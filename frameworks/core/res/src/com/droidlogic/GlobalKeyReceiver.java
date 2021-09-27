@@ -11,6 +11,8 @@
 package com.droidlogic;
 
 import android.app.ActivityManager;
+import android.os.UserManager;
+import android.content.pm.UserInfo;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.ComponentName;
@@ -230,6 +232,29 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
         return isNetflixRunning;
     }
 
+    private UserHandle getCurrentUser(Context context) {
+        final ActivityManager activityManager = (ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
+        final UserManager userManager = (UserManager)context.getSystemService(Context.USER_SERVICE);
+        boolean isUserRunning = false;
+
+        List<UserInfo> userList = userManager.getUsers();
+        for (UserInfo user : userList) {
+            if (user.id == 0) {
+                continue;
+            }
+            isUserRunning = activityManager.isUserRunning(user.id);
+            Log.d(TAG, "userid = " + user.id + "isUserRunning = " + isUserRunning);
+
+            if (isUserRunning) {
+                return new UserHandle(user.id);
+            }
+
+        }
+
+        return new UserHandle(0);
+
+    }
+
     private void launchNetflix(Context context , boolean isInteractive) {
         PackageManager packageManager = context.getPackageManager();
         if (packageManager.getLaunchIntentForPackage(PACKAGE_NAME_NETFLIX) == null) {
@@ -245,7 +270,7 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
         netflixIntent.setPackage(PACKAGE_NAME_NETFLIX);
         netflixIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         netflixIntent.putExtra("power_on", isInteractive); //false for netflixButton, true for powerOnFromNetflixButton
-        context.startActivity(netflixIntent);
+        context.startActivityAsUser(netflixIntent, getCurrentUser(context));
        //netflix key always need wake up, if it is in interactive , wakeUp do noting
         wakeUp(context);
     }
