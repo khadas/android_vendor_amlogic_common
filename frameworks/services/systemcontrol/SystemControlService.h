@@ -302,8 +302,10 @@ public:
     void getChipVersionInfo(std::string& chiversion);
     tvpq_databaseinfo_t getPQDatabaseInfo(int dataBaseName);
     int setDtvKitSourceEnable(int isEnable);
-    int setAipqEnable(int isEnable);
-    int getAipqEnable();
+    bool setAipqEnable(bool on);
+    bool getAipqEnable();
+    bool hasAipqFunc();
+    bool readAiPqTable(std::string *aiPqTable);
     void setHdrStrategy(const std::string& value);
     void setHdrPriority(const std::string& value);
     int setColorGamutMode(int mode, int is_save);

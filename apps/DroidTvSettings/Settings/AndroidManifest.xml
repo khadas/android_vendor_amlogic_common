@@ -80,6 +80,7 @@
     <uses-permission android:name="droidlogic.permission.SYSTEM_CONTROL" />
     <uses-permission android:name="android.permission.OVERRIDE_WIFI_CONFIG" />
     <uses-permission android:name="android.Manifest.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <!-- DroidLogic end -->
 
     <application android:allowClearUserData="false"
@@ -1162,8 +1163,28 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:exported="true"
+            android:name=".AiPqReceiver"
+            android:enabled="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        <service
+            android:name=".AiPqService"
+            android:enabled="true"
+            android:exported="true">
+        </service>
+
         <!-- DroidLogic start -->
         <activity android:name=".more.MorePrefFragmentActivity"
+              android:theme="@style/Theme.Settings.Transparent"
+              android:configChanges="keyboard|keyboardHidden|navigation"
+              android:excludeFromRecents="true"
+              android:exported="true">
+        </activity>
+        <activity android:name=".AiPqFragmentActivity"
               android:theme="@style/Theme.Settings.Transparent"
               android:configChanges="keyboard|keyboardHidden|navigation"
               android:excludeFromRecents="true"

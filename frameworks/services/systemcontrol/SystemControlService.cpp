@@ -31,12 +31,13 @@
 #include <sys/types.h>
 #include <private/android_filesystem_config.h>
 #include <pthread.h>
-
+#include "SysTokenizer.h"
 #include "SystemControlService.h"
 #include "keymaster_hidl_hal_test.h"
 #include "DisplayModeMgr.h"
 #include "FileUtils.h"
 
+#define SCENSE_DATE_POLIY_COFIG "vendor/etc/scenes_data.txt"
 //using android::hardware::keymaster::V3_0::check_AttestationKey;
 namespace android {
 
@@ -133,6 +134,46 @@ int SystemControlService::permissionCheck() {
     */
 
     return NO_ERROR;
+}
+
+bool SystemControlService::readAiPqTable(std::string *aiPqTable) {
+    const char* WHITESPACE = " \t\r";
+
+    SysTokenizer* tokenizer;
+    int status = SysTokenizer::open(SCENSE_DATE_POLIY_COFIG, &tokenizer);
+    if (status) {
+        SYS_LOGE("Error %d opening aipq config file %s.", status, SCENSE_DATE_POLIY_COFIG);
+    } else {
+        while (!tokenizer->isEof()) {
+            tokenizer->skipDelimiters(WHITESPACE);
+            if (!tokenizer->isEol() && tokenizer->peekChar() != '#') {
+                char *token = tokenizer->nextToken(WHITESPACE);
+                if (NULL != token && !strcmp(token,"AIPQ_scenes_data:")) {
+                    tokenizer->nextLine();
+                    token = tokenizer->nextToken(WHITESPACE);
+                    int size  = 0;
+                    if (!strcmp(token,"scenes_count:")) {
+                         token = tokenizer->nextToken(",");
+                         size = atoi(token);
+                    }
+                    SYS_LOGD("Read Scenes Count %d",size);
+                    tokenizer->nextLine();//skip ==
+                    for (int i=0;i<size;i++) {
+                        tokenizer->nextLine();
+                        token = tokenizer->nextToken(":");
+                        token = tokenizer->nextToken(",");
+                        std::string str(token);
+                        *aiPqTable += token;
+                        //table->push_back(str);
+                    }
+                    break;
+                }
+            }
+            tokenizer->nextLine();
+        }
+        delete tokenizer;
+    }
+    return status;
 }
 
 bool SystemControlService::getSupportDispModeList(std::vector<std::string> *supportDispModes) {
@@ -1915,28 +1956,16 @@ int SystemControlService::setDtvKitSourceEnable(int isEnable)
     return ret;
 }
 
-int SystemControlService::setAipqEnable(int isEnable)
-{
-    int ret = -1;
-    if (pCPQControl != NULL) {
-        if (isEnable) {
-            ret = pCPQControl->SetAipqEnable(true);
-        } else {
-            ret = pCPQControl->SetAipqEnable(false);
-        }
-    }
-
-    return ret;
+bool SystemControlService::setAipqEnable(bool on) {
+  return pDisplayMode->setAipqEnable(on);
 }
 
-int SystemControlService::getAipqEnable()
-{
-    int ret = -1;
-    if (pCPQControl != NULL) {
-        ret = pCPQControl->GetAipqEnable();
-    }
+bool SystemControlService::getAipqEnable() {
+  return pDisplayMode->getAipqEnable();
+}
 
-    return ret;
+bool SystemControlService::hasAipqFunc() {
+  return pDisplayMode->hasAipqFunc();
 }
 
 int SystemControlService::setColorGamutMode(int mode, int is_save)

@@ -4319,27 +4319,59 @@ public class SystemControlManager {
          return -1;
      }
 
-     public int setAipqEnable(boolean isEnable) {
-         synchronized (mLock) {
-             try {
-                 return mProxy.setAipqEnable(isEnable ? 1 : 0);
-             } catch (Exception e) {
-                 Log.e(TAG, "setAipqEnable:" + e);
-             }
-         }
-         return -1;
-     }
 
-     public boolean getAipqEnable() {
-         synchronized (mLock) {
-             try {
-                 return mProxy.getAipqEnable() == 1;
-             } catch (Exception e) {
-                 Log.e(TAG, "getAipqEnable:" + e);
-             }
-         }
-         return false;
-     }
+    public boolean setAipqEnable(boolean on) {
+        synchronized (mLock) {
+            try {
+                return (mProxy.setAipqEnable(on) == Result.OK);
+            } catch (Exception e) {
+                Log.e(TAG, "setAipqEnable:" + e);
+            }
+        }
+        return false;
+    }
+
+
+    public boolean getAipqEnable() {
+        synchronized (mLock) {
+            try {
+                return (mProxy.getAipqEnable() == Result.OK);
+            } catch (Exception e) {
+                Log.e(TAG, "getAipqEnable:" + e);
+            }
+        }
+        return false;
+    }
+
+    public boolean hasAipqFunc() {
+        synchronized (mLock) {
+            try {
+                return (mProxy.hasAipqFunc() == Result.OK);
+            } catch (Exception e) {
+                Log.e(TAG, "hasAipqFunc:" + e);
+            }
+        }
+        return false;
+    }
+
+    public String getAipqTable() {
+        String val = null;
+        synchronized (mLock) {
+            try {
+                Mutable<String> resultVal = new Mutable<>();
+                mProxy.readAiPqTable((int ret, String v) -> {
+                                  if (Result.OK == ret) {
+                                      resultVal.value = v;
+                                  }
+                              });
+                Log.d("AIPQ_TABLE", "getAipqTable value: " + resultVal.value);
+                return resultVal.value;
+            } catch (Exception e) {
+                Log.e(TAG, "getAipqTable:" + e);
+            }
+        }
+        return val;
+    }
 
      public boolean aisrContrl(boolean on) {
          synchronized (mLock) {

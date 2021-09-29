@@ -307,7 +307,7 @@ interface ISystemControl {
 
   saveContrast(int32_t value)
       generates (int32_t ret);
-      
+
   setSaturation(int32_t value, int32_t isSave)
       generates (int32_t ret);
 
@@ -682,11 +682,8 @@ interface ISystemControl {
   setDtvKitSourceEnable(int32_t isEnable)
       generates (int32_t ret);
 
-  setAipqEnable(int32_t isEnable)
-      generates (int32_t ret);
-
-  getAipqEnable()
-      generates (int32_t ret);
+  readAiPqTable()
+      generates (Result result, string aiPqTable);
 
   setColorGamutMode(int32_t mode,int32_t isSave)
       generates (int32_t ret);
@@ -734,5 +731,13 @@ interface ISystemControl {
   hasAisrFunc ()
       generates (Result result);
   getAisr ()
+      generates (Result result);
+
+//aipq
+  setAipqEnable (bool on)
+      generates (Result result);
+  hasAipqFunc ()
+      generates (Result result);
+  getAipqEnable ()
       generates (Result result);
 };

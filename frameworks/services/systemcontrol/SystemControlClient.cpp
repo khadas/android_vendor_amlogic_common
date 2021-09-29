@@ -1536,12 +1536,32 @@ int SystemControlClient::setDtvKitSourceEnable(int isEnable) {
     return mSysCtrl->setDtvKitSourceEnable(isEnable);
 }
 
-int SystemControlClient::setAipqEnable(int isEnable) {
-    return mSysCtrl->setAipqEnable(isEnable);
+  bool SystemControlClient::readAiPqTable(std::string& aiPqTable) {
+      mSysCtrl->readAiPqTable([&aiPqTable](const Result &ret, const hidl_string& getaiPqTable) {
+          if (Result::OK == ret)
+              aiPqTable = getaiPqTable.c_str();
+          else
+              aiPqTable.clear();
+      });
+
+      if (aiPqTable.empty()) {
+          LOG(ERROR) << "system control client readAiPqTable FAIL.";
+          return false;
+      }
+
+      return true;
+  }
+
+bool SystemControlClient::setAipqEnable(int isEnable) {
+    return (mSysCtrl->setAipqEnable(isEnable) == Result::OK);
 }
 
-int SystemControlClient::getAipqEnable() {
-    return mSysCtrl->getAipqEnable();
+bool SystemControlClient::hasAipqFunc() {
+    return (mSysCtrl->hasAipqFunc() == Result::OK);
+}
+
+bool SystemControlClient::getAipqEnable() {
+    return (mSysCtrl->getAipqEnable() == Result::OK);
 }
 
 int SystemControlClient::setColorGamutMode(int mode, int is_save) {

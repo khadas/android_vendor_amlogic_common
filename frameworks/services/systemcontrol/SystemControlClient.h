@@ -299,8 +299,10 @@ public:
     void getChipVersionInfo(std::string& chipversion);
     PQDatabaseInfo getPQDatabaseInfo(int32_t dataBaseName);
     int setDtvKitSourceEnable(int isEnable);
-    int setAipqEnable(int isEnable);
-    int getAipqEnable();
+    bool setAipqEnable(int isEnable);
+    bool hasAipqFunc();
+    bool getAipqEnable();
+    bool readAiPqTable(std::string& aiPqTable);
     int setColorGamutMode(int mode, int is_save);
     int getColorGamutMode(void);
     //PQ end

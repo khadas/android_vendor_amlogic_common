@@ -296,6 +296,10 @@ using namespace android;
 #define PROP_MEDIA_AISR               "persist.vendor.sys.aisr"
 #define MEDIA_AISR_SYSFS              "/sys/module/aml_media/parameters/uvm_open_nn"
 
+//aipq
+#define PROP_MEDIA_AIPQ               "persist.vendor.sys.aipq"
+#define MEDIA_AIPQ_SYSFS              "/sys/module/aml_media/parameters/uvm_open_aipq"
+
 #define FULL_WIDTH_480                  720
 #define FULL_HEIGHT_480                 480
 #define FULL_WIDTH_576                  720
@@ -684,6 +688,9 @@ public:
     bool aisrContrl(bool on);
     bool hasAisrFunc();
     bool getAisr();
+    bool setAipqEnable(bool on);
+    bool hasAipqFunc();
+    bool getAipqEnable();
 private:
 
     bool getBootEnv(const char* key, char* value);
@@ -731,6 +738,7 @@ private:
     bool checkDolbyVisionDeepColorChanged(int state);
     void resetMemc();
     void resetAisr();
+    void resetAipq();
 
     bool getContentTypeSupport(const char* type);
 

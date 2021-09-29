@@ -301,8 +301,10 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     Return<void> getChipVersionInfo(getChipVersionInfo_cb _hidl_cb) override;
     Return<void> getPQDatabaseInfo(int32_t dataBaseName, getPQDatabaseInfo_cb _hidl_cb) override;
     Return<int32_t> setDtvKitSourceEnable(int32_t isEnable) override;
-    Return<int32_t> setAipqEnable(int32_t isEnable) override;
-    Return<int32_t> getAipqEnable() override;
+    Return<Result> setAipqEnable(bool on) override;
+    Return<Result> getAipqEnable() override;
+    Return<Result> hasAipqFunc() override;
+    Return<void> readAiPqTable(readAiPqTable_cb _hidl_cb) override;
     Return<int32_t> setColorGamutMode(int32_t isEnable, int32_t is_save) override;
     Return<int32_t> getColorGamutMode(void) override;
     //PQ end

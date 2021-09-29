@@ -118,6 +118,14 @@ void SystemControlHal::onSetDisplayMode(int mode) {
     }
 }
 
+Return<void> SystemControlHal::readAiPqTable(readAiPqTable_cb _hidl_cb) {
+    AutoMutex _l(mLock);
+    std::string aiPqTable;
+    mSysControl->readAiPqTable(&aiPqTable);
+    _hidl_cb(Result::OK, aiPqTable);
+    return Void();
+}
+
 void SystemControlHal::onHdrInfoChange(int newHdrInfo) {
     AutoMutex _l(mLock);
     //ALOGI("%s: newHdrInfo is %d", __FUNCTION__ , newHdrInfo);
@@ -1691,12 +1699,25 @@ Return<int32_t> SystemControlHal::setDtvKitSourceEnable(int32_t isEnable) {
     return mSysControl->setDtvKitSourceEnable(isEnable);
 }
 
-Return<int32_t> SystemControlHal::setAipqEnable(int32_t isEnable) {
-    return mSysControl->setAipqEnable(isEnable);
+Return<Result> SystemControlHal::setAipqEnable(bool on) {
+    if (mSysControl->setAipqEnable(on)) {
+        return Result::OK;
+    }
+    return Result::FAIL;
 }
 
-Return<int32_t> SystemControlHal::getAipqEnable() {
-    return mSysControl->getAipqEnable();
+Return<Result> SystemControlHal::getAipqEnable() {
+    if (mSysControl->getAipqEnable()) {
+        return Result::OK;
+    }
+    return Result::FAIL;
+}
+
+Return<Result> SystemControlHal::hasAipqFunc() {
+    if (mSysControl->hasAipqFunc()) {
+        return Result::OK;
+    }
+    return Result::FAIL;
 }
 
 Return<int32_t> SystemControlHal::setColorGamutMode(int32_t isEnable, int32_t is_save) {

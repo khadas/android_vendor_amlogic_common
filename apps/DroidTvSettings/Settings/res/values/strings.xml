@@ -2590,5 +2590,10 @@
 
     <string name="title_dvbc_dvbs_switch">DTVkit DVBC/DVBS Switch</string>
     <string name="dvbc_dvbs_switch_description">Turn off the switch and set DVBC. Turn on the switch and set DVBS. Need reboot.</string>
+    <!-- aipq -->
+    <string name="ai_pq" translatable="false">AI PQ</string>
+    <string name="ai_pq_enable" translatable="false">Enable AI PQ</string>
+    <string name="ai_pq_info_enable" translatable="false">Show AI PQ information</string>
+    <string name="prepare">AI PQ invalid value...</string>
     <!-- DroidLogic end -->
 </resources>

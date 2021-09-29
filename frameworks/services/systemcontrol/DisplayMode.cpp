@@ -350,6 +350,7 @@ DisplayMode::DisplayMode(const char *path, Ubootenv *ubootenv)
     }
     resetMemc();
     resetAisr();
+    resetAipq();
 }
 
 DisplayMode::~DisplayMode() {
@@ -2703,6 +2704,39 @@ void DisplayMode::getHdrStrategy(char* value) {
         strcpy(value, HDR_POLICY_SINK);
     }
     SYS_LOGI("getHdrStrategy is [%s]", value);
+}
+
+bool DisplayMode::setAipqEnable(bool on) {
+    int ret = -1;
+    if (on) {
+       pSysWrite->setProperty(PROP_MEDIA_AIPQ, "true");
+       ret = pSysWrite->writeSysfs(MEDIA_AIPQ_SYSFS, "1");
+    } else {
+       pSysWrite->setProperty(PROP_MEDIA_AIPQ, "false");
+       ret = pSysWrite->writeSysfs(MEDIA_AIPQ_SYSFS, "0");
+    }
+    return  ret >= 0 ? true : false;
+
+}
+
+ bool DisplayMode::hasAipqFunc() {
+    int ret = -1;
+    ret = open(MEDIA_AIPQ_SYSFS, O_WRONLY);
+    return ret >= 0 ? true : false;
+ }
+
+void DisplayMode::resetAipq() {
+    int ret = -1;
+    if (pSysWrite->getPropertyBoolean(PROP_MEDIA_AIPQ, "false")) {
+        ret = pSysWrite->writeSysfs(MEDIA_AIPQ_SYSFS, "1");
+    } else {
+        ret = pSysWrite->writeSysfs(MEDIA_AIPQ_SYSFS, "0");
+    }
+    SYS_LOGD("resetAipq ret:%d",ret);
+}
+
+bool DisplayMode::getAipqEnable() {
+    return pSysWrite->getPropertyBoolean(PROP_MEDIA_AIPQ, "false");
 }
 
 void DisplayMode::setHdrStrategy(const char* type) {
