@@ -12,23 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Classic TvSettings
+
+
+// Classic DroidTvSettings
 android_app {
-    name: "DroidTvSettings",
-    manifest: "Settings/AndroidManifest.xml",
+    name: "DroidGTVTvSettings",
+    manifest: "AndroidManifest.xml",
     srcs: [
-        "Settings/src/**/*.java",
-        "Settings/src/**/I*.aidl",
+        "src/**/*.java",
     ],
-    resource_dirs: ["Settings/res"],
-    defaults: ["SettingsLibDefaults"],
+    resource_dirs: ["res"],
     platform_apis: true,
-    overrides: ["TvSettings"],
     certificate: "platform",
     system_ext_specific: true,
-    required: ["com.android.tv.settings.amlogic"],
+    required: ["com.droidlogic.googletv.settings"],
     optimize: {
-        proguard_flags_files: ["Settings/proguard.cfg"],
+        proguard_flags_files: ["proguard.cfg"],
     },
     privileged: true,
     static_libs: [
@@ -41,8 +40,9 @@ android_app {
         "androidx.lifecycle_lifecycle-extensions",
         "androidx.lifecycle_lifecycle-common-java8",
         "androidx.annotation_annotation",
-        "droid-statslog-tvsettings",
-        "DroidTwoPanelSettingsLib",
+        "guava",
+        "statslog-tvsettings",
+        "TwoPanelSettingsLib",
     ],
 
     libs: [
@@ -50,3 +50,12 @@ android_app {
         "droidlogic-tv",
     ],
 }
+
+prebuilt_etc {
+    name: "com.droidlogic.googletv.settings",
+    system_ext_specific: true,
+    sub_dir: "permissions",
+    src: "com.droidlogic.googletv.settings.xml",
+    filename_from_src: true,
+}
+

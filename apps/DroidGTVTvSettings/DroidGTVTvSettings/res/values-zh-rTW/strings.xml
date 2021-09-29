@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  Copyright 2018 Google Inc. All Rights Reserved.  -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="hdr_match_content_sink_key" msgid="6138212837035662398">"match_content_sink_key"</string>
+    <string name="hdr_match_content_sink_help_text" msgid="336182894185363742">"如果選取這個選項，系統就會一律以 DYNAMIC_RANGE_PLACEHOLDER 格式輸出。"</string>
+    <string name="hdr_match_content_source_key" msgid="5724773481669368007">"match_content_source_key"</string>
+    <string name="hdr_match_content_source_title" msgid="5478718444478858717">"與內容相符"</string>
+    <string name="hdr_match_content_help_text" msgid="1295834540589959463">"如果選取這個選項，系統就會以觀看內容的原始動態範圍輸出。"</string>
+    <string name="hdr_match_content_title" msgid="2176435241454068288">"與內容動態範圍相符"</string>
+    <string name="format_selection_title" msgid="843506005406922508">"選取格式"</string>
+    <string name="dynamic_range_and_color_format_title" msgid="320718354038120630">"動態範圍和顏色格式"</string>
+    <string name="dynamic_range_format_preference_title" msgid="5243420738666862155">"動態範圍格式偏好設定"</string>
+    <string name="hdr_supported_format_category_title" msgid="869084122349458120">"支援的格式"</string>
+    <string name="hdr_unsupported_format_category_title" msgid="3640448484033468905">"不支援的格式"</string>
+    <string name="hdr_format_sdr_title" msgid="3712352410410103431">"SDR"</string>
+    <string name="hdr_format_hdr_title" msgid="7742334808360226543">"HDR"</string>
+    <string name="hdr_format_dolby_vision_title" msgid="9168030387045643223">"Dolby Vision"</string>
+    <string name="hdr_format_sdr_help_text" msgid="954002169290325247">"僅支援 SDR 內容。"</string>
+    <string name="hdr_format_hdr_help_text" msgid="7778669481424929304">"優先顯示 HDR 內容 (如果有的話)，同時也支援 SDR 內容。"</string>
+    <string name="hdr_format_dolby_vision_help_text" msgid="9118650211316859017">"優先顯示 Dolby Vision 內容 (如果有的話)，同時也支援 SDR 和 HDR 內容。"</string>
+    <string name="hdr_format_always_hdr_title" msgid="6698217272783308122">"一律顯示 HDR 內容"</string>
+    <string name="hdr_format_always_dolby_vision_title" msgid="5666052671607452009">"一律顯示 Dolby Vision 內容"</string>
+    <string name="hdr_format_up_to_hdr_title" msgid="6426938486414587623">"最高可支援 HDR 內容"</string>
+    <string name="hdr_format_up_to_dolby_vision_title" msgid="8477232818747345962">"最高可支援 Dolby Vision 內容"</string>
+    <string name="color_format_title" msgid="5889259932743594292">"顏色格式"</string>
+    <string name="hdr_resolution_title" msgid="2358299493475976187">"解析度"</string>
+    <string name="dolby_vision_mode_title" msgid="6014109966668754412">"Dolby Vision 模式"</string>
+    <string name="dolby_vision_mode_low_latency_title" msgid="5306395513616911547">"低延遲"</string>
+    <string name="dolby_vision_mode_standard_title" msgid="5935267953931060588">"標準"</string>
+    <string name="adjust_resolution_dialog_desc" msgid="667161097186889393">"選取 [確定] 即可立即使用這個新的解析度 RESOLUTION_PLACEHOLDER"</string>
+    <string name="adjust_resolution_and_disable_dv_dialog_desc" msgid="6067438870490753572">"如果使用新解析度 RESOLUTION_PLACEHOLDER，系統將停用 Dolby Vision。選取 [確定] 即可使用這個新的解析度。"</string>
+    <string name="adjust_resolution_dialog_title" msgid="7844106855088307163">"解析度已變更"</string>
+    <string name="adjust_resolution_dialog_ok_msg" msgid="3200992996154701521">"確定"</string>
+    <string name="adjust_resolution_dialog_cancel_msg" msgid="5948076323480863064">"取消 (COUNTDOWN_PLACEHOLDER)"</string>
+    <string name="enable_unsupported_sound_format_dialog_desc" msgid="700216575578021415">"你的已連線顯示器裝置或音訊裝置未回報支援這個格式，裝置可能會因此出現未預期的行為，例如聲音不連貫或發出大聲的噪音。"</string>
+    <string name="enable_unsupported_sound_format_dialog_title" msgid="2509973477990650863">"要啟用不支援的音效格式嗎？"</string>
+    <string name="enable_unsupported_sound_format_dialog_ok_msg" msgid="4608591311195036141">"仍要變更"</string>
+    <string name="enable_unsupported_sound_format_dialog_cancel_msg" msgid="8917939114197657217">"取消"</string>
+    <string name="preferred_mode_change_dialog_desc" msgid="3500981786745907288">"選取 [確定] 即可繼續操作。"</string>
+    <string name="preferred_mode_change_and_display_mode_change_dialog_desc" msgid="916054920893208929">"目前的顯示模式不支援 Dolby Vision，系統已改用 RESOLUTION_PLACEHOLDER。"</string>
+    <string name="preferred_mode_change_dialog_title" msgid="4118230548907738654">"模式偏好設定已變更"</string>
+    <string name="preferred_mode_change_dialog_ok_msg" msgid="7893137940567414019">"確定"</string>
+    <string name="preferred_mode_change_dialog_cancel_msg" msgid="3884797091071820430">"取消 (COUNTDOWN_PLACEHOLDER)"</string>
+    <string name="adjust_color_format_dialog_desc" msgid="4348299142529904365">"選取 [確定] 就能立即使用這個新的顏色格式"</string>
+    <string name="adjust_color_format_dialog_title" msgid="5188225093554649734">"顏色格式已變更。"</string>
+    <string name="adjust_color_format_dialog_ok_msg" msgid="6097309625810879990">"確定"</string>
+    <string name="adjust_color_format_dialog_cancel_msg" msgid="4764637205687491542">"取消 (COUNTDOWN_PLACEHOLDER)"</string>
+    <string name="surround_sound_switch_title" msgid="6365932517760898638">"環場音效"</string>
+    <string name="advanced_sound_settings_title" msgid="1227815950104317850">"進階音效設定"</string>
+    <string name="surround_sound_format_selection_title" msgid="6056046228504343191">"環場音效格式選項"</string>
+    <string name="sound_auto_select_format_title" msgid="3812225140541778183">"自動"</string>
+    <string name="sound_auto_select_format_summary" msgid="2092040331798312535">"使用裝置支援的格式"</string>
+    <string name="sound_auto_select_format_help_text" msgid="8329738698555844539">"如果選取這個選項，系統將允許應用程式選取裝置系統支援的任何音效格式。應用程式不一定會選擇最高音質的格式。"</string>
+    <string name="sound_manual_select_format_title" msgid="8859714290649071786">"手動"</string>
+    <string name="sound_manual_select_format_summary" msgid="1056101186058480004">"手動選擇可用的格式"</string>
+    <string name="sound_manual_select_format_help_text" msgid="4170678007629555232">"如果選取這個選項，當裝置鏈支援的音效格式造成播放問題時，你就可以手動停用。不過，如果是裝置鏈不支援的音效格式，就無法強制停用。應用程式不一定會選擇最高音質的格式。"</string>
+    <string name="sound_disabled_title" msgid="7631010718159372879">"已停用"</string>
+    <string name="sound_supported_format_category_title" msgid="4076405660605867766">"支援的格式"</string>
+    <string name="sound_unsupported_format_category_title" msgid="7155276564651582415">"不支援的格式"</string>
+    <string name="surround_sound_format_ac3" msgid="8180332300293759116">"Dolby Digital"</string>
+    <string name="surround_sound_format_e_ac3" msgid="2734416274368408181">"Dolby Digital Plus"</string>
+    <string name="settings_official_remote_category" msgid="2466400518170727914">"Chromecast 聲控器"</string>
+    <string name="abort_msg" msgid="4830495739085115749">"取消"</string>
+    <string name="abort_due_to_interruption_msg" msgid="4716336321813544266">"重設程序因遭到中斷而取消"</string>
+    <string name="before_fdr_countdown_msg" msgid="4201449502677108618">"這部裝置將恢復原廠設定，放開即可取消。"</string>
+</resources>

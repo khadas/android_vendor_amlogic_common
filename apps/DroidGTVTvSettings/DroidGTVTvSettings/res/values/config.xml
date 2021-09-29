@@ -1,0 +1,56 @@
+<!-- Copyright 2019 Google Inc. All Rights Reserved. -->
+<resources>
+  <string-array translatable="false" name="dfu_binary_md5s">
+  </string-array>
+  <string-array translatable="false" name="known_remote_labels">
+    <!-- Lables are compared in lower case -->
+    <item>abbey</item>
+    <item>chromecast remote</item>
+  </string-array>
+  <!-- Upgrades from certain version would erase the connection information saved on the remote. For
+       this case, we would need to forget the connection on the host side and ask the user go
+       through pairing again.
+       Version format: [major version] [minor version] [Vendor ID] [Product ID]
+       Example: 1 23 AB 1F
+  -->
+  <string-array translatable="false" name="manual_reconnection_remote_versions">
+  </string-array>
+
+  <!-- List of official bluetooth device manufacturer names. -->
+  <string-array translatable="false" name="official_bt_device_manufacturer_names">
+      <item>Google</item>
+  </string-array>
+
+  <!-- List of official bluetooth device model names. -->
+  <string-array translatable="false" name="official_bt_device_model_names">
+      <item>Abbey 1.0</item>
+  </string-array>
+
+  <!-- List of bluetooth device model names whose "connect/disconnect" buttons should be hidden. -->
+  <string-array translatable="false" name="disconnect_button_hidden_device_model_names">
+      <item>Abbey 1.0</item>
+  </string-array>
+
+  <bool translatable="false" name="axel_settings_enabled">true</bool>
+
+  <!--
+    The HDMI-CEC settings on Sabrina is hidden from Connected settings but available in
+    Settings -> Display & Sound -> Advanced display settings.
+  -->
+  <bool translatable="false" name="show_cec_in_connected_settings">false</bool>
+  <!-- Hide remote control icon. -->
+  <bool translatable="false" name="show_remote_icon_in_dfu">false</bool>
+
+  <!-- Allow overlay to specify known/official device names using the return value of
+      BluetoothDevice # getName() so that it is hidden from the generic bluetooth accessories
+      section and is only visible in OEM-implemented Slice. -->
+  <string-array name="known_bluetooth_device_labels" translatable="false">
+  </string-array>
+
+  <!-- Whether to show the bluetooth toggle. Please be very careful with this config as setting it
+      to true would surface a toggle in Remotes & Accessories settings that allows the user to
+      turn off Bluetooth. Without an IR remote or some other form of connection, the user may not
+      be able to turn it back on and have to perform FDR. -->
+  <bool name="show_bluetooth_toggle">false</bool>
+
+</resources>

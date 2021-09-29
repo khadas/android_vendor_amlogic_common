@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2020 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- List entries for controlling surround sound passthrough setting -->
+    <string-array name="surround_sound_entries" translatable="false">
+            <item>@string/surround_sound_auto_summary</item>
+            <item>@string/surround_sound_none_summary</item>
+    </string-array>
+
+    <!-- Entry values for surround sound preference -->
+    <string-array name="surround_sound_entry_values" translatable="false">
+        <item>auto</item>
+        <item>never</item>
+    </string-array>
+<!-- Blacklist packages which should be seen as system apps in "All apps" page -->
+<string-array name="system_app_packages" translatable="false">
+    <item>com.android.vending</item>
+    <item>com.android.traceur</item>
+    <item>com.android.tv.settings</item>
+    <item>com.google.android.inputmethod.latin</item>
+    <item>com.google.android.music</item>
+    <item>com.google.android.play.games</item>
+    <item>com.google.android.tv</item>
+    <item>com.google.android.tv.remote.service</item>
+    <item>com.google.android.videos</item>
+    <item>com.google.android.katniss</item>
+</string-array>
+</resources>

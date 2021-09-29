@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.droidlogic.googletv.settings"
+          android:sharedUserId="android.uid.system">
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.DELETE_PACKAGES" />
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
+    <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS_FULL" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.HDMI_CEC" />
+    <uses-permission android:name="com.android.setupwizard.permission.SETUP" />
+    <uses-permission android:name="com.google.android.permission.GLOBAL_BUTTON" />
+    <uses-permission android:name="com.netflix.ninja.permission.ESN" />
+    <uses-permission android:name="com.netflix.ninja.permission.ESN_RESPONSE"/>
+    <uses-permission android:name="android.permission.DEVICE_POWER" />
+    <uses-permission android:name="android.permission.MANAGE_USERS" />
+    <uses-permission android:name="android.permission.REBOOT" />
+
+    <application
+        android:persistent="true">
+
+     <!-- DroidLogic start -->
+         <uses-library android:name="droidlogic.tv.software.core" />
+         <uses-library android:name="droidlogic.software.core" />
+         <!-- DroidLogic end -->
+
+        <activity
+            android:name=".sliceprovider.dialog.AdjustResolutionDialogActivity"
+            android:label="Adjust Resolution Dialog Activity"
+            android:launchMode="singleInstance"
+            android:theme="@style/DialogActivityTranslucentTheme">
+            <intent-filter>
+                <action android:name="com.droidlogic.googletv.settings.sliceprovider.SHOW_RESOLUTION_CHNAGE_WARNING" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".sliceprovider.dialog.EnableUnsupportedSoundDialogActivity"
+            android:label="Enable Unsupported Sound Dialog Activity"
+            android:launchMode="singleInstance"
+            android:theme="@style/DialogActivityTranslucentTheme">
+            <intent-filter>
+                <action android:name="com.droidlogic.googletv.settings.sliceprovider.SHOW_UNSUPPORTED_FORMAT_CHNAGE_WARNING" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".sliceprovider.dialog.AdjustColorFormatDialogActivity"
+            android:label="Adjust Color Format Dialog Activity"
+            android:launchMode="singleInstance"
+            android:theme="@style/DialogActivityTranslucentTheme">
+            <intent-filter>
+                <action android:name="com.google.android.settings.usage.ACTION_SET_COLOR_ATTRIBUTE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".sliceprovider.dialog.PreferredModeChangeDialogActivity"
+            android:label="Prefer Dolby Vision Dialog Activity"
+            android:launchMode="singleInstance"
+            android:theme="@style/DialogActivityTranslucentTheme">
+            <intent-filter>
+                <action android:name="com.google.android.settings.usage.ACTION_SET_HDR_FORMAT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <provider
+            android:name="androidx.lifecycle.ProcessLifecycleOwnerInitializer"
+            tools:replace="android:authorities"
+            android:authorities="${applicationId}.lifecycle-tests"
+            android:exported="false"
+            android:multiprocess="true" />
+
+        <provider
+            android:authorities="com.google.android.tv.settings.hdr.sliceprovider"
+            android:name="com.droidlogic.googletv.settings.sliceprovider.HdrSliceProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.app.slice.category.SLICE"/>
+            </intent-filter>
+        </provider>
+
+        <provider
+            android:authorities="com.google.android.tv.settings.advancedsound.sliceprovider"
+            android:name="com.droidlogic.googletv.settings.sliceprovider.AdvancedSoundSliceProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.app.slice.category.SLICE"/>
+            </intent-filter>
+        </provider>
+
+        <provider
+            android:authorities="com.google.android.tv.settings.general.sliceprovider"
+            android:name="com.droidlogic.googletv.settings.sliceprovider.GeneralContentSliceProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.app.slice.category.SLICE"/>
+            </intent-filter>
+        </provider>
+
+        <provider
+            android:authorities="com.google.android.tv.settings.displaysound.hdmi.sliceprovider"
+            android:name="com.droidlogic.googletv.settings.sliceprovider.HdmiCecContentSliceProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.app.slice.category.SLICE"/>
+            </intent-filter>
+        </provider>
+
+        <activity
+             android:name="com.droidlogic.googletv.settings.sliceprovider.accessories.BluetoothActionActivity"
+             android:exported="false" />
+
+        <service
+             android:name="com.droidlogic.googletv.settings.sliceprovider.accessories.BluetoothDevicesService"
+             android:exported="false" />
+
+        <provider
+            android:authorities="com.google.android.tv.btservices.settings.sliceprovider"
+            android:name="com.droidlogic.googletv.settings.sliceprovider.accessories.ConnectedDevicesSliceProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.app.slice.category.SLICE"/>
+            </intent-filter>
+        </provider>
+
+        <receiver
+            android:name="com.droidlogic.googletv.settings.sliceprovider.broadcastreceiver.HdrSliceBroadcastReceiver"
+            android:exported="false">
+        </receiver>
+
+        <receiver
+            android:name="com.droidlogic.googletv.settings.sliceprovider.broadcastreceiver.AdvancedSoundSliceBroadcastReceiver"
+            android:exported="false">
+        </receiver>
+
+        <receiver
+            android:name="com.droidlogic.googletv.settings.sliceprovider.broadcastreceiver.HdmiCecSliceBroadcastReceiver"
+            android:exported="false">
+        </receiver>
+
+        <receiver
+            android:name="com.droidlogic.googletv.settings.sliceprovider.broadcastreceiver.BluetoothBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+    <uses-sdk
+        android:minSdkVersion="29"
+        android:targetSdkVersion="29" />
+</manifest>

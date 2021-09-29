@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2020 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License
+   -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ambient_settings_title" msgid="3261513065549578450">"設定"</string>
+    <string name="device_daydream" msgid="762484484970796571">"微光模式"</string>
+    <string name="storage_suggestions" msgid="2482085129851387037">"建議"</string>
+    <string name="manage_user_services_slice_title" msgid="4237940450169230149">"服務"</string>
+    <string name="accessories_add_bluetooth_inst_extra" msgid="2268156109843541398">"如要開始與遙控器配對，請按住 [<xliff:g id="PAIRING_BUTTON1_ICON">%1$s</xliff:g>] 和 [<xliff:g id="PAIRING_BUTTON2_ICON">%2$s</xliff:g>]，直到遙控器上的指示燈開始閃爍為止。"</string>
+    <string name="accessories_pairing_button1" msgid="7275913246748147817">"返回按鈕"</string>
+    <string name="accessories_pairing_button2" msgid="5547574506148826534">"主畫面按鈕"</string>
+    <string name="cast_settings_title" msgid="6676520696171167910">"投放"</string>
+    <string name="system_location_summary" msgid="3831560866456217785">"Google 可能會定期收集位置資料，並以匿名方式使用這項資料，藉此提高定位精確度及改善適地性服務。"</string>
+  <string-array name="rooms">
+    <item msgid="2601804700462877564">"臥室電視"</item>
+    <item msgid="5661924919503963686">"休息室電視"</item>
+    <item msgid="1557894390791893693">"餐廳電視"</item>
+    <item msgid="1041643740362167845">"起居室電視"</item>
+    <item msgid="6698609577247795279">"廚房電視"</item>
+    <item msgid="688465253783823867">"客廳電視"</item>
+    <item msgid="7771710346763260277">"主臥室電視"</item>
+    <item msgid="2654629402493952002">"電視"</item>
+  </string-array>
+    <string name="basic_mode_suggestion_category_title" msgid="5467143565201766853">"建議"</string>
+    <string name="basic_mode_exit_preference_title" msgid="352839110326005911">"設定 Google TV"</string>
+    <string name="basic_mode_exit_preference_subtitle" msgid="2550820839234506622">"使用 Google 帳戶登入"</string>
+    <string name="basic_mode_exit_info_title" msgid="4888495102170589870">"你喜愛的娛樂內容"</string>
+    <string name="basic_mode_exit_info_summary" msgid="1489731518539301158">"使用 Google 帳戶登入即可取得應用程式、Google 助理和個人化推薦內容。"</string>
+    <string name="basic_mode_accounts_and_sign_in_info_summary" msgid="900079492883570820">"無法使用「帳戶與登入」預覽窗格，請設定 Google TV 以便啟用。"</string>
+    <string name="help_center_title" msgid="195270522377892717">"歡迎造訪 Google TV 說明中心："</string>
+</resources>

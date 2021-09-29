@@ -1,0 +1,220 @@
+<!-- Copyright 2018 Google Inc. All Rights Reserved. -->
+<resources>
+  <!-- Overriding the BluetoothDeviceService class name to point to the implemented class.-->
+  <string translatable="false" name="bluetooth_device_service_class">com.google.android.chromecast.chromecastservice.BtDeviceService</string>
+  <string name="hdr_match_content_sink_key">match_content_sink_key</string>
+  <string name="hdr_match_content_sink_help_text">Select this to always output in DYNAMIC_RANGE_PLACEHOLDER format.</string>
+  <string name="hdr_match_content_source_key">match_content_source_key</string>
+  <string name="hdr_match_content_source_title">Match content</string>
+  <string name="hdr_match_content_help_text">"Select this to output in the original dynamic range of the content you’re watching."</string>
+  <string name="hdr_match_content_title">Match content dynamic range</string>
+  <string translatable="false" name="hdr_match_content_type_radio_group_name">hdr_match_content_type_radio_group</string>
+
+  <!-- TODO: refactor: move position near to advanced sound  -->
+  <string name="format_selection_title">Format selection</string>
+
+  <string name="dynamic_range_and_color_format_title">Dynamic range &amp; Color format</string>
+
+  <string name="dynamic_range_format_preference_title">Dynamic range format preference</string>
+  <string name="hdr_supported_format_category_title">supported formats</string>
+  <string name="hdr_unsupported_format_category_title">unsupported formats</string>
+  <string description="abbreviation of standard dynamic range" name="hdr_format_sdr_title">SDR</string>
+  <string description="abbreviation of high dynamic range" name="hdr_format_hdr_title">HDR</string>
+  <string description="a specific format of dynamic range" name="hdr_format_dolby_vision_title">Dolby Vision</string>
+  <string name="hdr_format_sdr_help_text">Only supports SDR content.</string>
+  <string name="hdr_format_hdr_help_text">Prefer HDR content if available, but also support SDR content.</string>
+  <string name="hdr_format_dolby_vision_help_text">Prefer Dolby Vision content if available, but also support SDR and HDR content.</string>
+  <string description="Use to indicate the display is always showing HDR content" name="hdr_format_always_hdr_title">Always HDR</string>
+  <string description="Use to indicate the display is always showing Dolby vision content" name="hdr_format_always_dolby_vision_title">Always Dolby Vision</string>
+  <string description="Use to indicate the display will show HDR content if available" name="hdr_format_up_to_hdr_title">Up to HDR</string>
+  <string description="Use to indicate the display will show Dolby Vision content if available" name="hdr_format_up_to_dolby_vision_title">Up to Dolby Vision</string>
+  <string translatable="false" name="hdr_format_select_type_radio_group_name">hdr_format_select_type_radio_group</string>
+
+  <string name="color_format_title">Color format</string>
+  <string translatable="false" name="color_attribute_select_type_radio_group_name">color_attribute_select_type_radio_group</string>
+
+  <string name="hdr_auto_best_resolution_title">Auto swith best to resolution</string>
+
+  <string name="hdr_resolution_title">Resolution</string>
+  <string name="hdr_resolution_list_title">Resolution List</string>
+  <string translatable="false" name="hdr_resolution_radio_group_name">resolution_radio_group</string>
+
+  <string name="dolby_vision_mode_title">Dolby Vision Mode</string>
+  <string translatable="false" name="dolby_vision_mode_low_latency_key">dolby_vision_mode_low_latency_key</string>
+  <string name="dolby_vision_mode_low_latency_title">Low Latency</string>
+  <string translatable="false" name="dolby_vision_mode_standard_key">dolby_vision_mode_standard_key</string>
+  <string name="dolby_vision_mode_standard_title">Standard</string>
+  <string translatable="false" name="dolby_vision_mode_select_type_radio_group_name">dolby_vision_mode_select_type_radio_group</string>
+
+  <string description="The word RESOLUTION_PLACEHOLDER should not be translated. It will be replaced with a resolution message." name="adjust_resolution_dialog_desc">"Select OK to use this new resolution RESOLUTION_PLACEHOLDER from now on"</string>
+  <string description="The word RESOLUTION_PLACEHOLDER should not be translated. It will be replaced with a resolution message." name="adjust_resolution_and_disable_dv_dialog_desc">"The new resolution RESOLUTION_PLACEHOLDER disables Dolby Vision. Select OK to use this new resolution."</string>
+  <string name="adjust_resolution_dialog_title">Resolution has been changed</string>
+  <string name="adjust_resolution_dialog_ok_msg">OK</string>
+  <string description="The word COUNTDOWN_PLACEHOLDER should not be translated. It will be replaced with a countdown message." name="adjust_resolution_dialog_cancel_msg">"Cancel (COUNTDOWN_PLACEHOLDER)"</string>
+
+  <string name="enable_unsupported_sound_format_dialog_desc">Your connected display device or audio device does not report support for this format. This may cause unexpected behaviours like loud noises or pops from your device.</string>
+  <string name="enable_unsupported_sound_format_dialog_title">"Enabling unsupported sound format?"</string>
+  <string name="enable_unsupported_sound_format_dialog_ok_msg">Change anyway</string>
+  <string name="enable_unsupported_sound_format_dialog_cancel_msg">"Cancel"</string>
+
+  <string name="preferred_mode_change_dialog_desc">Select OK to continue.</string>
+  <string description="The word RESOLUTION_PLACEHOLDER should not be translated. It will be replaced with a resolution message." name="preferred_mode_change_and_display_mode_change_dialog_desc">The current display mode does not support Dobly Vision. It has been changed to RESOLUTION_PLACEHOLDER.</string>
+  <string name="preferred_mode_change_dialog_title">Mode preference has been changed</string>
+  <string name="preferred_mode_change_dialog_ok_msg">OK</string>
+  <string description="The word COUNTDOWN_PLACEHOLDER should not be translated. It will be replaced with a countdown message." name="preferred_mode_change_dialog_cancel_msg">"Cancel (COUNTDOWN_PLACEHOLDER)"</string>
+
+  <string name="adjust_color_format_dialog_desc">Select OK to use this new color format from now on</string>
+  <string name="adjust_color_format_dialog_title">Color format has been changed.</string>
+  <string name="adjust_color_format_dialog_ok_msg">OK</string>
+  <string description="The word COUNTDOWN_PLACEHOLDER should not be translated. It will be replaced with a countdown message." name="adjust_color_format_dialog_cancel_msg">"Cancel (COUNTDOWN_PLACEHOLDER)"</string>
+
+  <string name="surround_sound_switch_title">Surround sound</string>
+  <string name="advanced_sound_settings_title">Advanced sound settings</string>
+
+  <string name="surround_sound_format_selection_title">Surround sound format selection</string>
+
+  <string translatable="false" name="sound_auto_select_format_key">auto_select_format_key</string>
+  <string name="sound_auto_select_format_title">Automatic</string>
+  <string name="sound_auto_select_format_summary">Use device supported formats</string>
+  <string name="sound_auto_select_format_help_text">"When selected, the system will allow apps to select any sound format that is supported by your device chain. Apps may choose a format that is not the highest-quality format."</string>
+  <string translatable="false" name="sound_manual_select_format_key">manual_select_format_key</string>
+  <string name="sound_manual_select_format_title">Manual</string>
+  <string name="sound_manual_select_format_summary">Choose formats manually from available formats</string>
+  <string name="sound_manual_select_format_help_text">"When selected, you can manually disable sound formats that are supported by your device chain that cause problems with playback. Sound formats not supported by your device chain cannot be enabled. Apps may choose a format that is not the highest-quality format."</string>
+  <string name="sound_disabled_title">Disabled</string>
+  <string translatable="false" name="sound_format_select_type_radio_group_name">format_select_type_radio_group</string>
+
+  <string name="sound_supported_format_category_title">supported formats</string>
+  <string name="sound_unsupported_format_category_title">unsupported formats</string>
+  <string translatable="false" name="surround_sound_format_key_prefix">surround_sound_format_</string>
+
+  <!-- Name of the AC3 surround sound format that is displayed to the user [CHAR LIMIT=50] -->
+  <string name="surround_sound_format_ac3">Dolby Digital</string>
+  <!-- Name of the E-AC3 surround sound format that is displayed to the user [CHAR LIMIT=50] -->
+  <string name="surround_sound_format_e_ac3">Dolby Digital Plus</string>
+
+  <!-- Category header of Chromecast remote control settings. [CHAR LIMIT=50] -->
+  <string name="settings_official_remote_category">Chromecast Voice Remote</string>
+
+  <string translatable="false" name="netflix_esn_title">Netflix ESN</string>
+
+  <string description="A speech triggered when factory data reset is canceled by releasing the button on the device" name="abort_msg">abort</string>
+  <string description="A speech triggered when factory data reset had been interrupted by other operations" name="abort_due_to_interruption_msg">"abort due to interruption"</string>
+  <string description="A speech triggered when factory data reset countdown takes place." name="before_fdr_countdown_msg">"You're about to completely reset this device, release to cancel."</string>
+  <string name="settings_bt_confirm_update">Settings bt confirm update</string>
+  <string name="settings_bt_update">Settings bt update</string>
+  <string name="hdmi_cec_settings_title">HDMI-CEC</string>
+
+  <string name="hdmi_cec_switch_title" translatable="false">Enable HDMI-CEC</string>
+  <string name="hdmi_cec_switch_key" translatable="false">HDMI-CEC</string>
+
+  <string name="cec_switch_description" translatable="false">HDMI-CEC allow you to control and \n automatically turn on/off other HDMI-CEC\n enabled devices with a single remote control.\n
+  Note: Ensure HDMI-CEC is enabled on your TV and other HDMI devices. Manufacturers often have different names for HDMI-CEC, for example:
+  \n
+  Samsung:Anynet+\n
+  LG:SimpLink\n
+  Sony:BRAVIA Sync\n
+  Philips:EasyLink\n
+  Sharp:Aquos Link\n
+  </string>
+
+  <!-- General string for items such as buttons for confirmation [CHAR LIMIT=30] -->
+  <string name="general_action_yes">Yes</string>
+  <!-- General string for items such as buttons for rejection [CHAR LIMIT=30] -->
+  <string name="general_action_no">No</string>
+  <!-- Remote and Accessories -->
+  <!-- Title text for new accessories pairing screen used by Talkback. [CHAR LIMIT=50] -->
+  <string name="accessories_add_accessibility_title">Bluetooth pairing.</string>
+  <!-- Description text for new accessories pairing screen. [CHAR LIMIT=150] -->
+  <string name="accessories_add_title">Searching for accessories&#8230;</string>
+  <!-- Description text for bluetooth device pairing instructions. [CHAR LIMIT=150] -->
+  <string name="accessories_add_bluetooth_inst">Before pairing your Bluetooth devices, make sure they\'re in pairing mode.</string>
+  <!-- Extra description text for bluetooth device pairing instructions. It is a placeholder to be overrode. -->
+  <string name="accessories_add_bluetooth_inst_extra" translatable="false"/>
+  <!-- The extra description is presented with button icons. These two strings can be overrode to be used for describing the pairing buttons for accessibility feature such as Talkback. -->
+  <string name="accessories_pairing_button1" translatable="false"/>
+  <string name="accessories_pairing_button2" translatable="false"/>
+
+
+  <!-- Action title for Confirming the Bluetooth secure Pair action [CHAR LIMIT=50] -->
+  <string name="bluetooth_pair">Pair</string>
+  <!-- Action title for Cancelling the Bluetooth secure Pair action [CHAR LIMIT=50] -->
+  <string name="bluetooth_cancel">Cancel</string>
+
+  <!-- Toast message when a bluetooth device is connected. [CHAR LIMIT=NONE] -->
+  <string name="bluetooth_device_connected_toast">%1$s connected</string>
+  <!-- Toast message when a bluetooth device is disconnected. [CHAR LIMIT=NONE] -->
+  <string name="bluetooth_device_disconnected_toast">%1$s disconnected</string>
+
+  <!-- The title for "Remotes & Accessories" Slice [CHAR LIMIT = 50]-->
+  <string name="connected_devices_slice_pref_title">Remotes &amp; Accessories</string>
+  <!-- The title for the Bluetooth toggle [CHAR LIMIT=20] -->
+  <string name="bluetooth_toggle_title">Bluetooth</string>
+  <!-- The title for the confirmation dialog when users try to turn off bluetooth.
+      [CHAR LIMIT=50]-->
+  <string name="bluetooth_toggle_confirmation_dialog_title">Turn off Bluetooth</string>
+  <!-- The summary for the confirmation dialog when users try to turn off bluetooth.
+      [CHAR LIMIT=240]-->
+  <string name="bluetooth_toggle_confirmation_dialog_summary">You will not be able to
+      access Google Assistant from your remote while Bluetooth is off.</string>
+  <!-- The title on button that starts pairing flow. [CHAR LIMIT=40] -->
+  <string name="bluetooth_pair_accessory">Pair accessory</string>
+  <!-- The category title for connected/paired accessories. [CHAR LIMIT=30] -->
+  <string name="bluetooth_known_devices_category">Accessories</string>
+  <!-- Uri to be overlaid by partner to show official remote control settings. -->
+  <string name="bluetooth_official_remote_entry_slice_uri" translatable="false" />
+  <!-- Category for listing official remote control devices. Can be overlaid by OEM to something
+      like "Foobar Remote". -->
+  <string name="bluetooth_official_remote_category">Remote Control</string>
+  <!-- Title for official remote control settings. Can be overlaid by OEM to something like as
+      "Foobar Remote Settings". -->
+  <string name="bluetooth_official_remote_entry_title">Remote control settings</string>
+  <!-- Uri to be overlaid by partner to show remote control infrared settings. -->
+  <string name="bluetooth_ir_entry_slice_uri" translatable="false" />
+  <!-- Title for remote control infrared settings. -->
+  <string name="bluetooth_ir_entry_title">Set up remote buttons</string>
+  <!-- Subtitle for remote control infrared settings. -->
+  <string name="bluetooth_ir_entry_subtitle">Control volume, power, input on TVs, receivers and soundbars</string>
+  <!-- Text on button that allows users to connect their Bluetooth devices. [CHAR LIMIT=30] -->
+  <string name="bluetooth_connect_action_title">Connect</string>
+  <!-- Text asking users to confirm connecting their Bluetooth devices. [CHAR LIMIT=40] -->
+  <string name="bluetooth_connect_confirm">Connect to %1$s</string>
+  <!-- Text on button that allows users to disconnect their Bluetooth devices. [CHAR LIMIT=30] -->
+  <string name="bluetooth_disconnect_action_title">Disconnect</string>
+  <!-- Text asking users to confirm disconnecting their Bluetooth devices. [CHAR LIMIT=40] -->
+  <string name="bluetooth_disconnect_confirm">Disconnect from %1$s</string>
+  <!-- Text on button that allows users to rename their Bluetooth devices. [CHAR LIMIT=30] -->
+  <string name="bluetooth_rename_action_title">Rename</string>
+  <!-- Text shown on Bluetooth devices renaming screen. [CHAR LIMIT=40] -->
+  <string name="bluetooth_rename">Rename your connected device</string>
+  <!-- Text on button that allows users to forget their Bluetooth devices. [CHAR LIMIT=30] -->
+  <string name="bluetooth_forget_action_title">Forget</string>
+  <!-- Text asking users to confirm forgetting their Bluetooth devices. [CHAR LIMIT=40] -->
+  <string name="bluetooth_forget_confirm">Forget %1$s</string>
+  <!-- Text preceded by the bluetooth serial. [CHAR LIMIT=40] -->
+  <string name="bluetooth_serial_number_label">Bluetooth address</string>
+  <!-- Subtitle showing connected connection status of Bluetooth device. [CHAR LIMIT=40] -->
+  <string name="bluetooth_connected_status">Connected</string>
+  <!-- Subtitle showing disconnected connection status of Bluetooth device. [CHAR LIMIT=40] -->
+  <string name="bluetooth_disconnected_status">Disconnected</string>
+  <string name="bluetooth_battery_label">Battery level</string>
+  <string name="bluetooth_fireware_label">Firmware</string>
+  <!-- Error message displayed to the user indicating that a selected action is not supported on this device. [CHAR LIMIT=150] -->
+  <string name="error_action_not_supported">This action isn\'t supported</string>
+  <!-- Device Paring Status: Pairing. [CHAR LIMIT=50] -->
+  <string name="accessory_state_pairing">Pairing&#8230;</string>
+  <!-- Device Paring Status: Connecting. [CHAR LIMIT=50] -->
+  <string name="accessory_state_connecting">Connecting&#8230;</string>
+  <!-- Device Paring Status: Pairing Complete. [CHAR LIMIT=50] -->
+  <string name="accessory_state_paired">Paired</string>
+  <!-- Device Paring Status: Error. [CHAR LIMIT=50] -->
+  <string name="accessory_state_error">Couldn\'t pair</string>
+  <!-- Device Paring Status: Canceled. [CHAR LIMIT=50] -->
+  <string name="accessory_state_canceled">Canceled</string>
+  <!-- Bluetooth PIN hint text (below the text entry box). [CHAR LIMIT=30] -->
+  <string name="bluetooth_pin_values_hint">Usually 0000 or 1234</string>
+  <!-- Title for the dialog to enter PIN. [CHAR LIMIT=40] -->
+  <string name="bluetooth_pairing_request">Bluetooth pairing request</string>
+  <string name="connected_devices_slice_uri" translatable="false">content://com.google.android.tv.btservices.settings.sliceprovider/general</string>
+
+</resources>

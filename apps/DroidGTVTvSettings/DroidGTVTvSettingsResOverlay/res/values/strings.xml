@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2020 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License
+  -->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Overlaid title of preference for nest help center [CHAR LIMIT=60] -->
+    <string name="nest_help_center_title">Visit Chromecast Help at</string>
+    <!-- Text for a radio button that if selected will cause the device to automatically select
+        an appropriate surround sound format. [CHAR LIMIT=65] -->
+    <string name="surround_sound_auto_summary">Automatic: Use device reported formats</string>
+     <!-- Text for a radio button that if selected will cause the device to never use a surround
+        sound format. [CHAR LIMIT=50] -->
+     <string name="surround_sound_none_summary">None: Never use surround sound</string>
+    <!-- Text for a radio button that if selected will allow the user to manually select surround
+        sound formats. [CHAR LIMIT=87] -->
+    <string name="surround_sound_manual_summary">Manual: Choose formats manually from available
+        formats</string>
+       <!-- Title of ambient settings page [CHAR LIMIT=60] -->
+    <string name="ambient_settings_title">Settings</string>
+    <!-- Title of ambient mode page [CHAR LIMIT=60] -->
+    <string name="device_daydream">Ambient mode</string>
+    <string name="storage_suggestions">Suggestions</string>
+    <!-- Default title of manage services page[CHAR LIMIT=60] -->
+    <string name="manage_user_services_slice_title">Services</string>
+    <!-- Extra description text for bluetooth device pairing instructions. [CHAR LIMIT=250] -->
+    <string name="accessories_add_bluetooth_inst_extra">To start pairing a remote, hold <xliff:g id="pairing_button1_icon">%1$s</xliff:g> and <xliff:g id="pairing_button2_icon">%2$s</xliff:g> until you see the light pulsing on the remote.</string>
+    <!-- Used by Talkback/accessibility feature to replace the back button icon. -->
+    <string name="accessories_pairing_button1">back button</string>
+    <!-- Used by Talkback/accessibility feature to replace the home button icon. -->
+    <string name="accessories_pairing_button2">home button</string>
+    <!-- Title of settings entry for cast settings. -->
+    <string name="cast_settings_title">Cast</string>
+
+    <string name="account_slice_uri" translatable="false">content://com.google.android.apps.tv.launcherx.sliceprovider/general</string>
+    <string name="privacy_assistant_slice_uri" translatable="false">content://com.google.android.apps.tv.launcherx.sliceprovider/primary_account_assistant</string>
+    <string name="privacy_purchases_slice_uri" translatable="false">content://com.google.android.apps.tv.launcherx.sliceprovider/primary_account_purchases</string>
+    <string name="manage_user_services_slice_uri" translatable="false">content://com.google.android.apps.tv.launcherx.sliceprovider/subscription/%1$s</string>
+    <string name="connected_devices_slice_uri" translatable="false">content://com.google.android.tv.btservices.settings.sliceprovider/general</string>
+    <string name="hdr_settings_slice_uri" translatable="false">content://com.google.android.tv.settings.hdr.sliceprovider/general</string>
+    <string name="ambient_slice_uri" translatable="false">content://com.google.android.apps.tv.dreamx.sliceprovider/general</string>
+    <string name="ambient_slice_storage_uri" translatable="false">content://com.google.android.apps.tv.dreamx.sliceprovider/storage</string>
+    <string name="storage_summary_fragment_name" translatable="false">com.android.tv.settings.device.StorageSummaryFragmentX</string>
+    <string name="cast_settings_slice_uri" translatable="false">content://com.google.android.apps.mediashell.settings.CastSettingsSliceProvider/general</string>
+
+    <string name="preference_title_text_font" translatable="false">google-sans</string>
+    <string name="preference_subtitle_text_font" translatable="false">google-sans</string>
+    <string name="preference_category_text_font" translatable="false">google-sans-medium</string>
+    <string name="preference_list_item_text_font" translatable="false">google-sans</string>
+    <string name="preference_list_item_secondary_text_font" translatable="false">roboto-regular</string>
+
+    <!-- There is no light, thin or condensed style for google sans, so replace them with default google sans style-->
+    <string name="font_sans_serif" translatable="false">google-sans</string>
+    <string name="font_sans_serif_light" translatable="false">google-sans</string>
+    <string name="font_sans_serif_thin" translatable="false">google-sans</string>
+    <string name="font_sans_serif_condensed" translatable="false">google-sans</string>
+
+    <!-- [CHAR LIMIT=130] Location mode screen, description for wifi mode -->
+    <string name="system_location_summary">Google may collect location data periodically and use this data in an anonymous way to improve location accuracy and location-based services.</string>
+
+    <!-- Rooms where a user's device might be placed [CHAR LIMIT=40] -->
+    <string-array name="rooms">
+        <!-- [CHAR LIMIT=40] -->
+        <item>Bedroom TV</item>
+        <!-- [CHAR LIMIT=40] -->
+        <item>Den TV</item>
+        <!-- [CHAR LIMIT=40] -->
+        <item>Dining Room TV</item>
+        <!-- [CHAR LIMIT=40] -->
+        <item>Family Room TV</item>
+        <!-- [CHAR LIMIT=40] -->
+        <item>Kitchen TV</item>
+        <!-- [CHAR LIMIT=40] -->
+        <item>Living Room TV</item>
+        <!-- [CHAR LIMIT=40] -->
+        <item>Master Bedroom TV</item>
+        <!-- [CHAR LIMIT=40] -->
+        <item>TV</item>
+    </string-array>
+
+    <string name="cec_settings_slice_uri" translatable="false">content://com.google.android.tv.settings.displaysound.hdmi.sliceprovider/switch_cec</string>
+    <string name="match_content_slice_uri" translatable="false">content://com.google.android.tv.settings.hdr.sliceprovider/match_content</string>
+    <string name="format_selection_slice_uri" translatable="false">content://com.google.android.tv.settings.hdr.sliceprovider/format</string>
+    <string name="resolution_slice_uri" translatable="false">content://com.google.android.tv.settings.hdr.sliceprovider/resolution</string>
+    <string name="surround_sound_toggle_slice_uri" translatable="false">content://com.google.android.tv.settings.advancedsound.sliceprovider/surround_sound_toggle</string>
+    <string name="advanced_sound_settings_slice_uri" translatable="false">content://com.google.android.tv.settings.advancedsound.sliceprovider/advanced_sound_settings</string>
+    <string name="general_info_slice_uri" translatable="false">content://com.google.android.tv.settings.general.sliceprovider/general_info</string>
+
+    <!-- Startup verification -->
+    <string name="startup_verification_action" translatable="false">com.google.android.apps.tv.ACTIVE_ACCOUNT_REAUTH</string>
+    <string name="startup_verification_package" translatable="false">com.google.android.apps.tv.launcherx</string>
+
+    <!-- Basic mode -->
+    <!-- Title for basic mode suggested preference category [CHAR LIMIT=40] -->
+    <string name="basic_mode_suggestion_category_title">Suggested</string>
+    <!-- Title for basic mode exit preference [CHAR LIMIT=40] -->
+    <string name="basic_mode_exit_preference_title">Set up Google TV</string>
+    <!-- Subtitle for basic mode exit preference [CHAR LIMIT=60] -->
+    <string name="basic_mode_exit_preference_subtitle">Sign in with Google Account</string>
+    <!-- Title on preview pane of basic mode exit preference [CHAR LIMIT=60] -->
+    <string name="basic_mode_exit_info_title">The entertainment you love</string>
+    <!-- Summary on preview pane of basic mode exit preference [CHAR LIMIT=240] -->
+    <string name="basic_mode_exit_info_summary">Sign in with Google to get apps, Google Assistant, and personalized recommendations.</string>
+    <!-- Summary on preview pane of accounts and sign in preference in basic mode [CHAR LIMIT=240] -->
+    <string name="basic_mode_accounts_and_sign_in_info_summary">Accounts &amp; Sign in is unavailable. Please set up Google TV to enable it.</string>
+    <string name="basic_mode_provider_uri" translatable="false">content://com.google.android.tungsten.setupwraith/setup_provider</string>
+    <string name="basic_mode_exit_package" translatable="false">com.google.android.apps.tv.launcherx</string>
+    <string name="basic_mode_exit_component" translatable="false">com.google.android.apps.tv.launcherx.gateway.ExplicitLauncherDeepLink</string>
+    <string name="basic_mode_exit_data" translatable="false">content://android.media.tv/program?package=com.google.android.apps.tv.launcherx.VANILLA_EXIT_SETTINGS</string>
+
+    <!-- Title of preference for help center [CHAR LIMIT=60] -->
+    <string name="help_center_title">Visit Google TV Help at</string>
+    <string name="help_center_link" translatable="false">g.co/tv/help</string>
+
+
+    <!-- Amlogic add start -->
+    <string name="vendor_activity_title" translatable="false">Vendor sample activity</string>
+    <string name="vendor_sample_settings_summary" translatable="false">(Subtitle is suggested to give further information)</string>
+
+    <!-- channels_and_inputs_vendor -->
+    <!-- Title for "Channels & Inputs" settings [CHAR LIMIT=60] -->
+    <string name="channels_and_inputs_title">Channels &amp; Inputs</string>
+    <!-- Summary for "Channels & Inputs" settings [CHAR LIMIT=60] -->
+    <string name="channels_and_inputs_summary">Channels, external inputs</string>
+    <!-- Title for "Channels" settings [CHAR LIMIT=60] -->
+    <string name="channels_settings_title">Channels</string>
+    <!-- Title for "External inputs" settings [CHAR LIMIT=60] -->
+    <string name="external_inputs_settings_title">External inputs</string>
+
+    <!-- device_info_settings_vendor -->
+    <!-- Preference which shows about screen with legal info, model, etc. [CHAR LIMIT=50] -->
+    <string name="about_preference">About</string>
+    <!-- Preference which shows feature tutorial tours for this device. [CHAR LIMIT=50] -->
+    <string name="tutorials">Tutorials</string>
+    <!-- Preference which shows system update status. [CHAR LIMIT=50] -->
+    <string name="about_system_update">System update</string>
+    <!-- A menu item in "About phone" that allows the user to update the phone with settings
+        from their cell phone carrier. The use of the string is similar to the string
+        "system_update_settings_list_item_title" in this project. [CHAR LIMIT=50] -->
+    <string name="additional_system_update_settings_list_item_title">Additional system updates</string>
+    <!-- Preference which shows name of device as it will appear when being accessed remotely [CHAR LIMIT=50] -->
+    <string name="device_name">Device name</string>
+    <!-- Title of the Reset section, which lets user select from factory reset or other reset related operations. [CHAR LIMIT=60] -->
+    <string name="reset_options_title">Reset</string>
+    <!-- About screen, title of the item to go into the device status screen -->
+    <string name="device_status">Status</string>
+    <!-- About screen, summary of the item that takes you to device status screen -->
+    <string name="device_status_summary">Network, serial numbers and other information</string>
+    <!-- About settings screen, setting option name to show Manual [CHAR LIMIT=25] -->
+    <string name="manual">Manual</string>
+    <!-- Preference which shows legal info. [CHAR LIMIT=50] -->
+    <string name="about_legal_info">Legal information</string>
+    <!-- About settings screen, setting option name to show regulatory information [CHAR LIMIT=25] -->
+    <string name="regulatory_information">Regulatory information</string>
+    <!-- Feedback on the device [CHAR LIMIT=35] -->
+    <string name="device_feedback">Send feedback about this device</string>
+    <!-- Preference which shows model. [CHAR LIMIT=50] -->
+    <string name="about_model">Model</string>
+    <!-- Device Info screen. Used for a status item's value when the proper value is not known -->
+    <string name="device_info_default">Unknown</string>
+    <!-- Preference which shows version. [CHAR LIMIT=50] -->
+    <string name="about_version">Android TV OS version</string>
+    <!-- About phone screen, status item label  [CHAR LIMIT=60] -->
+    <string name="security_patch">Android TV OS security patch level</string>
+    <!-- About screen, fcc equipment id label  [CHAR LIMIT=40] -->
+    <string name="fcc_equipment_id">Equipment ID</string>
+    <!-- About screen,  setting option name  [CHAR LIMIT=40] -->
+    <string name="baseband_version">Baseband version</string>
+    <!-- About screen,  setting option name  [CHAR LIMIT=40] -->
+    <string name="kernel_version">Kernel version</string>
+    <!-- Preference which shows build version. [CHAR LIMIT=50] -->
+    <string name="about_build">Android TV OS build</string>
+    <!-- About screen,  setting option name  [CHAR LIMIT=40] -->
+    <string name="selinux_status">SELinux status</string>
+    <!-- These statuses are displayed when a device was built with SE Android supoprt.
+    These are displayed by the settings app in the about section. -->
+    <string name="selinux_status_disabled">Disabled</string>
+    <string name="selinux_status_permissive">Permissive</string>
+    <string name="selinux_status_enforcing">Enforcing</string>
+
+    <!-- Summary for vendor sample "Display & Sound" settings [CHAR LIMIT=60] -->
+    <string name="display_and_sound_vendor_summary">Picture, screen, sound</string>
+    <!-- Title for "Picture" settings [CHAR LIMIT=60] -->
+    <string name="picture_settings_title">Picture</string>
+    <!-- Title for "Screen" settings [CHAR LIMIT=60] -->
+    <string name="screen_settings_title">Screen</string>
+    <!-- Title for "Sound" settings [CHAR LIMIT=60] -->
+    <string name="sound_settings_title">Sound</string>
+    <!-- Title of power and energy page [CHAR LIMIT=60] -->
+    <string name="power_and_energy">Power &amp; Energy</string>
+    <!-- Title of power on behavior item [CHAR LIMIT=60] -->
+    <string name="power_on_behavior">Power on behavior</string>
+    <string name="power_boot_resume_slice_uri" translatable="false" />
+    <!-- Title for preference screen controlling display & sound settings. [CHAR LIMIT=50] -->
+    <string name="device_display_sound">Display &amp; Sound</string>
+    <!-- A category title for the settings related to display. [CHAR LIMIT=50] -->
+    <string name="display_category_title">Display</string>
+    <!-- Title for preference screen controlling sound settings [CHAR LIMIT=50] -->
+    <string name="device_sound">Sound</string>
+    <!-- Preference and title which changes system sounds settings. [CHAR LIMIT=50] -->
+    <string name="device_sound_effects">System sounds</string>
+    <!-- Preference which shows reset settings. [CHAR LIMIT=50] -->
+    <string name="device_reset">Factory reset</string>
+    <!-- Title for preference which when clicked lets the user configure advanced sound settings. [CHAR LIMIT=50] -->
+    <string name="advanced_sound_settings_title">Advanced sound settings</string>
+    <!-- Title for HDMI-CEC settings entry. [CHAR LIMIT=20] -->
+    <string name="hdmi_cec_settings_title">HDMI-CEC</string>
+    <string name="droidtvsetings_channels_class">HDMI-CEC</string>
+    <string name="droidtvsetings_package">HDMI-CEC</string>
+    <!-- Title for preference which when clicked lets the user configure advanced display settings. [CHAR LIMIT=50] -->
+    <string name="advanced_display_settings_title">Advanced display settings</string>
+    <!-- Amlogic add end -->
+
+</resources>

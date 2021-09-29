@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string-array translatable="false" name="power_saver_auto_whitelist_apps">
+    <item>com.netflix.ninja</item>
+  </string-array>
+</resources>
