@@ -34,7 +34,7 @@ private:
     int mChannelId = 0;
     int mDevNo = 0; // userdata device number
     int mVfmt = -1;
-    int mPlayerId = -1;
+    int mPlayerId = 0;//-1;
     int mMediaSyncId = -1;
     TVSubtitleData *mCcContext;
 

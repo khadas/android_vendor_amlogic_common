@@ -19,9 +19,9 @@ cc_library_shared {
         "libutils",
     ],
 
-	header_libs: [
-		"jni_headers",
-	],
+    header_libs: [
+        "jni_headers",
+    ],
 
     static_libs: ["libsubtitleclient_static"],
 

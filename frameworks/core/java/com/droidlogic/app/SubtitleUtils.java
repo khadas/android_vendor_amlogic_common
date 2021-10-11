@@ -187,19 +187,19 @@ public class SubtitleUtils {
             return language;
         }
 
-        public SubID getSubID (int index) {
+        public SubID getSubID(int index) {
             if (index < getInSubTotal() ) {
                 return new SubID ("INSUB", index);
-            } else if (index < getSubTotal() ) {
+            } else if (index < getSubTotal()) {
                 mCurrentSubIdx = index - getInSubTotal();
-                return mStrlist.get (index - getInSubTotal() );
+                return mStrlist.get(index - getInSubTotal() );
             }
             return null;
         }
         private void  accountExSubtitleNumber() {
             String tmp = mSubfile.getName();
             String prefix = tmp.substring (0, tmp.lastIndexOf ('.') + 1);
-            Log.i ("SubtitleUtils","[accountExSubtitleNumber]prefix:" + prefix);
+            Log.i ("SubtitleUtils","[accountExSubtitleNumber] prefix:" + prefix);
             File DirFile = mSubfile.getParentFile();
             int idxindex = 0;
             boolean skipLrc = false;
@@ -236,7 +236,7 @@ public class SubtitleUtils {
                                 mStrlist.remove (i);
                             }
                         }
-                        //accountIdxSubtitleNumber (file.mFileName);
+                        accountIdxSubtitleNumber(file.mFileName);
                         mExSubtotle = mStrlist.size();
                         break;
                     } else {
@@ -245,7 +245,7 @@ public class SubtitleUtils {
                 }
             }
             mExSubtotle = mStrlist.size();
-            Log.i("SubtitleUtils","accountExSubtitleNumber" + mExSubtotle);
+            Log.i("SubtitleUtils","accountExSubtitleNumber:" + mExSubtotle);
             String suffix = null;
             for (int i = 0; i < mExSubtotle; i++) {
                 suffix = mStrlist.get(i).mFileName.substring(mStrlist.get(i).mFileName.lastIndexOf ('.')+1, mStrlist.get(i).mFileName.length());
@@ -578,34 +578,80 @@ public class SubtitleUtils {
             return;
         }
 
-        /*private int accountIdxSubtitleNumber (String filename) {
-            int idxcount = 0;
-            String inputString = null;
-            try {
-                inputString = FileIO.file2string (filename, "GBK");
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                return idxcount;
+    private int accountIdxSubtitleNumber (String filename) {
+        int idxcount = 0;
+        String inputString = null;
+        try {
+            File f = new File (filename);
+            if (!f.exists()) {
+                throw new FileNotFoundException (filename + " doesn't exist.");
             }
-            String n = "\\" + System.getProperty ("line.separator");
-            Pattern p = Pattern.compile ("id:(.*?),\\s*" + "index:\\s*(\\d*)");
-            Matcher m = p.matcher (inputString);
-            while (m.find() ) {
-                idxcount++;
-                Log.v ("accountIdxSubtitleNumber", "id:" + m.group (1) + " index:" + m.group (2) );
-                mStrlist.add (new SubID (filename, Integer.parseInt (m.group (2) ) ) );
+            if (f.isDirectory()) {
+                throw new FileNotFoundException (filename + " is a directory.");
             }
+
+            inputString = getContents(f, "GBK");
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
             return idxcount;
-        }*/
+        }
+
+        String n = "\\" + System.getProperty ("line.separator");
+        Pattern p = Pattern.compile ("id:(.*?),\\s*" + "index:\\s*(\\d*)");
+        Matcher m = p.matcher (inputString);
+        while (m.find() ) {
+        idxcount++;
+        Log.v("accountIdxSubtitleNumber", "id:" + m.group (1) + " index:" + m.group (2) );
+        mStrlist.add(new SubID (filename, Integer.parseInt (m.group (2) ) ) );
+        }
+
+        return idxcount;
+    }
+
+    static private String getContents(File aFile, String enc) throws IOException {
+        //...checks on aFile are elided
+        StringBuffer contents = new StringBuffer();
+
+        //declared here only to make visible to finally clause
+        BufferedReader input = null;
+        try {
+            //use buffering
+            //this implementation reads one line at a time
+            input = new BufferedReader (new InputStreamReader (new FileInputStream (aFile), enc));
+            String line = null; //not declared within while loop
+            while ( (line = input.readLine()) != null) {
+                contents.append (line);
+                contents.append (System.getProperty ("line.separator"));
+            }
+        } catch (FileNotFoundException ex) {
+            throw ex;
+        } catch (IOException ex) {
+            throw ex;
+        } finally {
+            try {
+                if (input != null) {
+                    //flush and close both "input" and its underlying FileReader
+                    input.close();
+                }
+            } catch (IOException ex) {
+                throw ex;
+            }
+        }
+
+        return contents.toString();
+    }
+
 }
 
 class SubID {
         public SubID (String file, int i) {
             mFileName = file;
             mIndex = i;
+            mIdxSubFile = null;
         }
         public String mFileName;
         public int mIndex;
+        public String mIdxSubFile; // if the file is idx, need additional sub file.
 }
 

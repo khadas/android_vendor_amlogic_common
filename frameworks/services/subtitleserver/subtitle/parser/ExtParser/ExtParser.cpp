@@ -29,7 +29,7 @@
 
 //TODO: move to utils directory
 
-ExtParser::ExtParser(std::shared_ptr<DataSource> source) {
+ExtParser::ExtParser(std::shared_ptr<DataSource> source, int trackId) {
     mDataSource = source;
     mParseType = TYPE_SUBTITLE_EXTERNAL;
 
@@ -39,9 +39,11 @@ ExtParser::ExtParser(std::shared_ptr<DataSource> source) {
     mState = SUB_INIT;
     mMaxSpuItems = EXTERNAL_MAX_NUMBER_SPU_ITEM;
 
+    mIdxSubTrackId = trackId;
+
     mSubDecoder = ExtSubFactory::create(source);
     if (mSubDecoder != nullptr) {
-        mSubDecoder->decodeSubtitles();
+        mSubDecoder->decodeSubtitles(mIdxSubTrackId);
     }
 }
 
@@ -85,6 +87,7 @@ int ExtParser::parse() {
     return 0;
 }
 
-void dump(int fd, const char *prefix) {
-
+void ExtParser::dump(int fd, const char *prefix) {
+    dprintf(fd, "\nExtParser: %p at\n", mSubDecoder.get());
+    mSubDecoder->dump(fd, "   ");
 }

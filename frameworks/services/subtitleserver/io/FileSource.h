@@ -11,7 +11,7 @@ class FileSource : public DataSource {
 
 public:
     FileSource() {mFd = -1;}
-    FileSource(int fd);
+    FileSource(int fd, int fdExtra);
     virtual ~FileSource();
 
     size_t totalSize();
@@ -31,7 +31,7 @@ public:
 
 private:
     int mFd;
-
+    int mFdExtra;
 };
 
 #endif

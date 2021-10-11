@@ -34,6 +34,21 @@ bool AndroidHidlRemoteRender::postSubtitleData() {
 
     // only show the newest, since only 1 line for subtitle.
     for (auto it = mShowingSubs.rbegin(); it != mShowingSubs.rend(); it++) {
+
+        if (((*it)->spu_data) == nullptr) {
+            if ((*it)->dynGen) {
+                (*it)->genSubtitle();
+                ALOGD("dynamic gen and return!");
+                if (((*it)->spu_data) == nullptr) {
+                    ALOGE("Error! why still no decoded spu_data???");
+                    continue;
+                }
+            } else {
+                ALOGE("Error! why not decoded spu_data, but push to show???");
+                continue;
+            }
+        }
+
         width = (*it)->spu_width;
         height = (*it)->spu_height;
         if (mParseType == TYPE_SUBTITLE_DTVKIT_TELETEXT || mParseType == TYPE_SUBTITLE_DVB_TELETEXT) {
@@ -46,16 +61,19 @@ bool AndroidHidlRemoteRender::postSubtitleData() {
         videoHeight = (*it)->spu_origin_display_h;
         size = (*it)->buffer_size;
 
-        if (((*it)->spu_data) == nullptr) {
-            ALOGE("Error! why not decoded spu_data, but push to show???");
-            continue;
-        }
-
-        ALOGD(" in AndroidHidlRemoteRender:%s width=%d, height=%d data=%p size=%d",
-            __func__, width, height, (*it)->spu_data, (*it)->buffer_size);
+        ALOGD(" in AndroidHidlRemoteRender:%s type:%d, width=%d, height=%d data=%p size=%d",
+            __func__, mParseType,  width, height, (*it)->spu_data, (*it)->buffer_size);
         DisplayType  displayType = ParserFactory::getDisplayType(mParseType);
         if ((SUBTITLE_IMAGE_DISPLAY == displayType) && ((0 == width) || (0 == height))) {
            continue;
+        }
+
+        if (mParseType == TYPE_SUBTITLE_EXTERNAL) {
+            if (width > 0 && height > 0) {
+                displayType = SUBTITLE_IMAGE_DISPLAY;
+            } else {
+                displayType = SUBTITLE_TEXT_DISPLAY;
+            }
         }
 
         if (SUBTITLE_TEXT_DISPLAY == displayType) {

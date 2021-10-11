@@ -14,7 +14,7 @@ class Subtitle : public InfoChangeListener {
 
 public:
     Subtitle();
-    Subtitle(int fd, ParserEventNotifier *notifier);
+    Subtitle(bool isExtSub, int idxSubId, ParserEventNotifier *notifier);
     virtual ~Subtitle();
 
     void attachDataSource(std::shared_ptr<DataSource> source, std::shared_ptr<InfoChangeListener>listener);
@@ -80,7 +80,8 @@ private:
     std::mutex mMutex;
     std::condition_variable mCv;
 
-    int mFd;
+    bool mIsExtSub;
+    int mIdxSubTrack;// TODO: maybe we can use other API for track
 };
 
 #endif

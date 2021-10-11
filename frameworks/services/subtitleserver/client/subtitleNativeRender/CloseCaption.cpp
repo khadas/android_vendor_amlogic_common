@@ -1,3 +1,5 @@
+#define LOG_TAG "CloseCaption"
+
 #include "CloseCaption.h"
 
 #include <json/json.h>

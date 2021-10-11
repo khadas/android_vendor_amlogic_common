@@ -369,7 +369,7 @@ char *ExtSubStreamReader::getLine(char *s/*, int fd*/) {
             lineLen = offset - mFileReaded;
             MEMCPY(s, mBuffer + mFileReaded, lineLen);
             s[lineLen] = '\0';
-            ALOGD("found: %p %s lineLen=%d [%d %d]", mBuffer + mFileReaded, s, lineLen, offset, mFileReaded);
+            //ALOGD("found: %p %s lineLen=%d [%d %d] \n", mBuffer + mFileReaded, s, lineLen, offset, mFileReaded);
 
             // eat the last newline!
             mFileReaded = offset + lineCharLen;

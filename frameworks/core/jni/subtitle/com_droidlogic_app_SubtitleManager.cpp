@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <cutils/properties.h>
 #include <dlfcn.h>
+#include <algorithm>
 
 #include "SubtitleServerClient.h"
 
@@ -194,6 +195,9 @@ public:
 
         ALOGD("in onStringSubtitleEvent subtitleType=%d size=%d x=%d, y= %d width=%d height=%d videow=%d, videoh=%d cmd=%d\n",
                 uiType, size, x, y, width, height, videoWidth, videoHeight,cmd);
+
+        if (width > 0 && height > 0) uiType = 2;
+
         if (((uiType == 2) || (uiType == 4)) && size > 0) {
             getJniContext()->callJava_showBitmapData(data, size, uiType, x, y, width, height, videoWidth, videoHeight, cmd);
         } else {
@@ -264,7 +268,7 @@ static void nativeDestroy(JNIEnv* env, jobject object) {
 }
 
 static void nativeUpdateVideoPos(JNIEnv* env, jobject object, jint pos) {
-    ALOGD("subtitleShowSub pos:%d\n", pos);
+    //ALOGD("subtitleShowSub pos:%d\n", pos);
     if (pos > 0 && getJniContext()->mSubContext != nullptr) {
         getJniContext()->mSubContext->updateVideoPos(pos);
     } else {
@@ -272,22 +276,48 @@ static void nativeUpdateVideoPos(JNIEnv* env, jobject object, jint pos) {
     }
 }
 
-static jboolean nativeOpen(JNIEnv* env, jobject object, jstring jpath, jint ioType) {
+
+static jboolean nativeOpenSubIdx(JNIEnv* env, jobject object, jstring jpath, jint trackId, jint ioType) {
     if (TRACE_CALL) ALOGD("%s %d", __func__, __LINE__);
 
     bool res = false;
     int fd = -1;
 
+    const char *cpath = env->GetStringUTFChars(jpath, nullptr);
+
     if (getJniContext()->mSubContext != nullptr) {
         getJniContext()->mSubContext->userDataOpen();
         bool isExt = getJniContext()->callJava_isExternalSubtitle();
         ALOGD("isExt? %d", isExt);
-        if (isExt) {
-            const char *cpath = env->GetStringUTFChars(jpath, nullptr);
-            ALOGD("nativeOpen path:%s", cpath);
-            fd = ::open(cpath, O_RDONLY);
-            res = getJniContext()->mSubContext->open(fd, ioType);
-            env->ReleaseStringUTFChars(jpath, cpath);
+        if (isExt && cpath != nullptr) {
+            std::string path = cpath;
+            fd = ::open(path.c_str(), O_RDONLY);
+            size_t pos = path.rfind(".");
+            std::string ext = path.substr(pos, path.size()-pos);
+            ALOGD("file extension is:%s", ext.c_str());
+            std::transform(ext.begin(), ext.end(), ext.begin(), ::toupper);
+            ALOGD("file extension is:%s", ext.c_str());
+            if (ext.compare(".IDX") == 0) {
+                int idxDataFd = -1;
+                std::string subFile = path.substr(0, pos);
+                ALOGD(">> %s", (subFile+".SUB").c_str());
+                if (access((subFile+".SUB").c_str(), F_OK) == 0) {
+                    idxDataFd = ::open((subFile+".SUB").c_str(), O_RDONLY);
+                    ALOGD("access %s", (subFile+".SUB").c_str());
+                } else if(access((subFile+".sub").c_str(), F_OK) == 0) {
+                    idxDataFd = ::open((subFile+".sub").c_str(), O_RDONLY);
+                    ALOGD("access %s", (subFile+".sub").c_str());
+                }
+
+                if (idxDataFd != -1) {
+                    res = getJniContext()->mSubContext->open(fd, idxDataFd, trackId, ioType);
+                    ::close(idxDataFd);
+                } else {
+                    res = getJniContext()->mSubContext->open(fd, ioType);
+                }
+            } else {
+                res = getJniContext()->mSubContext->open(fd, ioType);
+            }
         } else {
             res = getJniContext()->mSubContext->open(-1, ioType);
         }
@@ -296,7 +326,14 @@ static jboolean nativeOpen(JNIEnv* env, jobject object, jstring jpath, jint ioTy
     }
 
     if (fd >= 0) ::close(fd);
+    env->ReleaseStringUTFChars(jpath, cpath);
     return true;
+}
+
+static jboolean nativeOpen(JNIEnv* env, jobject object, jstring jpath, jint ioType) {
+    // negtive index is for normal open.
+    // idx-sub subtitle may has many track, we support select it
+    return nativeOpenSubIdx(env, object, jpath, -1, ioType);
 }
 
 static void nativeClose(JNIEnv* env, jobject object) {
@@ -495,6 +532,7 @@ static JNINativeMethod SubtitleManager_Methods[] = {
     {"nativeDestroy", "()V", (void *)nativeDestroy},
     {"nativeUpdateVideoPos", "(I)V", (void *)nativeUpdateVideoPos},
     {"nativeOpen", "(Ljava/lang/String;I)Z", (void *)nativeOpen},
+    {"nativeOpenSubIdx", "(Ljava/lang/String;II)Z", (void *)nativeOpenSubIdx},
     {"nativeClose", "()V", (void *)nativeClose},
     {"nativeTotalSubtitles", "()I", (void *)nativeTotalSubtitles},
     {"nativeInnerSubtitles", "()I", (void *)nativeInnerSubtitles},

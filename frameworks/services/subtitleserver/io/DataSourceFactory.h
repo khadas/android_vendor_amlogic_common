@@ -8,7 +8,7 @@ class DataSourceFactory {
 public:
     static std::shared_ptr<DataSource> create(SubtitleIOType type);
     // TODO: use std::string &url
-    static std::shared_ptr<DataSource> create(int fd, SubtitleIOType type);
+    static std::shared_ptr<DataSource> create(int fd, int fdExtra, SubtitleIOType type);
 
 };
 

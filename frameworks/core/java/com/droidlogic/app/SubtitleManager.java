@@ -272,6 +272,7 @@ public class SubtitleManager {
     private native void nativeInit(boolean isFallback);
     private native void nativeUpdateVideoPos(int pos);
     private native boolean nativeOpen(String path, int ioType);
+    private native boolean nativeOpenSubIdx(String path, int trackId, int ioType);
     private native void nativeClose();
 //    private native void nativeSetIoType(int type);
     private native void nativeDestroy();
@@ -846,7 +847,6 @@ public class SubtitleManager {
     public boolean open(String path, int ioType) {
         boolean r = false;
         //Log.d(TAG, "[open] path:" + path, new Throwable());
-
         r = nativeOpen(path, ioType);
 
         LOGI("[open] innerTotal:" + innerTotal() +", mIOType:" + mIOType);
@@ -870,7 +870,7 @@ public class SubtitleManager {
       if have ext and internal sub at the same time.
     */
     public void openIdx(int idx) {
-        LOGI("[openIdx] idx:" + idx);
+        LOGI("[openIdx] idx:" + idx + " innerTotal()="+innerTotal());
         if (idx < 0) {
             return;
         }
@@ -883,14 +883,19 @@ public class SubtitleManager {
 
         //ext sub switch
         if (idx >= innerTotal() && mIOType == IO_TYPE_FMQ && mMediaPlayer != null) {
-            if (mSubtitleUtils.getSubID(idx - innerTotal()) != null) {
+            int builtInSubs = innerTotal();
+            builtInSubs = builtInSubs > 0 ? builtInSubs : 0;
+
+            if (mSubtitleUtils.getSubID(idx - builtInSubs) != null) {
                 close();
                 mSubtitleUtils.resetCharset();
                 LOGI("[openIdx] ext sub switch idx:" + idx+" mPath:"+mPath);
                 mSubtitleUtils = new SubtitleUtils(mPath);
-                mExtFilePath = mSubtitleUtils.getSubID(idx - mInterSubTotal).mFileName;
-                LOGI("[openIdx] ext sub switch idx:" + idx + " mExtFilePath:"+mExtFilePath+" mInterSubTotal:" + mInterSubTotal);
-                nativeOpen(mExtFilePath, IO_TYPE_FILE);
+                mExtFilePath = mSubtitleUtils.getSubID(idx - builtInSubs).mFileName;
+                int trackId = mSubtitleUtils.getSubID(idx - builtInSubs).mIndex;
+                LOGI("[openIdx] ext sub switch idx:" + idx + "-" + trackId +" mExtFilePath:"+mExtFilePath+" mInterSubTotal:" + mInterSubTotal);
+                //nativeOpen(mExtFilePath, IO_TYPE_FILE);
+                nativeOpenSubIdx(mExtFilePath, trackId, IO_TYPE_FILE);
                 show();
                 runOnMainThread(() -> { mUI.clearContent(); });
             }

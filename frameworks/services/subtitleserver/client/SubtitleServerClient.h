@@ -83,6 +83,7 @@ public:
 
     bool open(const char*path, int ioType);
     bool open(int fd, int ioType);
+    bool open(int fd, int fdData, int trackId, int ioType);
     bool close();
 
     /* for external subtitle update PTS */

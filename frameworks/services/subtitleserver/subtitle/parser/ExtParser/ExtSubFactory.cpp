@@ -25,6 +25,8 @@
 #include "Subrip09.h"
 #include "SubViewer2.h"
 #include "SubViewer3.h"
+#include "VobSubIndex.h"
+
 
 #if 0
 #include "ExtParserEbuttd.h"
@@ -153,11 +155,21 @@ int ExtSubFactory::detect(std::shared_ptr<DataSource> source) {
         if (sscanf(line, "[%d:%d:%d]", &i, &i, &i) == 3) {
             return SUB_SUBRIP09;
         }
+
+        if ((strstr(line, "VobSub index file") != nullptr)
+            || sscanf(line, "timestamp: [%d]:[%d]:[%d]:[%d], filepos: [%d]", &i, &i, &i, &i, &i) == 5) {
+            return SUB_IDXSUB;
+        }
+
+        if (sscanf(line, "[%d:%d:%d]", &i, &i, &i) == 3) {
+            return SUB_SUBRIP09;
+        }
     }
     return SUB_INVALID; // too many bad lines
 
 }
 
+// TODO: more....
 std::shared_ptr<TextSubtitle> ExtSubFactory::create(std::shared_ptr<DataSource> source) {
     int format = detect(source);
     ALOGD("detect ext subtitle format = %d", format);
@@ -226,6 +238,9 @@ std::shared_ptr<TextSubtitle> ExtSubFactory::create(std::shared_ptr<DataSource> 
         */
         case SUB_WEBVTT:
             return std::shared_ptr<TextSubtitle>(new SimpleWebVtt(source));
+
+        case SUB_IDXSUB:
+        return std::shared_ptr<TextSubtitle>(new VobSubIndex(source));
 
         default:
             ALOGD("ext subtitle format is invaild! format = %d", format);

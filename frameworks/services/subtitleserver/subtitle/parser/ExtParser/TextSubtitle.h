@@ -28,6 +28,11 @@ struct ExtSubItem{
     int64_t start;      /* start time */
     int64_t end;        /* end time */
 
+    // === for IDX-SUB
+    int subId; // one subtitle file may have many lang subs, this for select...
+    long long filePos;
+    // === END IDX-SUB
+
     /// number of subtitle lines, can be multi-line
     std::list<std::string> lines;
 
@@ -49,10 +54,10 @@ public:
     TextSubtitle(std::shared_ptr<DataSource> source);
     virtual  ~TextSubtitle() {}
 
-    bool decodeSubtitles();
+    bool decodeSubtitles(int idxSubTrackId);
 
-    std::shared_ptr<AML_SPUVAR> popDecodedItem();
     int totalItems();
+    virtual std::shared_ptr<AML_SPUVAR> popDecodedItem();
 
     virtual void dump(int fd, const char *prefix);
 
@@ -61,4 +66,6 @@ protected:
     ExtSubData mSubData;
     std::shared_ptr<DataSource> mSource;
     std::shared_ptr<ExtSubStreamReader> mReader;
+
+    int mIdxSubTrackId;
 };

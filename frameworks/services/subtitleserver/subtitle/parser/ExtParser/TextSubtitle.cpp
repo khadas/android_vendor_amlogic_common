@@ -11,10 +11,12 @@ TextSubtitle::TextSubtitle(std::shared_ptr<DataSource> source) {
 
 }
 
-bool TextSubtitle::decodeSubtitles() {
+bool TextSubtitle::decodeSubtitles(int idxSubTrackId) {
 
     mSource->lseek(0, SEEK_SET);
     //mPtsRate = 15;       //24;//dafault value
+
+    mIdxSubTrackId = idxSubTrackId;
 
     ALOGD("decodeSubtitles....");
     while (true) {
@@ -34,7 +36,7 @@ bool TextSubtitle::decodeSubtitles() {
         mSubData.subtitles.push_back(item);
     }
 
-    dump(0, nullptr);
+    //dump(0, nullptr);
     return true;
 }
 
@@ -43,7 +45,7 @@ std::shared_ptr<AML_SPUVAR> TextSubtitle::popDecodedItem() {
     if (totalItems() <= 0) {
         return nullptr;
     }
-
+    ALOGD("TextSubtitle::popDecodedItem");
     std::shared_ptr<ExtSubItem> item = mSubData.subtitles.front();
     mSubData.subtitles.pop_front();
     std::shared_ptr<AML_SPUVAR> spu(new AML_SPUVAR());
@@ -81,7 +83,15 @@ void TextSubtitle::dump(int fd, const char *prefix) {
                 ALOGD("    %s", s.c_str());
             }
         }
-     }
+    } else {
+        dprintf(fd, "%s Total: %d\n", prefix, mSubData.subtitles.size());
+        for (auto i : mSubData.subtitles) {
+            dprintf(fd, "%s [%08lld:%08lld]\n", prefix, sub_pts2ms(i->start), sub_pts2ms(i->end));
+            for (auto s :i->lines) {
+                dprintf(fd, "%s    %s\n", prefix, s.c_str());
+            }
+        }
+    }
 }
 
 

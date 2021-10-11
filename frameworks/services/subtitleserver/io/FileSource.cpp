@@ -9,11 +9,15 @@
 #include "IpcDataTypes.h"
 
 
-FileSource::FileSource(int fd) {
+FileSource::FileSource(int fd, int extFd) {
     ALOGD("%s fd:%d", __func__, fd);
     mFd = fd;
     if (mFd > 0) {
         ::lseek(mFd, 0, SEEK_SET);
+    }
+
+    if (extFd > 0) {
+        mExtraFd = extFd;
     }
 }
 
@@ -24,36 +28,12 @@ FileSource::~FileSource() {
         mFd = -1;
     }
 
-}
-
-static inline unsigned int make32bitValue(const char *buffer) {
-    return buffer[0] | (buffer[1]<<8) | (buffer[2]<<16) | (buffer[3]<<24);
+    if (mExtraFd > 0) {
+        ::close(mExtraFd);
+    }
 }
 
 int FileSource::onData(const char *buffer, int len) {
-    int type = make32bitValue(buffer);
-    ALOGD("subtype=%x eTypeSubtitleRenderTime=%x size=%d", type, eTypeSubtitleRenderTime, len);
-    switch (type) {
-        case eTypeSubtitleTotal: {
-            int totalSubtitle = make32bitValue(buffer + 4);
-            ALOGD("eTypeSubtitleTotal:%x total:%d", type, totalSubtitle);
-            for (auto it = mInfoListeners.begin(); it != mInfoListeners.end(); it++) {
-                auto wk_lstner = (*it);
-                if (auto lstn = wk_lstner.lock()) {
-                    if (lstn == nullptr) return -1;
-                    lstn->onSubtitleChanged(totalSubtitle);
-
-                }
-            }
-            return 0;
-        }
-
-        default: {
-            ALOGD("!!!!!!!!!FileSource:onData(subtitleData): %d", /*buffer,*/ len);
-            break;
-        }
-    }
-
     return 0;
 }
 

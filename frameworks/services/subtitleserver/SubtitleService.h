@@ -20,7 +20,8 @@ public:
     ~SubtitleService();
 
     // TODO: revise params and defines
-    bool startSubtitle(int fd, SubtitleIOType type, ParserEventNotifier *notifier);
+    // some subtitle, such as idx-sub, has tracks. if no tracks, ignore this parameter
+    bool startSubtitle(std::vector<int> fds, int trackId, SubtitleIOType type, ParserEventNotifier *notifier);
     bool stopSubtitle();
     bool resetForSeek();
 

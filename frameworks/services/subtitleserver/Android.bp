@@ -85,6 +85,7 @@ cc_binary {
     "subtitle/parser/ExtParser/Ttml.cpp",
     "subtitle/parser/ExtParser/WebVtt.cpp",
     "subtitle/parser/ExtParser/XmlSubtitle.cpp",
+    "subtitle/parser/ExtParser/VobSubIndex.cpp",
 
     "subtitle/render/AndroidHidlRemoteRender.cpp",
 

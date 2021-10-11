@@ -23,12 +23,13 @@ Subtitle::Subtitle() :
     mExitRequested(false),
     mThread(nullptr),
     mPendingAction(-1),
-    mFd(-1)
+    mIsExtSub(false),
+    mIdxSubTrack(-1)
  {
     ALOGD("%s", __func__);
 }
 
-Subtitle::Subtitle(int fd, ParserEventNotifier *notifier) :
+Subtitle::Subtitle(bool isExtSub, int trackId, ParserEventNotifier *notifier) :
         mSubtitleTracks(-1),
         mCurrentSubtitleType(-1),
         mRenderTime(-1),
@@ -38,7 +39,8 @@ Subtitle::Subtitle(int fd, ParserEventNotifier *notifier) :
 {
     ALOGD("%s", __func__);
     mParserNotifier = notifier;
-    mFd = fd;
+    mIsExtSub = isExtSub;
+    mIdxSubTrack = trackId;
 
     mSubPrams = std::shared_ptr<SubtitleParamType>(new SubtitleParamType());
 
@@ -203,6 +205,19 @@ void Subtitle::run() {
         //mCv.wait(autolock);
         mCv.wait_for(autolock, std::chrono::milliseconds(100));
 
+        if (mIsExtSub && mParser == nullptr) {
+            mSubPrams->subType = TYPE_SUBTITLE_EXTERNAL;// if mFd > 0 is Ext sub
+            mSubPrams->idxSubTrackId = mIdxSubTrack;
+            mParser = ParserFactory::create(mSubPrams, mDataSource);
+            if (mParser == nullptr) {
+                ALOGE("Parser creat failed, break!");
+                break;
+            }
+            mParser->startParse(mParserNotifier, mPresentation.get());
+            mPresentation->startPresent(mParser);
+            mPendingAction = -1; // No need handle
+        }
+
         switch (mPendingAction) {
             case ACTION_SUBTITLE_SET_PARAM: {
                 if (mParser == nullptr) {
@@ -264,10 +279,7 @@ void Subtitle::run() {
 
         // wait100ms, still no parser, then start default CC
         if (mParser == nullptr) {
-            ALOGD("No parser found, create default!mFd:%d",mFd);
-            if (mFd > 0) {
-                mSubPrams->subType = TYPE_SUBTITLE_EXTERNAL;// if mFd > 0 is Ext sub
-            }
+            ALOGD("No parser found, create default!");
             // start default parser, normally, this is CC
             mParser = ParserFactory::create(mSubPrams, mDataSource);
             if (mParser == nullptr) {

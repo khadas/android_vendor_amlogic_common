@@ -161,17 +161,24 @@ Return<Result> SubtitleServer::closeConnection(int32_t sId) {
     return Result::FAIL;
 }
 
-Return<Result> SubtitleServer::open(int32_t sId, const hidl_handle& handle, int32_t ioType, OpenType openType) {
+Return<Result> SubtitleServer:: open(int32_t sId, const hidl_handle& handle, int32_t ioType, OpenType openType) {
     android::AutoMutex _l(mLock);
     std::shared_ptr<SubtitleService>  ss = getSubtitleServiceLocked(sId);
     ALOGV("%s ss=%p ioType=%d openType:%d", __func__, ss.get(), ioType, openType);
 
-    int fd = -1;
-    int dupFd = -1; // fd will auto closed when destruct hidl_handle, dump one.
+    std::vector<int> fds;
+    int idxSubId = -1;
+    //int dupFd = -1; // fd will auto closed when destruct hidl_handle, dump one.
     int demuxId = -1;
     if (handle != nullptr && handle->numFds >= 1) {
-        fd = handle->data[0];
-        dupFd = ::dup(fd);
+        for (int i=0; i<handle->numFds; i++) {
+            int fd = handle->data[i];
+            fds.push_back(::dup(fd));
+        }
+
+        if (handle->numInts > 0) {
+            idxSubId = handle->data[handle->numFds];
+        }
     }
 
     auto now = systemTime(SYSTEM_TIME_MONOTONIC);
@@ -199,7 +206,7 @@ Return<Result> SubtitleServer::open(int32_t sId, const hidl_handle& handle, int3
             ALOGD("mOpenCalled : demux id= %d, ioType =%d\n", demuxId, ioType);
             ss->setDemuxId(demuxId);
         }
-        bool r = ss->startSubtitle(dupFd, (SubtitleIOType)ioType, mMessagQueue.get());
+        bool r = ss->startSubtitle(fds, idxSubId, (SubtitleIOType)ioType, mMessagQueue.get());
 
         mOpenCalled = true;
         mLastOpenType = openType;
@@ -208,7 +215,7 @@ Return<Result> SubtitleServer::open(int32_t sId, const hidl_handle& handle, int3
         return (r ? Result::OK : Result::FAIL);
     }
 
-    if (dupFd != -1) close(dupFd);
+    //if (dupFd != -1) close(dupFd);
     ALOGD("no valid ss, Should not enter here!");
     return Result::FAIL;
 }

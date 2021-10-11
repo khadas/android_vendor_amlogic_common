@@ -11,7 +11,7 @@
 #include <utils/Log.h>
 
 
-// TODO: impl as a class item
+// TODO: impl as a class item, optimize the structure[currently direct borrow from old impl]
 // support sort!!!
 typedef struct alm_spuvar
 {
@@ -50,11 +50,13 @@ typedef struct alm_spuvar
     unsigned char subtitle_type;
     unsigned char reser[2];
 
+/*
     unsigned rgba_enable;
     unsigned rgba_background;
     unsigned rgba_pattern1;
     unsigned rgba_pattern2;
     unsigned rgba_pattern3;
+    */
 
     //for vob
     int resize_height;
@@ -64,14 +66,25 @@ typedef struct alm_spuvar
     int resize_size;
 
     int disPlayBackground;
-
     //for qtone data inserted in cc data.
     bool isQtoneData;
+
+    bool dynGen; // generate bitmap data dynamically
+    int64_t pos;
+    std::function<unsigned char *(struct alm_spuvar *spu, size_t *size)> genMethod;
+    void genSubtitle() {
+        size_t size;
+        if (dynGen) {
+            spu_data = genMethod(this, &size);
+        }
+    }
+
 
     alm_spuvar() : sync_bytes(0), buffer_size(0), useMalloc(true), isSimpleText(false),
             pid(0), pts(0), isImmediatePresent(false), isExtSub(false), isKeepShowing(false),
             m_delay(0), spu_data(nullptr), cmd_offset(0), length(0), disPlayBackground(0), isQtoneData(false)
     {
+        dynGen = false;
         spu_start_x = spu_start_y = spu_width = spu_height = 0;
         spu_origin_display_w = spu_origin_display_h = 0;
     }

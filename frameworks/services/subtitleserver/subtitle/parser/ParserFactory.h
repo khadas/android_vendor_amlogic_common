@@ -30,6 +30,7 @@ enum ExtSubtitleType {
     SUB_LRC,
     SUB_DIVX,
     SUB_WEBVTT,
+    SUB_IDXSUB,
 };
 
 
@@ -205,11 +206,14 @@ struct SubtitleParamType {
 
     int playerId;
     int mediaId;
+
+    int idxSubTrackId; // only for idxsub
     DtvKitDvbParam dtvkitDvbParam; //the pes pid for filter subtitle data from demux
-    SubtitleParamType() {
+    SubtitleParamType() : playerId(0), mediaId(0) {
         subType = TYPE_SUBTITLE_INVALID;
         ttParam.event = TT_EVENT_INVALID;
         memset(&ccParam, 0, sizeof(ccParam));
+        memset(&ttParam, 0, sizeof(TeletextParam));
     }
 
     void update() {

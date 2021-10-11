@@ -250,6 +250,7 @@ bool AndroidCallbackMessageQueue::postDisplayData(const char *data,  int type,
 
     bool allocRes = false;
 
+
     Return<void> r = ashmemAllocator->allocate(size+1024, [&](bool success, const hidl_memory& _mem) {
             if (success) {
                 mem  = HidlMemory::getInstance(_mem);
@@ -283,6 +284,9 @@ bool AndroidCallbackMessageQueue::postDisplayData(const char *data,  int type,
         subtitleData->mem = mem;
         mSubtitleData.push_back(std::move(subtitleData));
         mLooper->sendMessage(this, Message(MSG_CHECK_SUBDATA));
+
+    ALOGD(" in postDisplayData:%s type:%d, width=%d, height=%d size=%d",
+        __func__, type,  width, height, size);
 
     } else {
         ALOGE("Fail to process hidl memory!!");
