@@ -29,11 +29,19 @@ import com.droidlogic.app.SystemControlManager;
 import com.android.tv.settings.util.DroidUtils;
 import android.util.Log;
 import com.android.tv.settings.AiPqService;
+import com.droidlogic.app.SystemControlManager;
+import android.util.Log;
+
+
 
 public class AiPqReceiver extends BroadcastReceiver {
     private SystemControlManager mSystemControlManager;
     @Override
         public void onReceive ( Context cxt, Intent intent ) {
-            cxt.startService(new Intent(cxt,AiPqService.class));
+            mSystemControlManager = SystemControlManager.getInstance();
+            Log.d("AIPQ_TABLE", "[AiPqReceiver]hasAipqFunc: " + mSystemControlManager.hasAipqFunc());
+            if (mSystemControlManager.hasAipqFunc()) {
+                cxt.startService(new Intent(cxt,AiPqService.class));
+                }
         }
 }

@@ -2720,14 +2720,14 @@ bool DisplayMode::setAipqEnable(bool on) {
 }
 
  bool DisplayMode::hasAipqFunc() {
-    int ret = -1;
-    ret = open(MEDIA_AIPQ_SYSFS, O_WRONLY);
-    return ret >= 0 ? true : false;
+    bool hasaipq = pSysWrite->getPropertyBoolean(PROP_HAS_AIPQ, false);
+    SYS_LOGI("hasAipqFunc:%d", hasaipq);
+    return pSysWrite->getPropertyBoolean(PROP_HAS_AIPQ, false);
  }
 
 void DisplayMode::resetAipq() {
     int ret = -1;
-    if (pSysWrite->getPropertyBoolean(PROP_MEDIA_AIPQ, "false")) {
+    if (pSysWrite->getPropertyBoolean(PROP_MEDIA_AIPQ, false)) {
         ret = pSysWrite->writeSysfs(MEDIA_AIPQ_SYSFS, "1");
     } else {
         ret = pSysWrite->writeSysfs(MEDIA_AIPQ_SYSFS, "0");
@@ -2736,7 +2736,7 @@ void DisplayMode::resetAipq() {
 }
 
 bool DisplayMode::getAipqEnable() {
-    return pSysWrite->getPropertyBoolean(PROP_MEDIA_AIPQ, "false");
+    return pSysWrite->getPropertyBoolean(PROP_MEDIA_AIPQ, false);
 }
 
 void DisplayMode::setHdrStrategy(const char* type) {

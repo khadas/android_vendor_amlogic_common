@@ -298,6 +298,8 @@ using namespace android;
 
 //aipq
 #define PROP_MEDIA_AIPQ               "persist.vendor.sys.aipq"
+#define PROP_HAS_AIPQ                 "ro.vendor.platform.has.aipq"
+
 #define MEDIA_AIPQ_SYSFS              "/sys/module/aml_media/parameters/uvm_open_aipq"
 
 #define FULL_WIDTH_480                  720

@@ -168,7 +168,7 @@ public class AiPqService extends Service {
         mSystemControlManager = SystemControlManager.getInstance();
         SharedPreferences DealData = PreferenceManager.getDefaultSharedPreferences(this);
         Boolean value = DealData.getBoolean(AiPqFragment.KEY_ENABLE_AIPQ_INFO, false);
-        if (mSystemControlManager.getAipqEnable()) {
+        if (mSystemControlManager.getAipqEnable() && mSystemControlManager.hasAipqFunc()) {
             enableAipq();
         }
 
