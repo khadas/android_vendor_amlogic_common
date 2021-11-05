@@ -215,10 +215,10 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         if (DEBUG)
             Log.d(TAG, "onSetStreamVolume volume = " + volume);
         //this function used for parental control, so HDMI source don't need it.
-        /*if ((mDeviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && mDeviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4)) {
+        if ((mDeviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && mDeviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4) && volume == 0.0) {
             Log.d(TAG, "onSetStreamVolume: hdmi source.");
             return;
-        }*/
+        }
         Message msg = mSessionHandler.obtainMessage(MSG_AUDIO_MUTE);
         if (0.0 == volume) {
             msg.arg1 = 0;

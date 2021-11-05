@@ -786,6 +786,8 @@ public class DTVInputService extends DroidLogicTvInputService implements TvContr
         public static final int MSG_MIX_AD_MAIN = 20;
         public static final int MSG_MIX_AD_LEVEL = 21;
 
+        public static final int MSG_UPDATE_VIDEO_RESOLUTION = 23;
+
         protected void initWorkThread() {
             Log.d(TAG, "initWorkThread");
             if (mHandlerThread == null) {
@@ -857,6 +859,19 @@ public class DTVInputService extends DroidLogicTvInputService implements TvContr
                                 case MSG_MIX_AD_LEVEL:
                                     Log.d(TAG, "receive MSG_MIX_AD_LEVEL arg1 = " + msg.arg1);
                                     handleAdtvAudioEvent(AudioSystemCmdManager.AUDIO_SERVICE_CMD_AD_MIX_LEVEL, msg.arg1, 0);
+                                    break;
+                                case MSG_UPDATE_VIDEO_RESOLUTION:
+                                    Log.d(TAG,"receive MSG_UPDATE_VIDEO_RESOLUTION");
+                                    String height = mSystemControlManager.readSysFs("/sys/class/video/frame_height");
+                                    String pi = mSystemControlManager.readSysFs("/sys/class/deinterlace/di0/frame_format");
+                                    String format = DroidLogicTvUtils.convertVideoFormat(height, pi);
+                                    Log.i(TAG,"height : " + height + " pi " + pi + " currentChannel : " + mCurrentChannel);
+                                    if (mCurrentChannel != null) {
+                                        if (!TextUtils.equals(format, mCurrentChannel.getVideoFormat())) {
+                                            mCurrentChannel.setVideoFormat(format);
+                                            mTvDataBaseManager.updateChannelInfo(mCurrentChannel);
+                                        }
+                                    }
                                     break;
                                 default:
                                     break;
@@ -1675,15 +1690,6 @@ public class DTVInputService extends DroidLogicTvInputService implements TvContr
                     notifyVideoAvailable();
                     if (mHandler != null) {
                         mHandler.sendEmptyMessageDelayed(MSG_UPDATE_VIDEO_RESOLUTION, 200);
-                    }
-                    String height = mSystemControlManager.readSysFs("/sys/class/video/frame_height");
-                    String pi = mSystemControlManager.readSysFs("/sys/class/deinterlace/di0/frame_format");
-                    String format = DroidLogicTvUtils.convertVideoFormat(height, pi);
-                    if (mCurrentChannel != null) {
-                        if (!TextUtils.equals(format, mCurrentChannel.getVideoFormat())) {
-                            mCurrentChannel.setVideoFormat(format);
-                            mTvDataBaseManager.updateChannelInfo(mCurrentChannel);
-                        }
                     }
                     // TODO: audioinfo only for test here, should be used by app
                     TvControlManager.AudioFormatInfo audioInfo = mTvControlManager.DtvGetAudioFormatInfo();
