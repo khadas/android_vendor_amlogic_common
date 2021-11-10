@@ -140,7 +140,7 @@ public class AudioSystemCmdService extends Service {
                 break;
             case 5:
             case 8:
-                stringValue = "DTS HD";
+                stringValue = "DTS-HD Master Audio";
                 break;
             case 6:
                 stringValue = "Multi PCM";
