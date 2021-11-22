@@ -3010,7 +3010,6 @@ static void btusb_intr_complete(struct urb *urb)
         return;
     }
 
-
     if (!test_bit(BTUSB_INTR_RUNNING, &data->flags))
         return;
 
