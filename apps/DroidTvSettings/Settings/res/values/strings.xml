@@ -323,6 +323,7 @@
 
     <!-- Remote and Accessories -->
     <skip />
+    <string name="screen_brightness">Screen brightness</string>   
     <!-- Preference which manages pairing new accessories. [CHAR LIMIT=50] -->
     <string name="accessories_add">Add accessory</string>
     <!-- Device Paring Status: Pairing. [CHAR LIMIT=50] -->

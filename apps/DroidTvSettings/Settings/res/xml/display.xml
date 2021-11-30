@@ -26,6 +26,10 @@
             android:title="@string/device_position"
             android:fragment="com.android.tv.settings.display.position.DisplayPositionFragment"/>
         <Preference
+            android:key="screen_brightness"
+            android:title="@string/screen_brightness"
+            android:fragment="com.android.tv.settings.display.screen.BrightnessFragment"/>
+        <Preference
             android:key="hdr"
             android:title="@string/device_hdr"
             android:fragment="com.android.tv.settings.display.hdr.HdrSettingFragment"/>

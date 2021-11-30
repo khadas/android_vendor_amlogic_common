@@ -154,7 +154,7 @@ void CPQControl::CPQControlInit()
     }
 
     //set backlight
-    BacklightInit();
+    //BacklightInit();
     //AI PQ
     AipqInit();
     //cabc pq
@@ -166,14 +166,14 @@ void CPQControl::CPQControlInit()
     mCDevicePollCheckThread.StartCheck();
     mInitialized = true;
     //auto backlight
-    if (isFileExist(LDIM_PATH)) {
+    /*if (isFileExist(LDIM_PATH)) {
         SetDynamicBacklight((Dynamic_backlight_status_t)GetDynamicBacklight(), 1);
     } else if (isFileExist(mSysFs->getSysNode(BACKLIGHT_AML_BL_BRIGHTNESS))) {//local diming or pwm
         mDynamicBackLight.setObserver(this);
         mDynamicBackLight.startDected();
     } else {
         SYS_LOGD("No auto backlight moudle!\n");
-    }
+    }*/
 }
 
 void CPQControl::CPQControlUnInit()

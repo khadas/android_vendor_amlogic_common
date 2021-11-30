@@ -48,7 +48,8 @@ public class DisplayFragment extends SettingsPreferenceFragment implements Prefe
 
     private static final int MEMC_OFF                  = 0;
     private static final int MEMC_ON                   = 1;
-
+    private static final String KEY_SCREEN_BRIGHTNESS = "screen_brightness";
+	
     private ListPreference mAllmPref;
     private ListPreference mMEMCPref;
     private SystemControlManager mSystemControlManager;
@@ -71,7 +72,8 @@ public class DisplayFragment extends SettingsPreferenceFragment implements Prefe
             && (SystemProperties.getBoolean("vendor.tv.soc.as.mbox", false) == false);
         final Preference outputmodePref = findPreference(KEY_OUTPUTMODE);
         outputmodePref.setVisible(SettingsConstant.needScreenResolutionFeture(getContext()) && !tvFlag);
-
+        final Preference brightnessPref = findPreference(KEY_SCREEN_BRIGHTNESS);
+        brightnessPref.setVisible(true);
         final Preference screenPositionPref = findPreference(KEY_POSITION);
         screenPositionPref.setVisible(!tvFlag);
 
