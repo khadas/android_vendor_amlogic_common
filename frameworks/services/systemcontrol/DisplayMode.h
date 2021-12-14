@@ -311,7 +311,12 @@ using namespace android;
 #define FULL_WIDTH_PANEL                1024
 #define FULL_HEIGHT_PANEL               600
 
-#define EDID_MAX_SIZE                   1025
+/* In HDMI 2.1 CTS, the blocks of EDID data will increase to 8 blocks,
+ * and the binary data size will be 128 x 8 = 1024bytes
+ * So cat /sys/class/amhdmitx/amhdmitx0/rawedid will be double
+ * to 2048, plus the '\0' char.
+ */
+#define EDID_MAX_SIZE                   2049
 
 enum {
     EVENT_OUTPUT_MODE_CHANGE            = 0,
