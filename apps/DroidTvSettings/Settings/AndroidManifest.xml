@@ -1311,6 +1311,14 @@
             android:name=".wifi.HotSpotActivity"
             android:configChanges="keyboard|keyboardHidden|navigation"
             android:exported="true" />
+        <receiver
+            android:name=".GlobalKeyReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.GLOBAL_BUTTON"/>
+            </intent-filter>
+        </receiver>
         <!-- DroidLogic end -->
     </application>
 
