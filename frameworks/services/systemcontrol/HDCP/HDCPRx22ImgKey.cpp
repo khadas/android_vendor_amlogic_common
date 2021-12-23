@@ -618,7 +618,16 @@ int setImgPath(const char *path)
     AmlResImgHead_t *pImgHead = NULL;
     AmlResItemHead_t *pItemHead = NULL;
     SysWrite write;
-    bool isTeeHdcp = write.getPropertyBoolean("ro.vendor.hdcp.tee.key.enable", false);
+
+    char existKey[10] = {0};
+    bool isTeeHdcp = false;
+    write.writeSysfs("/sys/class/unifykeys/attach", "1");
+    write.writeSysfs("/sys/class/unifykeys/name", "hdcp22_rx_fw");
+
+    write.readSysfs("/sys/class/unifykeys/exist", existKey);
+    if (0 == strncmp(existKey, "none", 5)) {
+        isTeeHdcp = true;
+    }
     bool result_provison = false;
 
     if (path == NULL) {

@@ -388,7 +388,7 @@ int HDCPRxKey::getHdcpRX22key(char *value, int size)
     writeSys(HDCP_RX_KEY_NAME_DEV_PATH, HDCP_RX22_KEY_NAME);
 
     readSys(HDCP_RX_KEY_DATA_EXIST, (char*)existKey, 10);
-    if (0 == strcmp(existKey, "0")) {
+    if (0 == strncmp(existKey, "none", 5)) {
         SYS_LOGE("do not write key to the storage");
         goto _exit;
     }
@@ -449,7 +449,7 @@ int HDCPRxKey::setHdcpRX22key(const char *value, const int size)
         usleep(100*1000);
 
         readSys(HDCP_RX_KEY_DATA_EXIST, (char*)existKey, 10);
-        if (0 == strcmp(existKey, "0")) {
+        if (0 == strncmp(existKey, "none", 5)) {
             SYS_LOGE("do not write key to the storage");
             goto _exit;
         }
@@ -553,7 +553,7 @@ _reGenetate:
         writeSys(HDCP_RX_KEY_NAME_DEV_PATH, HDCP_RX22_KEY_NAME);
 
         readSys(HDCP_RX_KEY_DATA_EXIST, (char*)existKey, 10);
-        if (!strcmp(existKey, "0")) {
+        if (!strncmp(existKey, "none",5)) {
             SYS_LOGE("do not write key to the secure storage");
             goto _exit;
         }
@@ -840,7 +840,7 @@ bool HDCPRxKey::combineFirmwarewithPCTool(const char* pKeyName, const char* pCrc
     writeSys(HDCP_RX_KEY_ATTACH_DEV_PATH, "1");
     writeSys(HDCP_RX_KEY_NAME_DEV_PATH, pKeyName);
     readSys(HDCP_RX_KEY_DATA_EXIST, (char*)existKey, 10);
-    if (!strcmp(existKey, "0")) {
+    if (!strncmp(existKey, "none", 5)) {
         SYS_LOGE("do not write key to the secure storage");
         goto exit;
     }

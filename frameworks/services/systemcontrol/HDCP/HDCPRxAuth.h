@@ -25,7 +25,6 @@
 #include "common.h"
 #include "HDCPTxAuth.h"
 
-#define TEE_HDCP_KEY_ENEBLA    "ro.vendor.hdcp.tee.key.enable"
 #define TEE_HDCP_WORK_STATUS    "init.svc.vendor.tee_hdcp"
 
 class HDCPRxAuth {
@@ -36,7 +35,7 @@ public:
 
 private:
     HDCPTxAuth *pTxAuth;
-
+    bool isUnifyKey();
     void initKey();
     void startVer22();
     void stopVer22();
