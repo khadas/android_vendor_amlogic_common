@@ -57,6 +57,7 @@ public class SoundFragment extends SettingsPreferenceFragment implements Prefere
     private static final String KEY_DTSDRCCUSTOMMODE_PASSTHROUGH            = "dtsdrc_custom_mode";
     private static final String KEY_SOUND_AD_MIXING                         = "key_sound_ad_mixing";
     private static final String KEY_DAP                                     = "dolby_audio_processing";
+    private static final String KEY_DAP_2_4                                 = "key_dolby_audio_processing_2_4";
     private static final String KEY_ARC_LATENCY                             = "arc_latency";                /* HDMI/ARC latency */
     public static final String KEY_AUDIO_OUTPUT_LATENCY                     = "key_audio_output_latency";   /* Audio Output Latency */
     public static final String KEY_FORCE_DDP                                = "key_force_ddp";   /* Audio Output DDP for ms12 v2 ,default is mat*/
@@ -122,7 +123,8 @@ public class SoundFragment extends SettingsPreferenceFragment implements Prefere
         final ListPreference dtsdrccustommodePref = (ListPreference) findPreference(KEY_DTSDRCCUSTOMMODE_PASSTHROUGH);
         final ListPreference dtsdrcmodePref = (ListPreference) findPreference(KEY_DTSDRCMODE_PASSTHROUGH);
         final TwoStatePreference adsurport = (TwoStatePreference) findPreference(KEY_SOUND_AD_MIXING);
-        final Preference dapPref = (Preference) findPreference(KEY_DAP);
+//        final Preference dapPref = (Preference) findPreference(KEY_DAP);
+        final Preference dap24Pref = (Preference) findPreference(KEY_DAP_2_4);
         final SeekBarPreference arcPref = (SeekBarPreference) findPreference(KEY_ARC_LATENCY);
         final SeekBarPreference audioOutputLatencyPref = (SeekBarPreference) findPreference(KEY_AUDIO_OUTPUT_LATENCY);
         final TwoStatePreference forceddp = (TwoStatePreference) findPreference(KEY_FORCE_DDP);
@@ -134,8 +136,8 @@ public class SoundFragment extends SettingsPreferenceFragment implements Prefere
 
         mOutputModeManager = OutputModeManager.getInstance(getActivity());
         if (!mOutputModeManager.isAudioSupportMs12System())
-            dapPref.setVisible(false);
-
+//            dapPref.setVisible(false);
+            dap24Pref.setVisible(false);
         forceddp.setChecked(mOutputModeManager.getForceDDPEnable());
         if (!mOutputModeManager.isAudioSupportMs12System())
             forceddp.setVisible(false);

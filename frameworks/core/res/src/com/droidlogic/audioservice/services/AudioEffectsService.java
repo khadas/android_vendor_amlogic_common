@@ -290,7 +290,7 @@ public class AudioEffectsService extends Service {
         }
 
         public void setDapParam(int id, int value) {
-            mSoundEffectManager.saveDapParam(id, value);
+//            mSoundEffectManager.saveDapParam(id, value);
             mSoundEffectManager.setDapParam(id, value);
         }
 
@@ -313,7 +313,7 @@ public class AudioEffectsService extends Service {
             registerCommandReceiver(this);
         }
         if (isDapValid) {
-            //mSoundEffectManager.initDapAudioEffect();
+            mSoundEffectManager.initDapAudioEffect();
         }
     }
 

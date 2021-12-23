@@ -2121,6 +2121,24 @@
     <string name="arc_latency">HDMI/ARC latency</string>
     <string name="audio_output_latency">Audio Output Latency</string>
 
+    <!-- Title for dap 2.4 -->
+    <string name="title_dolby_audio_processing_2_4">Dolby Audio Effect 2.4</string>
+    <string name="title_sound_mode">Audio Effect</string>
+    <string name="title_dap_2_4_detail">User Control</string>
+    <string name="title_dap_2_4_surround_virtualizer_mode">Surround Virtualizer</string>
+    <string name="title_dap_2_4_surround_virtualizer_boost">Surround Virtualizer Boost</string>
+    <string name="title_dap_2_4_dialogue_enhancer_enable">Dialogue Enhancer</string>
+    <string name="title_dap_2_4_dialogue_enhancer_amount">Dialogue Enhancer Amount</string>
+    <string name="title_dap_2_4_bass_enhancer_enable">Bass Enhancer</string>
+    <string name="title_dap_2_4_bass_enhancer_boost">Bass Enhancer Boost</string>
+    <string name="title_dap_2_4_bass_enhancer_cutoffX100">Bass Enhancer Cutoff (X100 Hz)</string>
+    <string name="title_dap_2_4_bass_enhancer_cutoffX1">Bass Enhancer Cutoff (X1 Hz)</string>
+    <string name="title_dap_2_4_bass_enhancer_width">Bass Enhancer Width</string>
+    <string name="title_dap_2_4_mi_steering">Mi Steering</string>
+    <string name="title_dap_2_4_surround_decoder_enable">Surround Decoder Enable</string>
+    <string name="title_dap_2_4_leveler_setting">Leveler</string>
+    <string name="title_dap_2_4_leveler_amount">Leveler Amount</string>
+
     <!-- Title for preference which controls surround sound passthrough function [CHAR LIMIT=50] -->
     <string name="device_sound_digital">Digital Audio Format</string>
     <string name="device_sound_dts_drcscale">DTS Drcscale</string>

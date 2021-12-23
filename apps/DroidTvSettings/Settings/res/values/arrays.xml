@@ -353,6 +353,51 @@
         <item>5</item>
     </string-array>
 
+	<!-- dap 2.4 -->
+    <string-array name="dap_2_4_profile_entries">
+        <item>MOVIE</item>
+        <item>MUSIC</item>
+        <item>GAME</item>
+        <item>NIGHT</item>
+        <item>VOICE</item>
+        <item>USER SELECTABLE</item>
+        <item>OFF</item>
+    </string-array>
+
+    <string-array name="dap_2_4_profile_entry_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+    </string-array>
+
+    <string-array name="dap_2_4_surround_virtualizer_mode_entries">
+        <item>OFF</item>
+        <item>ON</item>
+        <item>AUTO</item>
+    </string-array>
+
+    <string-array name="dap_2_4_surround_virtualizer_mode_entry_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string-array name="dap_2_4_leveler_setting_entries">
+        <item>OFF</item>
+        <item>ON</item>
+        <item>AUTO</item>
+    </string-array>
+
+    <string-array name="dap_2_4_leveler_setting_entry_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
     <string-array name="digital_sounds_box_entries">
         <item>PCM</item>
         <item>AUTO</item>

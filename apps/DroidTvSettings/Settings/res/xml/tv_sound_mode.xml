@@ -25,9 +25,9 @@
         android:title="@string/tv_sound_mode"
         android:summary="%s" />
     <Preference
-        android:fragment="com.android.tv.settings.soundeffect.DolbyAudioEffectFragment"
-        android:key="key_dolby_dap_effect"
-        android:title="@string/dolby_audio_processing"/>
+        android:fragment="com.android.tv.settings.soundeffect.DolbyAudioEffect_2_4_Fragment"
+        android:key="key_dolby_audio_processing_2_4"
+        android:title="@string/title_dolby_audio_processing_2_4"/>
     <Preference
         android:fragment="com.android.tv.settings.soundeffect.TrebleBassSeekBarFragment"
         android:key="treble_bass_effect_settings"

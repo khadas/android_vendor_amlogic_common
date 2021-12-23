@@ -60,6 +60,7 @@ public class SoundModeFragment extends SettingsPreferenceFragment implements Pre
     private static final String TV_VIRTUAL_SURROUND_SETTINGS                = "tv_sound_virtual_surround";
     private static final String TV_SOUND_OUT                                = "tv_sound_output_device";
     private static final String KEY_DOLBY_DAP_EFFECT                        = "key_dolby_dap_effect";
+    private static final String KEY_DOLBY_DAP_EFFECT_2_4                    = "key_dolby_audio_processing_2_4";
     private static final String AUDIO_ONLY                                  = "tv_sound_audio_only";
     private static final String KEY_TV_SOUND_AUDIO_SOURCE_SELECT            = "key_tv_sound_audio_source_select";
 
@@ -169,11 +170,13 @@ public class SoundModeFragment extends SettingsPreferenceFragment implements Pre
         eqmode.setValueIndex(mAudioEffectManager.getSoundModeStatus());
         eqmode.setOnPreferenceChangeListener(this);
 
-        final Preference dapPref = (Preference) findPreference(KEY_DOLBY_DAP_EFFECT);
+//        final Preference dapPref = (Preference) findPreference(KEY_DOLBY_DAP_EFFECT);
+        final Preference dap24Pref = (Preference) findPreference(KEY_DOLBY_DAP_EFFECT_2_4);
         if (mOutputModeManager.isAudioSupportMs12System())
             eqmode.setVisible(false);
         else
-            dapPref.setVisible(false);
+//            dapPref.setVisible(false);
+            dap24Pref.setVisible(false);
 
         final ListPreference virtualsurround = (ListPreference) findPreference(TV_VIRTUAL_SURROUND_SETTINGS);
         virtualsurround.setValueIndex(mAudioEffectManager.getVirtualSurroundStatus());

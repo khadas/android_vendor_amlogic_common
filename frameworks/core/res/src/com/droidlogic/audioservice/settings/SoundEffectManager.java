@@ -93,6 +93,8 @@ public class SoundEffectManager {
     public static final String DB_ID_SOUND_EFFECT_DBX_ADVANCED_MODE_SONICS      = "db_id_sound_effect_dbx_advanced_mode_sonics";
     public static final String DB_ID_SOUND_EFFECT_DBX_ADVANCED_MODE_VOLUME      = "db_id_sound_effect_dbx_advanced_mode_volume";
     public static final String DB_ID_SOUND_EFFECT_DBX_ADVANCED_MODE_SURROUND    = "db_id_sound_effect_dbx_advanced_mode_surround";
+
+    /* [DAP 1.3.2] */
     public static final String DB_ID_SOUND_EFFECT_DAP_SAVED                     = "db_id_sound_effect_dap_saved";
     public static final String DB_ID_SOUND_EFFECT_DAP_MODE                      = "db_id_sound_effect_dap_mode";
     public static final String DB_ID_SOUND_EFFECT_DAP_GEQ_ENABLE                = "db_id_sound_effect_dap_geq";
@@ -108,6 +110,24 @@ public class SoundEffectManager {
     public static final String DB_ID_SOUND_EFFECT_DAP_GEQ_BAND3                 = "db_id_sound_effect_dap_geq_band3";
     public static final String DB_ID_SOUND_EFFECT_DAP_GEQ_BAND4                 = "db_id_sound_effect_dap_geq_band4";
     public static final String DB_ID_SOUND_EFFECT_DAP_GEQ_BAND5                 = "db_id_sound_effect_dap_geq_band5";
+
+    /* [DAP 2.4] */
+    public static final String DB_ID_SOUND_EFFECT_DAP_2_4_PROFILE               = "db_id_sound_effect_dap_2_4_profile";
+
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_SURROUND_VIRTUALIZER_MODE     = "db_id_sound_effect_dap_2_4_surround_virtualizer_mode";
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_SURROUND_VIRTUALIZER_BOOST    = "db_id_sound_effect_dap_2_4_surround_virtualizer_boost";
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_DIALOGUE_ENHANCER_ENABLE      = "db_id_sound_effect_dap_2_4_dialogue_enhancer_enable";
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_DIALOGUE_ENHANCER_AMOUNT      = "db_id_sound_effect_dap_2_4_dialogue_enhancer_amount";
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_ENABLE          = "db_id_sound_effect_dap_2_4_bass_enhancer_enable";
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_BOOST           = "db_id_sound_effect_dap_2_4_bass_enhancer_boost";
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_CUTOFFX100      = "db_id_sound_effect_dap_2_4_bass_enhancer_cutoffX100";
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_CUTOFFX1        = "db_id_sound_effect_dap_2_4_bass_enhancer_cutoffX1";
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_WIDTH           = "db_id_sound_effect_dap_2_4_bass_enhancer_width";
+
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_MI_STEERING                   = "db_id_sound_effect_dap_2_4_mi_steering";
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_SURROUND_DECODER_ENABLE       = "db_id_sound_effect_dap_2_4_surround_decoder_enable";
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_LEVELER_MODE                  = "db_id_sound_effect_dap_2_4_leveler_mode";
+    private static final String DB_ID_SOUND_EFFECT_DAP_2_4_LEVELER_AMOUNT                = "db_id_sound_effect_dap_2_4_leveler_strength";
 
     //set id
     public static final int SET_BASS                                    = 0;
@@ -1357,90 +1377,137 @@ public class SoundEffectManager {
     private boolean creatDapAudioEffect() {
         try {
             if (mDap == null) {
-                Class audioeffect = Class.forName("android.media.audiofx.AudioEffect");
-                Class[] param = new Class[]{ Class.forName("java.util.UUID"),
-                        Class.forName("java.util.UUID"), int.class, int.class };
-                Constructor ctor = audioeffect.getConstructor(param);
-                Object[] obj = new Object[] { EFFECT_TYPE_DAP_2_4, AudioEffect.EFFECT_TYPE_NULL, 0, 0 };
-                mDap = (AudioEffect)ctor.newInstance(obj);
+                if (DroidLogicUtils.getAudioDebugEnable()) Log.d(TAG, "creatDapAudioEffect");
+                if (AudioEffectManager.SOUND_EFFECT_DAP_VERSION == AudioEffectManager.SOUND_EFFECT_DAP_VERSION_1_3_2) {
+                    mDap = new AudioEffect(EFFECT_TYPE_DAP_1_3_2, AudioEffect.EFFECT_TYPE_NULL, 0, 0);
+                } else if (AudioEffectManager.SOUND_EFFECT_DAP_VERSION == AudioEffectManager.SOUND_EFFECT_DAP_VERSION_2_4){
+                    mDap = new AudioEffect(EFFECT_TYPE_DAP_2_4, AudioEffect.EFFECT_TYPE_NULL, 0, 0);
+                }
                 int result = mDap.setEnabled(true);
                 if (result == AudioEffect.SUCCESS) {
-                    Log.d(TAG, "creatDapAudioEffect enable dap");
+                    Log.d(TAG, "creatDapAudioEffect setEnabled success");
+                } else {
+                    Log.w(TAG, "creatDapAudioEffect setEnabled error: "+result);
+                    return false;
                 }
             }
             return true;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             Log.e(TAG, "Unable to create Dap audio effect", e);
-        }
-        return false;
-    }
-
-    public void initDapAudioEffect() {
-        Log.i(TAG, "initDapAudioEffect");
-        if (!creatDapAudioEffect()) {
-            Log.e(TAG, "initDapAudioEffect dap create fail");
-            return;
-        }
-
-        int result = mDap.setEnabled(true);
-        if (result != AudioEffect.SUCCESS) {
-            Log.d(TAG, "initDapAudioEffect dap setEnabled error: "+result);
-            return;
-        }
-
-        int mode = getDapParam(AudioEffectManager.CMD_DAP_EFFECT_MODE);
-        if (Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_SAVED, 0) == 0) {
-            int id = 0;
-            //the first time, use the param from so load from ini file
-            setDapParam(AudioEffectManager.CMD_DAP_EFFECT_MODE, AudioEffectManager.DAP_MODE_USER);
-            for (id = AudioEffectManager.CMD_DAP_GEQ_ENABLE; id <= AudioEffectManager.CMD_DAP_VIRTUALIZER_ENABLE; id++)
-                saveDapParam(id, getDapParamInternal(id));
-            for (id = AudioEffectManager.SUBCMD_DAP_GEQ_BAND1; id <= AudioEffectManager.SUBCMD_DAP_GEQ_BAND5; id++)
-                saveDapParam(id, getDapParamInternal(id));
-            Settings.Global.putInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_SAVED, 1);
-        } else {
-            saveDapParam(AudioEffectManager.CMD_DAP_EFFECT_MODE, AudioEffectManager.DAP_MODE_USER);
-            setDapParam(AudioEffectManager.CMD_DAP_VL_ENABLE, getDapParam(AudioEffectManager.CMD_DAP_VL_ENABLE));
-            setDapParam(AudioEffectManager.CMD_DAP_VL_AMOUNT, getDapParam(AudioEffectManager.CMD_DAP_VL_AMOUNT));
-            setDapParam(AudioEffectManager.CMD_DAP_DE_ENABLE, getDapParam(AudioEffectManager.CMD_DAP_DE_ENABLE));
-            setDapParam(AudioEffectManager.CMD_DAP_DE_AMOUNT, getDapParam(AudioEffectManager.CMD_DAP_DE_AMOUNT));
-            setDapParam(AudioEffectManager.CMD_DAP_SURROUND_BOOST, getDapParam(AudioEffectManager.CMD_DAP_SURROUND_BOOST));
-            setDapParam(AudioEffectManager.CMD_DAP_GEQ_ENABLE, getDapParam(AudioEffectManager.CMD_DAP_GEQ_ENABLE));
-            setDapParam(AudioEffectManager.SUBCMD_DAP_GEQ_BAND1, getDapParam(AudioEffectManager.SUBCMD_DAP_GEQ_BAND1));
-            saveDapParam(AudioEffectManager.CMD_DAP_EFFECT_MODE, mode);
-        }
-        setDapParam(AudioEffectManager.CMD_DAP_EFFECT_MODE, mode);
-        applyAudioEffectByPlayEmptyTrack();
-    }
-
-    private void setDapParamInternal(int id, int value) {
-        try {
-            Class audioEffect = Class.forName("android.media.audiofx.AudioEffect");
-            Method setParameter = audioEffect.getMethod("setParameter", int.class, int.class);
-            setParameter.invoke(mDap, id, value);
-        } catch(Exception e) {
-            Log.d(TAG, "setDapParamInternal: "+e);
+            return false;
         }
     }
 
-    private void setDapParamInternal(int id, byte[] value) {
-        try {
-            Class audioEffect = Class.forName("android.media.audiofx.AudioEffect");
-            Method setParameter = audioEffect.getMethod("setParameter", int.class, byte[].class);
-            Object[] param = new Object[2];
-            param[0] = id;
-            param[1] = value;
-            setParameter.invoke(mDap, param);
-        } catch(Exception e) {
-            Log.d(TAG, "setDapParamInternal: "+e);
-        }
-    }
+    private void initDap_1_3_2() {
+       int mode = getDapParam(AudioEffectManager.CMD_DAP_EFFECT_MODE);
+       if (Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_SAVED, 0) == 0) {
+           Log.i(TAG, "initDap_1_3_2 first boot.");
+           int id = 0;
+           //the first time, use the param from so load from ini file
+           setDapParam(AudioEffectManager.CMD_DAP_EFFECT_MODE, AudioEffectManager.DAP_MODE_USER);
+           for (id = AudioEffectManager.CMD_DAP_GEQ_ENABLE; id <= AudioEffectManager.CMD_DAP_VIRTUALIZER_ENABLE; id++)
+               saveDapParam(id, getDapParamInternal(id));
+           for (id = AudioEffectManager.SUBCMD_DAP_GEQ_BAND1; id <= AudioEffectManager.SUBCMD_DAP_GEQ_BAND5; id++)
+               saveDapParam(id, getDapParamInternal(id));
+           Settings.Global.putInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_SAVED, 1);
+       } else {
+           saveDapParam(AudioEffectManager.CMD_DAP_EFFECT_MODE, AudioEffectManager.DAP_MODE_USER);
+           setDapParam(AudioEffectManager.CMD_DAP_VL_ENABLE, getDapParam(AudioEffectManager.CMD_DAP_VL_ENABLE));
+           setDapParam(AudioEffectManager.CMD_DAP_VL_AMOUNT, getDapParam(AudioEffectManager.CMD_DAP_VL_AMOUNT));
+           setDapParam(AudioEffectManager.CMD_DAP_DE_ENABLE, getDapParam(AudioEffectManager.CMD_DAP_DE_ENABLE));
+           setDapParam(AudioEffectManager.CMD_DAP_DE_AMOUNT, getDapParam(AudioEffectManager.CMD_DAP_DE_AMOUNT));
+           setDapParam(AudioEffectManager.CMD_DAP_SURROUND_BOOST, getDapParam(AudioEffectManager.CMD_DAP_SURROUND_BOOST));
+           setDapParam(AudioEffectManager.CMD_DAP_GEQ_ENABLE, getDapParam(AudioEffectManager.CMD_DAP_GEQ_ENABLE));
+           setDapParam(AudioEffectManager.SUBCMD_DAP_GEQ_BAND1, getDapParam(AudioEffectManager.SUBCMD_DAP_GEQ_BAND1));
+           saveDapParam(AudioEffectManager.CMD_DAP_EFFECT_MODE, mode);
+       }
+       setDapParam(AudioEffectManager.CMD_DAP_EFFECT_MODE, mode);
+   }
 
-    private int getDapParamInternal (int id) {
-        if (mDap == null) {
-            Log.e(TAG, "getDapParamInternal DAP Effect is not created");
-            return 0;
-        }
+   private void initDap_2_4() {
+       int value = 0;
+       byte[] tempValue = new byte[2];
+       byte[] tempValue2 = new byte[6];
+       if (Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_SAVED, 0) == 0) {
+           Log.i(TAG, "initDap_2_4 first boot.");
+           int mode = getDapParamInternal(AudioEffectManager.CMD_DAP_2_4_PROFILE);
+           saveDbDap24Param(AudioEffectManager.CMD_DAP_2_4_PROFILE, mode);
+           for (int i = AudioEffectManager.SOUND_EFFECT_DAP_2_4_PROFILE_MIN; i < AudioEffectManager.SOUND_EFFECT_DAP_2_4_PROFILE_MAX; i++) {
+               mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_PROFILE - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, i);
+           }
+           mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_PROFILE - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, mode);
+           Settings.Global.putInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_SAVED, 1);
+       } else {
+           value = getDbDap24Param(AudioEffectManager.CMD_DAP_2_4_PROFILE);
+           Log.i(TAG, "PROFILE init value: " + value);
+           mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_PROFILE - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, value);
+
+           tempValue[0] = (byte)getDbDap24Param(AudioEffectManager.CMD_DAP_2_4_SURROUND_VIRTUALIZER);
+           Log.i(TAG, "SURROUND_VIRTUALIZER init value: " + tempValue[0]);
+           tempValue[1] = (byte)getDbDap24Param(AudioEffectManager.SUBCMD_DAP_2_4_SURROUND_VIRTUALIZER_BOOST);
+           Log.i(TAG, "SURROUND_VIRTUALIZER_BOOST init value: " + tempValue[1]);
+           mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_SURROUND_VIRTUALIZER - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, tempValue);
+
+           tempValue[0] = (byte)getDbDap24Param(AudioEffectManager.CMD_DAP_2_4_DIALOGUE_ENHANCER);
+           Log.i(TAG, "DIALOGUE_ENHANCER init value: " + tempValue[0]);
+           tempValue[1] = (byte)getDbDap24Param(AudioEffectManager.SUBCMD_DAP_2_4_DIALOGUE_ENHANCER_AMOUNT);
+           Log.i(TAG, "DIALOGUE_ENHANCER_AMOUNT init value: " + tempValue[1]);
+           mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_DIALOGUE_ENHANCER - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, tempValue);
+
+           tempValue2[0] = (byte)getDbDap24Param(AudioEffectManager.CMD_DAP_2_4_BASS_ENHANCER);
+           Log.i(TAG, "BASS_ENHANCER init value: " + tempValue2[0]);
+           int tempInt = getDbDap24Param(AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_BOOST);
+           byte[] enbo = mDap.intToByteArray(tempInt);
+           tempValue2[1] = enbo[0];
+           tempValue2[2] = enbo[1];
+           int enboInt = mDap.byteArrayToInt(enbo);
+           Log.i(TAG, "BASS_ENHANCER_BOOST init value: " + enboInt);
+           int tempInt2 = (getDbDap24Param(AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX100)
+            + getDbDap24Param(AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX1));
+           byte[] encu = mDap.intToByteArray(tempInt2);
+           tempValue2[3] = encu[0];
+           tempValue2[4] = encu[1];
+           int encuInt = mDap.byteArrayToInt(encu);
+           Log.i(TAG, "BASS_ENHANCER_CUTOFF init value: " + encuInt);
+           tempValue2[5] = (byte)getDbDap24Param(AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_WIDTH);
+           Log.i(TAG, "BASS_ENHANCER_WIDTH init value: " + tempValue2[5]);
+           mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_BASS_ENHANCER - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, tempValue2);
+
+           value = getDbDap24Param(AudioEffectManager.CMD_DAP_2_4_MI_STEERING);
+           Log.i(TAG, "MI_STEERING init value: " + value);
+           mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_MI_STEERING - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, value);
+
+           value = getDbDap24Param(AudioEffectManager.CMD_DAP_2_4_SURROUND_DECODER_ENABLE);
+           Log.i(TAG, "SURROUND_DECODER_ENABLE init value: " + value);
+           mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_SURROUND_DECODER_ENABLE - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, value);
+
+           tempValue[0] = (byte)getDbDap24Param(AudioEffectManager.CMD_DAP_2_4_LEVELER);
+           Log.i(TAG, "LEVELER init value: " + tempValue[0]);
+           tempValue[1] = (byte)getDbDap24Param(AudioEffectManager.SUBCMD_DAP_2_4_LEVELER_AMOUNT);
+           Log.i(TAG, "LEVELER_AMOUNT init value: " + tempValue[1]);
+           mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_LEVELER - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, tempValue);
+       }
+   }
+
+   public void initDapAudioEffect() {
+       Log.i(TAG, "initDapAudioEffect dap version:" + AudioEffectManager.SOUND_EFFECT_DAP_VERSION);
+       if (!creatDapAudioEffect()) {
+           Log.e(TAG, "initDapAudioEffect dap create fail");
+           return;
+       }
+
+       if (AudioEffectManager.SOUND_EFFECT_DAP_VERSION == AudioEffectManager.SOUND_EFFECT_DAP_VERSION_1_3_2) {
+           initDap_1_3_2();
+           Log.e(TAG, "init DAP1.3.2 ok");
+       } else if (AudioEffectManager.SOUND_EFFECT_DAP_VERSION == AudioEffectManager.SOUND_EFFECT_DAP_VERSION_2_4){
+           Log.e(TAG, "init DAP2.4 ok");
+           initDap_2_4();
+       }
+       applyAudioEffectByPlayEmptyTrack();
+   }
+
+
+    private int getDapParamInternal(int id) {
         int result = 0;
         int[] value = new int[1];
         switch (id) {
@@ -1453,6 +1520,21 @@ public class SoundEffectManager {
                 mDap.getParameter(AudioEffectManager.CMD_DAP_GEQ_GAINS, tempValue);
                 result = tempValue[id - AudioEffectManager.SUBCMD_DAP_GEQ_BAND1];
                 break;
+            case AudioEffectManager.CMD_DAP_2_4_PROFILE:
+                mDap.getParameter(id - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, value);
+                if (value[0] < AudioEffectManager.SOUND_EFFECT_DAP_2_4_PROFILE_MIN ||  value[0] > AudioEffectManager.SOUND_EFFECT_DAP_2_4_PROFILE_MAX) {
+                    Log.w(TAG, "getDapParamInternal DAP 2.4 profile mode:" + value[0] + " invalid, set the default:" +
+                            AudioEffectManager.SOUND_EFFECT_DAP_2_4_PROFILE_MIN + ". id:" + id);
+                    value[0] = AudioEffectManager.SOUND_EFFECT_DAP_2_4_PROFILE_MIN;
+                }
+                //get profile mode
+                result = value[0];
+                Log.e(TAG, "getDapParamInternal DAP 2.4 profile mode:" + value[0]);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_MI_STEERING:
+                mDap.getParameter(AudioEffectManager.CMD_DAP_2_4_MI_STEERING - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, value);
+                result = value[0];
+                break;
             default:
                 mDap.getParameter(id, value);
                 result = value[0];
@@ -1461,12 +1543,8 @@ public class SoundEffectManager {
         return result;
     }
 
-    public void setDapParam (int id, int value) {
+    public void setDapParam(int id, int value) {
         if (DroidLogicUtils.getAudioDebugEnable()) Log.d(TAG, "setDapParam id:" + id + ", value:" + value);
-        if (mDap == null) {
-            Log.e(TAG, "setDapParam DAP Effect is not created");
-            return;
-        }
         byte[] fiveband = new byte[5];
         switch (id) {
             case AudioEffectManager.CMD_DAP_ENABLE:
@@ -1479,13 +1557,15 @@ public class SoundEffectManager {
             case AudioEffectManager.CMD_DAP_GEQ_ENABLE:
             case AudioEffectManager.CMD_DAP_SURROUND_ENABLE:
             case AudioEffectManager.CMD_DAP_SURROUND_BOOST:
-                setDapParamInternal(id, value);
+                mDap.setParameter(id, value);
+                saveDapParam(id, value);
                 break;
             case AudioEffectManager.CMD_DAP_VIRTUALIZER_ENABLE:
                 if (value == AudioEffectManager.DAP_SURROUND_SPEAKER)
-                    setDapParamInternal(id, DAP_CPDP_OUTPUT_2_SPEAKER);
+                    mDap.setParameter(id, DAP_CPDP_OUTPUT_2_SPEAKER);
                 else if (value == AudioEffectManager.DAP_SURROUND_HEADPHONE)
-                    setDapParamInternal(id, DAP_CPDP_OUTPUT_2_HEADPHONE);
+                    mDap.setParameter(id, DAP_CPDP_OUTPUT_2_HEADPHONE);
+                saveDapParam(id, value);
                 break;
             case AudioEffectManager.SUBCMD_DAP_GEQ_BAND1:
             case AudioEffectManager.SUBCMD_DAP_GEQ_BAND2:
@@ -1497,8 +1577,103 @@ public class SoundEffectManager {
                 fiveband[2] = (byte)getDapParam(AudioEffectManager.SUBCMD_DAP_GEQ_BAND3);
                 fiveband[3] = (byte)getDapParam(AudioEffectManager.SUBCMD_DAP_GEQ_BAND4);
                 fiveband[4] = (byte)getDapParam(AudioEffectManager.SUBCMD_DAP_GEQ_BAND5);
-                fiveband[id-AudioEffectManager.SUBCMD_DAP_GEQ_BAND1] = (byte)value;
-                setDapParamInternal(AudioEffectManager.CMD_DAP_GEQ_GAINS, fiveband);
+                fiveband[id - AudioEffectManager.SUBCMD_DAP_GEQ_BAND1] = (byte)value;
+                mDap.setParameter(AudioEffectManager.CMD_DAP_GEQ_GAINS, fiveband);
+                saveDapParam(id, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_PROFILE:
+                mDap.setParameter(id - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, value);
+                saveDbDap24Param(id, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_SURROUND_VIRTUALIZER:
+            case AudioEffectManager.SUBCMD_DAP_2_4_SURROUND_VIRTUALIZER_BOOST:
+                byte[] tempValue = new byte[2];
+                tempValue[0] = (byte)getDapParam(AudioEffectManager.CMD_DAP_2_4_SURROUND_VIRTUALIZER);
+                tempValue[1] = (byte)getDapParam(AudioEffectManager.SUBCMD_DAP_2_4_SURROUND_VIRTUALIZER_BOOST);
+                if (id < AudioEffectManager.SUBCMD_DAP_2_4_BASE_VALUE) {
+                    tempValue[0] = (byte)value;
+                } else {
+                    tempValue[1] = (byte)value;
+                }
+                mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_SURROUND_VIRTUALIZER - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, tempValue);
+                saveDbDap24Param(id, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_DIALOGUE_ENHANCER:
+            case AudioEffectManager.SUBCMD_DAP_2_4_DIALOGUE_ENHANCER_AMOUNT:
+                byte[] tempValue_1 = new byte[2];
+                tempValue_1[0] = (byte)getDapParam(AudioEffectManager.CMD_DAP_2_4_DIALOGUE_ENHANCER);
+                tempValue_1[1] = (byte)getDapParam(AudioEffectManager.SUBCMD_DAP_2_4_DIALOGUE_ENHANCER_AMOUNT);
+                if (id < AudioEffectManager.SUBCMD_DAP_2_4_BASE_VALUE) {
+                    tempValue_1[0] = (byte)value;
+                } else {
+                    tempValue_1[1] = (byte)value;
+                }
+                mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_DIALOGUE_ENHANCER - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, tempValue_1);
+                saveDbDap24Param(id, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_BASS_ENHANCER:
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_BOOST:
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX100:
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX1:
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_WIDTH:
+                byte[] tempValue_2 = new byte[6];
+                tempValue_2[0] = (byte)getDapParam(AudioEffectManager.CMD_DAP_2_4_BASS_ENHANCER);
+                int tempInt = getDapParam(AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_BOOST);
+                byte[] enbo = mDap.intToByteArray(tempInt);
+                tempValue_2[1] = enbo[0];
+                tempValue_2[2] = enbo[1];
+                int enboInt = mDap.byteArrayToInt(enbo);
+                int tempInt2 = (getDapParam(AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX100)
+                    + getDapParam(AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX1));
+                byte[] encu = mDap.intToByteArray(tempInt2);
+                tempValue_2[3] = encu[0];
+                tempValue_2[4] = encu[1];
+                int encuInt = mDap.byteArrayToInt(encu);
+                tempValue_2[5] = (byte)getDapParam(AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_WIDTH);
+                Log.d(TAG, "BASS_ENHANCER getDapParam enable:" + tempValue_2[0] + ", boost:" + enboInt + ", cutoff:" + encuInt + ", width:" + tempValue_2[5]);
+                if (id < AudioEffectManager.SUBCMD_DAP_2_4_BASE_VALUE) {
+                    tempValue_2[0] = (byte)value;
+                } else if (id == AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_BOOST) {
+                    enbo = mDap.intToByteArray(value);
+                    tempValue_2[1] = enbo[0];
+                    tempValue_2[2] = enbo[1];
+                } else if (id == AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX100) {
+                    encu = mDap.intToByteArray(value * 100 +
+                        getDapParam(AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX1));
+                    tempValue_2[3] = encu[0];
+                    tempValue_2[4] = encu[1];
+                } else if (id == AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX1) {
+                    encu = mDap.intToByteArray(value  +
+                        getDapParam(AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX100));
+                    tempValue_2[3] = encu[0];
+                    tempValue_2[4] = encu[1];
+                }
+                else {
+                    tempValue_2[5] = (byte)value;
+                }
+                int enbo2Int = mDap.byteArrayToInt(enbo);
+                int encu2Int = mDap.byteArrayToInt(encu);
+                mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_BASS_ENHANCER - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, tempValue_2);
+                Log.d(TAG, "BASS_ENHANCER setParameter enable:" + tempValue_2[0] + ", boost:" + enbo2Int + ", cutoff:" + encu2Int + ", width:" + tempValue_2[5]);
+                saveDbDap24Param(id, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_LEVELER:
+            case AudioEffectManager.SUBCMD_DAP_2_4_LEVELER_AMOUNT:
+                byte[] tempValue_3 = new byte[2];
+                tempValue_3[0] = (byte)getDapParam(AudioEffectManager.CMD_DAP_2_4_LEVELER);
+                tempValue_3[1] = (byte)getDapParam(AudioEffectManager.SUBCMD_DAP_2_4_LEVELER_AMOUNT);
+                if (id < AudioEffectManager.SUBCMD_DAP_2_4_BASE_VALUE) {
+                    tempValue_3[0] = (byte)value;
+                } else {
+                    tempValue_3[1] = (byte)value;
+                }
+                mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_LEVELER - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, tempValue_3);
+                saveDbDap24Param(id, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_MI_STEERING:
+            case AudioEffectManager.CMD_DAP_2_4_SURROUND_DECODER_ENABLE:
+                mDap.setParameter(id - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, value);
+                saveDbDap24Param(id, value);
                 break;
         }
     }
@@ -1570,21 +1745,24 @@ public class SoundEffectManager {
 
     public int getDapParam(int id) {
         int value = -1, param = 0;
+        int dbValue = 0;
         if (DroidLogicUtils.getAudioDebugEnable()) Log.d(TAG, "getDapParam id:" + id);
-        if (id == AudioEffectManager.CMD_DAP_EFFECT_MODE) {
+
+        if (AudioEffectManager.SOUND_EFFECT_DAP_VERSION == AudioEffectManager.SOUND_EFFECT_DAP_VERSION_1_3_2
+                && id != AudioEffectManager.CMD_DAP_EFFECT_MODE) {
             value = Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_MODE, -1);
-            if (value < 0) {
-                value = getDapParamInternal(id);
-                Settings.Global.putInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_MODE, value);
+            if (value != AudioEffectManager.DAP_MODE_USER) {
+                return getDapParamInternal(id);
             }
-            return value;
         }
-        if (getDapParam(AudioEffectManager.CMD_DAP_EFFECT_MODE) != AudioEffectManager.DAP_MODE_USER)
-            return getDapParamInternal(id);
 
         switch (id) {
             case AudioEffectManager.CMD_DAP_EFFECT_MODE:
-                value = Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_MODE, AudioEffectManager.DAP_MODE_DEFAULT);
+                value = Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_MODE, -1);
+                if (value < 0) {
+                    value = getDapParamInternal(AudioEffectManager.CMD_DAP_EFFECT_MODE);
+                    saveDapParam(id, value);
+                }
                 break;
             case AudioEffectManager.CMD_DAP_VL_ENABLE:
                 value = Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_VL_ENABLE, AudioEffectManager.DAP_VL_DEFAULT);
@@ -1645,8 +1823,141 @@ public class SoundEffectManager {
                 else
                     value = getDapParamInternal(id);
                 break;
+            case AudioEffectManager.CMD_DAP_2_4_PROFILE:
+                value = Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_2_4_PROFILE, -1);
+                if (value < 0) {
+                    value = getDapParamInternal(AudioEffectManager.CMD_DAP_2_4_PROFILE);
+                    Log.w(TAG, "getDapParam id:2_4_PROFILE hal value:" + value);
+                    saveDbDap24Param(id, value);
+                }
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_MI_STEERING:
+            case AudioEffectManager.CMD_DAP_2_4_SURROUND_DECODER_ENABLE:
+            case AudioEffectManager.CMD_DAP_2_4_SURROUND_VIRTUALIZER:
+            case AudioEffectManager.SUBCMD_DAP_2_4_SURROUND_VIRTUALIZER_BOOST:
+            case AudioEffectManager.CMD_DAP_2_4_DIALOGUE_ENHANCER:
+            case AudioEffectManager.SUBCMD_DAP_2_4_DIALOGUE_ENHANCER_AMOUNT:
+            case AudioEffectManager.CMD_DAP_2_4_BASS_ENHANCER:
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_BOOST:
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX100:
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX1:
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_WIDTH:
+            case AudioEffectManager.CMD_DAP_2_4_LEVELER:
+            case AudioEffectManager.SUBCMD_DAP_2_4_LEVELER_AMOUNT:
+                value = getDbDap24Param(id);
+                Log.w(TAG, "getDbDap24Param id:" + id + ", value:" + value);
+                break;
         }
         return value;
     }
+
+    private int getDbIntValue(String id, int defaultValue) {
+        return Settings.Global.getInt(mContext.getContentResolver(), id, defaultValue);
+    }
+
+    private void setDbIntValue(String id, int Value) {
+        Settings.Global.putInt(mContext.getContentResolver(), id, Value);
+    }
+
+    private int getDbDap24Param(int id) {
+        if (DroidLogicUtils.getAudioDebugEnable()) Log.d(TAG, "getDbDap24Param id:" + id);
+        int result = -1;
+        switch (id) {
+            case AudioEffectManager.CMD_DAP_2_4_PROFILE:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_PROFILE, -1);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_SURROUND_VIRTUALIZER:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_SURROUND_VIRTUALIZER_MODE, AudioEffectManager.DAP_2_4_SURROUND_VIRTUALIZER_DEFAULT);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_SURROUND_VIRTUALIZER_BOOST:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_SURROUND_VIRTUALIZER_BOOST, AudioEffectManager.DAP_2_4_SURROUND_VIRTUALIZER_BOOST_DEFAULT);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_DIALOGUE_ENHANCER:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_DIALOGUE_ENHANCER_ENABLE, AudioEffectManager.DAP_2_4_DIALOGUE_ENHANCER_DEFAULT);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_DIALOGUE_ENHANCER_AMOUNT:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_DIALOGUE_ENHANCER_AMOUNT, AudioEffectManager.DAP_2_4_DIALOGUE_ENHANCER_AMOUNT_DEFAULT);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_BASS_ENHANCER:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_ENABLE, AudioEffectManager.DAP_2_4_BASS_ENHANCER_DEFAULT);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_BOOST:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_BOOST, AudioEffectManager.DAP_2_4_BASS_ENHANCER_BOOST_DEFAULT);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX100:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_CUTOFFX100, AudioEffectManager.DAP_2_4_BASS_ENHANCER_CUTOFFX100_DEFAULT) * 100;
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX1:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_CUTOFFX1, AudioEffectManager.DAP_2_4_BASS_ENHANCER_CUTOFFX1_DEFAULT);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_WIDTH:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_WIDTH, AudioEffectManager.DAP_2_4_BASS_ENHANCER_WIDTH_DEFAULT);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_MI_STEERING:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_MI_STEERING, AudioEffectManager.DAP_2_4_MI_STEERING_DEFAULT);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_SURROUND_DECODER_ENABLE:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_SURROUND_DECODER_ENABLE, AudioEffectManager.DAP_2_4_SURROUND_DECODER_ENABLE_DEFAULT);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_LEVELER:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_LEVELER_MODE, AudioEffectManager.DAP_2_4_LEVELER_DEFAULT);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_LEVELER_AMOUNT:
+                result = getDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_LEVELER_AMOUNT, AudioEffectManager.DAP_2_4_LEVELER_AMOUNT_DEFAULT);
+                break;
+        }
+        return result;
+    }
+
+    private void saveDbDap24Param(int id, int value) {
+        if (DroidLogicUtils.getAudioDebugEnable()) Log.d(TAG, "saveDbDap24Param id:" + id + ", value:" + value);
+        switch (id) {
+            case AudioEffectManager.CMD_DAP_2_4_PROFILE:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_PROFILE, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_SURROUND_VIRTUALIZER:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_SURROUND_VIRTUALIZER_MODE, value);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_SURROUND_VIRTUALIZER_BOOST:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_SURROUND_VIRTUALIZER_BOOST, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_DIALOGUE_ENHANCER:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_DIALOGUE_ENHANCER_ENABLE, value);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_DIALOGUE_ENHANCER_AMOUNT:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_DIALOGUE_ENHANCER_AMOUNT, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_BASS_ENHANCER:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_ENABLE, value);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_BOOST:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_BOOST, value);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX100:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_CUTOFFX100, value);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_CUTOFFX1:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_CUTOFFX1, value);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_BASS_ENHANCER_WIDTH:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_BASS_ENHANCER_WIDTH, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_MI_STEERING:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_MI_STEERING, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_SURROUND_DECODER_ENABLE:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_SURROUND_DECODER_ENABLE, value);
+                break;
+            case AudioEffectManager.CMD_DAP_2_4_LEVELER:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_LEVELER_MODE, value);
+                break;
+            case AudioEffectManager.SUBCMD_DAP_2_4_LEVELER_AMOUNT:
+                setDbIntValue(DB_ID_SOUND_EFFECT_DAP_2_4_LEVELER_AMOUNT, value);
+                break;
+            default:
+                break;
+        }
+    }
+
 }
 

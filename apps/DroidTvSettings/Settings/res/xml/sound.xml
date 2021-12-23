@@ -26,9 +26,9 @@
         android:title="@string/device_sound_dolby"
         android:summary="%s" />
     <Preference
-        android:fragment="com.android.tv.settings.DolbyAudioEffectFragment"
-        android:key="dolby_audio_processing"
-        android:title="@string/dolby_audio_processing" />
+        android:fragment="com.android.tv.settings.soundeffect.DolbyAudioEffect_2_4_Fragment"
+        android:key="key_dolby_audio_processing_2_4"
+        android:title="@string/title_dolby_audio_processing_2_4" />
 
     <SeekBarPreference
         android:key="arc_latency"
