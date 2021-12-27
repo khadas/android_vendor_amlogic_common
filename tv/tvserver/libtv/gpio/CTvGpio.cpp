@@ -40,7 +40,10 @@ int CTvGpio::processCommand(const char *port_name, bool is_out, int edge)
 
     char pin_value[10] = {0};
     if (strcmp(mGpioName, port_name) != 0 && tvWriteSysfs(GPIO_NAME_TO_PIN, port_name)) {
-        strcpy(mGpioName, port_name);
+        //strcpy(mGpioName, port_name);
+        int nLen = strlen(port_name) < (sizeof(mGpioName) - 1) ? strlen(port_name) : (sizeof(mGpioName) - 1);
+        strncpy(mGpioName, port_name, nLen);
+        mGpioName[nLen] = '\0';
         tvReadSysfs(GPIO_NAME_TO_PIN, pin_value);
         mGpioPinNum = atoi(pin_value);
     }

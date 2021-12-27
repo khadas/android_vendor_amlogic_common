@@ -122,6 +122,7 @@ const char *tvservice_get_kernel_version_info(void)
         snprintf(kernelVersionStr, 21, "%s", buf);
         return kernelVersionStr;
     } else {
+        close(versionFd);
         return "Unknow";
     }
 }

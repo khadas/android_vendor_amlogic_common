@@ -90,10 +90,16 @@ int CTvin::OpenTvin()
 {
     const char *config_value;
     config_value = config_get_str ( CFG_SECTION_TV, CFG_TVIN_TVPATH_SET_MANUAL, "null" );
-    strcpy ( config_tv_path, config_value );
+    //strcpy ( config_tv_path, config_value );
+    int nLen = strlen(config_value) < (sizeof(config_tv_path)-1) ? strlen(config_value) : (sizeof(config_tv_path)-1);
+    strncpy(config_tv_path, config_value, nLen );
+    config_tv_path[nLen] = '\0';
     memset ( config_default_path, 0x0, 64 );
     config_value = config_get_str ( CFG_SECTION_TV, CFG_TVIN_TVPATH_SET_DEFAULT, "null" );
-    strcpy ( config_default_path, config_value );
+    //strcpy ( config_default_path, config_value );
+    int nLen1 = strlen(config_value) < (sizeof(config_default_path)-1) ? strlen(config_value) : (sizeof(config_default_path)-1);
+    strncpy(config_default_path, config_value, nLen1);
+    config_default_path[nLen1] = '\0';
 
     config_value = config_get_str(CFG_SECTION_TV, CFG_TVIN_DISPLAY_RESOLUTION_FIRST, "enable");
     if (strcmp(config_value, "enable") == 0) {
@@ -1076,7 +1082,11 @@ int CTvin::AFE_VGAAutoAdjust ( struct tvafe_vga_parm_s *timingadj )
     }
 
     for ( i = 0; i < 100; i++ ) {
-        VDIN_DeviceIOCtl ( TVIN_IOC_G_PARM, &tvin_para );
+        //VDIN_DeviceIOCtl ( TVIN_IOC_G_PARM, &tvin_para );
+        int rt = VDIN_DeviceIOCtl ( TVIN_IOC_G_PARM, &tvin_para );
+        if (rt < 0) {
+            LOGW ( "AFE_VGA auto adjust, error(%s)!", strerror ( errno ) );
+        }
 
         if ( tvin_para.info.status == TVIN_SIG_STATUS_STABLE ) {
             break;

@@ -1691,7 +1691,8 @@ int CTv::getHdmiFormatInfo ( int *pWidth, int *pHeight, int *pFPS)
         }
         *pFPS = getHDMIFrameRate();
     } else {
-        LOGD("%s: signal don't stable!\n");
+        //LOGD("%s: signal don't stable!\n");
+        LOGD("%s: signal don't stable!\n", __FUNCTION__);
     }
 
     return 0;
@@ -3070,7 +3071,8 @@ int CTv::LoadEdidData(int isNeedBlackScreen, int isDolbyVisionEnable)
 int CTv::UpdateEdidData(tv_source_input_t source_input, unsigned char *dataBuf)
 {
     AutoMutex _l(mLock);
-    LOGD("%s: source is %d.\n", __FUNCTION__);
+    //LOGD("%s: source is %d.\n", __FUNCTION__);
+    LOGD("%s: source is %d.\n", __FUNCTION__, source_input);
     int ret = -1;
     if (dataBuf == NULL) {
         LOGE("%s: dataBuf is NULL.\n", __FUNCTION__);

@@ -1130,16 +1130,19 @@ int tvSpiRead(unsigned int offset, unsigned int ulength, unsigned char *pubuf) {
     }
     if (NULL == pubuf) {
         LOGE("%s:pbuf is NULL!\n", __FUNCTION__);
+        close(fd);
         return -1;
     }
     if (offset != (unsigned int)lseek (fd, offset, SEEK_SET)) {
         LOGE("%s lseek error(%s)!\n", __FUNCTION__, strerror(errno));
+        close(fd);
         return -1;
     }
 
     err = read (fd, pubuf, ulength);
     if (err < 0) {
         LOGE("%s read error(%s)!\n", __FUNCTION__, strerror(errno));
+        close(fd);
         return -1;
     }
 

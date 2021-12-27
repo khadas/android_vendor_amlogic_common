@@ -318,7 +318,10 @@ void CTvScanner::notifyService(SCAN_ServiceInfo_t *srv)
     mCurEv.mFrequency = mCurEv.mFEParas.getFrequency();
     mCurEv.mProgramsInPat = srv->programs_in_pat;
 
-    strncpy(mCurEv.mVct, srv->tsinfo->vct, sizeof(mCurEv.mVct));
+    //strncpy(mCurEv.mVct, srv->tsinfo->vct, sizeof(mCurEv.mVct));
+    int nLen = strlen(srv->tsinfo->vct) < (sizeof(mCurEv.mVct)-1) ? strlen(srv->tsinfo->vct) : (sizeof(mCurEv.mVct)-1);
+    strncpy(mCurEv.mVct, srv->tsinfo->vct, nLen);
+    mCurEv.mVct[nLen]='\0';
 
     int feType = mCurEv.mFEParas.getFEMode().getBase();
     if (feType != TV_FE_ANALOG) {
@@ -334,7 +337,10 @@ void CTvScanner::notifyService(SCAN_ServiceInfo_t *srv)
         for (int i = 0; i < srv->aud_info.audio_count; i++) {
             mCurEv.mAid[i] = srv->aud_info.audios[i].pid;
             mCurEv.mAfmt[i] = srv->aud_info.audios[i].fmt;
-            strncpy(mCurEv.mAlang[i], srv->aud_info.audios[i].lang, 10);
+            //strncpy(mCurEv.mAlang[i], srv->aud_info.audios[i].lang, 10);
+            int nLen1 = strlen(srv->aud_info.audios[i].lang) < (sizeof(mCurEv.mAlang[i])-1) ? strlen(srv->aud_info.audios[i].lang) : (sizeof(mCurEv.mAlang[i])-1);
+            strncpy(mCurEv.mAlang[i], srv->aud_info.audios[i].lang,nLen1);
+            mCurEv.mAlang[i][nLen1]='\0';
             mCurEv.mAtype[i] = srv->aud_info.audios[i].audio_type;
             mCurEv.mAExt[i] = srv->aud_info.audios[i].audio_exten;
         }
@@ -359,7 +365,10 @@ void CTvScanner::notifyService(SCAN_ServiceInfo_t *srv)
                 mCurEv.mSstype[i] = srv->cap_info.captions[i].type ? TYPE_DTV_CC : TYPE_ATV_CC;
                 mCurEv.mSid1[i] = srv->cap_info.captions[i].private_data;
                 mCurEv.mSid2[i] = srv->cap_info.captions[i].flags;
-                strncpy(mCurEv.mSlang[i], srv->cap_info.captions[i].lang, 10);
+                //strncpy(mCurEv.mSlang[i], srv->cap_info.captions[i].lang, 10);
+                int nLen2 = strlen(srv->cap_info.captions[i].lang) < (sizeof(mCurEv.mSlang[i])-1) ? strlen(srv->cap_info.captions[i].lang) : (sizeof(mCurEv.mSlang[i])-1);
+                strncpy(mCurEv.mSlang[i], srv->cap_info.captions[i].lang,nLen2);
+                mCurEv.mSlang[i][nLen2]='\0';
             }
 
             for (j = 0; j < srv->scte27_info.subtitle_count; j++) {
@@ -380,7 +389,10 @@ void CTvScanner::notifyService(SCAN_ServiceInfo_t *srv)
                 mCurEv.mSstype[i] = srv->sub_info.subtitles[i].type;
                 mCurEv.mSid1[i] = srv->sub_info.subtitles[i].comp_page_id;
                 mCurEv.mSid2[i] = srv->sub_info.subtitles[i].anci_page_id;
-                strncpy(mCurEv.mSlang[i], srv->sub_info.subtitles[i].lang, 10);
+                //strncpy(mCurEv.mSlang[i], srv->sub_info.subtitles[i].lang, 10);
+                int nLen3 = strlen(srv->sub_info.subtitles[i].lang) < (sizeof(mCurEv.mSlang[i])-1) ? strlen(srv->sub_info.subtitles[i].lang) : (sizeof(mCurEv.mSlang[i])-1);
+                strncpy(mCurEv.mSlang[i], srv->sub_info.subtitles[i].lang, nLen3);
+                mCurEv.mSlang[i][nLen3]='\0';
             }
             int scnt = mCurEv.mScnt;
             for (int i = 0; i < srv->ttx_info.teletext_count; i++) {
@@ -393,7 +405,10 @@ void CTvScanner::notifyService(SCAN_ServiceInfo_t *srv)
                     mCurEv.mSstype[scnt] = srv->ttx_info.teletexts[i].type;
                     mCurEv.mSid1[scnt] = srv->ttx_info.teletexts[i].magazine_no;
                     mCurEv.mSid2[scnt] = srv->ttx_info.teletexts[i].page_no;
-                    strncpy(mCurEv.mSlang[scnt], srv->ttx_info.teletexts[i].lang, 10);
+                    //strncpy(mCurEv.mSlang[scnt], srv->ttx_info.teletexts[i].lang, 10);
+                    int nLen4 = strlen(srv->ttx_info.teletexts[i].lang) < (sizeof(mCurEv.mSlang[scnt])-1)? strlen(srv->ttx_info.teletexts[i].lang) : (sizeof(mCurEv.mSlang[scnt])-1);
+                    strncpy(mCurEv.mSlang[scnt], srv->ttx_info.teletexts[i].lang, nLen4);
+                    mCurEv.mSlang[scnt][nLen4]='\0';
                     scnt++;
                 }
             }
@@ -407,7 +422,10 @@ void CTvScanner::notifyService(SCAN_ServiceInfo_t *srv)
                     mCurEv.mSstype[scnt] = srv->ttx_info.teletexts[i].type;
                     mCurEv.mSid1[scnt] = srv->ttx_info.teletexts[i].magazine_no;
                     mCurEv.mSid2[scnt] = srv->ttx_info.teletexts[i].page_no;
-                    strncpy(mCurEv.mSlang[scnt], srv->ttx_info.teletexts[i].lang, 10);
+                    //strncpy(mCurEv.mSlang[scnt], srv->ttx_info.teletexts[i].lang, 10);
+                    int nLen5 = strlen(srv->ttx_info.teletexts[i].lang) < (sizeof(mCurEv.mSlang[scnt])-1) ? strlen(srv->ttx_info.teletexts[i].lang) : (sizeof(mCurEv.mSlang[scnt])-1);
+                    strncpy(mCurEv.mSlang[scnt], srv->ttx_info.teletexts[i].lang, nLen5);
+                    mCurEv.mSlang[scnt][nLen5]='\0';
                     scnt++;
                 }
             }
@@ -446,7 +464,10 @@ void CTvScanner::notifyService(SCAN_ServiceInfo_t *srv)
                 mCurEv.mSstype[i] = srv->cap_info.captions[i].type;
                 mCurEv.mSid1[i] = srv->cap_info.captions[i].pid_or_line21;
                 mCurEv.mSid2[i] = srv->cap_info.captions[i].flags;
-                strncpy(mCurEv.mSlang[i], srv->cap_info.captions[i].lang, 10);
+                //strncpy(mCurEv.mSlang[i], srv->cap_info.captions[i].lang, 10);
+                int nLen6 = strlen(srv->cap_info.captions[i].lang) < (sizeof(mCurEv.mSlang[i])-1) ? strlen(srv->cap_info.captions[i].lang) : (sizeof(mCurEv.mSlang[i])-1);
+                strncpy(mCurEv.mSlang[i], srv->cap_info.captions[i].lang, nLen6);
+                mCurEv.mSlang[i][nLen6]='\0';
             }
 
         }

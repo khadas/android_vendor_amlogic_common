@@ -201,7 +201,10 @@ CTvRrt::CTvRrt()
     } else {//kernel 4.9
         strcpy(defaultRRTXMLPath, TV_RRT_DEFINE_SYSTEM_PATH_0);
     }*/
-    strcpy(defaultRRTXMLPath, TV_RRT_DEFINE_SYSTEM_PATH_1);
+    //strcpy(defaultRRTXMLPath, TV_RRT_DEFINE_SYSTEM_PATH_1);
+    int nLen =  strlen(TV_RRT_DEFINE_SYSTEM_PATH_1) < (sizeof(defaultRRTXMLPath) - 1) ? strlen(TV_RRT_DEFINE_SYSTEM_PATH_1) :(sizeof(defaultRRTXMLPath)-1);
+    strncpy(defaultRRTXMLPath, TV_RRT_DEFINE_SYSTEM_PATH_1, nLen);
+    defaultRRTXMLPath[nLen] = '\0';
 
     if (isFileExist(defaultRRTXMLPath)) {
         if (!isFileExist(TV_RRT_DEFINE_PARAM_PATH)) {

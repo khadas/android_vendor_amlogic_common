@@ -212,7 +212,7 @@ int CTvPanel::PANEL_43D10_data_Conversion(unsigned int offset,const char *partit
     }
 
     unsigned short crc_check;
-    crc_check = crc_check = (unsigned short)(Parameter[33]*0x100+Parameter[32]);
+    crc_check = (unsigned short)(Parameter[33]*0x100+Parameter[32]);
     unsigned char crc_bin[4] = {0x0};
     for (int i = 0;i < 4;i++) {
         crc_bin[i] = Parameter[32 + i];
@@ -223,7 +223,12 @@ int CTvPanel::PANEL_43D10_data_Conversion(unsigned int offset,const char *partit
         LOGE("%s,Malloc memory failed!\n", __FUNCTION__);
         return -1;
     }
-    tvSpiRead(36, data_size, lutbuffer);
+    //tvSpiRead(36, data_size, lutbuffer);
+    int ret1 = tvSpiRead(36, data_size, lutbuffer);
+    if (ret1 < 0) {
+        LOGE("%s, read lutbuffer Failed!\n", __FUNCTION__);
+        return -1;
+    }
     unsigned int data_size_crc_32,data_size_crc=0;
     data_size_crc_32 = data_size/32+1;
     data_size_crc = data_size_crc_32*8;
@@ -1401,6 +1406,8 @@ int CTvPanel::PANEL_50T01_data_Conversion(const char *partition_name_Table_data,
     }
     ret = system("mount -r -o remount /dev/block/vendor /vendor");
     LOGD("unmount ret = %d\n", ret);
+    free(buffer_res);
+    buffer_res = NULL;
     return 0;
 }
 
@@ -1852,6 +1859,12 @@ int CTvPanel::PANEL_65D02_H_data_Conversion(const char *partition_name_Table_dat
         LOGE("%s,write lut error\n", __FUNCTION__);
         free(result);
         result = NULL;
+        free(plane1);
+        plane1 = NULL;
+        free(plane2);
+        plane2 = NULL;
+        free(plane3);
+        plane3 = NULL;
         return -1;
     } else {
         LOGD("%s,write lut is OK\n", __FUNCTION__);
@@ -1861,6 +1874,12 @@ int CTvPanel::PANEL_65D02_H_data_Conversion(const char *partition_name_Table_dat
     int write2=PANEL_Flash_Write(partition_name_Register, offset1, Register, length2);
     if (write2 !=0) {
         LOGE("%s,write reg error\n", __FUNCTION__);
+        free(plane1);
+        plane1 = NULL;
+        free(plane2);
+        plane2 = NULL;
+        free(plane3);
+        plane3 = NULL;
         return -1;
     } else {
         LOGD("%s,write reg is OK\n", __FUNCTION__);
@@ -1874,6 +1893,12 @@ int CTvPanel::PANEL_65D02_H_data_Conversion(const char *partition_name_Table_dat
     }
     ret = system("mount -r -o remount /dev/block/vendor /vendor");
     LOGD("unmount ret = %d\n", ret);
+    free(plane1);
+    plane1 = NULL;
+    free(plane2);
+    plane2 = NULL;
+    free(plane3);
+    plane3 = NULL;
     return 0;
 }
 
@@ -1927,16 +1952,31 @@ int CTvPanel::PANEL_55SDC_data_Conversion(const char *partition_name_Table_data,
 
         for (int i = 0; i < 892; i++) {
             if (i == 891) {
-                tvSpiRead((DEMURA_FLASH_ADDR+1024*i),81,(flash_demura+1024*i));
+                //tvSpiRead((DEMURA_FLASH_ADDR+1024*i),81,(flash_demura+1024*i));
+                ret = tvSpiRead((DEMURA_FLASH_ADDR+1024*i),81,(flash_demura+1024*i));
+                if (ret < 0) {
+                    LOGE("%s, falsh_demura_81 Failed!\n", __FUNCTION__);
+                    return -1;
+                }
             } else {
-                tvSpiRead((DEMURA_FLASH_ADDR+1024*i),1024,(flash_demura+1024*i));
+                //tvSpiRead((DEMURA_FLASH_ADDR+1024*i),1024,(flash_demura+1024*i));
+                ret = tvSpiRead((DEMURA_FLASH_ADDR+1024*i),1024,(flash_demura+1024*i));
+                if (ret < 0) {
+                    LOGE("%s, falsh_demura_1024 Failed!\n", __FUNCTION__);
+                    return -1;
+                }
             }
         }
         for (int i = 0; i< (DEMURA_FLASH_LEN - 1); i++) {
             check_sum_mura += flash_demura[i];
         }
         check = 0xFC - check_sum_mura;
-        tvSpiRead(0x12FC50,1,(flash_demura+912464));
+        //tvSpiRead(0x12FC50,1,(flash_demura+912464));
+        ret = tvSpiRead(0x12FC50,1,(flash_demura+912464));
+        if (ret < 0) {
+            LOGE("%s, flash_demura_1 Failed!\n", __FUNCTION__);
+            return -1;
+        }
         demura_check_count++;
 
         if (flash_demura[912464] == check) {
@@ -1960,7 +2000,12 @@ int CTvPanel::PANEL_55SDC_data_Conversion(const char *partition_name_Table_data,
         memset(tmp,0,129);
         check_sum_para = 0;
         check_p = 0;
-        tvSpiRead(GAIN_FLASH_ADDR, 129, tmp);
+        //tvSpiRead(GAIN_FLASH_ADDR, 129, tmp);
+        ret = tvSpiRead(GAIN_FLASH_ADDR, 129, tmp);
+        if (ret < 0) {
+            LOGE("%s,GAIN_FLASH_ADDR Failed!\n", __FUNCTION__);
+            return -1;
+        }
         for (int i = 0;i <128;i++) {
             check_sum_para += tmp[i];
         }

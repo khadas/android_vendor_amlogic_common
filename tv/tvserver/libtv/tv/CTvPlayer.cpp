@@ -847,14 +847,21 @@ int CDTVTvPlayer::readMediaInfoFromFile(const char *file_path, AM_AV_TimeshiftMe
         LOGE("Cannot open file '%s'", file_path);
         return -1;
     }
-
+    if ((sizeof(buffer[1])<0) || (sizeof(buffer[1])>4))
+    {
+        return -1;
+    }
     info_len = read(fd, pkt_buf, sizeof(buffer[1]));
 
     data_len = 0;
     /*skip the packet headers*/
     for (i=0; i<info_len; i++) {
         if ((i%188) > 3) {
-            buf[data_len++] = pkt_buf[i];
+            if ((data_len++) < sizeof(buffer[0]))
+            {
+                buf[data_len++] = pkt_buf[i];
+            }
+            //buf[data_len++] = pkt_buf[i];
         }
     }
 

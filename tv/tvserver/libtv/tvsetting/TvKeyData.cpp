@@ -227,6 +227,10 @@ int KeyData_ReadMacAddress(unsigned char data_buf[])
     if (rd_size == 17) {
         char *tmp_buf = NULL;
         tmp_buf = (char *)malloc(sizeof(char) * (sizeof(rd_buf)+1));
+        if (tmp_buf == NULL) {
+            LOGE("%s,tmp buf malloc fail\n", __FUNCTION__);
+            return -1;
+        }
 #if ANDROID_PLATFORM_SDK_VERSION == 19
     memcpy((void *)tmp_buf, (const void *)rd_buf, 128);
     rd_size = TransStringToHex(rd_size, (char *)rd_buf, tmp_buf);

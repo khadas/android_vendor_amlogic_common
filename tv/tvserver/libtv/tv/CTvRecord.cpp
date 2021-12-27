@@ -133,7 +133,10 @@ int CTvRecord::setFilePath(const char *name)
     LOGD("setFilePath(%s)", toReadable(name));
 #ifdef SUPPORT_ADTV
     if (mIsTsplayer == true) {
-        strncpy(rec_open_params.location, (char*)name, sizeof(rec_open_params.location));
+        //strncpy(rec_open_params.location, (char*)name, sizeof(rec_open_params.location));
+        int nLen = strlen(name) < (sizeof(rec_open_params.location)-1) ? strlen(name) : (sizeof(rec_open_params.location)-1);
+        strncpy(rec_open_params.location, (char*)name, nLen);
+        rec_open_params.location[nLen] = '\0';
         //strncpy((char*)rec_open_params.location, (char*)name, DVR_MAX_LOCATION_SIZE);
         //rec_open_params.location[DVR_MAX_LOCATION_SIZE-1] = '\0';
         LOGD("----rec_open_params.location(%s)", toReadable(rec_open_params.location));

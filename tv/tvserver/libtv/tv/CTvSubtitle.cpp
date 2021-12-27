@@ -522,7 +522,8 @@ program, no signal, blocked...*/
 //else != 0
 int CTvSubtitle::sub_start_atsc_cc(enum cc_param_country country, enum cc_param_source_type src_type, int channel_num, enum cc_param_caption_type caption_type)
 {
-    LOGD("%s:country=%d,src=%d,channel_num=%D,ctype=%d", __FUNCTION__, country, src_type, channel_num, caption_type);
+    //LOGD("%s:country=%d,src=%d,channel_num=%D,ctype=%d", __FUNCTION__, country, src_type, channel_num, caption_type);
+    LOGD("%s:country=%d,src=%d,channel_num=%d,ctype=%d", __FUNCTION__, country, src_type, channel_num, caption_type);
 /*
     switch (country) {
     case CC_PARAM_COUNTRY_USA:
