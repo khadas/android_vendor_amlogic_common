@@ -36,6 +36,7 @@ static void ge2d_calculate_buffer_size(const buffer_info_t* buffer,
         case PIXEL_FORMAT_RGBX_8888:
             size_out[0] = CANVAS_ALIGNED(image_width * buffer->canvas_h * 4);
             break;
+        case PIXEL_FORMAT_YCbCr_422_UYVY:
         case PIXEL_FORMAT_RGB_565:
         case PIXEL_FORMAT_ARGB_4444:
         case PIXEL_FORMAT_RGBA_4444:
