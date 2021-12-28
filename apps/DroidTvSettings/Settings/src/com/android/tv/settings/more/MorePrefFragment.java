@@ -92,8 +92,10 @@ public class MorePrefFragment extends SettingsPreferenceFragment {
     private static final String DTVKIT_PACKAGE = "org.dtvkit.inputsource";
     private static final String HAILSTORM_VERSION_PROP = "ro.vendor.hailstorm.version";
     private static final String DEBUG_DISPLY_PROP = "vendor.display.debug";
+    private static final String FRAMERATE_PROP = "persist.vendor.sys.framerate.feature";
     static final String KEY_DEVELOP_OPTION = "amlogic_developer_options";
     private static final String KEY_AI_PQ = "ai_pq";
+    private static final String KEY_FRAME_RATE = "frame_rate";
 
     private Preference mUpgradeBluetoothRemote;
     private Preference mSoundsPref;
@@ -148,6 +150,8 @@ public class MorePrefFragment extends SettingsPreferenceFragment {
         boolean customConfig     = getContext().getPackageManager().hasSystemFeature("droidlogic.software.netflix");
         boolean debugConfig      = mSystemControlManager.getPropertyBoolean(DEBUG_DISPLY_PROP,false);
 
+        boolean isShowFrameRate  = mSystemControlManager.getPropertyBoolean(FRAMERATE_PROP,false);
+
         final Preference morePref = findPreference(KEY_MAIN_MENU);
         final Preference displayPref = findPreference(KEY_DISPLAY);
         final Preference hdmicecPref = findPreference(KEY_HDMI_CEC_CONTROL);
@@ -163,6 +167,9 @@ public class MorePrefFragment extends SettingsPreferenceFragment {
         final Preference versionPref = findPreference(KEY_VERSION);
         final Preference advanced_sound_settings_pref = findPreference(KEY_ADVANCE_SOUND);
         final Preference aipq = findPreference(KEY_AI_PQ);
+        final Preference frameRatePref = findPreference(KEY_FRAME_RATE);
+
+        frameRatePref.setVisible(isShowFrameRate);
         aipq.setVisible(mSystemControlManager.hasAipqFunc()? true : false);
         //hide it forcedly as new bluetooth remote upgrade application is not available now
         mUpgradeBluetoothRemote.setVisible(false/*is_from_live_tv ? false : (SettingsConstant.needDroidlogicBluetoothRemoteFeature(getContext()) && !tvFlag)*/);

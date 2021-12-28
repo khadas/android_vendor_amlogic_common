@@ -1139,6 +1139,9 @@
             android:name=".accessories.BluetoothDevicesService"
             android:exported="false" />
 
+        <service android:name=".FrameRateService"
+            android:exported="false"/>
+
         <provider
             android:name=".accessories.ConnectedDevicesSliceProvider"
             android:authorities="com.android.tv.settings.accessories.sliceprovider"

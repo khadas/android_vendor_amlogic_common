@@ -27,6 +27,7 @@
     <color name="storage_music">#8E562A</color>
     <color name="storage_cache">#479392</color>
     <color name="storage_misc">#7C3030</color>
+    <color name="lightyellow_title">#FFFFE0</color>
 
     <color name="icon_background">#FF4A4F51</color>
     <color name="add_accessory_hint_text_color">#FFE0E0E0</color>

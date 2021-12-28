@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <TextView
-        android:id="@+id/show_info"
-        android:theme="@style/myfont"
-        android:text="@string/prepare"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+<TextView
+        android:id="@+id/show_framerate"
+        android:theme="@style/FrameRateFragmet"
+        android:text="@string/frame_rate_prepare"
         android:inputType="textMultiLine"
         android:lineSpacingExtra="3dp"
         android:lineSpacingMultiplier="1.5"
+        android:layout_gravity="right"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
-
     </TextView>
-
 </LinearLayout>

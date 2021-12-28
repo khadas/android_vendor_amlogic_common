@@ -115,4 +115,9 @@
         android:key="ai_pq"
         android:title="@string/ai_pq"
         android:fragment="com.android.tv.settings.AiPqFragment"/>
+    <Preference
+            android:icon="@drawable/ic_settings_more"
+            android:key="frame_rate"
+            android:title="@string/frame_rate"
+            android:fragment="com.android.tv.settings.FrameRateFragment"/>
 </PreferenceScreen>

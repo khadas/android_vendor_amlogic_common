@@ -467,6 +467,11 @@
         <item name="android:textSize">16sp</item>
         <item name="android:textColor">@color/green</item>
     </style>
+    <style name="FrameRateFragmet" >
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">50sp</item>
+        <item name="android:textColor">@color/lightyellow_title</item>
+    </style>
     <!-- DroidLogic end -->
 
 </resources>

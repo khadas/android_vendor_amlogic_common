@@ -37,6 +37,12 @@ public class BootReceiver extends BroadcastReceiver {
         if (DEBUG) {
             Log.i(TAG, "onReceive");
         }
+        try {
+            Log.i(TAG, "start FrameRateService");
+            context.startService(new Intent(context,FrameRateService.class));
+        } catch (Exception e) {
+            Log.e(TAG, "startFrameRateService error !!", e);
+        }
         // Start the Service that supports ConnectedDevicesSliceProvider only if the URI is not
         // overlaid.
         if (context != null
