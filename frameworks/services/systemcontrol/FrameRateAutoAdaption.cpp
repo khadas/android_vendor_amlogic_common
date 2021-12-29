@@ -229,6 +229,13 @@ void FrameRateAutoAdaption::policyControl(int frameRateValue){
             frameRateValue = findNearlyFrame(frameRateValue);
             SYS_LOGD("find new framerate is %d",frameRateValue);
             if (frameRateValue <= 0) return;
+            modes = configMap[frameRateValue];
+        }
+        if (modes.size() != 2) return;
+        int backVal1 = atoi(modes[0].c_str());
+        int backVal2 = atoi(modes[1].c_str());
+        if (backVal1 > 0 && backVal1 % 25 == 0) {
+            frameRateValue = FRAME_RATE_DURATION_50;
         }
         mPlayFlag = true;
 #ifdef FRAMERATE_MODE
