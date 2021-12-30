@@ -251,8 +251,8 @@ int ScreenControlService::startScreenCap(int32_t left, int32_t top, int32_t righ
         MetaData* pMeta;
         pMeta = new MetaData();
         pMeta->setInt32(kKeyColorFormat, OMX_COLOR_Format32bitARGB8888);
-        mScreenCatch->start(pMeta);
-
+        if( mScreenCatch->start(pMeta) != OK)
+            return UNKNOWN_ERROR;
         MediaBuffer *buffer;
 
         while ((!mNeedStop) && (count < 1)) {

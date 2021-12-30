@@ -108,6 +108,7 @@ ScreenManager::ScreenManager() :
     mScreenDev(NULL){
 
     mCorpX = mCorpY = mCorpWidth = mCorpHeight =0;
+	ALOGI("[%s %d] ScreenManager mCorpX:%d mCorpY:%d mCorpWidth:%d mCorpHeight:%d", __FUNCTION__, __LINE__, mCorpX, mCorpY, mCorpWidth, mCorpHeight);
 
     int fd1 = -1, fd2 = -1;
     fd1 = open("/dev/amvenc_avc", O_RDWR);
@@ -370,12 +371,11 @@ status_t ScreenManager::setVideoRotation(int32_t client_id, int degree)
 status_t ScreenManager::setVideoCrop(int32_t client_id, const int32_t x, const int32_t y, const int32_t width, const int32_t height)
 {
     ALOGI("[%s %d] setVideoCrop x:%d y:%d width:%d height:%d", __FUNCTION__, __LINE__, x, y, width, height);
-
+    Mutex::Autolock autoLock(mLock);
     mCorpX = x;
     mCorpY = y;
     mCorpWidth = width;
     mCorpHeight = height;
-
     return OK;
 }
 
@@ -424,7 +424,7 @@ status_t ScreenManager::start(int32_t client_id)
             mScreenDev->ops.set_format(mScreenDev, mWidth, mHeight, V4L2_PIX_FMT_NV21);
         }
         mScreenDev->ops.setDataCallBack(mScreenDev, VdinDataCallBack, (void*)this);
-        mScreenDev->ops.set_amlvideo2_crop(mScreenDev, mCorpX, mCorpY, mCorpWidth, mCorpHeight);
+        mScreenDev->ops.set_amlvideo2_crop(mScreenDev, mCorpX, mCorpY, mCorpWidth-mCorpX, mCorpHeight-mCorpY);
         mScreenDev->ops.start(mScreenDev);
     }
 

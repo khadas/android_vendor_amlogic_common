@@ -50,7 +50,7 @@ static void help(char *appName)
 {
     printf(
         "Usage:\n"
-        "  %s [-h] [-f <framerate>] [-b <bitrate>] [-t <type>] [-s <second>] [<width> <height>]\n"
+        "  %s [-h] [-f <framerate>] [-b <bitrate>] [-t <type>] [-s <second>] [<left>  <top>  <right>  <bottom> <width> <height>]\n"
         "\n"
         "Parameters:\n"
         "  -h            : show this help\n"
@@ -58,6 +58,7 @@ static void help(char *appName)
         "  -b <bitrate>  : bits per second, unit bit, default as 4000000\n"
         "  -t <type>     : select video-only(%d) or video+osd(%d), default as video+osd\n"
         "  -s <second>   : record times, unit second(s), default as 30\n"
+        "  left  top  right  bottom : capture area, default as 720P (0,0,1280,720) \n"
         "  width height  : output size, default as 720P (1280X720)\n"
         "\n"
         "\n"
@@ -78,6 +79,7 @@ int main(int argc, char **argv) {
     char *filename = "/data/temp/video.ts";
     int ch;
     int framerate=30, bitrate=4000000, type=AML_CAPTURE_OSD_VIDEO, timeSecond=30;
+    int left=0, top=0, right=1280, bottom=720;
     int outWidth=1280, outHeight=720;
     int tmpArgIdx = 0;
     int needDumpFrame = 0;
@@ -94,7 +96,11 @@ int main(int argc, char **argv) {
     }
     tmpArgIdx = optind;
 
-    if ((tmpArgIdx+1) < argc && (argc-tmpArgIdx) >= 2) {
+    if ((tmpArgIdx+1) < argc && (argc-tmpArgIdx) >= 6) {
+        left = atoi(argv[tmpArgIdx++]);
+        top = atoi(argv[tmpArgIdx++]);
+        right = atoi(argv[tmpArgIdx++]);
+        bottom = atoi(argv[tmpArgIdx++]);
         outWidth = atoi(argv[tmpArgIdx++]);
         outHeight = atoi(argv[tmpArgIdx++]);
     }
@@ -102,12 +108,13 @@ int main(int argc, char **argv) {
     needDumpFrame = framerate * timeSecond;
 
     printf("size     =[%dX%d]\n"
+           "(left,top,right,bottom)=(%d,%d,%d,%d)\n"
            "framerate=%dbps\n"
            "bitrate  =%d\n"
            "type     =%s\n"
            "time     =%ds\n"
            "save as [%s]\n",
-           outWidth, outHeight, framerate, bitrate,
+           outWidth, outHeight,left, top,right,bottom, framerate, bitrate,
            type==AML_CAPTURE_OSD_VIDEO?"video+osd":type==AML_CAPTURE_VIDEO?"video only":"unknow",
            timeSecond, filename);
 
@@ -119,7 +126,7 @@ int main(int argc, char **argv) {
     }
 
     sp<TSPacker> mTSPacker = new TSPacker(outWidth, outHeight, framerate, bitrate, type, 0);
-
+    mTSPacker->setVideoCrop(left, top,right,bottom );
     err = mTSPacker->start();
     if (err != OK) {
         printf("[%s %d] start TSPacker error, exit...\n", __FUNCTION__, __LINE__);

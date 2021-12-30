@@ -67,6 +67,10 @@ TSPacker::TSPacker(int width, int height, int frameRate, int bitRate, int source
     mStarted(false),
     mMaxFrameCnt(-1),
     mLimitTimeMs(-1),
+    mCorpX(-1),
+    mCorpY(-1),
+    mCorpWidth(-1),
+    mCorpHeight(-1),
     mheadFinalize(0) {
 
     mPATContinuityCounter = 0;
@@ -211,6 +215,16 @@ void *TSPacker::ThreadWrapper(void *me) {
     return NULL;
 }
 
+void TSPacker::setVideoCrop(int x, int y, int width, int height){
+    ALOGI("[%s %d] setVideoCrop x:%d y:%d width:%d height:%d", __FUNCTION__, __LINE__, x, y, width, height);
+    mCorpX = x;
+    mCorpY = y;
+    mCorpWidth = width;
+    mCorpHeight = height;
+}
+
+
+
 void TSPacker::initCrcTable() {
     uint32_t poly = 0x04C11DB7;
 
@@ -252,6 +266,11 @@ status_t TSPacker::start(MetaData *params)
 
     mVideoConvertor = new ESConvertor(mSourceType, 0);
 
+	if (mCorpX >= 0){
+		mVideoConvertor->setVideoCrop(mCorpX,mCorpY,mCorpWidth,mCorpHeight);
+
+	}
+	
     if (mMaxFrameCnt > 0) {
         mVideoConvertor->setMaxFrameCount(mMaxFrameCnt);
     }

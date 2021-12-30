@@ -874,6 +874,7 @@ void *ESConvertor::ThreadWrapper(void *me) {
 }
 
 void ESConvertor::setVideoCrop(int x, int y, int width, int height){
+    ALOGI("[%s %d] setVideoCrop x:%d y:%d width:%d height:%d", __FUNCTION__, __LINE__, x, y, width, height);
     mCorpX = x;
     mCorpY = y;
     mCorpWidth = width;

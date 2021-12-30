@@ -59,6 +59,8 @@ public:
     status_t setTimeLimit(int32_t timeLimitMs);
     int32_t getTimeLimit() const;
 
+    void setVideoCrop(int x, int y, int width, int height);
+
     // The call for the StageFrightRecorder to tell us that
     // it is done using the MediaBuffer data so that its state
     // can be set to FREE for dequeuing
@@ -143,6 +145,11 @@ private:
     int mDumpVideoTs;
     int mDumpAudioEs;
     int mDumpAudioPCM;
+
+    int32_t mCorpX;
+    int32_t mCorpY;
+    int32_t mCorpWidth;
+    int32_t mCorpHeight;
     Vector<sp<ABuffer> > mProgramInfoDescriptors;
 };
 
