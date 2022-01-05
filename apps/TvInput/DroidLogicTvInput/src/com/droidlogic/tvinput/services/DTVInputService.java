@@ -135,6 +135,8 @@ public class DTVInputService extends DroidLogicTvInputService implements TvContr
     protected static final String DTV_STANDARD_FORCE = "vendor.tv.dtv.standard.force";
     protected static final String DTV_MONITOR_MODE_FORCE = "vendor.tv.dtv.monitor.mode.force";
 
+    protected static final String KEY_TVINPUTINFO_AUDIO_AD = "audio_ad";
+
     protected static final int KEY_RED = 183;
     protected static final int KEY_GREEN = 184;
     protected static final int KEY_YELLOW = 185;
@@ -2055,14 +2057,18 @@ public class DTVInputService extends DroidLogicTvInputService implements TvContr
                 if (a == null) continue;
                 String Id = generateAudioIdString(a);
                 String description = "";
+                Bundle bundle = new Bundle();
+                bundle.putBoolean(KEY_TVINPUTINFO_AUDIO_AD, false);
                 if (a != null && firstAdAudioIndex > 0 && a.id >= firstAdAudioIndex) {//find ad audio
                     description = "ad";
+                    bundle.putBoolean(KEY_TVINPUTINFO_AUDIO_AD, true);
                 }
                 TvTrackInfo AudioTrack =
                     new TvTrackInfo.Builder(TvTrackInfo.TYPE_AUDIO, Id)
                         .setLanguage(a.mLang)
                         .setAudioChannelCount(2)
                         .setDescription(description)
+                        .setExtra(bundle)
                         .build();
                 tracks.add(AudioTrack);
 

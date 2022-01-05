@@ -156,7 +156,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         mContext.unregisterReceiver(mBroadcastReceiver);
         mSystemControlEvent.setHdrInfoListener(null);
         mSessionHandler.removeCallbacksAndMessages(null);
-        mSessionHandler = null;
+//        mSessionHandler = null;
 
         if (setSessionStateMachine(SESSION_RELEASED) == 0) {
             ((DroidLogicTvInputService)mContext).stopTvPlay(mId, true);
