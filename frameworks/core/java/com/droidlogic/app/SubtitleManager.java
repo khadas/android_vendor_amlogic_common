@@ -847,6 +847,7 @@ public class SubtitleManager {
     public boolean open(String path, int ioType) {
         boolean r = false;
         //Log.d(TAG, "[open] path:" + path, new Throwable());
+        mInterSubTotal = -1;//need clear, or else may be used the old vlaue which cause outofindex error
         r = nativeOpen(path, ioType);
 
         LOGI("[open] innerTotal:" + innerTotal() +", mIOType:" + mIOType);
@@ -1009,7 +1010,12 @@ public class SubtitleManager {
     public int total() {
         int extTotal = 0;
         if (mDisplayType == SUBTITLE_CC_JASON) {
-            return mChalIdList.size();
+            if (mChalIdList.size() > 0) {
+                LOGI("[total] SUBTITLE_CC_JASON type, mChalIdList size:" + mChalIdList.size());
+                return mChalIdList.size();
+            } else {
+                LOGI("[total] SUBTITLE_CC_JASON type, mChalIdList.size() <=0");
+            }
         }
 
         if (mSubtitleUtils != null) {
