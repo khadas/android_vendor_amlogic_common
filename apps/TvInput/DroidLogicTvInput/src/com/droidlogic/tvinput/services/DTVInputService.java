@@ -1673,7 +1673,9 @@ public class DTVInputService extends DroidLogicTvInputService implements TvContr
                     break;
                 case TvControlManager.EVENT_AV_VIDEO_AVAILABLE:
                     notifyVideoAvailable();
-
+                    if (mHandler != null) {
+                        mHandler.sendEmptyMessageDelayed(MSG_UPDATE_VIDEO_RESOLUTION, 200);
+                    }
                     String height = mSystemControlManager.readSysFs("/sys/class/video/frame_height");
                     String pi = mSystemControlManager.readSysFs("/sys/class/deinterlace/di0/frame_format");
                     String format = DroidLogicTvUtils.convertVideoFormat(height, pi);

@@ -311,7 +311,7 @@ public class ADTVInputService extends DTVInputService {
         @Override
         public void onEvent(int msgType, int programID) {
             Log.d(TAG, "AV evt:" + msgType);
-            if (mCurrentSession.mCurrentChannel != null) {
+            if (mCurrentSession != null && mCurrentSession.mCurrentChannel != null) {
                 if (mCurrentSession.mCurrentChannel.isAnalogChannel()) {
                     if (msgType > TvControlManager.EVENT_AV_PLAYER_UNBLOCK
                         || msgType < TvControlManager.EVENT_AV_PLAYER_BLOCKED) {
