@@ -1657,7 +1657,7 @@ void DisplayMode::getHdmiDvCap(hdmi_data_t* data) {
     }
 
     std::string dv_cap;
-    DisplayModeMgr::getInstance().getDisplayAttribute(DISPLAY_DOLBY_VISION_CAP, dv_cap, ConnectorType::CONN_TYPE_HDMI);
+    DisplayModeMgr::getInstance().getDisplayAttribute(DISPLAY_DOLBY_VISION_CAP2, dv_cap, ConnectorType::CONN_TYPE_HDMI);
     strcpy(data->dv_info.dv_cap, dv_cap.c_str());
 
     if (strstr(data->dv_info.dv_cap, "DolbyVision RX support list") != NULL) {
@@ -3312,7 +3312,6 @@ void DisplayMode::onTxEvent (char* switchName, char* hpdstate, int outputState) 
                 memcpy(mEdid, temp, EDID_MAX_SIZE);
             }
         }
-
         if (hpdstate[0] == '1')
             dumpCaps();
     }

@@ -1083,6 +1083,23 @@ public class SystemControlManager {
         }
     }
 
+    public String getPrefHdmiDispMode() {
+        synchronized (mLock) {
+            Mutable<String> resultVal = new Mutable<>();
+            try {
+                mProxy.getPrefHdmiDispMode((int ret, String v) -> {
+                                if (Result.OK == ret) {
+                                    resultVal.value = v;
+                                }
+                            });
+                return resultVal.value;
+            } catch (RemoteException e) {
+                Log.e(TAG, "getPrefHdmiDispMode:" + e);
+            }
+        }
+        return "";
+    }
+
     public String getActiveDispMode() {
         synchronized (mLock) {
             Mutable<String> resultVal = new Mutable<>();
@@ -1098,6 +1115,28 @@ public class SystemControlManager {
             }
         }
         return "";
+    }
+
+    public void getSupportDispModeList(ArrayList<String> HdmiSupportModeList) {
+        synchronized (mLock) {
+            try {
+                mProxy.getSupportDispModeList((int ret, ArrayList<String> hidlDispModeList) -> {
+                                if (Result.OK == ret) {
+                                    int size = hidlDispModeList.size();
+                                    if (size <= 0) {
+                                       Log.e(TAG, "hidlDispModeList size is 0");
+                                    } else {
+                                      for (int i =  0; i < size; i++) {
+                                          //Log.d(TAG, "hidlDispModeList:"+ hidlDispModeList.get(i));
+                                          HdmiSupportModeList.add(hidlDispModeList.get(i));
+                                      }
+                                    }
+                                }
+                            });
+            } catch (RemoteException e) {
+                Log.e(TAG, "getSupportDispModeList:" + e);
+            }
+        }
     }
 
     public void setMboxOutputMode(String mode) {

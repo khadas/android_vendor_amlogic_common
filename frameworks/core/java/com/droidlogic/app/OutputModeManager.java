@@ -26,6 +26,9 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import android.content.Context;
 import android.content.Intent;
@@ -46,7 +49,7 @@ import com.droidlogic.app.DroidLogicUtils;
 
 public class OutputModeManager {
     private static final String TAG                         = "OutputModeManager";
-    private static final boolean DEBUG                      = false;
+    private static final boolean DEBUG                      = true;
     /**
      * The saved value for Outputmode auto-detection.
      * One integer
@@ -113,7 +116,6 @@ public class OutputModeManager {
     public static final String PROP_ALWAYS_DOLBY_VISION     = "vendor.system.always.dolbyvision";
     public static final String PROP_DTSDRCSCALE             = "persist.vendor.sys.dtsdrcscale";
     public static final String PROP_DTSEDID                 = "persist.vendor.sys.dts.edid";
-    public static final String PROP_HDMI_FRAMERATE_PRIORITY = "persist.vendor.sys.framerate.priority";
     public static final String DISPLY_DEBUG_PROP            = "vendor.display.debug";
 
     public static final String FULL_WIDTH_480               = "720";
@@ -128,6 +130,16 @@ public class OutputModeManager {
     public static final String FULL_HEIGHT_4K2K             = "2160";
     public static final String FULL_WIDTH_4K2KSMPTE         = "4096";
     public static final String FULL_HEIGHT_4K2KSMPTE        = "2160";
+
+    public static final String CVBS_MODE = "cvbs";
+    public static final String HDMI_MODE = "hdmi";
+    private static String mUiMode;
+
+    //dolby vision mode
+    private static final int DV_LL_RGB            = 3;
+    private static final int DV_LL_YUV            = 2;
+    private static final int DV_ENABLE            = 1;
+    private static final int DV_DISABLE           = 0;
 
     private static final String PARA_AUDIO_DOLBY_MS12       = "dolby_ms12_enable";
     private static final String PARA_AUDIO_DOLBY_MS12_ENABLE= "dolby_ms12_enable=1";
@@ -252,7 +264,9 @@ public class OutputModeManager {
     private static final String HDR_POLICY_SOURCE           = "1";
     private static final String HDR_POLICY_SINK             = "0";
 
-    private static final String DEFAULT_HDR_PRIORITY        = "0";
+    private static final int DV_PRIORITY        =  0;
+    private static final int HDR_PRIORITY       =  1;
+    private static final int SDR_PRIORITY       =  2;
 
     private static final String HDMI_OFFSET_ENABLE           = "1";
     private static final String HDMI_OFFSET_DISABLE          = "0";
@@ -272,36 +286,52 @@ public class OutputModeManager {
     public static final int FORCE_DDP_OFF   = 0;
     public static final int FORCE_DDP_ON    = 1;
 
-    private static final String[] MODE_RESOLUTION_FIRST = {
-        "480i60hz",
-        "576i50hz",
-        "480p60hz",
-        "576p50hz",
-        "720p50hz",
-        "720p60hz",
-        "1080p50hz",
-        "1080p60hz",
-        "2160p24hz",
-        "2160p25hz",
-        "2160p30hz",
-        "2160p50hz",
+    //hdmi mode list
+    private static final String[] HDMI_LIST = {
         "2160p60hz",
-    };
-    private static final String[] MODE_FRAMERATE_FIRST = {
-        "480i60hz",
-        "576i50hz",
-        "480p60hz",
-        "576p50hz",
-        "720p50hz",
-        "720p60hz",
-        "2160p24hz",
-        "2160p25hz",
-        "2160p30hz",
-        "1080p50hz",
-        "1080p60hz",
         "2160p50hz",
-        "2160p60hz",
+        "2160p30hz",
+        "2160p25hz",
+        "2160p24hz",
+        "smpte24hz",
+        "1080p60hz",
+        "1080p50hz",
+        "1080p24hz",
+        "720p60hz",
+        "720p50hz",
+        "1080i60hz",
+        "1080i50hz",
+        "576p50hz",
+        "480p60hz",
+        "576i50hz",
+        "480i60hz"
     };
+    private static final String[] HDMI_TITLE = {
+        "4k2k-60hz",
+        "4k2k-50hz",
+        "4k2k-30hz",
+        "4k2k-25hz",
+        "4k2k-24hz",
+        "4k2k-smpte",
+        "1080p-60hz",
+        "1080p-50hz",
+        "1080p-24hz",
+        "720p-60hz",
+        "720p-50hz",
+        "1080i-60hz",
+        "1080i-50hz",
+        "576p-50hz",
+        "480p-60hz",
+        "576i-50hz",
+        "480i-60hz"
+    };
+
+    //cvbs mode list
+    private static final String[] CVBS_MODE_VALUE_LIST = {
+        "480cvbs",
+        "576cvbs"
+    };
+
     private static final String[] HDMI_COLOR_LIST = {
         "444,12bit",
         "444,10bit",
@@ -316,14 +346,38 @@ public class OutputModeManager {
         "rgb,10bit",
         "rgb,8bit"
     };
+
+    private static final String[] HDMI_COLOR_LIST_NON4K = {
+        "444,8bit",
+        "422,8bit",
+        "rgb,8bit"
+    };
+
+    private static final String[] DOLBY_VISION_TYPE = {
+        "DV_RGB_444_8BIT",
+//         "DV_YCbCr_422_12BIT",  //box not support
+        "LL_YCbCr_422_12BIT",
+        "LL_RGB_444_12BIT",
+        "LL_RGB_444_10BIT"
+    };
+
     private static String currentColorAttribute = null;
     private static String currentOutputmode = null;
+    private static String tvSupportDolbyVisionMode;
+    private static String tvSupportDolbyVisionType;
+    private List<String> mOutModeList = new ArrayList<String>();
+    private List<String> mOutTitleList = new ArrayList<String>();
+    private static String[] mHdmiSupportModeList;
+    private static String[] mHdmiSupportTitleList;
+    private volatile List<String> mHdmiModeList;
+    private volatile List<String> mDolbyVisionModeList;
     private boolean ifModeSetting = false;
     private final Context mContext;
     private final ContentResolver mResolver;
     final Object mLock = new Object[0];
 
     private SystemControlManager mSystemControl;
+    private DolbyVisionSettingManager mDolbyVisionSettingManager;
     private static OutputModeManager mOutputModeManager = null;
     private AudioManager mAudioManager;
     private HdmiTvClient mTvClient = null;
@@ -341,6 +395,7 @@ public class OutputModeManager {
         mContext = context;
 
         mSystemControl = SystemControlManager.getInstance();
+        mDolbyVisionSettingManager = new DolbyVisionSettingManager(mContext);
         mResolver = mContext.getContentResolver();
         currentOutputmode = getCurrentOutputMode();
         mAudioManager = (AudioManager) context.getSystemService(context.AUDIO_SERVICE);
@@ -356,6 +411,43 @@ public class OutputModeManager {
 
     public boolean isSupportDisplayDebug() {
          return mSystemControl.getPropertyBoolean(DISPLY_DEBUG_PROP, false);
+    }
+
+    public boolean isDolbyVisionEnable() {
+        return mDolbyVisionSettingManager.isDolbyVisionEnable();
+    }
+
+    public boolean isTvSupportDolbyVision() {
+        String dv_cap = mDolbyVisionSettingManager.isTvSupportDolbyVision();
+        tvSupportDolbyVisionType = null;
+        if (!dv_cap.equals("")) {
+            for (int i = 0;i < HDMI_LIST.length; i++) {
+                if (dv_cap.contains(HDMI_LIST[i])) {
+                    tvSupportDolbyVisionMode = HDMI_LIST[i];
+                    break;
+                }
+            }
+            for (int i = 0; i < DOLBY_VISION_TYPE.length; i++) {
+                if (dv_cap.contains(DOLBY_VISION_TYPE[i])) {
+                    tvSupportDolbyVisionType += DOLBY_VISION_TYPE[i];
+                }
+            }
+        } else {
+            tvSupportDolbyVisionMode = "";
+            tvSupportDolbyVisionType = "";
+        }
+
+        return tvSupportDolbyVisionMode.equals("") ? false : true;
+    }
+
+    public boolean isDolbyVisionPreference() {
+        return mDolbyVisionSettingManager.isDolbyVisionEnable()
+               && isTvSupportDolbyVision()
+               && (getHdrPriority() == DV_PRIORITY);
+    }
+
+    public long resolveResolutionValue(String mode) {
+        return mSystemControl.resolveResolutionValue(mode);
     }
 
     public void setOutputMode(final String mode) {
@@ -463,7 +555,7 @@ public class OutputModeManager {
     }
 
     public int getHdrPriority() {
-        String curType = getBootenv(ENV_HDR_PRIORITY, DEFAULT_HDR_PRIORITY);
+        String curType = getBootenv(ENV_HDR_PRIORITY, "0");
         Log.d(TAG, "getHdrPriority curType: " + curType);
         return Integer.parseInt(curType);
     }
@@ -480,8 +572,184 @@ public class OutputModeManager {
         mSystemControl.setPosition(left, top, width, height);
     }
 
+    public List<String> getOutTitleList() {
+        return mOutTitleList;
+    }
+
+    public List<String> getOutModeList() {
+        RefreshOutModeList();
+        return mOutModeList;
+    }
+
+    public void  filterHdmiSupportModeList() {
+        //init mode and title list
+        mHdmiSupportModeList  = HDMI_LIST;
+        mHdmiSupportTitleList = HDMI_TITLE;
+
+        //1. update title for 59.94/29.97/23.976
+        //mHdmiSupportModeList-->listMode
+        //mHdmiSupportTitleList-->listTitle
+        List<String> listMode = new ArrayList<String>();
+        List<String> listTitle = new ArrayList<String>();
+        String frac_rate_policy = getFrameRateOffset();
+
+        for (int i = 0; i < mHdmiSupportModeList.length; i++) {
+            if (mHdmiSupportModeList[i] != null) {
+                listMode.add(mHdmiSupportModeList[i]);
+                if (frac_rate_policy.contains(HDMI_OFFSET_ENABLE)) {
+                    if (mHdmiSupportTitleList[i].contains("60hz")) {
+                        listTitle.add(mHdmiSupportTitleList[i].replace("60hz", "59.94hz"));
+                    } else if (mHdmiSupportTitleList[i].contains("30hz")) {
+                        listTitle.add(mHdmiSupportTitleList[i].replace("30hz", "29.97hz"));
+                    } else if (mHdmiSupportTitleList[i].contains("24hz")) {
+                        listTitle.add(mHdmiSupportTitleList[i].replace("24hz", "23.976hz"));
+                    } else {
+                        listTitle.add(mHdmiSupportTitleList[i]);
+                    }
+                } else {
+                    listTitle.add(mHdmiSupportTitleList[i]);
+                }
+            }
+        }
+
+        //2. check hdmi edid support mode
+        List<String> listHdmiMode  = new ArrayList<String>();
+        List<String> listHdmiTitle = new ArrayList<String>();
+        ArrayList<String> HdmiSupportModeList = new ArrayList<String>();
+
+        mSystemControl.getSupportDispModeList(HdmiSupportModeList);
+        if (HdmiSupportModeList.size() <= 0) {
+            Log.w(TAG, "read hdmi support mode fail");
+            mHdmiSupportModeList  = listMode.toArray(new String[listMode.size()]);
+            mHdmiSupportTitleList = listTitle.toArray(new String[listTitle.size()]);
+        } else {
+            //2.1 filter hdmi edid mode list
+            //listMode-->listHdmiMode
+            //listTitle-->listHdmiTitle
+            for (int i = 0; i < listMode.size(); i++) {
+                if (HdmiSupportModeList.contains(listMode.get(i))) {
+                    listHdmiMode.add(listMode.get(i));
+                    listHdmiTitle.add(listTitle.get(i));
+                }
+            }
+
+            if (DEBUG) {
+                for (int i =  0; i < listHdmiMode.size(); i++) {
+                    Log.d(TAG, "listHdmiMode:"+ listHdmiMode.get(i));
+                }
+            }
+
+            //2.2 filter dolby vision support mode list
+            //listHdmiMode-->listHdmiDVMode
+            //listHdmiTitle-->listHdmiDVTitle
+            List<String> listHdmiDVMode  = new ArrayList<String>();
+            List<String> listHdmiDVTitle = new ArrayList<String>();
+            if (isDolbyVisionPreference()) {
+                //get current dolby vision mode
+                int type = mDolbyVisionSettingManager.getDolbyVisionType();
+                for (int i = 0; i < listHdmiMode.size(); i++) {
+                    if (resolveResolutionValue(listHdmiMode.get(i))
+                            > resolveResolutionValue(tvSupportDolbyVisionMode)) {
+                        Log.w(TAG, "This TV not Support Dolby Vision: " + listHdmiMode.get(i));
+                    } else {
+                        if (listHdmiMode.get(i).contains("smpte")
+                            || listHdmiMode.get(i).contains("i")) {
+                            Log.w(TAG, "This hdmi mode is not support Dolby Vision: " + listHdmiMode.get(i));
+                            continue;
+                        }
+
+                        switch (type) {
+                            case DV_ENABLE:
+                                if (isModeSupportColor(listHdmiMode.get(i), "444,8bit")) {
+                                    listHdmiDVMode.add(listHdmiMode.get(i));
+                                    listHdmiDVTitle.add(listHdmiTitle.get(i));
+                                }
+                                break;
+                            case DV_LL_YUV:
+                                if (isModeSupportColor(listHdmiMode.get(i), "422,12bit")
+                                        || isModeSupportColor(listHdmiMode.get(i), "422,10bit")) {
+                                    listHdmiDVMode.add(listHdmiMode.get(i));
+                                    listHdmiDVTitle.add(listHdmiTitle.get(i));
+                                }
+                                break;
+                            case DV_LL_RGB:
+                                if (resolveResolutionValue(listHdmiMode.get(i))
+                                        > resolveResolutionValue("1080p60hz")) {
+                                    Log.e(TAG, "This mode is not support dv LL RGB: " + listHdmiMode.get(i));
+                                    continue;
+                                }
+
+                                if (isModeSupportColor(listHdmiMode.get(i), "444,12bit")
+                                    || isModeSupportColor(listHdmiMode.get(i), "444,10bit")) {
+                                    listHdmiDVMode.add(listHdmiMode.get(i));
+                                    listHdmiDVTitle.add(listHdmiTitle.get(i));
+                                }
+                                break;
+                        }
+                    }
+                }
+
+                if (DEBUG) {
+                    for (int i =  0; i < listHdmiDVMode.size(); i++) {
+                        Log.d(TAG, "listHdmiDVMode:"+ listHdmiDVMode.get(i));
+                    }
+                }
+
+                mHdmiSupportModeList  = listHdmiDVMode.toArray(new String[listHdmiDVMode.size()]);
+                mHdmiSupportTitleList = listHdmiDVTitle.toArray(new String[listHdmiDVTitle.size()]);
+            } else {
+                mHdmiSupportModeList  = listHdmiMode.toArray(new String[listHdmiMode.size()]);
+                mHdmiSupportTitleList = listHdmiTitle.toArray(new String[listHdmiTitle.size()]);
+            }
+        }
+    }
+
+    public String getUiMode() {
+        String currentMode = getCurrentOutputMode();
+        Log.d(TAG,"getUiMode currentMode = " + currentMode);
+        if (currentMode.contains(CVBS_MODE)) {
+            mUiMode = CVBS_MODE;
+        } else {
+            mUiMode = HDMI_MODE;
+        }
+        return mUiMode;
+    }
+
+    private void RefreshOutModeList() {
+        filterHdmiSupportModeList();
+        mOutModeList.clear();
+        mOutTitleList.clear();
+
+        String currentUiMode = getUiMode();
+        Log.d(TAG,"getOutModeList currentUiMode:" + currentUiMode);
+
+        if (currentUiMode.equalsIgnoreCase(HDMI_MODE)) {
+            for (int i=0 ; i< mHdmiSupportTitleList.length; i++) {
+                if (mHdmiSupportTitleList[i] != null && mHdmiSupportTitleList[i].length() != 0) {
+                    mOutTitleList.add(mHdmiSupportTitleList[i]);
+                    mOutModeList.add(mHdmiSupportModeList[i]);
+                }
+            }
+        } else if (currentUiMode.equalsIgnoreCase(CVBS_MODE)) {
+            for (int i = 0 ; i< CVBS_MODE_VALUE_LIST.length; i++) {
+                mOutTitleList.add(CVBS_MODE_VALUE_LIST[i]);
+                mOutModeList.add(CVBS_MODE_VALUE_LIST[i]);
+            }
+        }
+
+        if (DEBUG) {
+            for (int i =  0; i < mOutModeList.size(); i++) {
+                Log.d(TAG, "mOutModeList:"+ mOutModeList.get(i));
+                Log.d(TAG, "mOutTitleList:"+ mOutTitleList.get(i));
+            }
+        }
+    }
+
     public String getHdmiSupportList() {
-        String list = readSupportList(HDMI_SUPPORT_LIST).replaceAll("[*]", "");
+        //String list = readSupportList(HDMI_SUPPORT_LIST).replaceAll("[*]", "");
+
+        RefreshOutModeList();
+        String list = mOutModeList.toString();
 
         if (DEBUG)
             Log.d(TAG, "getHdmiSupportList :" + list);
@@ -489,22 +757,7 @@ public class OutputModeManager {
     }
 
     public String getHighestMatchResolution() {
-        String value = readSupportList(HDMI_SUPPORT_LIST);
-        if (getPropertyBoolean(PROP_HDMI_FRAMERATE_PRIORITY, true)) {
-            for (int i = MODE_FRAMERATE_FIRST.length - 1; i >= 0 ; i--) {
-                if (value.contains(MODE_FRAMERATE_FIRST[i])) {
-                    return MODE_FRAMERATE_FIRST[i];
-                }
-            }
-        } else {
-            for (int i = MODE_RESOLUTION_FIRST.length - 1; i >= 0 ; i--) {
-                if (value.contains(MODE_RESOLUTION_FIRST[i])) {
-                    return MODE_RESOLUTION_FIRST[i];
-                }
-            }
-        }
-
-        return getPropertyString(PROP_BEST_OUTPUT_MODE, DEFAULT_OUTPUT_MODE);
+        return mSystemControl.getPrefHdmiDispMode();
     }
 
     public String getBestMatchResolution() {
