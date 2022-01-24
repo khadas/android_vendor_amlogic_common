@@ -107,7 +107,7 @@ sd8987_modules ?= sd8987
 sd8987_src_path ?= $(DRIVER_DIR)/marvell/sd8987
 sd8987_copy_path ?=
 sd8987_build_path ?=
-sd8987_args ?=
+sd8987_args ?= KERNELDIR=$(KERNEL_SRC)
 
 WIFI_SUPPORT_DRIVERS += mt7661
 mt7661_build ?= true
