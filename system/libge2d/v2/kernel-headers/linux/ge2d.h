@@ -409,11 +409,11 @@ struct ge2d_dmabuf_exp_s {
 #define GE2D_FMT_S8_A           0x000c0 /* 00_11_0_00_0_00 */
 #define GE2D_FMT_S8_LUT         0x00020 /* 00_00_1_00_0_00 */
 #define GE2D_FMT_S16_YUV422     0x20102 /* 01_00_0_00_0_00 */
-#define GE2D_FMT_S16_RGB        (GE2D_LITTLE_ENDIAN|0x00100) /* 01_00_0_00_0_00 */
+#define GE2D_FMT_S16_RGB        0x00100 /* 01_00_0_00_0_00 */
 #define GE2D_FMT_S24_YUV444     0x20200 /* 10_00_0_00_0_00 */
-#define GE2D_FMT_S24_RGB        (GE2D_LITTLE_ENDIAN|0x00200) /* 10_00_0_00_0_00 */
+#define GE2D_FMT_S24_RGB        0x00200 /* 10_00_0_00_0_00 */
 #define GE2D_FMT_S32_YUVA444    0x20300 /* 11_00_0_00_0_00 */
-#define GE2D_FMT_S32_RGBA       (GE2D_LITTLE_ENDIAN|0x00300) /* 11_00_0_00_0_00 */
+#define GE2D_FMT_S32_RGBA       0x00300 /* 11_00_0_00_0_00 */
 #define GE2D_FMT_M24_YUV420     0x20007 /* 00_00_0_00_1_11 */
 #define GE2D_FMT_M24_YUV422     0x20006 /* 00_00_0_00_1_10 */
 #define GE2D_FMT_M24_YUV444     0x20004 /* 00_00_0_00_1_00 */
@@ -534,5 +534,6 @@ struct ge2d_dmabuf_exp_s {
 
 #define GE2D_SYNC_DEVICE _IOW(GE2D_IOC_MAGIC, 0x08, int)
 #define GE2D_SYNC_CPU _IOW(GE2D_IOC_MAGIC, 0x09, int)
+#define GE2D_SET_CLUT _IOW(GE2D_IOC_MAGIC, 0x0c, struct ge2d_clut8_t)
 
 #endif /* GE2D_H */

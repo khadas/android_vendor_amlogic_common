@@ -68,6 +68,12 @@ static int num_process_per_thread = 1;
 static int rotation_option = 0;
 static int dst_rpt_times = 0;
 static int dst_signed_mode = 0;
+static int src1_endian = PIXEL_FORMAT_LITTLE_ENDIAN;
+static int src2_endian = PIXEL_FORMAT_LITTLE_ENDIAN;
+static int dst_endian = PIXEL_FORMAT_LITTLE_ENDIAN;
+static int clut8_count = 0;
+static int clut8_data[256] = {0};
+static char clut8_table_file[64] = "";
 
 #define THREADS_MAX_NUM (64)
 
@@ -107,16 +113,19 @@ static void set_ge2dinfo(aml_ge2d_info_t *pge2dinfo)
     pge2dinfo->src_info[0].canvas_h = SY_SRC1;
     pge2dinfo->src_info[0].format = SRC1_PIXFORMAT;
     pge2dinfo->src_info[0].plane_number = src1_plane_number;
+    pge2dinfo->src_info[0].endain = src1_endian;
 
     pge2dinfo->src_info[1].canvas_w = SX_SRC2;
     pge2dinfo->src_info[1].canvas_h = SY_SRC2;
     pge2dinfo->src_info[1].format = SRC2_PIXFORMAT;
     pge2dinfo->src_info[1].plane_number = src2_plane_number;
+    pge2dinfo->src_info[1].endain = src2_endian;
 
     pge2dinfo->dst_info.canvas_w = SX_DST;
     pge2dinfo->dst_info.canvas_h = SY_DST;
     pge2dinfo->dst_info.format = DST_PIXFORMAT;
     pge2dinfo->dst_info.plane_number = dst_plane_number;
+    pge2dinfo->dst_info.endain = dst_endian;
     pge2dinfo->dst_info.rotation = ge2d_rotation(rotation_option);
     pge2dinfo->offset = 0;
     pge2dinfo->ge2d_op = OP;
@@ -191,13 +200,19 @@ static void print_usage(void)
     printf ("  --r <num>                                         rotation option, 0/1/2/3/4/5 for 0/90/180/270/H-mirror/V-mirror.\n");
     printf ("  --dst_rpt_times <num>                             dst repeat x times, 0:disable 2/4/8:repeat times.\n");
     printf ("  --dst_signed_mode <num>                           dst signed mode, 0:disable 1:enable.\n");
+    printf ("  --src1_endian <num>                               src1 endian, 0:little_endian 1:big_endian.\n");
+    printf ("  --src2_endian <num>                               src2 endian, 0:little_endian 1:big_endian.\n");
+    printf ("  --dst_endian  <num>                               dst  endian, 0:little_endian 1:big_endian.\n");
+    printf ("  --clut8_table_file  <name>                        clut8 table, filename of clut8_data");
+    printf ("  --clut8_count  <num>                              clut8 count, count of clut8_data");
+    printf ("  --clut8_data  <nums>                              clut8 data, clut8_data");
     printf ("  --help                                            Print usage information.\n");
     printf ("\n");
 }
 
 static int parse_command_line(int argc, char *argv[])
 {
-    int i;
+    int i, j = 0;
     /* parse command line */
     for (i = 1; i < argc; i++) {
         if (strncmp (argv[i], "--", 2) == 0) {
@@ -376,6 +391,36 @@ static int parse_command_line(int argc, char *argv[])
                 }
                 continue;
             }
+            else if (strcmp (argv[i] + 2, "src1_endian") == 0 && ++i < argc &&
+                sscanf (argv[i], "%d", &src1_endian) == 1) {
+                continue;
+            }
+            else if (strcmp (argv[i] + 2, "src2_endian") == 0 && ++i < argc &&
+                sscanf (argv[i], "%d", &src2_endian) == 1) {
+                continue;
+            }
+            else if (strcmp (argv[i] + 2, "dst_endian") == 0 && ++i < argc &&
+                sscanf (argv[i], "%d", &dst_endian) == 1) {
+                continue;
+            }
+            else if (strcmp (argv[i] + 2, "clut8_table_file") == 0 && ++i < argc &&
+                sscanf (argv[i], "%s", clut8_table_file) == 1) {
+                continue;
+            }
+            else if (strcmp (argv[i] + 2, "clut8_count") == 0 && ++i < argc &&
+                sscanf (argv[i], "%d", &clut8_count) == 1) {
+                continue;
+            }
+            else if (strcmp (argv[i] + 2, "clut8_data") == 0 && ++i < argc) {
+                if (clut8_count == 0) {
+                    printf("error clut8_count\n");
+                    return GE2D_FAIL;
+                } else {
+                    while (sscanf (argv[i], "%d", &clut8_data[j]) != EOF && j < clut8_count && ++i <argc)
+                        j++;
+                }
+                continue;
+            }
         }
     }
     return GE2D_SUCCESS;
@@ -397,6 +442,26 @@ static int check_plane_number(int plane_number, int format)
             ret = 0;
     }
     return ret;
+}
+
+static int aml_read_file_clut(struct ge2d_clut8_t *clut8_table, const char* url)
+{
+    int count = 0;
+    FILE *fp;
+    fp = fopen(url, "r");
+    if (fp == NULL) {
+        E_GE2D("open clut8_data.txt fail\n");
+        return GE2D_FAIL;
+    }
+    while (fscanf(fp, "%u", &clut8_table->data[count]) != EOF)
+        count++;
+    fclose(fp);
+    if (count == 0 || count > 256) {
+        E_GE2D("clut8_data.txt context error\n");
+        return GE2D_FAIL;
+    }
+    clut8_table->count = count;
+    return GE2D_SUCCESS;
 }
 
 static int aml_read_file_src1(aml_ge2d_t *amlge2d, const char* url)
@@ -1092,6 +1157,7 @@ void *main_run(void *arg)
     int i = 0, run_time = 0;
     aml_ge2d_t amlge2d;
     char dst_file_name[128] = {};
+    struct ge2d_clut8_t *clut8_table = NULL;
 
     for (run_time = 0; run_time < num_process_per_thread; run_time++) {
         printf("ThreadIdx -- %d, run time -- %d\n", *(int *)arg, run_time);
@@ -1138,6 +1204,35 @@ void *main_run(void *arg)
         ret = aml_ge2d_mem_alloc(&amlge2d);
         if (ret < 0)
             goto exit;
+
+        if (strlen(clut8_table_file) != 0) {
+            clut8_table = malloc(sizeof(struct ge2d_clut8_t));
+            ret = aml_read_file_clut(clut8_table, clut8_table_file);
+            if (ret < 0) {
+                free(clut8_table);
+                printf("Error read clut8_table_file\n");
+                return NULL;
+            }
+            ret = ge2d_set_clut8_table(amlge2d.ge2dinfo.ge2d_fd, clut8_table);
+            if (ret < 0) {
+                free(clut8_table);
+                printf("Error set clut8_table\n");
+                return NULL;
+            }
+            free(clut8_table);
+        } else if (clut8_count) {
+            clut8_table = malloc(clut8_count * sizeof(unsigned int));
+            memcpy(&clut8_table->data, &clut8_data, clut8_count * sizeof(unsigned int));
+            clut8_table->count = clut8_count;
+            ret = ge2d_set_clut8_table(amlge2d.ge2dinfo.ge2d_fd, clut8_table);
+            if (ret < 0) {
+                free(clut8_table);
+                printf("Error set clut8_table\n");
+                return NULL;
+            }
+            free(clut8_table);
+       }
+
     #if 0
         /* if dma_buf and used fd alloc other driver */
         /* set dma buf fd */
