@@ -364,6 +364,8 @@ int UEventObserver::tv_framerateevent_thread() {
     addMatch(FRAME_RATE_DECODER_UEVENT);
     addMatch(FRAME_RATE_VDIN0_UEVENT);
     addMatch(FRAME_RATE_VDIN1_UEVENT);
+    addMatch(FRAME_RATE_VDIN0_UEVENT_N);
+    addMatch(FRAME_RATE_VDIN1_UEVENT_N);
     ret = pthread_create(&thread_id, NULL, AFRUenventThreadLoop, this);
     if (ret != 0) {
         SYS_LOGE("Create HDMITxUenventThreadLoop error :%d!\n", ret);
@@ -384,7 +386,9 @@ void* UEventObserver::AFRUenventThreadLoop(void* data) {
         SYS_LOGI("uevent name:%s, switch_state: %s\n", ueventData.switchName, ueventData.matchName);
         if (!strcmp(ueventData.matchName, FRAME_RATE_DECODER_UEVENT) ||
                          !strcmp(ueventData.matchName, FRAME_RATE_VDIN0_UEVENT) ||
-                         !strcmp(ueventData.matchName, FRAME_RATE_VDIN1_UEVENT)) {
+                         !strcmp(ueventData.matchName, FRAME_RATE_VDIN1_UEVENT) ||
+                         !strcmp(ueventData.matchName, FRAME_RATE_VDIN0_UEVENT_N) ||
+                         !strcmp(ueventData.matchName, FRAME_RATE_VDIN1_UEVENT_N)) {
             pThiz->pmFrameRateAutoAdaption->onTxUeventReceived(&ueventData);
         }
     }
@@ -402,6 +406,8 @@ int UEventObserver::start_hdmitxuevent_thread() {
     addMatch(FRAME_RATE_DECODER_UEVENT);
     addMatch(FRAME_RATE_VDIN0_UEVENT);
     addMatch(FRAME_RATE_VDIN1_UEVENT);
+    addMatch(FRAME_RATE_VDIN0_UEVENT_N);
+    addMatch(FRAME_RATE_VDIN1_UEVENT_N);
 #endif
     addMatch(HDMI_TX_UEVENT);
 
@@ -520,7 +526,9 @@ void* UEventObserver::HDMITxUenventThreadLoop(void* data) {
         }
         else if (!strcmp(ueventData.matchName, FRAME_RATE_DECODER_UEVENT) ||
                          !strcmp(ueventData.matchName, FRAME_RATE_VDIN0_UEVENT) ||
-                         !strcmp(ueventData.matchName, FRAME_RATE_VDIN1_UEVENT)) {
+                         !strcmp(ueventData.matchName, FRAME_RATE_VDIN1_UEVENT) ||
+                         !strcmp(ueventData.matchName, FRAME_RATE_VDIN0_UEVENT_N) ||
+                         !strcmp(ueventData.matchName, FRAME_RATE_VDIN1_UEVENT_N)) {
             pThiz->pmFrameRateAutoAdaption->onTxUeventReceived(&ueventData);
         }
         else if (!strcmp(ueventData.matchName, HDMI_TX_HDMI_AUDIO_UEVENT) && !strcmp(ueventData.switchName, HDMI_UEVENT_HDMI_AUDIO)  && (NULL != pThiz->pmHDMITxUevntCallbak)) {

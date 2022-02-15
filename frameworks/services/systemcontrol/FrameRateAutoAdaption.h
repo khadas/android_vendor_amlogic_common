@@ -39,6 +39,8 @@
 #define FRAME_RATE_DECODER_UEVENT               "DEVPATH=/devices/virtual/framerate_adapter/framerate_dev"
 #define FRAME_RATE_VDIN0_UEVENT                 "DEVTYPE=vdin0event"
 #define FRAME_RATE_VDIN1_UEVENT                 "DEVTYPE=vdin1event"
+#define FRAME_RATE_VDIN0_UEVENT_N               "DEVNAME=vdin0event"
+#define FRAME_RATE_VDIN1_UEVENT_N               "DEVNAME=vdin1event"
 #define VDIN_EVENT_FILE                         "/dev/vdin0"
 #define SYSFS_DISPLAY_VINFO                     "/sys/class/display/vinfo"
 
@@ -65,6 +67,7 @@
 #define FRAME_RATE_DURATION_5994                1601
 #define FRAME_RATE_DURATION_5992                1602
 #define FRAME_RATE_DURATION_60                  1600
+#define FRAME_RATE_DURATION_125                 7860
 typedef void (*fun_t)(bool, bool, const char*);
 
 struct vdin_event_info {

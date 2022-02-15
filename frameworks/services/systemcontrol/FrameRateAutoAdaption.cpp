@@ -234,9 +234,6 @@ void FrameRateAutoAdaption::policyControl(int frameRateValue){
         if (modes.size() != 2) return;
         int backVal1 = atoi(modes[0].c_str());
         int backVal2 = atoi(modes[1].c_str());
-        if (backVal1 > 0 && backVal1 % 25 == 0) {
-            frameRateValue = FRAME_RATE_DURATION_50;
-        }
         mPlayFlag = true;
 #ifdef FRAMERATE_MODE
         mTask->resetPlayFlag(seconds(60*5));
@@ -318,7 +315,9 @@ void FrameRateAutoAdaption::inputValidateAndParse(void* data, int inType) {
                 }
                 break;
             } else if (!strcmp(ueventData->matchName, FRAME_RATE_VDIN0_UEVENT) ||
-                        !strcmp(ueventData->matchName, FRAME_RATE_VDIN1_UEVENT)) {
+                        !strcmp(ueventData->matchName, FRAME_RATE_VDIN1_UEVENT)||
+                        !strcmp(ueventData->matchName, FRAME_RATE_VDIN0_UEVENT_N) ||
+                        !strcmp(ueventData->matchName, FRAME_RATE_VDIN1_UEVENT_N)) {
                 if (mVdinEventFd < 0) {
                     mVdinEventFd = open(VDIN_EVENT_FILE, O_RDWR);
                         if (mVdinEventFd < 0) {
@@ -417,7 +416,7 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
                 return;
             }else {
                 const char* frameRateValue = "6000";//default 60hz
-                if (frameRate == FRAME_RATE_DURATION_25 ||frameRate == FRAME_RATE_DURATION_50) {
+                if (frameRate == FRAME_RATE_DURATION_25 ||frameRate == FRAME_RATE_DURATION_50 || frameRate == FRAME_RATE_DURATION_125) {
                     frameRateValue = "5000";
                 }else if (FRAME_RATE_DURATION_5994 == frameRate || FRAME_RATE_DURATION_2397 == frameRate
                           ||FRAME_RATE_DURATION_2398 == frameRate ||FRAME_RATE_DURATION_2997 == frameRate
