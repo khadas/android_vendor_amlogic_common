@@ -407,7 +407,21 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
             }*/
 
             char PanelValue[MODE_LEN] = {0};
+            char DisplayRange[MODE_LEN] = {0};
+            bool doubleRate = false;
+            bool mode24p = false;
+            const char blank[2]=" ";
             mSysWrite.readSysfs(FRAMERAT_PANEL_OUT,PanelValue);
+            if (mSysWrite.readSysfsOriginal(VOUT_DISPLAY_RANGE,DisplayRange)) {
+                char *token = strtok(DisplayRange, blank);
+                if (token != NULL) {
+                    int lowval = atoi(token);
+                    token = strtok(NULL, blank);
+                    int topval = atoi(token);
+                    if (topval >= 100) doubleRate = true;
+                    if (lowval < 50) mode24p = true;
+                }
+            }
             if (frameRate == 0) {
                 if (strcmp(PanelValue,"0")) {
                     SYS_LOGD("tv set outputmode frameRate 0");
@@ -415,14 +429,17 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
                 }
                 return;
             }else {
-                const char* frameRateValue = "6000";//default 60hz
+                const char* frameRateValue = doubleRate? "12000":"6000";//default 60hz
                 if (frameRate == FRAME_RATE_DURATION_25 ||frameRate == FRAME_RATE_DURATION_50 || frameRate == FRAME_RATE_DURATION_125) {
-                    frameRateValue = "5000";
+                    frameRateValue = doubleRate? "10000":"5000";
+                }else if (FRAME_RATE_DURATION_24 == frameRate ) {
+                    frameRateValue = doubleRate? "12000":(mode24p ? "4800" : "6000");
                 }else if (FRAME_RATE_DURATION_5994 == frameRate || FRAME_RATE_DURATION_2397 == frameRate
                           ||FRAME_RATE_DURATION_2398 == frameRate ||FRAME_RATE_DURATION_2997 == frameRate
                           ||FRAME_RATE_DURATION_5992 == frameRate){
-                    frameRateValue = "5994";
+                    frameRateValue = doubleRate? "11988":"5994";
                 }
+
                 if (strcmp(PanelValue,frameRateValue)) {
                     DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_FR_HINT,frameRateValue);
                 }

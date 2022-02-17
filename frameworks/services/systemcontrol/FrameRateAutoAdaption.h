@@ -50,6 +50,7 @@
 #define HDMI_FRAME_RATE_AUTO                    "/sys/class/display/fr_policy"
 //sysfs of panel framerate change
 #define FRAMERAT_PANEL_OUT                      "/sys/class/display/fr_hint"
+#define VOUT_DISPLAY_RANGE                      "/sys/class/display/fr_range"
 #define FRAME_RATE_HDMI_OFF                     "0"
 #define FRAME_RATE_HDMI_CLK_PULLDOWN            "1"
 #define FRAME_RATE_HDMI_SWITCH_FORCE            "2"
