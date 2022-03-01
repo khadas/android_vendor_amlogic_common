@@ -15,7 +15,7 @@
 -->
 <!-- The attributes in this XML file provide configuration information -->
 <!-- for the Search Manager. -->
-<input-method xmlns:android="http://schemas.android.com/apk/res/android" android:settingsActivity="com.droidlogic.inputmethod.remote.SettingsActivity" android:isDefault="@bool/im_is_default">
+<input-method xmlns:android="http://schemas.android.com/apk/res/android" android:settingsActivity="com.droidlogic.inputmethod.remote.SettingsActivity" android:isDefault="false">
   <subtype android:label="@string/toggle_en_label" android:imeSubtypeLocale="en_US" android:imeSubtypeMode="keyboard" />
   <subtype android:label="@string/toggle_cn_label" android:imeSubtypeLocale="zh_CN" android:imeSubtypeMode="keyboard" />
 </input-method>
