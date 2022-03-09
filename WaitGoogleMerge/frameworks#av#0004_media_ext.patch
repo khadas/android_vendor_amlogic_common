@@ -1,0 +1,64 @@
+From 3d04f3e1f9bff00acf5a2ee5a8b18705b1a94978 Mon Sep 17 00:00:00 2001
+From: "sijia.lin" <sijia.lin@amlogic.com>
+Date: Wed, 9 Mar 2022 16:20:29 +0800
+Subject: [PATCH] xmlparser: modify dts mime type. [1/1]
+
+PD#SWPL-72087
+
+Problem:
+MediaCodec need support DTS format.
+
+Solution:
+Modify DTS standard mimetype.
+DTS mapping to audio/vnd.dts
+DTSHD mapping to audio/vnd.dts.hd
+DTS EXPRESS mapping to audio/vnd.dts.hd;profile=lbr
+
+Verify:
+R, T3
+
+Signed-off-by: sijia.lin <sijia.lin@amlogic.com>
+Change-Id: Ib08929c0a208aa4ae13da2421b213107c4354553
+---
+ media/libstagefright/xmlparser/MediaCodecsXmlParser.cpp | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/media/libstagefright/xmlparser/MediaCodecsXmlParser.cpp b/media/libstagefright/xmlparser/MediaCodecsXmlParser.cpp
+index 1341db74a9..d726dfffbb 100644
+--- a/media/libstagefright/xmlparser/MediaCodecsXmlParser.cpp
++++ b/media/libstagefright/xmlparser/MediaCodecsXmlParser.cpp
+@@ -1482,7 +1482,7 @@ const char *MEDIA_MIMETYPE_VIDEO_WMV3 = "video/wmv3";
+ const char *MEDIA_MIMETYPE_VIDEO_MSWMV3 = "video/x-ms-wmv";
+ const char *MEDIA_MIMETYPE_VIDEO_AVS = "video/avs";
+ const char *MEDIA_MIMETYPE_VIDEO_AVS2 = "video/avs2";
+-const char *MEDIA_MIMETYPE_AUDIO_DTS = "audio/dtshd";
++const char *MEDIA_MIMETYPE_AUDIO_DTS = "audio/vnd.dts";
+ const char *MEDIA_MIMETYPE_AUDIO_MP1 = "audio/mp1";
+ const char *MEDIA_MIMETYPE_AUDIO_MP2 = "audio/mp2";
+ const char *MEDIA_MIMETYPE_AUDIO_ADPCM_IMA = "audio/adpcm-ima";
+@@ -1493,7 +1493,8 @@ const char *MEDIA_MIMETYPE_AUDIO_AAC_LATM = "audio/aac-latm";
+ const char *MEDIA_MIMETYPE_AUDIO_ADTS_PROFILE = "audio/adts";
+ const char *MEDIA_MIMETYPE_AUDIO_WMA = "audio/wma";
+ const char *MEDIA_MIMETYPE_AUDIO_WMAPRO = "audio/wmapro";
+-const char *MEDIA_MIMETYPE_AUDIO_DTSHD  = "audio/dtshd";
++const char *MEDIA_MIMETYPE_AUDIO_DTSHD  = "audio/vnd.dts.hd";
++const char *MEDIA_MIMETYPE_AUDIO_DTS_EXPRESS  = "audio/vnd.dts.hd;profile=lbr";
+ const char *MEDIA_MIMETYPE_AUDIO_TRUEHD = "audio/truehd";
+ const char *MEDIA_MIMETYPE_AUDIO_AC3 = "audio/ac3";
+ const char *MEDIA_MIMETYPE_AUDIO_EC3 = "audio/eac3";
+@@ -1512,8 +1513,12 @@ const char*  AGetComponentRole(bool isEncoder, const char *mime) {
+     };
+ 
+     static const MimeToRole kMimeToRole[] = {
++         {MEDIA_MIMETYPE_AUDIO_DTS,
++         "audio_decoder.dts",  "audio_encoder.dts" },
+          {MEDIA_MIMETYPE_AUDIO_DTSHD,
+          "audio_decoder.dtshd",  "audio_encoder.dtshd" },
++         {MEDIA_MIMETYPE_AUDIO_DTS_EXPRESS,
++         "audio_decoder.dtse",  "audio_encoder.dtse" },
+          { MEDIA_MIMETYPE_AUDIO_AAC_ADIF,
+          "audio_decoder.adif", "audio_encoder.adif" },
+          { MEDIA_MIMETYPE_AUDIO_AAC_LATM,
+-- 
+2.34.1
+
