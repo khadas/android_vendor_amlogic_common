@@ -106,6 +106,7 @@ cc_binary {
         "HDCP/HDCPRx22ImgKey.cpp",
         "FrameRateAutoAdaption.cpp",
         "FormatColorDepth.cpp",
+        "provision/ProvisionKey.cpp",
     ],
 
     shared_libs: [
@@ -124,15 +125,16 @@ cc_binary {
         "vendor.amlogic.hardware.systemcontrol@1.0",
         "vendor.amlogic.hardware.systemcontrol@1.1",
         "libmeson_display_adapter_remote",
+        //"libprovision"
     ],
 
     init_rc: ["systemcontrol.rc"],
 
     static_libs: [
-	    "libz",
-		"libsceneprocess_static",
-		"libsyswrite_static",
-	],
+        "libz",
+        "libsceneprocess_static",
+        "libsyswrite_static",
+    ],
 
     proprietary: true,
 }
@@ -170,8 +172,8 @@ cc_binary {
         "libz",
         "libjsoncpp",
         "libmeson_display_adapter_local_static",
-		"libsceneprocess_recovery_static",
-		"libsyswrite_recovery_static",
+        "libsceneprocess_recovery_static",
+        "libsyswrite_recovery_static",
         "libbase",
         "libcutils",
     ],
@@ -202,7 +204,8 @@ cc_library_static {
         "HDCP/sha1.cpp",
         "HDCP/HDCPRx22ImgKey.cpp",
         "FrameRateAutoAdaption.cpp",
-        "FormatColorDepth.cpp"
+        "FormatColorDepth.cpp",
+        "provision/ProvisionKey.cpp",
     ],
 
     static_libs: [

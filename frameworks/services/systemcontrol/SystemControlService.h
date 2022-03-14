@@ -28,6 +28,7 @@
 #include <utils/Mutex.h>
 
 #include "SysWrite.h"
+#include "provision/ProvisionKey.h"
 #include "common.h"
 #include "DisplayMode.h"
 #include "Dimension.h"
@@ -352,6 +353,7 @@ private:
     int mLogLevel;
 
     SysWrite *pSysWrite;
+    ProvisionKey *pProvisionKey;
     DisplayMode *pDisplayMode;
     CPQControl *pCPQControl;
     Dimension *pDimension;

@@ -54,6 +54,8 @@ SystemControlService::SystemControlService(const char *path)
 
     pUbootenv = new Ubootenv();
     pSysWrite = new SysWrite();
+    pProvisionKey = new ProvisionKey();
+
 
     pDisplayMode = new DisplayMode(path, pUbootenv);
 
@@ -93,6 +95,7 @@ SystemControlService::SystemControlService(const char *path)
 SystemControlService::~SystemControlService() {
     delete pUbootenv;
     delete pSysWrite;
+    delete pProvisionKey;
     delete pDisplayMode;
     delete pDimension;
 
@@ -257,35 +260,35 @@ bool SystemControlService::writeUnifyKey(const std::string& path, const std::str
 
 bool SystemControlService::writePlayreadyKey(const char *value, const int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->writePlayreadyKey(value, size);
+        return pProvisionKey->writePlayreadyKey(value, size);
     }
     return false;
 }
 
 bool SystemControlService::writeNetflixKey(const char *value, const int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->writeNetflixKey(value, size);
+        return pProvisionKey->writeNetflixKey(value, size);
     }
     return false;
 }
 
 bool SystemControlService::writeWidevineKey(const char *value, const int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->writeWidevineKey(value, size);
+        return pProvisionKey->writeWidevineKey(value, size);
     }
     return false;
 }
 
 bool SystemControlService::writeAttestationKey(const char *value, const int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->writeAttestationKey(value, size);
+        return pProvisionKey->writeAttestationKey(value, size);
     }
     return false;
 }
 
 bool SystemControlService::writeHDCP14Key(const char *value, const int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->writeHDCP14Key(value, size);
+        return pProvisionKey->writeHDCP14Key(value, size);
     }
 
     return false;
@@ -293,21 +296,21 @@ bool SystemControlService::writeHDCP14Key(const char *value, const int size) {
 
 bool SystemControlService::writeHdcpRX14Key(const char *value, const int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->writeHdcpRX14Key(value, size);
+        return pProvisionKey->writeHdcpRX14Key(value, size);
     }
     return false;
 }
 
 bool SystemControlService::writeHDCP22Key(const char *value, const int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->writeHDCP22Key(value, size);
+        return pProvisionKey->writeHDCP22Key(value, size);
     }
     return false;
 }
 
 bool SystemControlService::writeHdcpRX22Key(const char *value, const int size) {
    if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->writeHdcpRX22Key(value, size);
+        return pProvisionKey->writeHdcpRX22Key(value, size);
     }
     return false;
 }
@@ -315,7 +318,7 @@ bool SystemControlService::writeHdcpRX22Key(const char *value, const int size) {
 bool SystemControlService::writePFIDKey(const char *value, const int size) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService writePFIDKey \n");
-        int ret= pSysWrite->writePFIDKey(value,size);
+        int ret= pProvisionKey->writePFIDKey(value,size);
         if (0 == ret) {
             return true;
         } else  {
@@ -328,7 +331,7 @@ bool SystemControlService::writePFIDKey(const char *value, const int size) {
 bool SystemControlService::writePFPKKey(const char *value, const int size) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService writePFPKKey \n");
-        int ret= pSysWrite->writePFPKKey(value,size);
+        int ret= pProvisionKey->writePFPKKey(value,size);
         if (0 == ret) {
             return true;
         } else  {
@@ -356,56 +359,56 @@ bool SystemControlService::readUnifyKey(const std::string& path, std::string& va
 bool SystemControlService::readPlayreadyKey(const std::string& path, uint32_t key_type, int size) {
     if (NO_ERROR == permissionCheck()) {
         traceValue("readPlayreadyKey", path, size);
-        return pSysWrite->readPlayreadyKey(path.c_str(), key_type, size);
+        return pProvisionKey->readPlayreadyKey(path.c_str(), key_type, size);
     }
     return false;
 }
 
 bool SystemControlService::readWidevineKey(const uint32_t key_type, int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->readWidevineKey(key_type, size);
+        return pProvisionKey->readWidevineKey(key_type, size);
     }
     return false;
 }
 
 bool SystemControlService::readNetflixKey(const uint32_t key_type, int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->readNetflixKey(key_type, size);
+        return pProvisionKey->readNetflixKey(key_type, size);
     }
     return false;
 }
 
 bool SystemControlService::readAttestationKey(const uint32_t key_type, int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->readAttestationKey(key_type, size);
+        return pProvisionKey->readAttestationKey(key_type, size);
     }
     return false;
 }
 
 bool SystemControlService::readHDCP14Key(const uint32_t key_type, int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->readHDCP14Key(key_type, size);
+        return pProvisionKey->readHDCP14Key(key_type, size);
     }
     return false;
 }
 
 bool SystemControlService::readHdcpRX14Key(const uint32_t key_type, int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->readHdcpRX14Key(key_type, size);
+        return pProvisionKey->readHdcpRX14Key(key_type, size);
     }
     return false;
 }
 
 bool SystemControlService::readHDCP22Key(const uint32_t key_type, int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->readHDCP22Key(key_type, size);
+        return pProvisionKey->readHDCP22Key(key_type, size);
     }
     return false;
 }
 
 bool SystemControlService::readHdcpRX22Key(const uint32_t key_type, int size) {
     if (NO_ERROR == permissionCheck()) {
-        return pSysWrite->readHdcpRX22Key(key_type, size);
+        return pProvisionKey->readHdcpRX22Key(key_type, size);
     }
     return false;
 }
@@ -414,7 +417,7 @@ bool SystemControlService::readHdcpRX22Key(const uint32_t key_type, int size) {
 bool SystemControlService::checkPlayreadyKey(const std::string& path, const char *value, uint32_t key_type) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService checkPlayreadyKey \n");
-        return pSysWrite->checkPlayreadyKey(path.c_str(), value, key_type);
+        return pProvisionKey->checkPlayreadyKey(path.c_str(), value, key_type);
     }
     return false;
 }
@@ -422,7 +425,7 @@ bool SystemControlService::checkPlayreadyKey(const std::string& path, const char
 bool SystemControlService::checkNetflixKey(const char *value, const uint32_t key_type) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService checkNetflixKey \n");
-        return pSysWrite->checkNetflixKey(value,key_type);
+        return pProvisionKey->checkNetflixKey(value,key_type);
     }
     return false;
 }
@@ -430,7 +433,7 @@ bool SystemControlService::checkNetflixKey(const char *value, const uint32_t key
 bool SystemControlService::checkWidevineKey(const char *value, const uint32_t key_type) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService checkWidevineKey \n");
-        return pSysWrite->checkWidevineKey(value,key_type);
+        return pProvisionKey->checkWidevineKey(value,key_type);
     }
     return false;
 }
@@ -438,7 +441,7 @@ bool SystemControlService::checkWidevineKey(const char *value, const uint32_t ke
 bool SystemControlService::checkAttestationKey(const char *value, const uint32_t key_type) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService checkAttestationKey \n");
-        return pSysWrite->checkAttestationKey(value,key_type);
+        return pProvisionKey->checkAttestationKey(value,key_type);
     }
     return false;
 }
@@ -446,7 +449,7 @@ bool SystemControlService::checkAttestationKey(const char *value, const uint32_t
 bool SystemControlService::checkHDCP14Key(const char *value, const uint32_t key_type) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService checkHDCP14 \n");
-        return pSysWrite->checkHDCP14Key(value, key_type);
+        return pProvisionKey->checkHDCP14Key(value, key_type);
     }
     return false;
 }
@@ -454,7 +457,7 @@ bool SystemControlService::checkHDCP14Key(const char *value, const uint32_t key_
 bool SystemControlService::checkHDCP14KeyIsExist(const uint32_t key_type) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService checkHDCP14KeyIsExist \n");
-        return pSysWrite->checkHDCP14KeyIsExist(key_type);
+        return pProvisionKey->checkHDCP14KeyIsExist(key_type);
     }
     return false;
 }
@@ -462,7 +465,7 @@ bool SystemControlService::checkHDCP14KeyIsExist(const uint32_t key_type) {
 bool SystemControlService::checkHDCP22Key(const std::string& path, const char *value, const uint32_t key_type) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService checkHDCP22Key \n");
-        return pSysWrite->checkHDCP22Key(path.c_str(), value, key_type);
+        return pProvisionKey->checkHDCP22Key(path.c_str(), value, key_type);
     }
     return false;
 }
@@ -470,7 +473,7 @@ bool SystemControlService::checkHDCP22Key(const std::string& path, const char *v
 bool SystemControlService::checkHDCP22KeyIsExist(const uint32_t key_type_first, const uint32_t key_type_second) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService checkHDCP14KeyIsExist \n");
-        return pSysWrite->checkHDCP22KeyIsExist(key_type_first, key_type_second);
+        return pProvisionKey->checkHDCP22KeyIsExist(key_type_first, key_type_second);
     }
     return false;
 }
@@ -478,7 +481,7 @@ bool SystemControlService::checkHDCP22KeyIsExist(const uint32_t key_type_first, 
 bool SystemControlService::checkPFIDKeyIsExist(const uint32_t key_type) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService checkPFIDKeyIsExist \n");
-        return pSysWrite->checkPFIDKeyIsExist(key_type);
+        return pProvisionKey->checkPFIDKeyIsExist(key_type);
     }
     return false;
 }
@@ -486,7 +489,7 @@ bool SystemControlService::checkPFIDKeyIsExist(const uint32_t key_type) {
 bool SystemControlService::checkPFPKKeyIsExist(const uint32_t key_type) {
     if (NO_ERROR == permissionCheck()) {
         ALOGD("SystemControlService checkPFPKKeyIsExist \n");
-        return pSysWrite->checkPFPKKeyIsExist(key_type);
+        return pProvisionKey->checkPFPKKeyIsExist(key_type);
     }
     return false;
 }
