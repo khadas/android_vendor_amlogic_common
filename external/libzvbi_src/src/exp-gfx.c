@@ -700,7 +700,7 @@ vbi_draw_vt_page_region(vbi_page *pg,
 	}
 #endif
 
-	if (strlen (time) != 0)
+	if (time && strlen (time) != 0)
 	{
 		for (i=0; i<8; i++)
 			pg->text[32+i].unicode = _vbi_to_ascii(time[i]);

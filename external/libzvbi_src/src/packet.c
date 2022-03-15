@@ -1563,12 +1563,12 @@ store_lop(vbi_decoder *vbi, const cache_page *vtp)
 				for (i=0; i<8; i++)
 				{
 					time_event.time[i] = _vbi_to_ascii(vtp->data.lop.raw[0][i+32]);
-					if (i == 0 || i == 1 || i == 3 || i == 4 || i == 6 || i == 7)
+					/*if (i == 0 || i == 1 || i == 3 || i == 4 || i == 6 || i == 7)
 					{
 						//The time position of the special stream is not fixed
-						/*if (time_event.time[i] < '0' || time_event.time[i] > '9')
-							clock_correct = FALSE;*/
-					}
+						if (time_event.time[i] < '0' || time_event.time[i] > '9')
+							clock_correct = FALSE;*
+					}*/
 				}
 				if (clock_correct == TRUE)
 					vbi_send_event(vbi, &time_event);
