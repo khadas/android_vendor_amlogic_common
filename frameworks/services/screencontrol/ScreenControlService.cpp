@@ -138,7 +138,8 @@ int ScreenControlService::startScreenRecord(int32_t width, int32_t height, int32
     int32_t limit_time = limitTimeSec * frameRate;
     MediaBufferBase *tVideoBuffer;
     mNeedStop = false;
-
+    int64_t firsetNowUs = 0;
+    struct timeval timeNow;
     ProcessState::self()->startThreadPool();
 
     int video_file = open(filename, O_CREAT | O_RDWR, 0666);
@@ -156,10 +157,20 @@ int ScreenControlService::startScreenRecord(int32_t width, int32_t height, int32
         ALOGE("[%s %d]TSPacker start fail\n", __FUNCTION__, __LINE__);
         return !OK;
     }
+    gettimeofday(&timeNow, NULL);
+    firsetNowUs = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
 
     while (!mNeedStop) {
         tVideoBuffer = NULL;
         err = mTSPacker->read(&tVideoBuffer);
+        struct timeval timeNow;
+        gettimeofday(&timeNow, NULL);
+        int64_t nowUs = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
+        int64_t diff = nowUs -firsetNowUs;
+        if (video_dump_size == 0 && diff >= (limitTimeSec*1000*1000)) {
+            ALOGE("[%s %d] no data !!!! break", __FUNCTION__, __LINE__);
+            break;
+        }
 
         if (err != OK) {
             usleep(1);
