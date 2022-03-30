@@ -167,7 +167,8 @@ int ScreenControlService::startScreenRecord(int32_t width, int32_t height, int32
         gettimeofday(&timeNow, NULL);
         int64_t nowUs = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
         int64_t diff = nowUs -firsetNowUs;
-        if (video_dump_size == 0 && diff >= (limitTimeSec*1000*1000)) {
+        int64_t limitTimeUs = (int64_t)limitTimeSec *1000 *1000;
+        if (video_dump_size == 0 && (diff >= limitTimeUs)) {
             ALOGE("[%s %d] no data !!!! break", __FUNCTION__, __LINE__);
             break;
         }
