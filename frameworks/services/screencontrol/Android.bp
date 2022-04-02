@@ -65,7 +65,7 @@ cc_binary {
   init_rc: ["screencontrol.rc"],
   vintf_fragments: ["vendor.amlogic.hardware.screencontrol@1.0.xml"],
   vendor: true,
-//  compile_multilib: "32",
+  compile_multilib: "32",
 
   srcs: [
     "ScreenControlHal.cpp",
