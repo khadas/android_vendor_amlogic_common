@@ -293,7 +293,7 @@ public class AudioSystemCmdService extends Service {
             mTvControlManager.SetAudioEventListener(mADtvAudioEvent);
         }
 
-        mSystemControlEvent = SystemControlEvent.getInstance(null);
+        mSystemControlEvent = SystemControlEvent.getInstance(mContext);
         mDtvKitAudioEvent = new DtvKitAudioEvent();
         mSystemControlEvent.SetAudioEventListener(mDtvKitAudioEvent);
         mSystemControlManager.setListener(mSystemControlEvent);
