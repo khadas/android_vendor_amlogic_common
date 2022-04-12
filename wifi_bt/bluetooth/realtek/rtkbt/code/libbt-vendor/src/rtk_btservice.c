@@ -25,7 +25,7 @@
  ******************************************************************************/
 
 #define LOG_TAG "bt_service"
-#define RTKBT_RELEASE_NAME "20200924_BT_ANDROID_10.0"
+#define RTKBT_RELEASE_NAME "20201130_BT_ANDROID_11.0"
 
 #include <utils/Log.h>
 #include <sys/types.h>
@@ -61,6 +61,9 @@
 
 //HCI VENDOR Command opcode
 #define HCI_VSC_READ_REGISTER           0xFFFF
+#ifdef VENDOR_MESH_RTK
+#define HCI_VSC_MESH_NOTIFY             0xFFFE
+#endif
 
 #define RTKBTSERVICE_SOCKETPATH "@/data/misc/bluedroid/rtkbt_service.sock"
 #define MAX_CONNECTION_NUMBER 10
@@ -76,6 +79,10 @@
 
 #define HCICMD_REPLY_TIMEOUT_VALUE  8000 //ms
 #define HCI_CMD_PREAMBLE_SIZE   3
+#ifdef VENDOR_MESH_RTK
+int meshsockfd;
+pthread_mutex_t sock_mutex;
+#endif
 
 typedef void (*tTIMER_HANDLE_CBACK)(union sigval sigval_value);
 
@@ -126,6 +133,9 @@ typedef struct Rtk_socket_node
     int             client_fd;
 }Rtkqueuenode;
 
+#ifdef VENDOR_MESH_RTK
+extern volatile uint16_t scan_flag;
+#endif
 extern void rtk_vendor_cmd_to_fw(uint16_t opcode, uint8_t parameter_len, uint8_t* parameter, tINT_CMD_CBACK p_cback);
 static Rtk_Btservice_Info *rtk_btservice = NULL;
 static void Rtk_Service_Send_Hwerror_Event();
@@ -298,15 +308,24 @@ static void Rtk_Client_Cmd_Cback(void *p_mem)
             if(p_evt_buf->event != HCIT_TYPE_EVENT)
               return;
             uint8_t type = HCIT_TYPE_EVENT;
+#ifdef VENDOR_MESH_RTK
+            pthread_mutex_lock(&sock_mutex);
+#endif
             RTK_NO_INTR(ret = send(rtk_btservice->current_client_sock,&type, 1, MSG_NOSIGNAL));
             if(ret < 0) {
               ALOGE("%s send type errno: %s", __func__, strerror(errno));
+#ifdef VENDOR_MESH_RTK
+              pthread_mutex_unlock(&sock_mutex);
+#endif
               return;
             }
 
             RTK_NO_INTR(ret = send(rtk_btservice->current_client_sock,sendbuf,p_evt_buf->len, MSG_NOSIGNAL));
             if(ret < 0)
               ALOGE("%s errno: %s", __func__, strerror(errno));
+#ifdef VENDOR_MESH_RTK
+            pthread_mutex_unlock(&sock_mutex);
+#endif
         }
         else
         {
@@ -465,6 +484,12 @@ static void Getpacket(int client_sock)
         {
             rtk_btservice->autopair_fd = -1;
         }
+#ifdef VENDOR_MESH_RTK
+        else if(client_sock == meshsockfd)
+        {
+            meshsockfd = -1;
+        }
+#endif
         return;
     }
 
@@ -490,7 +515,15 @@ static void Getpacket(int client_sock)
                 ALOGE("read parameter_length char error");
                 break;
             }
-
+#ifdef VENDOR_MESH_RTK
+            ALOGD("Getpacket opcode:0x%x sockfd:%d", ((unsigned short)opcodeh)<<8 | opcodel, client_sock);
+            if(HCI_VSC_MESH_NOTIFY == (((unsigned short)opcodeh)<<8 | opcodel))
+            {
+                meshsockfd = client_sock;
+                scan_flag |= RTK_MESH_SCAN;
+                return;
+            }
+#endif
             if(parameter_length > 0)
             {
                 parameter = (unsigned char *)malloc(sizeof(char)*parameter_length);
@@ -517,6 +550,12 @@ static void Getpacket(int client_sock)
             }
 
             p_buf->opcode = ((unsigned short)opcodeh)<<8 | opcodel;
+#ifdef VENDOR_MESH_RTK
+            if(p_buf->opcode == HCI_VENDOR_LE_SCAN_PARAMETER)
+                scan_flag |= RTK_MESH_SET_SCAN_PARM;
+            else if(p_buf->opcode == HCI_VENDOR_LE_SCAN_ENABLE)
+                scan_flag |= RTK_MESH_SET_SCAN;
+#endif
             p_buf->parameter = parameter;
             p_buf->parameter_len = parameter_length;
             p_buf->complete_cback = Rtk_Client_Cmd_Cback;
@@ -605,6 +644,36 @@ void rtk_btservice_internal_event_intercept(uint8_t *p_full_msg, uint8_t *p_msg)
             }
             break;
         }
+#ifdef VENDOR_MESH_RTK
+        case HCI_BLE_EVENT:
+        {
+            uint8_t len = *p++;
+            STREAM_TO_UINT8(subcode, p);
+            switch(subcode)
+            {
+                case HCI_BLE_ADV_PKT_RPT_EVT:
+                {
+                    if(meshsockfd != -1)
+                    {
+                        uint8_t buflen = len + 3;
+                        uint8_t buf[buflen];
+                        buf[0] = DATA_TYPE_EVENT;
+                        memcpy((uint8_t *)(buf+1), p_msg, len+2);
+                        pthread_mutex_lock(&sock_mutex);
+                        write(meshsockfd, buf, buflen);
+                        pthread_mutex_unlock(&sock_mutex);
+                    }
+                    else
+                        ALOGD("not accept mesh socket yet");
+                    break;
+                }
+
+                default:
+                    break;
+            }
+            break;
+        }
+#endif
         default:
             break;
     }
@@ -645,7 +714,7 @@ static int rtk_socket_accept(socketfd)
 
 static void *epoll_thread()
 {
-    struct epoll_event events[64];
+    struct epoll_event events[64] = {{0}};
     int nfds=0;
     int i=0;
 
@@ -814,8 +883,27 @@ void RTK_btservice_thread_stop()
     ALOGD("%s end!", __func__);
 }
 
+#ifdef VENDOR_MESH_RTK
+void ouch(int sig)
+{
+   ALOGE("got a signal %d\n", sig);
+}
+#endif
 int RTK_btservice_init()
 {
+#ifdef VENDOR_MESH_RTK
+struct sigaction act;
+
+act.sa_handler = ouch;
+sigemptyset (&act.sa_mask);
+  act.sa_flags = 0;
+
+if (sigaction(SIGPIPE, &act, NULL) == 0) {
+
+    ALOGE("SIGPIPE ignore");
+
+}
+#endif
     int ret;
     rtk_btservice = (Rtk_Btservice_Info *)malloc(sizeof(Rtk_Btservice_Info));
     if(rtk_btservice) {
@@ -829,6 +917,9 @@ int RTK_btservice_init()
     rtk_btservice->current_client_sock = -1;
     rtk_btservice->current_complete_cback = NULL;
     rtk_btservice->autopair_fd = -1;
+#ifdef VENDOR_MESH_RTK
+    meshsockfd = -1;
+#endif
     if(!hcicmd_alloc_reply_timer()) {
         ALOGE("%s alloc timer fail!", __func__);
         ret = -1;
@@ -917,10 +1008,16 @@ void RTK_btservice_destroyed()
     flush_cmdqueue_hash(rtk_btservice);
     hcicmd_free_reply_timer();
     pthread_mutex_destroy(&rtk_btservice->cmdqueue_mutex);
+#ifdef VENDOR_MESH_RTK
+    pthread_mutex_destroy(&sock_mutex);
+#endif
     rtk_btservice->autopair_fd = -1;
     rtk_btservice->current_client_sock = -1;
     free(rtk_btservice);
     rtk_btservice = NULL;
+#ifdef VENDOR_MESH_RTK
+    meshsockfd = -1;
+#endif
     ALOGD("%s destroyed done!", __func__);
 }
 

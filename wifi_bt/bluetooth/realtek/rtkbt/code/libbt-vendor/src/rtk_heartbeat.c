@@ -16,7 +16,7 @@
  *
  ******************************************************************************/
 #define LOG_TAG "rtk_heartbeat"
-#define RTKBT_RELEASE_NAME "20200924_BT_ANDROID_10.0"
+#define RTKBT_RELEASE_NAME "20201130_BT_ANDROID_11.0"
 
 #include <utils/Log.h>
 #include <sys/types.h>
@@ -278,25 +278,26 @@ static void heartbeat_timed_out()//(union sigval arg)
 
     pthread_mutex_lock(&heartbeat_mutex);
     heartbeatCount++;
-    if (heartbeatCount >= 3)
+    if(heartbeatCount >= 3)
     {
-        if (cleanupFlag == 1)
+        if(cleanupFlag == 1)
         {
             ALOGW("Already cleanup, ignore.");
             pthread_mutex_unlock(&heartbeat_mutex);
             return;
         }
-
         ALOGE("heartbeat_timed_out: heartbeatCount = %d, expected nextSeqNum = %d",heartbeatCount, nextSeqNum);
         ALOGE("heartbeat_timed_out,controller may be suspend! Now restart bluedroid stack\n");
         count = heartbeatCount;
         pthread_mutex_unlock(&heartbeat_mutex);
         usleep(1000);
         rtkbt_heartbeat_send_hw_error(0,0,nextSeqNum,count);
+
+        //kill(getpid(), SIGKILL);
         return;
     }
     pthread_mutex_unlock(&heartbeat_mutex);
-    if (heartbeatFlag)
+    if(heartbeatFlag)
     {
         p_buf = (Rtk_Service_Data *)malloc(sizeof(Rtk_Service_Data));
         if (NULL == p_buf)

@@ -50,12 +50,16 @@
 #include <cutils/properties.h>
 #include "rtk_common.h"
 
-#define RTK_VERSION "5.0.1"
+#define RTK_VERSION "5.1.1"
 /******************************************************************************
 **  Constants & Macros
 ******************************************************************************/
+//for mesh
+//#define VENDOR_MESH_RTK
+
 #define RTKBT_TRANS_H4          0x20
 #define RTKBT_TRANS_H5          0x10
+#define RTKBT_TRANS_H45         0x40
 #define RTKBT_TRANS_UART        0x01
 #define RTKBT_TRANS_USB         0x02
 

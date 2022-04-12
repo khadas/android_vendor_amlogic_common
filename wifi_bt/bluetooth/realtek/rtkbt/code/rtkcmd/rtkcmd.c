@@ -112,19 +112,24 @@ int Rtkbt_Sendcmd(int socketfd,char *p)
             params_count++;
         } else {
             printf("parameter error\n");
+            free(p_buf);
             return -1;
         }
     }
 
     if (params_count != ParamLen + 2) {
         printf("parameter error\n");
+        free(p_buf);
         return -1;
     }
 
     sendlen=sizeof(Rtk_Socket_Data)+sizeof(char)*p_buf->parameter_len;
     ret=write(socketfd,p_buf,sendlen);
-    if(ret!=sendlen)
+    if(ret!=sendlen){
+        free(p_buf);
         return -1;
+    }
+
 
     free(p_buf);
     return 0;
@@ -157,8 +162,10 @@ int Rtkbt_Getevent(int sock_fd)
     recvbuf[0] = event;
     recvbuf[1] = len;
     ret = read(sock_fd,recvbuf+2,len);
-    if(ret < len)
+    if(ret < len){
+        free(recvbuf);
         return -1;
+    }
 
     printf("Event: ");
     for(i=0;i<tot_len-1;i++)

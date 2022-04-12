@@ -166,8 +166,10 @@ $(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/mtk/mtkbt/mtkbt.
 $(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/broadcom/bcmbt.mk )
 $(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/qualcomm/qcabt.mk )
 $(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/amlogic/amlbt.mk )
+$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/nxp/nxpbt.mk )
 
 PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/bluetooth/configs/init_rc/init.amlogic.amlbt.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/init.amlogic.bluetooth.rc
+PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/bluetooth/configs/bt_hal.conf:$(TARGET_COPY_OUT_VENDOR)/etc/bluetooth/bt_hal.conf
 
 
 PRODUCT_PACKAGES += \
@@ -177,5 +179,6 @@ PRODUCT_PACKAGES += \
 	libbt-vendor_qca \
 	libbt-vendor_uwe \
     libbluetooth_mtkbt \
-    libbt-vendor_aml
+    libbt-vendor_aml \
+	libbt-vendor_nxp
 endif

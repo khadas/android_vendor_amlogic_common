@@ -31,6 +31,9 @@
 #include <asm/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/syscall.h>
+#include <dirent.h>
+
 
 #include "multibt_hal.h"
 
@@ -44,6 +47,8 @@
 
 #define VND_PORT_NAME_MAXLEN    256
 #define LOOP_TIMES              100
+static int set_debug_level(const char *p_name, char *p_value);
+static int set_redistinguish(const char *p_name, char *p_value);
 
 /******************************************************************************
 **  Local type definitions
@@ -63,12 +68,14 @@ struct device_info {
     char vendor_lib_name[64];
 	char mudule_name[20];
 	unsigned short chip_id;
+	bool power_type;
 };
 
 struct uart_device_info {
 	unsigned short vendor_id;
 	char device_name[20];
 	char vendor_lib_name[64];
+	bool power_type;
 };
 
 /******************************************************************************
@@ -78,6 +85,9 @@ struct uart_device_info {
 static vnd_userial_cb_t vnd_userial;
 static int rfkill_id = -1;
 static char *rfkill_state_path = NULL;
+static int VDBG = 0;
+static int redistinguish = 0; //default onboot dou't distinguish
+static int distinguish = 0; //distinguish Corresponding module set 1
 
 static const tUSERIAL_CFG userial_H5_cfg =
 {
@@ -88,6 +98,10 @@ static const tUSERIAL_CFG userial_H4_cfg =
 {
     (USERIAL_DATABITS_8 | USERIAL_PARITY_NONE | USERIAL_STOPBITS_1),
     USERIAL_BAUD_115200,
+};
+static const d_entry_t entry_table[] = {
+	{"debuglevel", set_debug_level},
+	{"redistinguish", set_redistinguish}
 };
 /******************************************************************************
 **  init variables
@@ -109,43 +123,254 @@ static std::string dev_typeid[] = {"0000", "0001","8800"};
 **  usb/mmc struct config
 ******************************************************************************/
 static const struct device_info bluetooth_dongle[] = {
-	{0xC820, "rtl8821cu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0xC811, "rtl8821cu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0xD723, "rtl8723du", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0xB82C, "rtl8822bu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0xB720, "rtl8723bu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0x0823, "rtl8821au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0x0821, "rtl8821au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0x885c, "rtl8852au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0x885a, "rtl8852au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0xB733, "rtl8733bu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0xC82C, "rtl88x2cu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0xB761, "rtl8761u",  "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000},
-	{0xBD27, "ap62x8",    "libbt-vendor_bcmMulti.so", "btusb",     0x0000},
-	{0x0BDC, "ap62x8",    "libbt-vendor_bcmMulti.so", "btusb",     0x0000},
-	{0x9378, "qca9379",   "libbt-vendor_qcaMulti.so", "bt_usb_qcom", 0x0000},
-	{0x7A85, "qca9379",   "libbt-vendor_qcaMulti.so", "bt_usb_qcom", 0x0000},
-	{0x7668, "mtk7668u",  "libbt-vendor_mtkMulti.so", "btmtk_usb", 0x0000},
-	{0x0000, "aml_w1",    "libbt-vendor_amlMulti.so", ""         , 0x8888},
-	{0x0000, "qca6391",   "libbt-vendor_639Multi.so", ""         , 0x1101},
-	{0x0000, "nxpw8997",  "libbt-vendor_nxpMulti.so", ""         , 0x9141},
-	{0x0000, "mtk7668s",  "libbt-vendor_mtkMulti.so", "btmtksdio", 0x7608},
-	{0x0000, "mtk7661s",  "libbt-vendor_mtkMulti.so", "btmtksdio", 0x7603},
-	{0x0000, "uwe5621ds", "libbt-vendor_uweMulti.so", "sprdbt_tty", 0x0000}
+	{0xC820, "rtl8821cu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
+	{0xC811, "rtl8821cu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
+	{0xD723, "rtl8723du", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
+	{0xB82C, "rtl8822bu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
+	{0xB720, "rtl8723bu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
+	{0x0823, "rtl8821au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
+	{0x0821, "rtl8821au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
+	{0x885c, "rtl8852au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
+	{0x885a, "rtl8852au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
+	{0xB733, "rtl8733bu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
+	{0xC82C, "rtl88x2cu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
+	{0xB761, "rtl8761u",  "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, false},
+	{0x8771, "rtl8771u",  "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, false},
+	{0x2045, "ap62x8",    "libbt-vendor_bcmMulti.so", "btusb",     0x0000, false},
+	{0xBD27, "ap62x8",    "libbt-vendor_bcmMulti.so", "btusb",     0x0000, false},
+	{0x0BDC, "ap62x8",    "libbt-vendor_bcmMulti.so", "btusb",     0x0000, false},
+	{0x9378, "qca9379",   "libbt-vendor_qcaMulti.so", "bt_usb_qcom", 0x0000, true},
+	{0x7A85, "qca9379",   "libbt-vendor_qcaMulti.so", "bt_usb_qcom", 0x0000, true},
+	{0x7668, "mtk7668u",  "libbt-vendor_mtkMulti.so", "btmtk_usb", 0x0000, true},
+	{0x0000, "aml_w1",    "libbt-vendor_amlMulti.so", "NULL"     , 0x8888, true},
+	{0x0000, "qca6391",   "libbt-vendor_639Multi.so", "NULL"     , 0x1101, false},
+	{0x0000, "nxp8987",   "libbt-vendor_nxpMulti.so", "NULL"     , 0x9149, false},
+	{0x0000, "nxp8997",   "libbt-vendor_nxpMulti.so", "NULL"     , 0x9141, false},
+	{0x0000, "nxpiw620",  "libbt-vendor_nxpMulti.so", "NULL"     , 0x2b56, false},
+	{0x0000, "mtk7668s",  "libbt-vendor_mtkMulti.so", "btmtksdio", 0x7608, true},
+	{0x0000, "mtk7661s",  "libbt-vendor_mtkMulti.so", "btmtksdio", 0x7603, true},
+	{0x0000, "uwe5621ds", "libbt-vendor_uweMulti.so", "sprdbt_tty", 0x0000, true},
+	{0x4C55, "aml_w1u",   "libbt-vendor_amlMulti.so", "aml_w1u"  , 0x0000, true}
 };
 
 /******************************************************************************
 **  uart struct config
 ******************************************************************************/
 static const struct uart_device_info uart_dongle[] = {
-	{0x0F00, "bcm_bt",  "libbt-vendor_bcmMulti.so"},
-	{0x1D00, "qca_bt",  "libbt-vendor_qcaMulti.so"},
-	{0x5D00, "rtl_bt",  "libbt-vendor_rtlMulti.so"},
-	{0x4600, "mtk_bt",  "libbt-vendor_mtkMulti.so"},
-	{0XFFFF, "aml_bt",  "libbt-vendor_amlMulti.so"},
-	{0X4800, "nxp_bt",  "libbt-vendor_nxpMulti.so"},
-	{0XEC01, "uwe_bt",  "libbt-vendor_uweMulti.so"},
+	{0x0F00, "bcm_bt",  "libbt-vendor_bcmMulti.so", false},
+	{0x1D00, "qca_bt",  "libbt-vendor_qcaMulti.so", false},
+	{0x5D00, "rtl_bt",  "libbt-vendor_rtlMulti.so", false},
+	{0x4600, "mtk_bt",  "libbt-vendor_mtkMulti.so", false},
+	{0XFFFF, "aml_bt",  "libbt-vendor_amlMulti.so", false},
+	{0XEC01, "uwe_bt",  "libbt-vendor_uweMulti.so", false},
 };
+
+static void wirte_power_type(char * str)
+{
+	int ret;
+	int fd;
+	fd = open(BT_POWER_TYPE, O_WRONLY);
+	if (fd < 0)
+	{
+		ALOGE("open(%s) failed: %s (%d)\n", \
+			BT_POWER_TYPE, strerror(errno), errno);
+	}
+
+	ret = write(fd, str, 1);
+	if (ret < 0) {
+		ALOGE( "Failed to write bt power evt");
+	}
+	close(fd);
+}
+
+static char* get_power_type(void)
+{
+	char module_name[16];
+	int size = 0;
+	int i;
+
+	memset(module_name, 0, sizeof(module_name));
+	btvendor_hal.get_module_name(module_name);
+	if (!strncmp(module_name, "NULL", 4)) {
+		PR_INFO("dou't find module name");
+		return NULL;
+	}
+
+	size = sizeof(uart_dongle) / sizeof(uart_device_info);
+	for (i = 0; i < size; i++) {
+		if(strstr(module_name, uart_dongle[i].device_name)) {
+			PR_INFO("find name: %s", uart_dongle[i].device_name);
+			if (!uart_dongle[i].power_type) {
+				return (char*)"1";
+			}
+			else {
+				return (char*)"2";
+			}
+		}
+	}
+
+	size = sizeof(bluetooth_dongle) / sizeof(device_info);
+	for (i = 0; i < size; i++) {
+		if (strstr(module_name, bluetooth_dongle[i].device_name)) {
+			PR_INFO("find name: %s", bluetooth_dongle[i].device_name);
+			if (!bluetooth_dongle[i].power_type) {
+				return (char*)"1";
+			}
+			else {
+				return (char*)"2";
+			}
+		}
+	}
+	return NULL;
+}
+
+static int set_power_type(void)
+{
+	char *str;
+
+	str = get_power_type();
+	if (!str)
+		return 0;
+
+	wirte_power_type(str);
+	return 0;
+}
+
+static int set_debug_level(const char *p_name, char *p_value)
+{
+	VDBG = std::strtol(p_value, nullptr, 10);
+	if (VDBG) {
+		PR_INFO("%s = %d", p_name, VDBG);
+	}
+	return 0;
+}
+
+static int set_redistinguish(const char *p_name, char *p_value)
+{
+	redistinguish = std::strtol(p_value, nullptr, 10);
+	if (VDBG) {
+		PR_INFO("%s = %d", p_name, redistinguish);
+	}
+	return 0;
+}
+
+static int insmod(const char *filename, const char *args) {
+  int fd = 0;
+  int ret;
+
+  fd = open(filename, O_RDONLY);
+  if (fd < 0 ) return -1;
+
+  ret = finit_module(fd, args, 0);
+
+  close(fd);
+
+  return ret;
+}
+
+static int rmmod(const char *modname) {
+  int ret = -1;
+  int maxtry = 10;
+
+  while (maxtry-- > 0) {
+    ret = delete_module(modname, O_NONBLOCK | O_EXCL);
+    if (ret < 0 && errno == EAGAIN)
+      usleep(500000);
+    else
+      break;
+  }
+
+  if (ret != 0)
+    PR_ERR("Unable to unload driver module %s",modname);
+  return ret;
+}
+
+/*exist return 1 .or return 0 */
+static int find_target_file(const char *path, const char * targetfile)
+{
+    DIR *dir;
+    struct dirent *name;
+
+    dir = opendir(path);
+    if (dir == NULL) {
+       PR_ERR("fail to open %s", path);
+       return 0;
+    }
+    while ((name = readdir(dir)) != NULL) {
+        if (strncmp(name->d_name, targetfile, strlen(targetfile)) == 0) {
+            closedir(dir);
+            return 1;
+        }
+    }
+    closedir(dir);
+    return 0;
+}
+
+static int get_config_param(std::string path, std::string targetfile)
+{
+	int ret = -1;
+	char *p_name;
+	char *p_value;
+	d_entry_t * temp_table;
+	FILE* fd;
+	std::string pathname;
+
+	char line[MAX_LINE_LEN +1];
+	if (!(find_target_file(path.c_str(), targetfile.c_str()))) {
+		PR_ERR("debug config file not exist");
+		goto error;
+	}
+
+	pathname = std::string(path) + std::string(targetfile);
+	//PR_INFO("pathname: %s", pathname.c_str());
+	fd = fopen(pathname.c_str(), "r");
+	if (fd == NULL) {
+		PR_ERR("open file fail");
+		goto error;
+	}
+
+	while(fgets(line, MAX_LINE_LEN +1, fd) != NULL) {
+		if (line[0] == '#') {
+			continue;
+		}
+
+		p_name = strtok(line, DELIM);
+
+		if (p_name == NULL) {
+			continue;
+		}
+
+		p_value = strtok(NULL, DELIM);
+		temp_table = (d_entry_t*)entry_table;
+
+		while(temp_table->entry_name != NULL) {
+			if(strcmp(temp_table->entry_name, p_name) == 0) {
+				temp_table->p_action(temp_table->entry_name, p_value);
+				break;
+			}
+
+			temp_table++;
+		}
+	}
+	ret = redistinguish;
+	fclose(fd);
+error:
+	return ret;
+}
+
+static int get_redistinguish(void)
+{
+/*
+	power on or reboot later:    distinguish = 0;
+	distinguish BT successfully: distinguish = 1;
+*/
+
+	get_config_param(CONFIG_PATH, CONFIG_NAME);
+	if (redistinguish && !distinguish)
+		property_set("persist.vendor.libbt_vendor", "re_libbt");
+
+	return 0;
+}
 
 static std::string get_usb_path(std::string devid, std::string subdevid)
 {
@@ -233,39 +458,39 @@ error:
 	return 0;
 }
 
-static unsigned short int get_dev_info(std::string path)
+static unsigned short get_dev_info(std::string path)
 {
     char info[16];
     unsigned short val;
     int fp = open(path.c_str(), O_RDONLY);
     if (fp < 0) {
         PR_ERR("Open file failed !!! %s(%d)", strerror(errno), errno);
-        return -1;
+        return 0xFF;
     }
     memset(info, 0, sizeof(info));
     if(read(fp, info, sizeof(info)) < 0) {
 		PR_ERR(" %s read failed",__func__);
 		close(fp);
-		return -1;
+		return 0xFF;
 	}
     close(fp);
-
     val = std::strtol(info, nullptr, 16);
     return val;
 }
 
 static int matching_usb_device(std::string path)
 {
-	int cnt, device_id;
+	int cnt;
+	unsigned short device_id;
 	int dongle_size;
-	if ((device_id = get_dev_info(path)) == -1) {
+	if ((device_id = get_dev_info(path)) == 0xFF) {
 		return 1;
 	}
 
 	dongle_size = sizeof(bluetooth_dongle)/sizeof(struct device_info);
 	for (cnt = 0; cnt < dongle_size; cnt++) {
 		if (bluetooth_dongle[cnt].device_id == device_id && bluetooth_dongle[cnt].device_id > 0) {
-			if (bluetooth_dongle[cnt].mudule_name != "") {
+			if (strncmp(bluetooth_dongle[cnt].mudule_name, "NULL", sizeof("NULL")-1)) {
 				property_set(MULTIBT_MODULE_PROP_NAME, bluetooth_dongle[cnt].mudule_name);
 			}
 			property_set(MULTIBT_VENDOR_PROP_NAME, bluetooth_dongle[cnt].vendor_lib_name);
@@ -308,19 +533,39 @@ static int get_dev_type(char *dev_type)
     return 0;
 }
 
+static int clr_bten_bit(int type)
+{
+	int fd = open("/dev/wifi_power", O_RDWR);
+    if (fd < 0) {
+       PR_ERR("/dev/wifi_power open fail : %s(%d)", strerror(errno), errno);
+       return -1;
+    }
+
+	switch(type) {
+	case CLR_BT_POWER_BIT:
+		if (ioctl(fd, type) < 0)
+			PR_ERR("%s fail", __func__);
+		break;
+	default:
+		PR_INFO("pls input correct parameters");
+		break;
+	}
+	return 0;
+}
+
 static int enum_mmc_type(std::string path)
 {
 	int cnt;
-	int chip_id;
+	unsigned short chip_id;
 	int dongle_size;
-	if ((chip_id = get_dev_info(path)) == -1) {
+	if ((chip_id = get_dev_info(path)) == 0xFF) {
 		return 1;
 	}
 
 	dongle_size = sizeof(bluetooth_dongle)/sizeof(struct device_info);
 	for (cnt = 0; cnt < dongle_size; cnt++) {
 		if (bluetooth_dongle[cnt].chip_id == chip_id && bluetooth_dongle[cnt].device_id <= 0) {
-			if (bluetooth_dongle[cnt].mudule_name != "") {
+			if (strncmp(bluetooth_dongle[cnt].mudule_name, "NULL", sizeof("NULL")-1)) {
 				property_set(MULTIBT_MODULE_PROP_NAME, bluetooth_dongle[cnt].mudule_name);
 			}
 			property_set(MULTIBT_VENDOR_PROP_NAME, bluetooth_dongle[cnt].vendor_lib_name);
@@ -995,7 +1240,13 @@ static int matching_vendor_lib(unsigned char * buf, int size)
 		}
 		else
 		{
-			property_set(MULTIBT_VENDOR_PROP_NAME, QCA_VENDOR_LIB);
+			if(enum_uart_type(vendor_id)) {
+				return 0;
+			}
+			else {
+				PR_INFO("need add qca module struct");
+				goto error;
+			}
 		}
 	}
 	else if (enum_uart_type(vendor_id))
@@ -1011,6 +1262,22 @@ static int matching_vendor_lib(unsigned char * buf, int size)
 	return 0;
 error:
 	return ret;
+}
+
+static int init_bt_status(void)
+{
+	char *str;
+
+	distinguish = 1;
+	str = get_power_type();
+	if (!str)
+		return 0;
+
+	if (!strncmp(str, "1", 1)) {
+		PR_INFO("BT is powered on separately");
+		clr_bten_bit(CLR_BT_POWER_BIT);
+	}
+	return 0;
 }
 
 /*******************************************************************************
@@ -1132,21 +1399,34 @@ H5:
 
 static int bluetooth_distinguish_module(void)
 {
-	upio_set_bluetooth_power(UPIO_BT_POWER_ON);
-
-	if (btvendor_hal.uart_module()) {
+	/*pcie dou't need go power when uart dou't rsp cmd*/
+	if (btvendor_hal.pci_module()) {
+		distinguish = 1;
 		return 1;
 	}
+
+	upio_set_bluetooth_power(UPIO_BT_POWER_ON);
+
 	if (btvendor_hal.usb_module()) {
+		init_bt_status();
+		return 1;
+	}
+	if (btvendor_hal.uart_module()) {
+		init_bt_status();
 		return 1;
 	}
 	if (btvendor_hal.mmc_module()) {
+		init_bt_status();
 		return 1;
 	}
 	return 0;
 }
 
 const struct vendor_action btvendor_hal {
+	insmod,
+	rmmod,
+	set_power_type,
+	get_redistinguish,
 	userial_vendor_init,
 	userial_vendor_open,
 	userial_vendor_close,

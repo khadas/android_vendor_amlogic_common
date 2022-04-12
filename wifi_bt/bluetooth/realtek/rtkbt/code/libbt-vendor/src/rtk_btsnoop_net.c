@@ -18,6 +18,8 @@
 #define LOG_TAG "rtk_btsnoop_net"
 #include "rtk_btsnoop_net.h"
 #include <unistd.h>
+#include <time.h>
+#include <stdio.h>
 
 #define RTK_NO_INTR(fn)  do {} while ((fn) == -1 && errno == EINTR)
 
@@ -34,7 +36,7 @@
 #define HCI_ACLDATA_PKT         0x02
 #define HCI_SCODATA_PKT         0x03
 #define HCI_EVENT_PKT           0x04
-
+#define FW_LOG_PATH         "/data/misc/bluedroid/firmware_log_rtk"
 
 unsigned int rtkbt_h5logfilter = 0x01;
 bool rtk_btsnoop_dump = false;
@@ -42,6 +44,7 @@ bool rtk_btsnoop_net_dump = false;
 bool rtk_btsnoop_save_log = false;
 char rtk_btsnoop_path[1024] = {'\0'};
 static pthread_mutex_t btsnoop_log_lock;
+extern const int  INVALID_FD;
 
 
 static void rtk_safe_close_(int *fd);
@@ -383,4 +386,48 @@ static void rtk_safe_close_(int *fd) {
     close(*fd);
     *fd = -1;
   }
+}
+int hci_open_firmware_log_file_rtk(uint8_t seg) {
+	static char config_time_created[sizeof("YYYY-MM-DD-HH:MM:SS")];
+  char name[PATH_MAX];
+  memset(name,0,PATH_MAX);
+	if(seg == 0){
+		ALOGE("%s this is first segment!!", __func__);
+		time_t current_time = time(NULL);
+		struct tm* time_created = localtime(&current_time);
+		strftime(config_time_created, sizeof("YYYY-MM-DD-HH:MM:SS"), "%Y-%m-%d-%H:%M:%S",time_created);
+	}
+	snprintf(name, PATH_MAX, "%s.%s_%d", FW_LOG_PATH, config_time_created,seg);
+  ALOGE("%s begin to open %s", __func__,name);
+  mode_t prevmask = umask(0);
+  int logfile_fd = open(name, O_WRONLY | O_CREAT | O_TRUNC,
+                        S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+  umask(prevmask);
+  if (logfile_fd == INVALID_FD) {
+    ALOGE("%s unable to open '%s': %s", __func__, FW_LOG_PATH, strerror(errno));
+  }
+  return logfile_fd;
+}
+void hci_log_firmware_debug_packet_rtk(int fd, HC_BT_HDR* p_buf) {
+	 time_t time_log = time(NULL);
+	 struct tm* tm_log = localtime(&time_log);
+	 struct timeval time_msec;
+	 unsigned char timebuffer[9] = {0};
+	 gettimeofday( &time_msec, NULL );
+ 	uint16_t msec = time_msec.tv_usec/1000;
+	 *((uint16_t*)timebuffer) = tm_log->tm_year;
+	 *((uint8_t*)timebuffer+2) = tm_log->tm_mon + 1;
+	 *((uint8_t*)timebuffer+3) = tm_log->tm_mday;
+	 *((uint8_t*)timebuffer+4) = tm_log->tm_hour;
+	 *((uint8_t*)timebuffer+5) = tm_log->tm_min;
+	 *((uint8_t*)timebuffer+6) = tm_log->tm_sec;
+	 timebuffer[7] = msec&0xff;
+	 timebuffer[8] = (msec>>8)&0xff;
+  write(fd, timebuffer, 9);
+  uint16_t len = *((const uint8_t *)(p_buf + 1) + 1) - 2;
+  const uint8_t *p = (const uint8_t *)(p_buf + 1) + p_buf->offset + 4;
+  write(fd, p, len);
+}
+void hci_close_firmware_log_file(int fd) {
+  if (fd != INVALID_FD) close(fd);
 }

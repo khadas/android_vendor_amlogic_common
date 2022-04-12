@@ -203,6 +203,12 @@ void userial_recv_rawdata_hook(unsigned char *buffer, unsigned int total_length)
 void userial_set_bt_interface_state(int bt_on);
 #define RTK_HANDLE_EVENT
 #define RTK_HANDLE_CMD
+#ifdef VENDOR_MESH_RTK
+#define RTK_MESH_SCAN                 0x01
+#define RTK_BT_STACK_SCAN             0x02
+#define RTK_MESH_SET_SCAN_PARM        0x04
+#define RTK_MESH_SET_SCAN             0x08
+#endif
 //#define CONFIG_SCO_OVER_HCI
 //#define CONFIG_SCO_MSBC_PLC
 #endif /* USERIAL_VENDOR_H */

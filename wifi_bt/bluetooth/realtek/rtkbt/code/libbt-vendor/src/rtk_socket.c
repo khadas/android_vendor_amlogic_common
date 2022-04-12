@@ -117,7 +117,7 @@ uint32_t Skt_Read(int fd, uint8_t *p_buf, uint32_t len, bool* condition)
 int Skt_Read_noblock(int fd, uint8_t *p_buf, uint32_t len)
 {
     int n_read = 0;
-    struct pollfd pfd;
+    struct pollfd pfd = {0};
 
     if (fd == -1)
     {

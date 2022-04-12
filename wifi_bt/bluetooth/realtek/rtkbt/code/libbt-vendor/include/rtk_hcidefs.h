@@ -329,6 +329,11 @@
 #define HCI_BLE_LTK_REQ_REPLY           (0x001A | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_LTK_REQ_NEG_REPLY       (0x001B | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_READ_SUPPORTED_STATES   (0x001C | HCI_GRP_BLE_CMDS)
+
+/* RTK mesh vendor cmd */
+#define HCI_VENDOR_LE_SCAN_PARAMETER    (0XFCA8)
+#define HCI_VENDOR_LE_SCAN_ENABLE       (0XFCA9)
+
                             /*0x001D, 0x001E and 0x001F are reserved*/
 #define HCI_BLE_RECEIVER_TEST           (0x001D | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_TRANSMITTER_TEST        (0x001E | HCI_GRP_BLE_CMDS)
@@ -719,6 +724,7 @@
 #define HCI_USER_PASSKEY_NOTIFY_EVT         0x3B
 #define HCI_KEYPRESS_NOTIFY_EVT             0x3C
 #define HCI_RMT_HOST_SUP_FEAT_NOTIFY_EVT    0x3D
+#define HCI_LE_META_EVT                     0x3E
 
 /*#define HCI_GENERIC_AMP_LINK_KEY_NOTIF_EVT  0x3E Removed from spec */
 #define HCI_PHYSICAL_LINK_COMP_EVT          0x40
@@ -1429,6 +1435,7 @@ typedef struct
 #define LMP_TESTCTL_HOPMOD_HOP_FRANCE   3
 #define LMP_TESTCTL_HOPMOD_HOP_SPAIN    4
 #define LMP_TESTCTL_HOPMOD_REDUCED_HOP  5
+#define HCI_ENABLE_FW_LOG           		(0x0027 | HCI_GRP_VENDOR_SPECIFIC)
 
 #define LMP_TESTCTL_POWCTL_FIXEDTX_OP   0
 #define LMP_TESTCTL_POWCTL_ADAPTIVE     1
@@ -2702,6 +2709,11 @@ typedef struct {
   bool    adverting_start;
   bool    connetion_enable;
 } rtkbt_lescn_t;
+
+typedef struct {
+  uint8_t addr[6];
+  volatile bool finded;
+} rtkbt_cts_info_t;
 
 #endif
 

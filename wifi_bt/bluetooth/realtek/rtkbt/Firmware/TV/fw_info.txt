@@ -21,8 +21,14 @@ rtl8725a_fw           	 B	23166	0202
 rtl8723b_fw           	 B	19897	6d50
 rtl8822cs_fw          	 D	23369	1c1c
 rtl8725as_fw          	 B	23166	0202
+rtl8852cu_fw          	 A	922063960	0606
 rtl8821c_fw           	 B	23227	5050
 rtl8822bs_fw          	 C	22746	7979
 rtl8723d_fw           	 C	22951	3535
 rtl8761at8192er_fw    	 D	21962	0007
+rtl8852bs_fw          	 B	3985952765	0606
+rtl8852bu_fw          	 B	3985952765	0606
+rtl8852au_fw          	 B	2149631033	0606
+rtl8852cs_fw          	 A	922063960	0606
 rtl8723bs_VQ0_fw      	 B	14422	5844
+rtl8852as_fw          	 B	2149631033	0606

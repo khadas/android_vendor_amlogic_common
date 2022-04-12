@@ -26,12 +26,12 @@
 #endif
 
 #if (BT_DBG == TRUE)
-#define PR_INFO(param, ...) {ALOGD(param, ## __VA_ARGS__);}
+#define PR_INFO(param, ...) {if(VDBG) {ALOGD(param, ## __VA_ARGS__);}}
 #else
 #define PR_INFO(param, ...) {}
 #endif
 
-#define PR_ERR(param, ...) {ALOGE(param, ## __VA_ARGS__);}
+#define PR_ERR(param, ...) {if (VDBG) {ALOGE(param, ## __VA_ARGS__);}}
 
 #ifndef FALSE
 #define FALSE  0
@@ -48,7 +48,14 @@
 #define UPIO_BT_POWER_OFF 0
 #define UPIO_BT_POWER_ON  1
 #define SDIO_GET_DEV_TYPE       _IO('m',5)
+#define CLR_BT_POWER_BIT        _IO('m',6)
 
+#define MAX_LINE_LEN 255
+#define DELIM " =\n\t\r"
+#define UNRE_IDENTIFICATION 0
+#define RE_IDENTIFICATION 1
+#define finit_module(fd, opts, flags) syscall(SYS_finit_module, fd, opts, flags)
+extern "C" int delete_module(const char *, unsigned int);
 
  #define HCI_MAX_EVENT_SIZE     260
 
@@ -65,6 +72,9 @@
 #define MTK_VENDOR_LIB "libbt-vendor_mtkMulti.so"
 #define AML_VENDOR_LIB "libbt-vendor_amlMulti.so"
 #define NODE_PATH "/data/misc/bluetooth/bt_module"
+#define BT_POWER_TYPE "/sys/module/bt_device/parameters/btpower_evt"
+#define CONFIG_PATH "vendor/etc/bluetooth/"
+#define CONFIG_NAME "bt_hal.conf"
 
 /**** baud rates ****/
 #define USERIAL_BAUD_300        0
@@ -144,7 +154,24 @@ typedef void (*userial_init_act)(void);
 typedef void (*userial_close_act)(void);
 typedef int (*get_module_name_act)(char* str);
 typedef int (*userial_open_act)(tUSERIAL_CFG *p_cfg);
+
+typedef int (*action_act)(const char *p_name, char *p_value);
+typedef int (*insmod_act)(const char *filename, const char *args);
+typedef int (*rmmod_act)(const char *modname);
+typedef int (*get_config_act)(void);
+typedef int (*set_config_act)(void);
+
+typedef struct {
+    const char *entry_name;
+    action_act p_action;
+} d_entry_t;
+
+
 struct vendor_action {
+	insmod_act insmod_t;
+	rmmod_act rmmod_t;
+	set_config_act set_config;
+	get_config_act get_config;
 	userial_init_act userial_init;
 	userial_open_act userial_open;
 	userial_close_act userial_close;

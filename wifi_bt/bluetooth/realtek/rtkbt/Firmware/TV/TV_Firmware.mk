@@ -45,5 +45,17 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/Firmware/TV/rtl8723f_fw:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8723f_fw \
     $(LOCAL_PATH)/Firmware/TV/rtl8723fs_config:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8723fs_config \
     $(LOCAL_PATH)/Firmware/TV/rtl8723fs_fw:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8723fs_fw \
-    $(LOCAL_PATH)/Firmware/TV/rtl8852as_config:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852as_config \
-    $(LOCAL_PATH)/Firmware/TV/rtl8852as_fw:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852as_fw
+	$(LOCAL_PATH)/Firmware/TV/rtl8852as_config:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852as_config \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852as_config_vendor:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852as_config_vendor \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852as_fw:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852as_fw \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852au_config:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852au_config \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852au_config_vendor:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852au_config_vendor \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852au_fw:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852au_fw \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852bs_config:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852bs_config \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852bs_fw:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852bs_fw \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852bu_config:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852bu_config \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852bu_fw:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852bu_fw \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852cu_config:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852cu_config \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852cu_fw:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852cu_fw \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852cs_config:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852cs_config \
+	$(LOCAL_PATH)/Firmware/TV/rtl8852cs_fw:$(TARGET_COPY_OUT_VENDOR)/firmware/rtl8852cs_fw

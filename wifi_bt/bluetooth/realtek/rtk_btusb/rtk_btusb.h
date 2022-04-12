@@ -177,6 +177,14 @@ int mp_drv_mode = 0; /* 1 Mptool Fw; 0 Normal Fw */
 #define ROM_LMP_8852a               0x8852
 #define ROM_LMP_8723f               0x8723
 #define ROM_LMP_8852b               0x8852
+#define ROM_LMP_8763c               0x8763
+#define ROM_LMP_8773b               0x8773
+#define ROM_LMP_8762a               0x8762
+#define ROM_LMP_8762b               0x8762
+#define ROM_LMP_8852c               0x8852
+#define ROM_LMP_8851a               0x8852
+#define ROM_LMP_8852bp              0x8852
+#define ROM_LMP_8851b               0x8851
 
 /* signature: Realtek */
 const uint8_t RTK_EPATCH_SIGNATURE[8] = {0x52,0x65,0x61,0x6C,0x74,0x65,0x63,0x68};
@@ -204,7 +212,12 @@ uint16_t project_id[] = {
     ROM_LMP_NONE,
     ROM_LMP_8852a,  //0x12
     ROM_LMP_8723f,
-    ROM_LMP_8852b
+    ROM_LMP_8852b,
+    ROM_LMP_8763c,  //bbpro2
+    ROM_LMP_8773b,  //bblite
+    ROM_LMP_8762a,  //bee
+    ROM_LMP_8762b,  //bee2
+    ROM_LMP_8852c
 };
 struct rtk_eversion_evt {
     uint8_t status;
@@ -660,6 +673,7 @@ typedef struct {
 
 static inline int getmacaddr(uint8_t * vnd_local_bd_addr)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 14)
     struct file  *bdaddr_file;
     mm_segment_t oldfs;
     char buf[FACTORY_BT_BDADDR_STORAGE_LEN];
@@ -695,6 +709,7 @@ static inline int getmacaddr(uint8_t * vnd_local_bd_addr)
         }
         return 0;
     }
+#endif
     return -1;
 }
 

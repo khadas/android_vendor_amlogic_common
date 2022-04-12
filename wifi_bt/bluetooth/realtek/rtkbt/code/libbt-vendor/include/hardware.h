@@ -40,6 +40,9 @@
 #define MAX_PATCH_SIZE_24K            (1024*24)   //24K
 #define MAX_PATCH_SIZE_25K            (1024*25)   //25K for rtl8822b
 #define MAX_PATCH_SIZE_40K            (1024*40)   //40K
+#define MAX_PATCH_SIZE_49_2K          (0xC4Cf + 529)   //49.2K 8723f
+#define MAX_PATCH_SIZE_69_2K          (0x114D0 + 529)  //69.2K 8852a
+#define MAX_PATCH_SIZE_65_2K          (0x104D0 + 529)   //65.2K 8852b
 
 #define MAX_ORG_CONFIG_SIZE     (0x100*14)
 #define MAX_ALT_CONFIG_SIZE     (0x100*2)
@@ -76,8 +79,7 @@ struct rtk_bt_vendor_config{
 
 #define CHIPTYPE_NONE           (0x1F)      //Chip Type's range: 0x0 ~ 0xF
 #define CHIP_TYPE_MASK_ALL      (0xFFFFFFFF)
-
-#define PROJECT_ID_MASK_ALL     (0xFFFFFFFF)    // temp used for unknow project id for a new chip
+#define PROJECT_ID_MASK_ALL     (0xFFFFFFFFFFFFFFFF)    // temp used for unknow project id for a new chip
 
 #define PATCH_OPTIONAL_MATCH_FLAG_CHIPTYPE   (0x1)
 
@@ -96,6 +98,7 @@ struct rtk_bt_vendor_config{
 #define HCI_EVT_CMD_CMPL_OPFC6D_EVERSION_OFFSET        (6)  //eversion's offset in COMMAND Completed Event for OpCode 0xfc6d(Read eVERSION Vendor Command)
 #define HCI_EVT_CMD_CMPL_OPFC61_CHIPTYPE_OFFSET        (6)  //chip type's offset in COMMAND Completed Event for OpCode 0xfc61(Read ChipType Vendor Command)
 #define HCI_EVT_CMD_CMPL_OPFC61_8761_CHIPTYPE_OFFSET   (8)  //8761B chip type's offset in COMMAND Completed Event for OpCode 0xfc61(Read ChipType Vendor Command)
+#define HCI_EVT_CMD_CMPL_OPFC61_CHIPDIE_OFFSET         (7)  //chip die's offset in COMMAND Completed Event for OpCode 0xfc61(Read ChipType Vendor Command)
 
 //#define UPDATE_BAUDRATE_CMD_PARAM_SIZE          (6)
 #define HCI_CMD_PREAMBLE_SIZE                   (3)
@@ -141,7 +144,7 @@ typedef struct
     uint16_t    lmp_sub_current;
     uint8_t     state;          /* Hardware configuration state */
     uint8_t     eversion;
-    uint32_t    project_id_mask;
+    uint64_t    project_id_mask;
     uint8_t     hci_version;
     uint8_t     hci_revision;
     uint8_t     chip_type;
@@ -160,6 +163,7 @@ typedef struct
     uint16_t    vid;   /* usb vendor id */
     uint16_t    pid;   /* usb product id */
     uint8_t     heartbeat; /*heartbeat*/
+    uint8_t     parsing_rule; /* fw merge rule 1: v1, 2: v2 */
 } bt_hw_cfg_cb_t;
 
 /* low power mode parameters */
@@ -196,6 +200,22 @@ typedef struct
 #define ROM_LMP_8852a               0x8852
 #define ROM_LMP_8723f               0x8723
 #define ROM_LMP_8852b               0x8852
+#define ROM_LMP_8763c               0x8763
+#define ROM_LMP_8773b               0x8773
+#define ROM_LMP_8762a               0x8762
+#define ROM_LMP_8762b               0x8762
+#define ROM_LMP_8852c               0x8852
+#define ROM_LMP_8851a               0x8852
+#define ROM_LMP_8852bp              0x8852
+#define ROM_LMP_8851b               0x8851
+
+#define HCI_VERSION_5_2             0x000B
+#define HCI_VERSION_5_1             0x000A
+#define HCI_VERSION_5_0             0x0009
+#define HCI_VERSION_4_2             0x0008
+#define HCI_VERSION_4_1             0x0007
+#define HCI_VERSION_4_0             0x0006
+#define HCI_VERSION_2_1             0x0004
 
 struct rtk_epatch_entry{
     uint16_t chip_id;
@@ -213,6 +233,34 @@ struct rtk_epatch{
 } __attribute__ ((packed));
 
 
+struct rtk_epatch_fragment{
+    uint8_t chip_id;
+    uint8_t priority;
+    uint16_t reserve;
+    uint32_t length;
+    uint8_t  data[0];
+} __attribute__ ((packed));
+
+struct rtk_epatch_section{
+    uint32_t opcode;
+    uint32_t length;
+    uint16_t number_of_fragment;
+    uint16_t reserve;
+    struct rtk_epatch_fragment fragment[0];
+} __attribute__ ((packed));
+
+struct rtk_epatch_v2{
+    uint8_t signature[8];
+    uint32_t fw_version;
+    uint32_t fw_version_sub;
+    uint16_t number_of_section;
+    struct rtk_epatch_section section[0];
+} __attribute__ ((packed));
+
+struct rtk_epatch_fragment_linklist{
+    struct rtk_epatch_fragment *fragment;
+    struct rtk_epatch_fragment_linklist * next;
+} __attribute__ ((packed));
 
 
 #endif

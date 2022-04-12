@@ -1,4 +1,4 @@
-# RELEASE NAME: 20200924_BT_ANDROID_10.0
+# RELEASE NAME: 20220111_BT_ANDROID_11.0
 # RTKBT_API_VERSION=2.1.1.0
 
 BOARD_HAVE_BLUETOOTH := true
@@ -39,6 +39,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
                     persist.vendor.bluetooth.prefferedrole=master \
                     persist.vendor.rtkbtadvdisable=false
 
-PRODUCT_SYSTEM_DEFAULT_PROPERTIES += persist.bluetooth.btsnoopsize=0xffff \
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += persist.bluetooth.btsnooplogmode=disable \
+                    persist.bluetooth.btsnooppath=/data/misc/bluedroid/btsnoop_hci.cfa \
+                    persist.bluetooth.btsnoopsize=0xffff \
                     persist.bluetooth.showdeviceswithoutnames=false \
-                    vendor.bluetooth.enable_timeout_ms=11000
+                    vendor.bluetooth.enable_timeout_ms=11000 \
+                    vendor.realtek.bluetooth.en=false

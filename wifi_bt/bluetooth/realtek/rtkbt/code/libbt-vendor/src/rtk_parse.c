@@ -34,7 +34,7 @@
 *
 ******************************************************************************/
 #define LOG_TAG "rtk_parse"
-#define RTKBT_RELEASE_NAME "20200924_BT_ANDROID_10.0"
+#define RTKBT_RELEASE_NAME "20220111_BT_ANDROID_11.0"
 
 #include <utils/Log.h>
 #include <stdlib.h>
@@ -68,6 +68,7 @@
 #define RTK_COEX_VERSION "3.0"
 
 //#define RTK_ROLE_SWITCH_RETRY
+extern bool rtkbt_capture_fw_log;
 
 #ifdef RTK_ROLE_SWITCH_RETRY
 #ifndef MAX_LINKS
@@ -111,6 +112,7 @@ typedef void (*tTIMER_HANDLE_ROLE_SWITCH)(union sigval sigval_value);
 static void rtk_start_role_switch_schedule(role_monitor_cb  * p);
 #endif
 
+bool is_fw_log = FALSE;
 
 char invite_req[] = "INVITE_REQ";
 char invite_rsp[] = "INVITE_RSP";
@@ -166,6 +168,7 @@ char bt_leave[] =   "BT_LEAVE";
 //sub event from fw
 #define HCI_VENDOR_PTA_REPORT_EVENT         0x24
 #define    HCI_VENDOR_PTA_AUTO_REPORT_EVENT    0x25
+#define    HCI_VENDOR_FW_LOG_REPORT_EVENT    0x20
 
 //vendor cmd to wifi driver
 #define HCI_OP_HCI_EXTENSION_VERSION_NOTIFY (0x0100 | HCI_GRP_VENDOR_SPECIFIC)
@@ -2753,6 +2756,11 @@ static void rtk_handle_cmd_complete_evt(uint8_t*p, uint8_t len)
         case 0xfc1b:
             RtkLogMsg("received cmd complete event for fc1b");
             poweroff_allowed = 1;
+			if(rtkbt_capture_fw_log ){
+			ALOGE("%s, begin to enable fw log libs_liu", __func__);
+			 uint8_t enable_fw_log_param[4] = {0x00,0x00,0x00,0x01};
+			 rtk_vendor_cmd_to_fw(HCI_ENABLE_FW_LOG, 4, enable_fw_log_param, NULL);
+		 }
             break;
 
         case HCI_VENDOR_MAILBOX_CMD:
@@ -3143,6 +3151,8 @@ void rtk_parse_internal_event_intercept(uint8_t *p_msg)
                 if((len-2) != 8)
                     RtkLogMsg("rtk_parse_internal_event_intercept:HCI_VENDOR_SPECIFIC_EVT:HCI_VENDOR_PTA_AUTO_REPORT_EVENT len=%d", len);
                 rtk_notify_info_to_wifi(AUTO_REPORT, (len-2), (uint8_t *)p);
+            }else if(subcode == HCI_VENDOR_FW_LOG_REPORT_EVENT){
+				is_fw_log = TRUE;
             }
             break;
         }

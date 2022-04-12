@@ -26,7 +26,7 @@
 
 #undef NDEBUG
 #define LOG_TAG "libbt_vendor"
-#define RTKBT_RELEASE_NAME "20200924_BT_ANDROID_10.0"
+#define RTKBT_RELEASE_NAME "20220111_BT_ANDROID_11.0"
 #include <utils/Log.h>
 #include "bt_vendor_rtk.h"
 #include "upio.h"
@@ -43,9 +43,11 @@ extern bool rtk_btsnoop_net_dump;
 extern bool rtk_btsnoop_save_log;
 extern char rtk_btsnoop_path[];
 extern uint8_t coex_log_enable;
+extern rtkbt_cts_info_t rtkbt_cts_info;
 extern void hw_config_start(char transtype);
 extern void hw_usb_config_start(char transtype,uint32_t val);
-
+extern void hci_close_firmware_log_file(int fd);
+extern int hci_firmware_log_fd;
 #if (HW_END_WITH_HCI_RESET == TRUE)
 void hw_epilog_process(void);
 #endif
@@ -56,6 +58,7 @@ void hw_epilog_process(void);
 bt_vendor_callbacks_t *bt_vendor_cbacks = NULL;
 uint8_t vnd_local_bd_addr[6]={0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 bool rtkbt_auto_restart = false;
+bool rtkbt_capture_fw_log = false;
 
 /******************************************************************************
 **  Local type definitions
@@ -76,6 +79,12 @@ static const tUSERIAL_CFG userial_H5_cfg =
 {
     (USERIAL_DATABITS_8 | USERIAL_PARITY_EVEN | USERIAL_STOPBITS_1),
     USERIAL_BAUD_115200,
+    USERIAL_HW_FLOW_CTRL_OFF
+};
+const tUSERIAL_CFG userial_H45_cfg =
+{
+    (USERIAL_DATABITS_8 | USERIAL_PARITY_EVEN | USERIAL_STOPBITS_1),
+    USERIAL_BAUD_1_5M,
     USERIAL_HW_FLOW_CTRL_OFF
 };
 static const tUSERIAL_CFG userial_H4_cfg =
@@ -234,6 +243,10 @@ static void load_rtkbt_stack_conf()
             if(!strcmp(rtk_trim(split+1), "true"))
                 rtkbt_auto_restart = true;
         }
+        else if(!strcmp(rtk_trim(line_ptr), "RtkBtCaptureFwLog")) {
+            if(!strcmp(rtk_trim(split+1), "true"))
+                rtkbt_capture_fw_log = true;
+        }
     }
 
     fclose(fp);
@@ -308,6 +321,9 @@ static void load_rtkbt_conf()
         else if(!strcmp(rtk_trim(split + 1), "H4")) {
             rtkbt_transtype |= RTKBT_TRANS_H4;
         }
+        else if(!strcmp(rtk_trim(split + 1), "H45")){
+            rtkbt_transtype |= RTKBT_TRANS_H45;
+        }
     }
     else if(strcmp(rtkbt_device_node, "/dev/rtkbt_dev")) {
         //default use h5
@@ -379,6 +395,12 @@ static int init(const bt_vendor_callbacks_t* p_cb, unsigned char *local_bdaddr)
     property_get("persist.vendor.btsnoopsavelog", value, "false");
     if(strncmp(value, "true", 4) == 0) {
         rtk_btsnoop_save_log = true;
+    }
+
+    property_get("vendor.realtek.bluetooth.en",value,"false");
+    memset(rtkbt_cts_info.addr,0xff,6);
+    if(strncmp(value, "true", 4) == 0){
+        rtkbt_cts_info.finded = true;
     }
 
     ALOGE("rtk_btsnoop_dump = %d, rtk_btsnoop_save_log = %d", rtk_btsnoop_dump, rtk_btsnoop_save_log);
@@ -469,7 +491,7 @@ static int op(bt_vendor_opcode_t opcode, void *param)
 
                 /* retval contains numbers of open fd of HCI channels */
                 }
-                else if((rtkbt_transtype & RTKBT_TRANS_UART) && (rtkbt_transtype & RTKBT_TRANS_H4)) {
+                else if((rtkbt_transtype & RTKBT_TRANS_UART) && ((rtkbt_transtype & RTKBT_TRANS_H4) || (rtkbt_transtype & RTKBT_TRANS_H45))) {
                     int (*fd_array)[] = (int (*)[]) param;
                     int fd, idx;
                     if(userial_vendor_open((tUSERIAL_CFG *) &userial_H4_cfg) != -1) {
@@ -489,11 +511,12 @@ static int op(bt_vendor_opcode_t opcode, void *param)
                     BTVNDDBG("USB op for %d", opcode);
                     int fd, idx = 0;
                     int (*fd_array)[] = (int (*)[]) param;
-                    for(idx = 0; idx < 10; idx++) {
+                    for(idx = 0; idx < 1000; idx++) { //timeout 1s
                         if(userial_vendor_usb_open() != -1){
                             retval = 1;
                             break;
                         }
+                        usleep(1000);
                     }
                     fd = userial_socket_open();
                     if (fd != -1)
@@ -579,6 +602,9 @@ static void cleanup( void )
         rtk_btsnoop_close();
     if(rtk_btsnoop_net_dump)
         rtk_btsnoop_net_close();
+	if(rtkbt_capture_fw_log){
+		hci_close_firmware_log_file(hci_firmware_log_fd);
+	}
     rtkbt_stack_conf_cleanup();
 }
 
