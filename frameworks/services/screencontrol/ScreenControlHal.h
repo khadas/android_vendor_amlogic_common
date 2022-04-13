@@ -42,6 +42,8 @@ class ScreenControlHal : public IScreenControl {
         ~ScreenControlHal();
 
         Return<Result> startScreenRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const hidl_string& filename) override;
+        Return<Result> startScreenRecordByCrop(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
+                                                     int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const hidl_string& filename) override;
 
         Return<Result> startScreenCap(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, const hidl_string& filename) override;
 

@@ -51,6 +51,16 @@ namespace implementation {
         }
         return Result::FAIL;
     }
+    Return<Result> ScreenControlHal::startScreenRecordByCrop(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const hidl_string& filename) {
+        if ( NULL != mScreenControl) {
+            std::string filenamestr = filename;
+            if (android::OK != mScreenControl->setScreenRecordCropArea(left, top, right, bottom ) )
+                return Result::FAIL;
+            if (android::OK == mScreenControl->startScreenRecord(width, height, frameRate, bitRate, limitTimeSec, sourceType, filenamestr.c_str()))
+                return Result::OK;
+        }
+        return Result::FAIL;
+    }
 
     Return<Result>  ScreenControlHal::startScreenCap(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, const hidl_string& filename) {
         if ( NULL != mScreenControl) {

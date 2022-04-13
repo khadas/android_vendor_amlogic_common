@@ -95,7 +95,12 @@ class DeathNotifier: public IBinder::DeathRecipient
 
 namespace android {
 
-ScreenControlService::ScreenControlService(): mPicFd(-1) {
+ScreenControlService::ScreenControlService():
+    mPicFd(-1),
+    mRecordCorpX(-1),
+    mRecordCorpY(-1),
+    mRecordCorpWidth(-1),
+    mRecordCorpHeight(-1) {
     mNeedStop = false;
 }
 
@@ -127,6 +132,19 @@ void ScreenControlService::instantiate(bool lazyMode) {
 void ScreenControlService::forceStop() {
     ALOGI("forceStop()");
     mNeedStop = true;
+    mRecordCorpX = -1 ;
+    mRecordCorpY = -1;
+    mRecordCorpWidth = -1;
+    mRecordCorpHeight = -1;
+}
+int ScreenControlService::setScreenRecordCropArea(int32_t left, int32_t top, int32_t right, int32_t bottom) {
+    Mutex::Autolock autoLock(mLock);
+    ALOGI("setScreenRecordCropArea left:%d, top:%d, right:%d, bottom:%d ", left, top, right, bottom);
+    mRecordCorpX = left ;
+    mRecordCorpY = top;
+    mRecordCorpWidth = right;
+    mRecordCorpHeight = bottom;
+    return OK;
 }
 
 int ScreenControlService::startScreenRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const char* filename) {
@@ -151,6 +169,9 @@ int ScreenControlService::startScreenRecord(int32_t width, int32_t height, int32
     sp<TSPacker> mTSPacker = new TSPacker(width, height, frameRate, bitRate, sourceType, 0);
 //    mTSPacker->setMaxFrameCount(limit_time);
     mTSPacker->setTimeLimit(limitTimeSec*1000);
+    if (mRecordCorpX != -1 && mRecordCorpY !=-1 && mRecordCorpWidth != -1 && mRecordCorpHeight != -1) {
+        mTSPacker->setVideoCrop(mRecordCorpX, mRecordCorpY, mRecordCorpWidth, mRecordCorpHeight);
+    }
     err = mTSPacker->start();
 
     if (err != OK) {
@@ -194,7 +215,10 @@ int ScreenControlService::startScreenRecord(int32_t width, int32_t height, int32
     }
 
     ALOGI("tspacker stop\n");
-
+    mRecordCorpX = -1 ;
+    mRecordCorpY = -1;
+    mRecordCorpWidth = -1;
+    mRecordCorpHeight = -1;
     mTSPacker->stop();
     close(video_file);
 	if (mNeedStop) {

@@ -19,6 +19,8 @@ package vendor.amlogic.hardware.screencontrol@1.0;
 interface IScreenControl {
     startScreenRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, string filename)
         generates (Result result);
+    startScreenRecordByCrop(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, string filename)
+        generates (Result result);
 
     startScreenCap(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, string filename)
         generates (Result result);

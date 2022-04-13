@@ -110,9 +110,12 @@ ESConvertor::ESConvertor(int sourceType, int IsAudio) :
     mDropFrameCounter(0),
     mDumpYuvFd(-1),
     mDumpEsFd(-1),
+    mCorpX(-1),
+    mCorpY(-1),
+    mCorpWidth(-1),
+    mCorpHeight(-1),
     mFirstPtsUs(0),
-    mLastPtsUs(0)
-{
+    mLastPtsUs(0) {
     int fd1 = -1, fd2 = -1;
     fd1 = open("/dev/amvenc_avc", O_RDWR);
     fd2 = open("/dev/amvenc_multi", O_RDWR);

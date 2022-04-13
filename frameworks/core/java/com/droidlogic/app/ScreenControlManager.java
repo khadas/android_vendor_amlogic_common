@@ -54,6 +54,7 @@ public class ScreenControlManager {
     private native void native_ConnectScreenControl();
     private native int native_ScreenCap(int left, int top, int right, int bottom, int width, int height, int sourceType, String filename);
     private native int native_ScreenRecord(int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename);
+    private native int native_ScreenRecordByCrop(int left, int top, int right, int bottom, int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename);
     private native byte[] native_ScreenCapBuffer(int left, int top, int right, int bottom, int width, int height, int sourceType);
     private native void native_ForceStop();
 
@@ -135,6 +136,17 @@ public class ScreenControlManager {
         synchronized (mLock) {
             try {
                 return native_ScreenRecord(width, height, frameRate, bitRate, limitTimeSec, sourceType, filename);
+            } catch (Exception e) {
+                Log.e(TAG, "startScreenRecord: ScreenControlService is dead!:" + e);
+            }
+        }
+        return REMOTE_EXCEPTION;
+    }
+    public int startScreenRecord(int left, int top, int right, int bottom, int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename) {
+        Log.d(TAG, "startScreenRecord left:" +left + ",top:"+ top + ",right:" + right + ",bottom:" + bottom + ",width:"+  width + ",height:"+ height + ",frameRate:" + frameRate + ",bitRate:" + bitRate + ",limitTimeSec:" + limitTimeSec + ",sourceType:" + sourceType + ",filename:" + filename);
+        synchronized (mLock) {
+            try {
+                return native_ScreenRecordByCrop(left, top, right, bottom, width, height, frameRate, bitRate, limitTimeSec, sourceType, filename);
             } catch (Exception e) {
                 Log.e(TAG, "startScreenRecord: ScreenControlService is dead!:" + e);
             }

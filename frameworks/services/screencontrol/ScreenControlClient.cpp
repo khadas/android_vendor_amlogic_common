@@ -78,6 +78,18 @@ int ScreenControlClient::startScreenRecord(int32_t width, int32_t height, int32_
     return result;
 }
 
+int ScreenControlClient::startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t frameRate,
+    int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const char* filename)
+{
+    int result = -1;
+    ALOGI("enter %s,left=%d,top=%d,right=%d,bottom=%d, width=%d,height=%d,rate=%d,bitrate=%d,timesec=%d,srctype=%d,filename=%s",
+        __func__, left, top, right, bottom, width, height, frameRate, bitRate, limitTimeSec, sourceType, filename);
+    if (Result::OK == mScreenCtrl->startScreenRecordByCrop(left, top, right, bottom, width, height, frameRate,
+        bitRate, limitTimeSec, sourceType, filename))
+        result = 0;
+    return result;
+}
+
 int ScreenControlClient::startScreenCap(int32_t left, int32_t top, int32_t right, int32_t bottom,
     int32_t width, int32_t height, int32_t sourceType, const char* filename)
 {

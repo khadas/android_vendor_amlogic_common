@@ -68,7 +68,7 @@ public:
     virtual int startScreenCap(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, const char* filename);
 
     virtual int startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, void *buffer, int32_t *bufSize);
-
+    virtual int setScreenRecordCropArea(int32_t left, int32_t top, int32_t right, int32_t bottom);
     virtual void forceStop();
 
     virtual int release();
@@ -81,6 +81,11 @@ private:
     sp<DeathNotifier> mDeathNotifier;
     bool mNeedStop;
     int mPicFd;  // use for save picture
+
+    int32_t mRecordCorpX;
+    int32_t mRecordCorpY;
+    int32_t mRecordCorpWidth;
+    int32_t mRecordCorpHeight;
     Mutex mLock;
 };
 

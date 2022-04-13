@@ -54,6 +54,18 @@ static jint ScreenControlRecordScreen(JNIEnv *env, jobject clazz, jint width, ji
     } else
         return -1;
 }
+static jint ScreenControlRecordScreenByCrop(JNIEnv *env, jobject clazz, jint left,
+    jint top, jint right, jint bottom, jint width, jint height,jint frameRate, jint bitRate, jint limitTimeSec, jint sourceType, jstring jfilename)
+{
+    ALOGI("EScreenControlRecordScreenByCrop......\n");
+    sp<ScreenControlClient>& scc = getScreenControlClient();
+    if (scc != NULL) {
+        const char *filename = env->GetStringUTFChars(jfilename, nullptr);
+        return scc->startScreenRecord(left, top, right, bottom, width, height,
+            frameRate, bitRate, limitTimeSec, sourceType, filename);
+    } else
+        return -1;
+}
 
 static jbyteArray ScreenControlCapScreenBuffer(JNIEnv *env, jobject clazz, jint left,
     jint top, jint right, jint bottom, jint width, jint height, jint sourceType)
@@ -86,6 +98,7 @@ static JNINativeMethod ScreenControl_Methods[] = {
     {"native_ConnectScreenControl", "()V", (void *) ConnectScreenControl },
     {"native_ScreenCap", "(IIIIIIILjava/lang/String;)I", (void *) ScreenControlCapScreen},
     {"native_ScreenRecord", "(IIIIIILjava/lang/String;)I", (void *) ScreenControlRecordScreen},
+    {"native_ScreenRecordByCrop", "(IIIIIIIIIILjava/lang/String;)I", (void *) ScreenControlRecordScreenByCrop},
     {"native_ScreenCapBuffer", "(IIIIIII)[B", (void *) ScreenControlCapScreenBuffer},
     {"native_ForceStop", "()V", (void *) ScreenControlForceStop },
 };
