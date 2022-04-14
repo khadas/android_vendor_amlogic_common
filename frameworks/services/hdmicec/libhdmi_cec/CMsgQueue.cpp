@@ -107,7 +107,7 @@ bool CMsgQueueThread::threadLoop()
             delayMs = msg.mWhenMs - getNowMs();
             if (delayMs > 0) {
                 mLockQueue.lock();//get msg ,first lock.
-                mGetMsgCondition.waitRelative(mLockQueue, delayMs);
+                mGetMsgCondition.waitRelative(mLockQueue, delayMs*1000000);
                 mLockQueue.unlock();
             } else {
                 break;
