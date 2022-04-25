@@ -131,7 +131,7 @@ function setup_env_for_kernel_5_4()
   elif [[ $KERNEL_ARCH == "arm64" ]]; then
     . $ROOT_DIR/common/build.config.aarch64
   fi
-  . $ROOT_DIR/device/amlogic/common/kernelbuild/build.config.common
+  . $ROOT_DIR/device/khadas/common/kernelbuild/build.config.common
   export COMMON_OUT_DIR=$(readlink -m ${OUT_DIR:-${ROOT_DIR}/out${OUT_DIR_SUFFIX}/${BRANCH}})
   export OUT_DIR=$(readlink -m ${COMMON_OUT_DIR}/${KERNEL_DIR})
   export DIST_DIR=$(readlink -m ${DIST_DIR:-${COMMON_OUT_DIR}/dist})

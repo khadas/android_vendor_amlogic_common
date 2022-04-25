@@ -20,7 +20,7 @@ include vendor/amlogic/common/wifi_bt/wifi/configs/4_9/config.mk
 else
 include vendor/amlogic/common/wifi_bt/wifi/configs/5_4/config.mk
 endif
--include device/amlogic/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
+-include device/khadas/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
 WIFI_MODULES := $(CONFIG_WIFI_MODULES)
 build_drivers :=\
 $(foreach driver,\

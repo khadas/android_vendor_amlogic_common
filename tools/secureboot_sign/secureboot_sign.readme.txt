@@ -3,7 +3,7 @@ Step 1> fetch latest version of Aml_Linux_SecureBootV3_SignTool.zip from FAE
 Step 2> unzip Aml_Linux_SecureBootV3_SignTool.zip in path vendor/amlogic/common/tools/secureboot_sign/Aml_Linux_SecureBootV3_SignTool, 
 	check file exist vendor/amlogic/common/tools/secureboot_sign/Aml_Linux_SecureBootV3_SignTool/amlogic_secureboot_sign_whole_pkg.bash
 step 3> configure soc family type and secure-boot key path
-	3.1 take device/amlogic/franklin as example:
+	3.1 take device/khadas/franklin as example:
 		diff --git a/franklin.mk b/franklin.mk
 		index 72018dc..fbbed63 100644
 		--- a/franklin.mk
