@@ -52,6 +52,7 @@ cc_prebuilt_library_shared {
     name: "libicuuc_vendor",
     compile_multilib: "both",
     vendor: true,
+    check_elf_files: false,
     defaults: ["droidlogic_icu_go_defaults"],
     arch: {
         arm: {
