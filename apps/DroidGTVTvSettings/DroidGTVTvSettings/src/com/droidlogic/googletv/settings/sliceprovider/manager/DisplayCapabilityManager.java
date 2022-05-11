@@ -622,9 +622,8 @@ public class DisplayCapabilityManager {
   }
 
   public boolean isDolbyVisionModeLLPreferred() {
-    //return mDolbyVisionSettingManager.getDolbyVisionType() == DV_LL_YUV
-    //    && doesDolbyVisionSupportLL();
-    return doesDolbyVisionSupportLL();
+    return mDolbyVisionSettingManager.getDolbyVisionType() == DV_LL_YUV
+        && doesDolbyVisionSupportLL();
   }
 
   public void setDolbyVisionModeLLPreferred(boolean preferred) {
