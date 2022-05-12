@@ -190,7 +190,7 @@ int TSPacker::threadFunc()
         } else if(mHasAudio) {
             err = mAudioConvertor->read(&tESBuffer);
             if (err != OK) {
-                usleep(100);
+                usleep(10*1000);
                 continue;
             }
 
@@ -201,7 +201,7 @@ int TSPacker::threadFunc()
             tESBuffer->release();
             tESBuffer = NULL;
         } else {
-            usleep(100);
+            usleep(10*1000);
         }
     }
 

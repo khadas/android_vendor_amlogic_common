@@ -195,7 +195,7 @@ int ScreenControlService::startScreenRecord(int32_t width, int32_t height, int32
         }
 
         if (err != OK) {
-            usleep(1);
+            usleep(10 *1000);
             continue;
         }
 
@@ -258,7 +258,7 @@ int ScreenControlService::startScreenCap(int32_t left, int32_t top, int32_t righ
         while ((!mNeedStop) && (count < 1)) {
             status = mScreenCatch->read(&buffer);
             if (status != OK) {
-                usleep(100);
+                usleep(10 *1000);
                 continue;
             }
 
@@ -338,7 +338,7 @@ int ScreenControlService::startScreenCapBuffer(int32_t left, int32_t top, int32_
     while ((!mNeedStop) && (count < 1)) {
         status = mScreenCatch->read(&buffer);
         if (status != OK) {
-            usleep(50);
+            usleep(10 *1000);
             continue;
         }
 
