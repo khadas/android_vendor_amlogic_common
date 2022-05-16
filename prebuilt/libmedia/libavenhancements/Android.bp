@@ -18,6 +18,44 @@ bootstrap_go_package {
 avenhancements_adapter_go_defaults {
     name: "avenhancements_adapter_go_defaults",
 }
+
+cc_prebuilt_library_shared {
+    name: "libmetadataretriever_ext",
+    system_ext_specific: true,
+    defaults: ["avenhancements_adapter_go_defaults"],
+    check_elf_files: false,
+
+    arch: {
+        arm: {
+            srcs: ["lib/libmetadataretriever_ext.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libmetadataretriever_ext.so"],
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+    shared_libs: [
+        "libammediaext",
+        "libbinder",
+        "libc++",
+        "libc",
+        "libcutils",
+        "libdl",
+        "liblog",
+        "libm",
+        "libmedia",
+        "libmediandk",
+        "libstagefright",
+        "libstagefright_foundation",
+        "libutils",
+    ],
+}
+
 avenhancements_amnuplayer_go_defaults {
     name: "avenhancements_amnuplayer_go_defaults",
 }
