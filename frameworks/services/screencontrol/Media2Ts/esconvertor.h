@@ -49,6 +49,8 @@ public:
     // valid function after call setMaxFrameCount()
     virtual status_t checkConvertDone();
 
+    virtual status_t checkAvcConvertDone();
+
     void setVideoCrop(int x, int y, int width, int height);
 
     // Get / Set the frame rate used for encoding. Default fps = 30
@@ -89,6 +91,9 @@ public:
     status_t setUseAbsoluteTimestamps();
 
     int CanvasdataCallBack(const sp<IMemory>& data);
+
+    virtual bool isHaveOutputData();
+    virtual void setPauseMode(bool isPause);
 
 private:
     enum {
@@ -143,6 +148,7 @@ private:
     // limit unencoded buffer size in buffer queue
     // this might cause frame lost when buffer size overflow
     int mMaxBufSize;
+    bool mNeedPause;
 
     int mIsAudio;
     int mIsPCMAudio;

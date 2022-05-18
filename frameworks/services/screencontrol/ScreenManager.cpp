@@ -121,7 +121,9 @@ ScreenManager::ScreenManager() :
     mScreenModule(NULL),
     mIsSoftwareEncoder(false),
     mIsScreenRecord(false),
-    mScreenDev(NULL){
+    mScreenDev(NULL),
+    mOutFrameCounter(0),
+    mNeedPause(false){
 
     mCorpX = mCorpY = mCorpWidth = mCorpHeight =0;
 	ALOGI("[%s %d] ScreenManager mCorpX:%d mCorpY:%d mCorpWidth:%d mCorpHeight:%d", __FUNCTION__, __LINE__, mCorpX, mCorpY, mCorpWidth, mCorpHeight);
@@ -153,6 +155,8 @@ ScreenManager::~ScreenManager() {
     if (mScreenDev)
         mScreenDev->common.close((struct hw_device_t *)mScreenDev);
 }
+
+
 
 static int saveBufferAsFile(void *buffer, size_t size, char *file)
 {
@@ -190,6 +194,18 @@ static void checkAndSaveBufferToFile(char *baseFile, char *filename, void *buffe
 ScreenManager* ScreenManager::instantiate() {
     ScreenManager *mScreenControl = new ScreenManager();
     return mScreenControl;
+}
+
+bool ScreenManager::isHaveOutputData(){
+    Mutex::Autolock lock(mLock);
+
+    if (mRawBufferQueue.size() > 0)
+      return true;
+    return false;
+}
+
+void ScreenManager::setPauseMode(bool isPause){
+    mNeedPause=isPause;
 }
 
 status_t ScreenManager::init(int32_t width,
@@ -506,6 +522,7 @@ status_t ScreenManager::stop(int32_t client_id)
 
     if (SCREENCONTROL_CANVAS_TYPE == source_data_type)
         mCanvasClientExist = 0;
+    mOutFrameCounter = 0;
 #if 0
     if (SCREENCONTROL_HANDLE_TYPE == source_data_type && mANativeWindow != NULL) {
         mANativeWindow->decStrong((void*)ANativeWindow_acquire);
@@ -592,7 +609,6 @@ status_t ScreenManager::readBuffer(int32_t client_id, sp<IMemory> buffer, int64_
 
         if (frame)
             delete frame;
-
         return OK;
 
     }
@@ -625,8 +641,16 @@ status_t ScreenManager::readBuffer(int32_t client_id, sp<IMemory> buffer, int64_
 
     if (frame)
         delete frame;
-
+    mOutFrameCounter++;
     return OK;
+}
+
+
+status_t ScreenManager::checkConvertDone(){
+    Mutex::Autolock autoLock(mLock);
+    if (mOutFrameCounter > 0 && mRawBufferQueue.size() <= 0)
+      return OK;
+    return !OK;
 }
 
 status_t ScreenManager::freeBuffer(int32_t client_id, sp<IMemory>buffer) {
@@ -688,7 +712,7 @@ int ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer){
                 client = mClientList.valueAt(i);
                 switch (client->data_type) {
                     case SCREENCONTROL_RAWDATA_TYPE:{
-                        if (mRawBufferQueue.size() < 60) {
+                        if (mRawBufferQueue.size() < 60 && !mNeedPause) {
                             MediaBuffer* accessUnit = new MediaBuffer(client->width*client->height*3/2);
                             if (accessUnit != NULL) {
                                 memmove(accessUnit->data(), buffer->buffer_mem, client->width*client->height*3/2);

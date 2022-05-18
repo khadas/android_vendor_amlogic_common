@@ -114,6 +114,11 @@ public:
 
     virtual status_t setVideoRotation(int degree);
     virtual status_t setVideoCrop(int32_t client_id, const int32_t x, const int32_t y, const int32_t width, const int32_t height);
+
+    virtual bool isHaveOutputData();
+    virtual void setPauseMode(bool isPause);
+    virtual status_t checkConvertDone();
+
     bool mIsScreenRecord;
 
 private:
@@ -202,6 +207,9 @@ private:
     int32_t mCorpY;
     int32_t mCorpWidth;
     int32_t mCorpHeight;
+
+    int mOutFrameCounter;
+    bool mNeedPause;
 
     aml_screen_module_t* mScreenModule;
     aml_screen_device_t* mScreenDev;

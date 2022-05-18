@@ -44,6 +44,7 @@
 
 #include "IScreenControlService.h"
 #include "ScreenManager.h"
+#include <Media2Ts/esconvertor.h>
 
 
 namespace android {
@@ -71,6 +72,21 @@ public:
     virtual int setScreenRecordCropArea(int32_t left, int32_t top, int32_t right, int32_t bottom);
     virtual void forceStop();
 
+    virtual int startYuvRecord(int32_t width, int32_t height, int32_t frameRate, int32_t sourceType);
+
+    virtual int getYuvRecordData(void *dstBuffer,int32_t bufSize);
+
+
+    virtual bool isHaveYuvDate();
+
+    virtual int checkYuvRecordDone();
+
+    // H264/AVC record
+    virtual int startAvcRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t sourceType);
+    virtual int getAvcRecordData(void *dstBuffer, int32_t *dstBufferSize, int64_t *nowtime);
+    virtual bool isHaveAvcDate();
+    virtual int checkAvcRecordDone();
+
     virtual int release();
     static void instantiate(bool lazyMode=false);
     static ScreenControlService* getInstance();
@@ -81,11 +97,13 @@ private:
     sp<DeathNotifier> mDeathNotifier;
     bool mNeedStop;
     int mPicFd;  // use for save picture
-
+    sp<ESConvertor> mVideoConvertor;
     int32_t mRecordCorpX;
     int32_t mRecordCorpY;
     int32_t mRecordCorpWidth;
     int32_t mRecordCorpHeight;
+    ScreenManager* mScreenManager;
+    int mYuvClientId;
     Mutex mLock;
 };
 

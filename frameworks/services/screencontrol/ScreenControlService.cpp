@@ -100,7 +100,8 @@ ScreenControlService::ScreenControlService():
     mRecordCorpX(-1),
     mRecordCorpY(-1),
     mRecordCorpWidth(-1),
-    mRecordCorpHeight(-1) {
+    mRecordCorpHeight(-1),
+    mYuvClientId(-1) {
     mNeedStop = false;
 }
 
@@ -363,6 +364,124 @@ int ScreenControlService::startScreenCapBuffer(int32_t left, int32_t top, int32_
     }
     return result;
 }
+
+int ScreenControlService::startYuvRecord(int32_t width, int32_t height, int32_t frameRate,int32_t sourceType){
+    int32_t client_id = 0;
+    Mutex::Autolock autoLock(mLock);
+    mScreenManager = ScreenManager::instantiate();
+    if (mScreenManager == NULL)
+      return !OK;
+    mScreenManager->init(width, height, sourceType, frameRate, SCREENCONTROL_RAWDATA_TYPE, &client_id);
+
+    mYuvClientId = client_id;
+
+    mScreenManager->start(client_id);
+    mNeedStop = false;
+
+    return OK;
+}
+bool ScreenControlService::isHaveYuvDate(){
+    Mutex::Autolock autoLock(mLock);
+
+    if (mScreenManager == NULL)
+      return false;
+    return mScreenManager->isHaveOutputData();
+}
+
+int ScreenControlService::getYuvRecordData(void *dstBuffer,int32_t bufSize){
+    Mutex::Autolock autoLock(mLock);
+    int64_t pts;
+    int status;
+    //ALOGE("[%s %d]", __FUNCTION__, __LINE__);
+    sp<MemoryHeapBase> newMemoryHeap = new MemoryHeapBase(bufSize);
+    sp<MemoryBase> buffer = new MemoryBase(newMemoryHeap, 0, bufSize);
+    status = mScreenManager->readBuffer(mYuvClientId, buffer, &pts);
+    if (status == !OK) {
+      return status;
+}
+
+    memmove(dstBuffer,buffer->unsecurePointer(),bufSize);
+    buffer.clear();
+    newMemoryHeap.clear();
+    return OK;
+}
+
+int ScreenControlService::checkYuvRecordDone(){
+    Mutex::Autolock autoLock(mLock);
+    if (mNeedStop) {
+      mScreenManager->setPauseMode(true);
+      if (OK == mScreenManager->checkConvertDone()) {
+        ALOGD("Detect record data stop and convert done, need stop packer...");
+        mScreenManager->stop(mYuvClientId);
+        mNeedStop = false;
+        mScreenManager=NULL;
+        return OK;
+      }
+    }
+    return !OK;
+
+
+}
+
+int ScreenControlService::startAvcRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t sourceType){
+    Mutex::Autolock autoLock(mLock);
+    int err;
+    ALOGI("startScreenRecord width:%d, height:%d, frameRate:%d, bitRate:%d, sourceType:%d\n", width, height, frameRate, bitRate, sourceType);
+    sp<MetaData> params_video = new MetaData;
+    params_video->setInt32(kKeyWidth, width);
+    params_video->setInt32(kKeyHeight, height);
+
+    params_video->setInt32(kKeyFrameRate, frameRate);
+    params_video->setInt32(kKeyBitRate, bitRate);
+
+    mVideoConvertor = new ESConvertor(sourceType, 0);
+    err = mVideoConvertor->start(params_video.get());
+    if ( err != OK ) {
+        ALOGE("[%s %d] start avc record error\n", __FUNCTION__, __LINE__);
+        return !OK;
+    }
+    return OK;
+
+}
+
+bool ScreenControlService::isHaveAvcDate(){
+    return mVideoConvertor->isHaveOutputData();
+}
+int ScreenControlService::getAvcRecordData(void *dstBuffer, int32_t *dstBufferSize, int64_t *nowtime){
+    Mutex::Autolock autoLock(mLock);
+    MediaBufferBase *tVideoBuffer = NULL;
+    int64_t realNowTime = 0;
+    int err = mVideoConvertor->read(&tVideoBuffer);
+    if (err != OK) {
+        return !OK;
+    }
+    memcpy(dstBuffer, tVideoBuffer->data(), tVideoBuffer->size());
+    *dstBufferSize = tVideoBuffer->size();
+    if (!tVideoBuffer->meta_data().findInt64(kKeyTime,&realNowTime)) {
+        return !OK;
+    }
+    ALOGI("[%s %d] get record data, size:%d,pts =%lld", __FUNCTION__, __LINE__, tVideoBuffer->range_length(),*nowtime);
+    tVideoBuffer->release();
+    *nowtime = realNowTime;
+    tVideoBuffer = NULL;
+    return OK;
+}
+int ScreenControlService::checkAvcRecordDone(){
+    Mutex::Autolock autoLock(mLock);
+    if (mNeedStop) {
+        mVideoConvertor->setPauseMode(true);
+        if (OK == mVideoConvertor->checkAvcConvertDone()) {
+            ALOGD("Detect record data stop and convert done, need stop packer...");
+            mVideoConvertor->stop();
+            mNeedStop = false;
+            mVideoConvertor=NULL;
+            return OK;
+        }
+    }
+
+    return !OK;
+}
+
 #if 0
 SkColorType ScreenControlService::flinger2skia(PixelFormat f) {
     switch (f) {

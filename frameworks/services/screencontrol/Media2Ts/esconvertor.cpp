@@ -196,6 +196,23 @@ int32_t ESConvertor::getFrameRate( ) const {
     return mFrameRate;
 }
 
+bool ESConvertor::isHaveOutputData(){
+    if (mOutputBufferQueue.empty()) {
+        return false;
+    }
+    return true;
+}
+void ESConvertor::setPauseMode(bool isPause){
+    mNeedPause=isPause;
+}
+
+status_t ESConvertor::checkAvcConvertDone(){
+    if (mOutFrameCounter > 0 && mOutputBufferQueue.size() <= 0) {
+        return OK;
+    }
+    return !OK;
+}
+
 status_t ESConvertor::feedEncoderInputBuffers() {
     media_status_t err;
 

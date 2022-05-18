@@ -71,6 +71,7 @@ cc_binary {
     "ScreenControlHal.cpp",
     "ScreenControlService.cpp",
     "main_screencontrol.cpp",
+    "ScreenControlH264.cpp",
   ],
 
   shared_libs: [

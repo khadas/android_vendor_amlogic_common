@@ -24,5 +24,16 @@
 
 using namespace android;
 
+enum msg_handle
+{
+	MSG_DATA_RECEIVE,
+    MSG_DATA_OVER
+};
+enum msg_type
+{
+	MSG_DATA_TYPE_YUV,
+    MSG_DATA_type_AVC
+};
+
 #endif
 

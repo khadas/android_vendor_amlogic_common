@@ -21,7 +21,8 @@
 #include <vendor/amlogic/hardware/screencontrol/1.0/IScreenControl.h>
 #include <vendor/amlogic/hardware/screencontrol/1.0/types.h>
 #include "ScreenControlService.h"
-
+#include <utils/Mutex.h>
+#include "ScreenControlH264.h"
 namespace vendor {
 namespace amlogic {
 namespace hardware {
@@ -50,10 +51,31 @@ class ScreenControlHal : public IScreenControl {
         Return<void> startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, startScreenCapBuffer_cb _hidl_cb);
 
         Return<void> forceStop();
+        //YUV record
+        Return<Result> startYuvRecord(int32_t width, int32_t height,int32_t frameRate ,int32_t sourceType);
+
+        Return<Result> checkYuvRecordDone();
+
+        Return<void> getYuvRecordData(getYuvRecordData_cb _hidl_cb);
+
+         // H264/AVC record
+        Return<Result> startAvcRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t sourceType);
+
+        Return<void> getAvcRecordData(getAvcRecordData_cb _hidl_cb);
+
+        Return<Result> checkAvcRecordDone();
 
     private:
         void handleServiceDeath(uint32_t cookie);
         ScreenControlService* mScreenControl;
+        int32_t mYuvRecordWidth;
+        int32_t mYuvRecordHeight;
+        mutable android::Mutex  mLock;
+        int32_t mAvcRecordWidth;
+        int32_t mAvcRecordHeight;
+        int32_t mAvcRecordFramerate;
+        int32_t mAvcRecordBitrate;
+        int32_t mAvcRecordSourceType;
         class  DeathRecipient : public android::hardware::hidl_death_recipient  {
             public:
                 DeathRecipient(sp<ScreenControlHal> sch);
