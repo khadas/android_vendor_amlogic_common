@@ -123,6 +123,9 @@ PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/6255/f
 PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/6255/fw_bcm43455c0_ag_p2p.bin:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/6255/fw_bcm43455c0_ag_p2p.bin
 PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/6255/nvram.txt:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/6255/nvram_ap6255.txt
 PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/config.txt:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/6255/config.txt
+PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/AP6256/Wi-Fi/fw_bcm43456c5_ag_apsta.bin:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/6255/fw_bcm43456c5_ag_apsta.bin
+PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/AP6256/Wi-Fi/fw_bcm43456c5_ag.bin:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/6255/fw_bcm43456c5_ag.bin
+PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/AP6256/Wi-Fi/nvram_ap6256.txt:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/6255/nvram_ap6256.txt
 endif
 
 ifneq ($(filter ap6271 bcm43751_s,$(WIFI_MODULES)),)
