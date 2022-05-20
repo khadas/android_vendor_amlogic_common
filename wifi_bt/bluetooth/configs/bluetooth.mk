@@ -17,7 +17,7 @@
 #Support modules:
 #   bcm40183, AP6210, AP6476, AP6330, AP62x2,AP6335,mt5931 & mt6622
 
--include device/amlogic/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
+-include device/khadas/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
 BLUETOOTH_MODULE := $(CONFIG_BLUETOOTH_MODULES)
 ifeq ($(BLUETOOTH_MODULE), )
 BLUETOOTH_MODULE := multibt
