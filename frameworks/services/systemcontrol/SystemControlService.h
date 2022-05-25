@@ -106,6 +106,7 @@ public:
     bool checkHDCP22KeyIsExist(const uint32_t key_type_first, const uint32_t key_type_second);
     bool checkPFIDKeyIsExist(const uint32_t key_type);
     bool checkPFPKKeyIsExist(const uint32_t key_type);
+    bool calcChecksumKey(const char *value, const int size, std::string *keyCheckSum);
     //key end
 
     bool updataLogoBmp(const std::string& path);

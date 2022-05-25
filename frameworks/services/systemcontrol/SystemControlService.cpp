@@ -493,6 +493,17 @@ bool SystemControlService::checkPFPKKeyIsExist(const uint32_t key_type) {
     }
     return false;
 }
+
+bool SystemControlService::calcChecksumKey(const char *value, const int size, std::string *keyCheckSum) {
+    char buf[PROPERTY_VALUE_MAX] = {0};
+    if (NO_ERROR == permissionCheck()) {
+        bool ret = pProvisionKey->calcChecksumKey(value, size, (char *)buf);
+        *keyCheckSum = buf;
+        return ret;
+    }
+    *keyCheckSum = buf;
+    return false;
+}
 // key end
 
 bool SystemControlService::writeHdcpRXImg(const std::string& path) {

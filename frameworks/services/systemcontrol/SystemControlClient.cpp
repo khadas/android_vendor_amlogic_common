@@ -537,6 +537,30 @@ bool SystemControlClient::checkPFPKKeyIsExist(const uint32_t key_type) {
     }
     return false;
 }
+
+bool SystemControlClient::calcChecksumKey(const char *value, const int size, std::string& keyCheckSum) {
+    int i;
+    hidl_array<int32_t, 10240> result;
+    for (i = 0; i < size; ++i) {
+        result[i] = value[i];
+    }
+    for (; i < size; ++i) {
+        result[i] = 0;
+    }
+    mSysCtrl->calcChecksumKey(result, size, [&keyCheckSum](const Result &ret, const hidl_string& calcChecksum) {
+        if (Result::OK == ret)
+            keyCheckSum = calcChecksum.c_str();
+        else
+            keyCheckSum.clear();
+    });
+
+    if (keyCheckSum.empty()) {
+        LOG(ERROR) << "system control client calcChecksumKey FAIL.";
+        return false;
+    }
+
+    return true;
+  }
 //key end
 
 bool SystemControlClient::writeHdcpRXImg(const std::string& path) {

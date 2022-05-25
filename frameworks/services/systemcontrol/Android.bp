@@ -125,7 +125,7 @@ cc_binary {
         "vendor.amlogic.hardware.systemcontrol@1.0",
         "vendor.amlogic.hardware.systemcontrol@1.1",
         "libmeson_display_adapter_remote",
-        //"libprovision"
+        "libprovision"
     ],
 
     init_rc: ["systemcontrol.rc"],

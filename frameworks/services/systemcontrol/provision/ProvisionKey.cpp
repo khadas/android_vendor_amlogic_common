@@ -37,7 +37,7 @@
 #include <sys/types.h>
 
 #ifndef RECOVERY_MODE
-//#include <../../../../provision/ca/include/provision_api.h>
+#include "../../../../provision/ca/include/provision_api.h"
 #include <getopt.h>
 #include <sys/stat.h>
 //#include <tee_client_api.h>
@@ -421,6 +421,13 @@ bool ProvisionKey::checkPFPKKeyIsExist(const uint32_t key_type){
     else
         return false;
 }
+
+bool ProvisionKey::calcChecksumKey(const char *value, const int size, char *keyCheckSum){
+    #ifndef RECOVERY_MODE
+        return keyProvisionCalcChecksum(value, size, keyCheckSum);
+    #endif
+    return false;
+}
 //key end
 
 void ProvisionKey::setLogLevel(int level){
@@ -431,7 +438,7 @@ bool ProvisionKey::keyProvisionStore(const char *value, const int size) {
     SYS_LOGI("keyProvisionStore keybox: %s key_size: %d\n", value,size);
     int ret = -1;
     #ifndef RECOVERY_MODE
-        //ret = key_provision_store(NULL, 0, (uint8_t*)value, (uint32_t)size);
+        ret = key_provision_store(NULL, 0, (uint8_t*)value, (uint32_t)size);
     #endif
     if (ret == 0)
         return true;
@@ -444,7 +451,7 @@ bool ProvisionKey::keyProvisionQuery (const uint32_t key_type, const int size) {
     int ret = -1;
     SYS_LOGI("keyProvisionQuery key_type: %d default_storage_location: %d key_size: %d\n", key_type,default_storage_location,size);
     #ifndef RECOVERY_MODE
-        //ret = key_provision_query(NULL, 0, key_type, &default_storage_location, &key_size);
+        ret = key_provision_query(NULL, 0, key_type, &default_storage_location, &key_size);
     #endif
     if (ret == 0)
         return true;
@@ -456,7 +463,7 @@ bool ProvisionKey::keyProvisionChecksum (const uint32_t key_type, const char *va
     SYS_LOGI("keyProvisionChecksum key_type: %d checksum: %s \n", key_type,value);
     int ret = -1;
     #ifndef RECOVERY_MODE
-        //ret = key_provision_checksum(key_type, NULL, 0, (uint8_t*)value);
+        ret = key_provision_checksum(key_type, NULL, 0, (uint8_t*)value);
     #endif
     if (ret == 0)
         return true;
@@ -468,7 +475,7 @@ bool ProvisionKey::keyProvisionDelete (const uint32_t key_type) {
     int ret = -1;
     #ifndef RECOVERY_MODE
         SYS_LOGI("keyProvisionDelete key_type: %d \n", key_type);
-        //ret = key_provision_delete(key_type, NULL);
+        ret = key_provision_delete(key_type, NULL);
     #endif
     if (ret == 0)
         return true;
@@ -481,7 +488,7 @@ bool ProvisionKey::keyProvisionQueryV2 (const uint32_t ext_key_type, const int s
     int ret = -1;
     SYS_LOGI("keyProvisionQueryV2 ext_key_type: %d default_storage_location: %d key_size: %d\n", ext_key_type,default_storage_location,size);
     #ifndef RECOVERY_MODE
-        //ret = key_provision_query_v2(NULL, 0, ext_key_type, (uint8_t *)default_ext_ta_uuid, &default_storage_location, &key_size);
+        ret = key_provision_query_v2(NULL, 0, ext_key_type, (uint8_t *)default_ext_ta_uuid, &default_storage_location, &key_size);
     #endif
     if (ret == 0)
         return true;
@@ -493,7 +500,7 @@ bool ProvisionKey::keyProvisionChecksumV2 (const char *value, const uint32_t ext
     int ret = -1;
     #ifndef RECOVERY_MODE
         SYS_LOGI("keyProvisionChecksumV2 ext_key_type: %d checksum: %s \n", ext_key_type,value);
-        //ret = key_provision_checksum_v2(ext_key_type, NULL, 0, (uint8_t *)default_ext_ta_uuid, (uint8_t*)value);
+        ret = key_provision_checksum_v2(ext_key_type, NULL, 0, (uint8_t *)default_ext_ta_uuid, (uint8_t*)value);
     #endif
     if (ret == 0)
         return true;
@@ -505,7 +512,7 @@ bool ProvisionKey::keyProvisionDeleteV2 (const uint32_t ext_key_type) {
     int ret = -1;
     #ifndef RECOVERY_MODE
         SYS_LOGI("keyProvisionDeleteV2 ext_key_type: %d \n", ext_key_type);
-        //ret = key_provision_delete(ext_key_type, (uint8_t *)default_ext_ta_uuid); // delete key
+        ret = key_provision_delete(ext_key_type, (uint8_t *)default_ext_ta_uuid); // delete key
     #endif
     if (ret == 0)
         return true;
@@ -517,7 +524,7 @@ bool ProvisionKey::keyProvisionGetPfid () {
     int ret = -1;
     SYS_LOGI("keyProvisionGetPfid default_pfid_buf: %s default_pfid_buf: %d \n", default_pfid_buf,default_id_size);
     #ifndef RECOVERY_MODE
-        //ret = key_provision_get_pfid(default_pfid_buf, &default_id_size);
+        ret = key_provision_get_pfid(default_pfid_buf, &default_id_size);
     #endif
     if (ret == 0)
         return true;
@@ -529,7 +536,22 @@ bool ProvisionKey::keyProvisionGetDac () {
     int ret = -1;
     SYS_LOGI("keyProvisionGetDac default_dac_buf: %s default_dac_size: %d \n", default_dac_buf,default_dac_size);
     #ifndef RECOVERY_MODE
-        //ret = key_provision_get_dac(default_dac_buf, &default_dac_size);
+        ret = key_provision_get_dac(default_dac_buf, &default_dac_size);
+    #endif
+    if (ret == 0)
+        return true;
+    else
+        return false;
+}
+
+bool ProvisionKey::keyProvisionCalcChecksum (const char *value, const int size, char *keyCheckSum) {
+    uint32_t key_size = size;
+    char buf[PROVISION_KEY_CHECKSUM_LENGTH+1] = {0};
+    int ret = -1;
+    #ifndef RECOVERY_MODE
+        SYS_LOGI("keyProvisionCalcChecksum value: %s key_size: %d \n",value, key_size);
+        ret = key_provision_calc_checksum((uint8_t*)value, key_size, (uint8_t*)buf);
+        strcpy(keyCheckSum, buf);
     #endif
     if (ret == 0)
         return true;

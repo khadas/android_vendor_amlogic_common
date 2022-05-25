@@ -702,6 +702,25 @@ Return<Result> SystemControlHal::checkPFIDKeyIsExist(const uint32_t key_type) {
 Return<Result> SystemControlHal::checkPFPKKeyIsExist(const uint32_t key_type) {
      return mSysControl->checkPFPKKeyIsExist(key_type) ? Result::OK:Result::FAIL;
 }
+
+Return<void> SystemControlHal::calcChecksumKey(const hidl_array<int32_t, 10240>& value, int32_t size, calcChecksumKey_cb _hidl_cb) {
+    if (ENABLE_LOG_PRINT) ALOGI("calcChecksumKey");
+    std::string keyCheckSum;
+    char *result = (char *)malloc(size);
+    memset(result, 0, size);
+    int i;
+    bool ret = false;
+    for (i = 0; i < size; ++i) {
+        result[i] = value[i];
+    }
+    ret = mSysControl->calcChecksumKey(result, size, &keyCheckSum);
+    free(result);
+    if (ret)
+        _hidl_cb(Result::OK, keyCheckSum);
+    else
+        _hidl_cb(Result::FAIL, keyCheckSum);
+    return Void();
+}
 //Provision key end
 
 

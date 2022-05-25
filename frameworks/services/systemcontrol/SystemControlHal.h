@@ -107,6 +107,8 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     Return<Result> checkHDCP22KeyIsExist(const uint32_t key_type_first, const uint32_t key_type_second) override;
     Return<Result> checkPFIDKeyIsExist(const uint32_t key_type) override;
     Return<Result> checkPFPKKeyIsExist(const uint32_t key_type) override;
+    Return<void> calcChecksumKey(const hidl_array<int32_t, 10240>& value, int32_t size, calcChecksumKey_cb _hidl_cb) override;
+
     //Provision key end
 
     Return<Result> updataLogoBmp(const hidl_string &path) override;

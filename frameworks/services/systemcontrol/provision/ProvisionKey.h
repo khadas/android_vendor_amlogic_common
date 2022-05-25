@@ -67,6 +67,8 @@
 
 #endif
 
+#define PROVISION_KEY_CHECKSUM_LENGTH                       (32)
+
 class ProvisionKey
 {
 public:
@@ -112,6 +114,7 @@ public:
     bool checkHDCP22KeyIsExist(const uint32_t key_type_first, const uint32_t key_type_second);
     bool checkPFIDKeyIsExist(const uint32_t key_type);
     bool checkPFPKKeyIsExist(const uint32_t key_type);
+    bool calcChecksumKey(const char *value, const int size, char *keyCheckSum);
     //key end
 
     void setLogLevel(int level);
@@ -127,6 +130,7 @@ private:
     bool keyProvisionDeleteV2 (const uint32_t ext_key_type);
     bool keyProvisionGetPfid ();
     bool keyProvisionGetDac ();
+    bool keyProvisionCalcChecksum (const char *value, const int size, char *keyCheckSum);
     //key end
 
     int getKernelReleaseVersion();

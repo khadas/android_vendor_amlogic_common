@@ -34,7 +34,7 @@ interface ISystemControl extends @1.0::ISystemControl{
   checkWidevineKey(int32_t[4096] value, uint32_t key_type, int32_t size)
       generates (Result result);
 
-  checkAttestationKey(int32_t[10240] value, uint32_t key_type, int32_t size) 
+  checkAttestationKey(int32_t[10240] value, uint32_t key_type, int32_t size)
       generates (Result result);
 
   checkHDCP14Key(int32_t[4096] value, uint32_t key_type, int32_t size)
@@ -42,6 +42,9 @@ interface ISystemControl extends @1.0::ISystemControl{
 
   checkHDCP22Key(string path, int32_t[4096] value, uint32_t key_type, int32_t size)
       generates (Result result);
+
+  calcChecksumKey(int32_t[10240] value, int32_t size)
+      generates (Result result, string keyCheckSum);
   //Provision key end
 
   /**
