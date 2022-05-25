@@ -49,17 +49,20 @@ int ion_mem_alloc_fd(int ion_fd, size_t size, IONMEM_AllocParams *params, unsign
                 for (int i = 0; i != num_heaps; ++i) {
                     __D("heaps[%d].type=%d, heap_id=%d\n", i, heaps[i].type, heaps[i].heap_id);
                     if ((1 << heaps[i].type) == alloc_hmask) {
+                        /* ion-fb heap is only for display */
+                        if (!strncmp("ion-fb", heaps[i].name, 6))
+                            continue;
                         heap_mask = 1 << heaps[i].heap_id;
                         __D("%d, m=%x, 1<<heap_id=%x, heap_mask=%x, name=%s, alloc_hmask=%x\n",
                             heaps[i].type, 1<<heaps[i].type, heaps[i].heap_id, heap_mask, heaps[i].name, alloc_hmask);
-                        break;
+                        ret = ion_alloc_fd(ion_fd, size, 0, heap_mask, flag, &params->mImageFd);
+                        if (ret >= 0)
+                            break;
                     }
                 }
             }
             free(heaps);
-            if (heap_mask)
-                ret = ion_alloc_fd(ion_fd, size, 0, heap_mask, flag, &params->mImageFd);
-            else
+            if (!heap_mask)
                 __E("don't find match heap!!\n");
         } else {
               if (heaps)
