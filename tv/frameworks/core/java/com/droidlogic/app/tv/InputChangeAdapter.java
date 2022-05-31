@@ -37,7 +37,7 @@ public class InputChangeAdapter {
 
     private Intent mBootOtp;
     private Context mContext;
-    private boolean mBootComplete;
+    private boolean mBootComplete = true;
 
     private InputChangeAdapter() {}
 
