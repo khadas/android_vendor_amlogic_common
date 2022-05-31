@@ -187,7 +187,7 @@ bool DisplayModeMgr::setDisplayRect(int left,  int top, int width, int height) {
 
 bool DisplayModeMgr::updateConnectorType() {
     // For MBox, if connected hdmi, never switch back to cvbs
-    if (mDisplayType == DISPLAY_TYPE_MBOX && !access(DISPLAY_HDMI_USED, F_OK)) {
+    if ((mDisplayType == DISPLAY_TYPE_MBOX || mDisplayType == DISPLAY_TYPE_TABLET) && !access(DISPLAY_HDMI_USED, F_OK)) {
         char hdmi_state[MODE_LEN] = {0};
         SysWrite *pSysWrite = new SysWrite();
 
