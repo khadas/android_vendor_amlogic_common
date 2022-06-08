@@ -79,6 +79,7 @@ int wpa_driver_nl80211_driver_cmd(void *priv, char *cmd, char *buf,
 	int ret = 0;
 	char wifi_status[PROPERTY_VALUE_MAX] = {'\0'};
 	property_get("vendor.bcm_wifi", wifi_status, NULL);
+#if 0
 	if (bss->ifindex <= 0 && bss->wdev_id > 0) {
 		/* DRIVER CMD received on the DEDICATED P2P Interface which doesn't
 		 * have an NETDEVICE associated with it. So we have to re-route the
@@ -95,7 +96,7 @@ int wpa_driver_nl80211_driver_cmd(void *priv, char *cmd, char *buf,
 					      " cmd (%s)", bss->ifname, cmd);
 		}
 	}
-
+#endif
        if (os_strncasecmp(cmd, "BTCOEXMODE", 10) == 0 || os_strncasecmp(cmd, "MIRACAST", 8) == 0 ||
         os_strncasecmp(cmd, "WLS_BATCHING", 12) == 0 || os_strcasecmp(cmd, "BTCOEXSCAN-STOP") == 0 ||
         os_strncasecmp(cmd, "RXFILTER", 8) == 0 || os_strncasecmp(cmd, "SETSUSPENDMODE", 14) == 0 ||
