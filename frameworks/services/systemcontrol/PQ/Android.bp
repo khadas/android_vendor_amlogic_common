@@ -1,0 +1,83 @@
+bootstrap_go_package {
+    name: "soong-droidlogic_pq",
+    pkgPath: "android/soong/vendor/amlogic/common/frameworks/services/systemcontrol/PQ",
+    deps: [
+        "blueprint",
+        "blueprint-pathtools",
+        "soong",
+        "soong-android",
+        "soong-cc",
+        "soong-genrule",
+    ],
+    srcs: [
+        "droidlogic_pq.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+soong_config_module_type_import {
+    from: "device/amlogic/common/soong_config/Android.bp",
+    module_types: ["amlogic_vendorconfig_cc_defaults"],
+}
+
+amlogic_vendorconfig_cc_defaults {
+    name: "pqcontrol_defaults",
+
+    soong_config_variables: {
+        build_livetv: {
+            cflags: ["-DSUPPORT_TVSERVICE"],
+            //shared_libs: ["libtvbinder"], needed, but added in go.
+        },
+    },
+}
+
+pqcontrol_go_defaults {
+    name: "pqcontrol_go_defaults",
+}
+
+cc_library_shared {
+    name: "libpqcontrol",
+    defaults: ["pqcontrol_defaults", "pqcontrol_go_defaults"],
+    srcs: [
+        "CPQdb.cpp",
+        "COverScandb.cpp",
+        "CPQControl.cpp",
+        "CDevicePollCheckThread.cpp",
+        "CPQColorData.cpp",
+        "CEpoll.cpp",
+        "CDynamicBackLight.cpp",
+        "CHlgToneMapping.cpp",
+        "CDolbyVision.cpp",
+    ],
+
+    export_include_dirs: [
+        "utils/include",
+        "include",
+    ],
+
+    shared_libs: [
+        "vendor.amlogic.hardware.tvserver@1.0",
+        "libsqlite",
+        "libutils",
+        "liblog",
+        "libcutils",
+        "libbinder",
+        "libfbc",
+    ],
+
+    static_libs: [
+        "pq.utils_static",
+    ],
+
+    cflags: [
+        "-Wno-unused-variable",
+        "-Wno-unused-parameter",
+        "-Wno-implicit-fallthrough",
+        "-Wno-unused-variable",
+        "-Wno-unused-parameter",
+        "-Wno-implicit-fallthrough",
+    ],
+
+    proprietary: true,
+
+}

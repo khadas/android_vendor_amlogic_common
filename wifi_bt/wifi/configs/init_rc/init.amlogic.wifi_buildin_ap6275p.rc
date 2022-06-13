@@ -1,0 +1,4 @@
+on boot
+    insmod /vendor/lib/modules/dhdpci.ko firmware_path=/vendor/etc/wifi/43752a2/fw_bcm43752a2_pcie_ag.bin nvram_path=/vendor/etc/wifi/43752a2/nvram_ap6275p.txt
+    chown system wifi /sys/module/dhdpci/parameters/firmware_path
+    chmod 0660 /sys/module/dhdpci/parameters/firmware_path

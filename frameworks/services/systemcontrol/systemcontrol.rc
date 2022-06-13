@@ -1,0 +1,14 @@
+on early-boot
+    start system_control
+
+on post-fs-data
+    mkdir  /mnt/vendor/param/pq
+    mkdir  /mnt/vendor/param/logo
+    chmod 0755 /mnt/vendor/param/pq
+    chmod 0755 /mnt/vendor/param/logo
+
+service system_control /vendor/bin/systemcontrol
+    user root
+    group system root media audio
+    interface vendor.amlogic.hardware.systemcontrol@1.0::ISystemControl default
+    interface vendor.amlogic.hardware.systemcontrol@1.1::ISystemControl default

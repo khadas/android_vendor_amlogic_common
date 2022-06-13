@@ -1,0 +1,12 @@
+on early-init
+    insmod /vendor/lib/modules/amlsec_mkl.ko
+    insmod /vendor/lib/modules/aml-ca-cert.ko
+
+
+service nodbuild /system_ext/bin/nodbuild
+    class main
+    user root
+    group root system
+    capabilities MKNOD
+    seclabel u:r:vold:s0
+    oneshot

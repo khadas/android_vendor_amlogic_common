@@ -1,0 +1,76 @@
+<configuration>
+    <inputs-configuration show_inputs="false"/>
+
+
+<!-- Home Screen search icon -->
+
+<!-- OEMs can define which apps will show up in the favorite apps row out
+     of box in the Home Screen by providing a list of apps (name and package
+     name). This list should be up to 8 apps and the system will use the
+     first 8 apps on this list of more than 8 are provided.
+     The list should comply with the GTVS app placement requirements
+     (see: requirements page)
+     -->
+<partner-favorite-apps-out-of-box-order>
+     <app
+        name="Netflix"
+        package_name="com.netflix.ninja" />
+<!--     <app
+        name="TBD"
+        package_name="com.example.tbd" /> -->
+<!--     <app
+        name="TBD"
+        package_name="com.example.tbd" /> -->
+<!--     <app
+        name="TBD"
+        package_name="com.example.tbd" /> -->
+    <app
+        name="YouTube"
+        package_name="com.google.android.youtube.tv" />
+    <app
+       name="Google Play Movies"
+       package_name="com.google.android.videos" />
+<!--     <app
+        name="TBD"
+        package_name="com.example.tbd" /> -->
+</partner-favorite-apps-out-of-box-order>
+
+<partner-all-apps-out-of-box-order>
+<!--     <app
+        name="TBD"
+        package_name="com.example.tbd" /> -->
+<!--     <app
+        name="TBD"
+        package_name="com.example.tbd" /> -->
+<!--     <app
+        name="TBD"
+        package_name="com.example.tbd" /> -->
+<!--     <app
+        name="TBD"
+        package_name="com.example.tbd" /> -->
+    <app
+        name="YouTube"
+        package_name="com.google.android.youtube.tv" />
+    <app
+       name="Play Movies &#038; TV"
+       package_name="com.google.android.videos" />
+    <app
+       name="YouTube Music"
+       package_name="com.google.android.youtube.tvmusic" />
+    <app
+        name="Play Store"
+        package_name="com.android.vending" />
+<!--     <app
+        name="TBD"
+        package_name="com.example.tbd" /> -->
+</partner-all-apps-out-of-box-order>
+
+<partner-channels-out-of-box-order>
+    <package-name>com.netflix.ninja</package-name>
+<!--    <package-name>com.example.tbd</package-name> -->
+   <package-name>com.google.android.youtube.tv</package-name>
+   <package-name>com.google.android.videos</package-name>
+   <package-name>com.google.android.youtube.tvmusic</package-name>
+</partner-channels-out-of-box-order>
+
+</configuration>

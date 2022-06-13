@@ -1,0 +1,48 @@
+cc_prebuilt_library_static {
+    name: "libskia_prebuilt",
+    vendor_available: true,
+    system_ext_specific: true,
+    srcs: [
+        "libskia.a",
+    ],
+
+    export_include_dirs: [
+        "skia/include/android/",
+        "skia/include/atlastext/",
+        "skia/include/c/",
+        "skia/include/codec/",
+        "skia/include/config/",
+        "skia/include/core/",
+        "skia/include/effects/",
+        "skia/include/encode/",
+        "skia/include/gpu/",
+        "skia/include/gpu/gl/",
+        "skia/include/gpu/vk/",
+        "skia/include/pathops/",
+        "skia/include/ports/",
+        "skia/include/svg/",
+        "skia/include/utils/",
+        "skia/include/utils/mac/",
+        //"skia/platform_tools/android/vulkan",
+     ],
+
+}
+
+// TODO: remove
+cc_prebuilt_library_static {
+    name: "libwebp-encode_prebuilt",
+    vendor_available: true,
+    system_ext_specific: true,
+    srcs: [
+        "libwebp-encode.a",
+    ],
+}
+cc_prebuilt_library_static {
+    name: "libwebp-decode_prebuilt",
+    vendor_available: true,
+    system_ext_specific: true,
+    srcs: [
+        "libwebp-decode.a",
+    ],
+}
+

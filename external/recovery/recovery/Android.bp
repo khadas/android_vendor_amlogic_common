@@ -1,0 +1,76 @@
+cc_library_static {
+    name: "librecovery_amlogic",
+    recovery_available: true,
+    //vendor_available: true,
+    //vndk: {
+    //    enabled: true,
+    //},
+    srcs: [
+        "recovery_amlogic.cpp",
+    ],
+    static_libs: [
+        "liblog",
+        "libbase",
+        "libselinux",
+        "libcutils",
+        "libc++_static",
+    ],
+    include_dirs: [
+        "bootable/recovery",
+        "system/core/libcutils/include",
+        "system/core/libutils/include",
+        "bootable/recovery/recovery_ui/include/recovery_ui",
+        "vendor/amlogic/common/external/recovery",
+    ],
+    cflags: ["-Werror"],
+}
+
+cc_library_static {
+    name: "libenv_droid",
+    recovery_available: true,
+
+    srcs: [
+        "uboot_env.cpp",
+        "set_display_mode.cpp",
+    ],
+    static_libs: [
+        "liblog",
+        "libcutils",
+        "libsystemcontrol_static",
+        "libc++_static",
+    ],
+    include_dirs: [
+        "bootable/recovery",
+        "system/core/libutils/include",
+        "vendor/amlogic/common/frameworks/services/systemcontrol",
+    ],
+    cflags: ["-Werror"],
+}
+
+cc_library_static {
+    name: "libamlogic_ui",
+    recovery: true,
+    //vendor_available: true,
+    //vndk: {
+    //    enabled: true,
+    //},
+    srcs: [
+        "amlogic_ui.cpp",
+    ],
+    static_libs: [
+        "liblog",
+	"libbase",
+        "libselinux",
+        "libcutils",
+        "libc++_static",
+        "librecovery_amlogic",
+    ],
+    include_dirs: [
+        "bootable/recovery",
+        "system/core/libcutils/include",
+        "system/core/libutils/include",
+        "bootable/recovery/recovery_ui/include/recovery_ui",
+        "vendor/amlogic/common/external/recovery",
+    ],
+    cflags: ["-Werror"],
+}

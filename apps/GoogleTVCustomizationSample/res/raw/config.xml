@@ -1,0 +1,53 @@
+<configuration>
+
+    <country value="all">
+        <basic-mode-live-tv-app-uri value="android-app://com.partner.livetv.app" />
+        <epg-app-deep-link url="app://com.partner.epg.app" />
+
+        <basic-mode-blocked-apps>
+            <partner-basic-mode-blocked-apps>
+                <app package_name="com.netflix.ninja" />
+            </partner-basic-mode-blocked-apps>
+
+            <google-basic-mode-blocked-apps>
+                <app package_name="com.google.android.apps.mediashell" />
+                <app package_name="com.google.android.katniss" />
+                <app package_name="com.google.android.music" />
+                <app package_name="com.google.android.play.games" />
+                <app package_name="com.google.android.videos" />
+                <app package_name="com.google.android.youtube.tv" />
+                <app package_name="com.google.android.youtube.tvmusic" />
+                <app package_name="com.google.android.youtube.tvunplugged" />
+            </google-basic-mode-blocked-apps>
+        </basic-mode-blocked-apps>
+
+        <notifications-allowed-apps>
+            <app package_name="com.google.android.deadpoolservice" />
+            <app package_name="com.google.android.tv.dfuservice" />
+        </notifications-allowed-apps>
+
+    </country>
+
+    <country value="JP US IN CH">
+        <partner-system-apps-basic-mode-order>
+            <app package_name="com.partner.app2" />
+            <app package_name="com.partner.app1" />
+        </partner-system-apps-basic-mode-order>
+    </country>
+
+    <country value="GB">
+        <partner-system-apps-basic-mode-order>
+            <app package_name="com.partner.app1" />
+            <app package_name="com.partner.app2" />
+            <app package_name="com.partner.app3" />
+        </partner-system-apps-basic-mode-order>
+    </country>
+
+    <country value="default">
+        <partner-system-apps-basic-mode-order>
+            <app package_name="com.partner.app1" />
+            <app package_name="com.partner.app2" />
+        </partner-system-apps-basic-mode-order>
+    </country>
+
+</configuration>

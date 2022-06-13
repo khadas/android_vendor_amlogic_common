@@ -1,0 +1,2 @@
+on boot
+    insmod /vendor/lib/modules/bt_usb_qcom.ko

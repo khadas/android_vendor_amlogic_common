@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".OnlineActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="20dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="Url："
+            android:textColor="@android:color/white"
+            android:textSize="19sp" />
+
+        <com.droidlogic.videoplayer.ExtEditText
+            android:id="@+id/et_url"
+            android:layout_width="400sp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="10dp"
+            android:textColor="@android:color/black"
+            android:textSize="19sp" />
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_marginLeft="20dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/text_warning"
+            android:singleLine="false"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="support udp, http, rtsp, rtp,for example:\nudp://233.154.49.101:9101\nhttp://192.168.0.100:8080/cctv1.ts\nrtsp://192.168.0.100/cctv1.ts\nrtp://234.0.0.6:5004"
+            android:textColor="#C0C0C0"
+            android:textSize="19sp" />
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+
+        <Button
+            android:id="@+id/btn_play"
+            android:layout_width="160dp"
+            android:layout_height="70dp"
+            android:layout_marginLeft="20dp"
+            android:text="Play"
+            android:textColor="@android:color/black"
+            android:textSize="19sp" />
+
+    </LinearLayout>
+</LinearLayout>

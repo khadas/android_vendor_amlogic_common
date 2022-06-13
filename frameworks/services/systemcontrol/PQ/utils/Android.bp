@@ -1,0 +1,63 @@
+// Copyright (C) 2008 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+soong_config_module_type_import {
+    from: "device/amlogic/common/soong_config/Android.bp",
+    module_types: ["amlogic_vendorconfig_cc_defaults"],
+}
+
+amlogic_vendorconfig_cc_defaults {
+    name: "pqutils_defaults",
+
+    soong_config_variables: {
+        support_pq_compress_db: {
+            cflags: ["-DPRODUCT_SUPPORT_COMPRESS_DB"],
+        },
+    },
+}
+
+cc_library_static {
+    name: "pq.utils_static",
+    proprietary: true,
+    defaults: ["pqutils_defaults"],
+
+    srcs: [
+        "miniz.c",
+        "Minizip.cpp",
+        "CPQLog.cpp",
+        "CFile.cpp",
+        "CConfigFile.cpp",
+        "CSqlite.cpp",
+        "SSMAction.cpp",
+        "SSMHandler.cpp",
+        "SysFs.cpp",
+    ],
+
+    export_include_dirs: [
+        "include",
+    ],
+
+    shared_libs: [
+        "libutils",
+        "liblog",
+        "libcutils",
+        "libsqlite",
+    ],
+
+    cflags: [
+        "-Wno-unused-variable",
+        "-Wno-unused-parameter",
+        "-Wno-implicit-fallthrough",
+    ],
+}

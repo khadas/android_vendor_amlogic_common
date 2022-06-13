@@ -1,0 +1,51 @@
+subdirs = ["jni",]
+prebuilt_etc {
+    name: "droidlogic_permissions.xml",
+    system_ext_specific: true,
+    sub_dir: "permissions",
+    src: "droidlogic_permissions.xml",
+    filename_from_src: true,
+}
+
+android_app {
+    name: "droidlogic-res",
+
+    system_ext_specific: true,
+    platform_apis: true,
+    srcs: [
+        "**/*.java",
+        "src/com/droidlogic/audioservice/services/IAudioSystemCmdService.aidl",
+        "src/com/droidlogic/audioservice/services/IAudioEffectsService.aidl",
+    ],
+
+    libs: [
+        "droidlogic",
+        "droidlogic-tv",
+        "android.hidl.base-V1.0-java",
+        "android.hidl.manager-V1.0-java",
+    ],
+
+    static_libs: [
+        "android.hidl.base-V1.0-java",
+        "vendor.amlogic.hardware.hdmicec-V1.0-java",
+        "vendor.amlogic.hardware.droidvold-V1.0-java",
+        "vendor.amlogic.hardware.systemcontrol-V1.0-java",
+        "vendor.amlogic.hardware.systemcontrol-V1.1-java",
+    ],
+
+    certificate: "platform",
+
+    required: [
+        "droidlogic_permissions.xml",
+        "libjniuevent",
+        ],
+
+
+    optimize: {
+        enabled: false,
+    },
+    resource_dirs: ["res"],
+    privileged: true,
+
+}
+

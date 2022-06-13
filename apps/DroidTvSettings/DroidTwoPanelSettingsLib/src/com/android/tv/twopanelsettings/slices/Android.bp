@@ -1,0 +1,19 @@
+android_library {
+    name: "DroidTvSliceLib",
+
+    srcs: ["builders/*.java", "SlicesConstants.java"],
+
+    static_libs: [
+        "androidx.slice_slice-builders",
+        "androidx.slice_slice-core",
+        "androidx.slice_slice-view",
+    ],
+
+    sdk_version: "system_current",
+    min_sdk_version: "21",
+
+    apex_available: [
+        "//apex_available:platform",
+        "com.android.permission",
+    ],
+}

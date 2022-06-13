@@ -1,0 +1,132 @@
+// Copyright (c) 2014 Amlogic, Inc. All rights reserved.
+//
+// This source code is subject to the terms and conditions defined in the
+// file 'LICENSE' which is part of this source code package.
+//
+// Description: makefile
+
+cc_library_shared {
+    name: "libtv",
+    compile_multilib: "both",
+
+    arch: {
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+
+    allow_undefined_symbols: true,
+
+    srcs: [
+        "tv/CBootvideoStatusDetect.cpp",
+        "tv/CTvEv.cpp",
+        "tv/CTvSubtitle.cpp",
+        "tv/CTvTime.cpp",
+        "tv/CTv.cpp",
+        "tv/CTvBooking.cpp",
+        "tv/CTvVchipCheck.cpp",
+        "tv/CTvScreenCapture.cpp",
+        "tv/CAv.cpp",
+        "tv/CTvDmx.cpp",
+        "tv/CTvFactory.cpp",
+        "tvin/CTvin.cpp",
+        "tvin/CDevicesPollStatusDetect.cpp",
+        "tvin/CHDMIRxManager.cpp",
+        "tvdb/CTvDimension.cpp",
+        "tv/CTvPlayer.cpp",
+        "tvdb/CTvChannel.cpp",
+        "tvdb/CTvEvent.cpp",
+        "tvdb/CTvGroup.cpp",
+        "tvdb/CTvProgram.cpp",
+        "tvdb/CTvRegion.cpp",
+        "tvdb/CTvDatabase.cpp",
+        "tv/CTvScanner.cpp",
+        "tv/CFrontEnd.cpp",
+        "tv/CTvEpg.cpp",
+        "tv/CTvRrt.cpp",
+        "tv/CTvEas.cpp",
+        "tv/CTvRecord.cpp",
+        "vpp/CVpp.cpp",
+        "tvsetting/CTvSetting.cpp",
+        "tvsetting/TvKeyData.cpp",
+        "version/version.cpp",
+        "gpio/CTvGpio.cpp",
+		"panel/CTvPanel.cpp",
+    ],
+
+    shared_libs: [
+        "libui",
+        "libutils",
+        "libcutils",
+        "libnetutils",
+        "libsqlite",
+        "libtinyxml2",
+        "liblog",
+        "libbinder",
+        "libtvbinder",
+        "libsystemcontrolservice",
+        "libpqcontrol",
+        //"libzvbi",
+        "libam_mw",
+        "libam_adp",
+        "libam_ver",
+        "libmediahal_resman",
+        "libmediahal_tsplayer",
+        "libamdvr",
+    ],
+    cflags: [
+        "-DSUPPORT_ADTV",
+        "-fPIC",
+        "-fsigned-char",
+        "-D_POSIX_SOURCE",
+
+//        "-DALSA_CONFIG_DIR=\"/system/usr/share/alsa\"",
+//        "-DALSA_PLUGIN_DIR=\"/system/usr/lib/alsa-lib\"",
+
+        "-DALSA_DEVICE_DIRECTORY=\"/dev/snd/\"",
+
+
+        "-DANDROID_PLATFORM_SDK_VERSION=29",
+        "-DSOURCE_DETECT_ENABLE"
+    ],
+
+    // TODO: revise
+    include_dirs: [
+      "frameworks/av/include",
+      "vendor/amlogic/common/external/dvb/include/am_mw/",
+      "vendor/amlogic/common/external/dvb/android/ndk/include/",
+      "vendor/amlogic/common/external/dvb/include/am_adp/",
+      "vendor/amlogic/common/external/dvb/include/am_ver/",
+      "vendor/amlogic/common/mediahal_sdk/include",
+      "vendor/amlogic/common/libdvr/include",
+      "external/jsoncpp/include",
+      "hardware/amlogic/media/amcodec/include",
+    ],
+
+    static_libs: [
+        "libz",
+        "libtv_utils",
+        "libjsoncpp",
+        "libzvbi_static",
+    ],
+
+    header_libs: ["libaudioclient_headers", "libhardware_legacy_headers"],
+
+    export_include_dirs: [
+        "tvdb",
+        "tv",
+        "gpio",
+        ".",
+		"panel",
+    ],
+
+
+    ldflags: ["-shared"],
+
+
+    proprietary: true,
+
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.sample.googletvcustomizationsample">
+
+    <application android:label="GoogleTVCustomizationSample">
+        <provider
+            android:name=".GoogleTVCustomizationSampleProvider"
+            android:authorities="tvlauncher.config"
+            android:enabled="true"
+            android:exported="true"></provider>
+    </application>
+</manifest>

@@ -1,0 +1,32 @@
+cc_binary {
+    name: "hdmicecd",
+
+    srcs: [
+        "main_hdmicec.cpp",
+        "DroidHdmiCec.cpp",
+    ],
+
+    header_libs: [
+        "libhardware_headers",
+    ],
+
+    shared_libs: [
+        "vendor.amlogic.hardware.hdmicec@1.0",
+        "libbase",
+        "libhidlbase",
+        "libcutils",
+        "libutils",
+        "libhdmicec",
+        "liblog",
+    ],
+
+    static_libs: ["libhdmi_cec_static"],
+
+    init_rc: ["hdmicecd.rc"],
+
+    proprietary: true,
+
+    cflags: [
+        "-DNO_USE_DROID_PATCH=0",
+    ]
+}

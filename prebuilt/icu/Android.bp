@@ -1,0 +1,257 @@
+bootstrap_go_package {
+    name: "soong-droidlogic_icu",
+    pkgPath: "android/soong/vendor/amlogic/common/prebuilt/icu",
+    deps: [
+        "blueprint",
+        "blueprint-pathtools",
+        "soong",
+        "soong-android",
+        "soong-cc",
+        "soong-genrule",
+    ],
+    srcs: [
+        "droidlogic_icu.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+
+droidlogic_icu_go_defaults {
+    name: "droidlogic_icu_go_defaults",
+}
+
+cc_prebuilt_library_static {
+
+    name: "libicuuc_vendor_static",
+    compile_multilib: "both",
+    vendor: true,
+    defaults: ["droidlogic_icu_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libicuuc_vendor.a"],
+        },
+        arm64: {
+            srcs: ["lib64/libicuuc_vendor.a"],
+        },
+    },
+
+    export_include_dirs: ["include"],
+
+    shared_libs: [
+        "libcrypto",
+        "libcutils",
+        "liblog",
+        "libutils",
+        "libz",
+    ],
+
+}
+
+cc_prebuilt_library_shared {
+
+    name: "libicuuc_vendor",
+    compile_multilib: "both",
+    vendor: true,
+    defaults: ["droidlogic_icu_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libicuuc_vendor.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libicuuc_vendor.so"],
+        },
+    },
+
+    export_include_dirs: ["include"],
+
+    shared_libs: [
+        "libcrypto",
+        "libcutils",
+        "liblog",
+        "libutils",
+        "libz",
+    ],
+
+}
+
+cc_prebuilt_library_shared {
+
+    name: "libicui18n_vendor",
+    export_include_dirs: ["include"],
+    vendor: true,
+    defaults: ["droidlogic_icu_go_defaults"],
+
+    compile_multilib: "both",
+    arch: {
+        arm: {
+            srcs: ["lib/libicui18n_vendor.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libicui18n_vendor.so"],
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+    shared_libs: [
+        "libcrypto",
+        "libcutils",
+        "libicuuc_vendor",
+        "liblog",
+        "libutils",
+        "libz",
+    ],
+
+}
+
+cc_prebuilt_library_static {
+
+    name: "libicuuc_stubdata_vendor_static",
+    export_include_dirs: ["include"],
+    vendor_available: true,
+    defaults: ["droidlogic_icu_go_defaults"],
+
+    arch: {
+        arm: {
+            srcs: ["lib/libicuuc_stubdata_product.a"],
+        },
+        arm64: {
+            srcs: ["lib64/libicuuc_stubdata_product.a"],
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+
+    shared_libs: [
+        "libcrypto",
+        "libcutils",
+        "liblog",
+        "libutils",
+        "libz",
+    ],
+
+}
+
+cc_prebuilt_library_static {
+
+    name: "libicuuc_stubdata_product",
+    export_include_dirs: ["include"],
+    vendor_available: true,
+    defaults: ["droidlogic_icu_go_defaults"],
+
+    arch: {
+        arm: {
+            srcs: ["lib/libicuuc_stubdata_product.a"],
+        },
+        arm64: {
+            srcs: ["lib64/libicuuc_stubdata_product.a"],
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+
+    shared_libs: [
+        "libcrypto",
+        "libcutils",
+        "liblog",
+        "libutils",
+        "libz",
+    ],
+
+}
+
+cc_prebuilt_library_static {
+
+    name: "libicui18n_static_vendor",
+    compile_multilib: "both",
+    export_include_dirs: ["include"],
+    vendor: true,
+    defaults: ["droidlogic_icu_go_defaults"],
+
+    arch: {
+        arm: {
+            srcs: ["lib/libicui18n_product.a"],
+        },
+        arm64: {
+            srcs: ["lib64/libicui18n_product.a"],
+        },
+    },
+    shared_libs: [
+        "libcrypto",
+        "libcutils",
+        "liblog",
+        "libutils",
+        "libz",
+    ],
+
+}
+
+cc_prebuilt_library_static {
+
+    name: "libicui18n_product",
+    compile_multilib: "both",
+    export_include_dirs: ["include"],
+    vendor: true,
+    defaults: ["droidlogic_icu_go_defaults"],
+
+    arch: {
+        arm: {
+            srcs: ["lib/libicui18n_product.a"],
+        },
+        arm64: {
+            srcs: ["lib64/libicui18n_product.a"],
+        },
+    },
+    shared_libs: [
+        "libcrypto",
+        "libcutils",
+        "liblog",
+        "libutils",
+        "libz",
+    ],
+
+}
+
+cc_prebuilt_library_static {
+
+    name: "libicuuc_product",
+    compile_multilib: "both",
+    export_include_dirs: ["include"],
+    defaults: ["droidlogic_icu_go_defaults"],
+
+    vendor: true,
+    arch: {
+        arm: {
+            srcs: ["lib/libicuuc_product.a"],
+        },
+        arm64: {
+            srcs: ["lib64/libicuuc_product.a"],
+        },
+    },
+    shared_libs: [
+        "libcrypto",
+        "libcutils",
+        "liblog",
+        "libutils",
+        "libz",
+    ],
+
+}
+
+prebuilt_etc {
+    name: "icudt60l.dat",
+    vendor: true,
+    src: "icudt60l.dat",
+    sub_dir: "icu",
+}

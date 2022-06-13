@@ -1,0 +1,49 @@
+java_library {
+    name: "droidlogicLib",
+
+    vendor: true,
+    sdk_version: "system_current",
+    srcs: [
+        "**/*.java",
+        "com/droidlogic/audioservice/services/IAudioSystemCmdService.aidl",
+    ],
+
+    libs: [
+        "android.hidl.base-V1.0-java",
+        "android.hidl.manager-V1.0-java",
+    ],
+
+    static_libs: [
+        "vendor.amlogic.hardware.systemcontrol-V1.0-java",
+        "vendor.amlogic.hardware.systemcontrol-V1.1-java",
+        "vendor.amlogic.hardware.droidvold-V1.0-java",
+    ],
+}
+
+java_library {
+
+    name: "droidlogic",
+
+    vendor: true,
+    sdk_version: "system_current",
+    installable: true,
+
+    dxflags: ["--core-library"],
+
+    static_libs: [
+        "droidlogicLib",
+        "vendor.amlogic.hardware.systemcontrol-V1.0-java",
+        "vendor.amlogic.hardware.systemcontrol-V1.1-java",
+        "vendor.amlogic.hardware.droidvold-V1.0-java",
+    ],
+
+}
+
+//copy xml to permissions directory
+prebuilt_etc {
+    name: "droidlogic.software.core.xml",
+
+    vendor: true,
+    src: "droidlogic.software.core.xml",
+    sub_dir: "permissions",
+}

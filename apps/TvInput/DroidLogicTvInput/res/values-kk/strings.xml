@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="label_hdmi1" msgid="492939324580603828">"1-HDMI"</string>
+    <string name="label_hdmi2" msgid="6602644892474280183">"2-HDMI"</string>
+    <string name="label_hdmi3" msgid="3913210613084312433">"3-HDMI"</string>
+    <string name="label_hdmi4" msgid="5946070062384969599">"4-HDMI"</string>
+    <string name="label_spdif" msgid="2469663872555294689">"Оптикалық аудиосигнал"</string>
+    <string name="label_aux" msgid="401495844760736153">"Aux аудиосы"</string>
+</resources>

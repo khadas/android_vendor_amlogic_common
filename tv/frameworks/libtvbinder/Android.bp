@@ -1,0 +1,29 @@
+cc_library_shared {
+    name: "libtvbinder",
+
+    export_include_dirs: ["include"],
+
+    srcs: [
+        "TvServerHidlClient.cpp",
+        "TvClient.cpp",
+        "ITv.cpp",
+        "ITvClient.cpp",
+        "ITvService.cpp",
+    ],
+
+    shared_libs: [
+        "vendor.amlogic.hardware.tvserver@1.0",
+        "libbase",
+        "libhidlbase",
+        "libhidlmemory",
+        "android.hidl.allocator@1.0",
+        "liblog",
+        "libcutils",
+        "libutils",
+        "libbinder",
+    ],
+
+
+    proprietary: true,
+
+}

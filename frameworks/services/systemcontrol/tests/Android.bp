@@ -1,0 +1,23 @@
+cc_binary {
+    name: "test-systemcontrol",
+
+    srcs: ["systemcontroltest.cpp"],
+
+    shared_libs: [
+        "libcutils",
+        "libutils",
+        "liblog",
+        "libbinder",
+        "libsystemcontrolservice",
+        "vendor.amlogic.hardware.systemcontrol@1.0",
+        "vendor.amlogic.hardware.systemcontrol@1.1",
+        "libbase",
+        "libhidlbase",
+    ],
+
+
+    cflags: ["-Wno-unused-function"],
+
+    proprietary: true,
+
+}

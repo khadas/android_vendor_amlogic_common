@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2015 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License
+  -->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+        android:title="@string/pq_pictrue_advanced">
+
+    <ListPreference
+        android:key="pq_pictrue_advanced_dynamic_tone_mapping"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_dynamic_tone_mapping_entries"
+        android:entryValues="@array/pq_pictrue_advanced_dynamic_tone_mapping_entry_values"
+        android:title="@string/pq_pictrue_advanced_dynamic_tone_mapping"
+        android:summary="%s" />
+    <Preference
+        android:fragment="com.android.tv.settings.pqsettings.advanced.PQAdvancedGammaFragment"
+        android:key="pq_pictrue_advanced_gamma"
+        android:persistent="false"
+        android:title="@string/pq_pictrue_advanced_gamma"/>
+    <Preference
+        android:fragment="com.android.tv.settings.pqsettings.advanced.PQAdvancedManualGammaFragment"
+        android:key="pq_pictrue_advanced_manual_gamma"
+        android:persistent="false"
+        android:title="@string/pq_pictrue_advanced_manual_gamma"/>
+    <Preference
+        android:fragment="com.android.tv.settings.pqsettings.advanced.PQAdvancedColorTemperatureFragment"
+        android:key="pq_pictrue_advanced_color_temperature"
+        android:persistent="false"
+        android:title="@string/pq_pictrue_advanced_color_temperature"/>
+    <ListPreference
+        android:key="pq_pictrue_advanced_color_management"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_color_management_entries"
+        android:entryValues="@array/pq_pictrue_advanced_color_management_entry_values"
+        android:title="@string/pq_pictrue_advanced_color_management"
+        android:summary="%s" />
+    <Preference
+        android:fragment="com.android.tv.settings.pqsettings.advanced.PQAdvancedColorCustomizeFragment"
+        android:key="pq_pictrue_advanced_color_customize"
+        android:persistent="false"
+        android:title="@string/pq_pictrue_advanced_color_customize"/>
+    <ListPreference
+        android:key="pq_hdmi_color_range"
+        android:persistent="false"
+        android:entries="@array/pq_hdmi_color_entries"
+        android:entryValues="@array/pq_hdmi_color_entry_values"
+        android:title="@string/pq_hdmi_color"
+        android:summary="%s" />
+    <ListPreference
+        android:key="pq_pictrue_advanced_color_space"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_color_space_entries"
+        android:entryValues="@array/pq_pictrue_advanced_color_space_entry_values"
+        android:title="@string/pq_pictrue_advanced_color_space"
+        android:summary="%s" />
+    <ListPreference
+        android:key="pq_pictrue_advanced_global_dimming"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_global_dimming_entries"
+        android:entryValues="@array/pq_pictrue_advanced_global_dimming_entry_values"
+        android:title="@string/pq_pictrue_advanced_global_dimming"
+        android:summary="%s" />
+    <ListPreference
+        android:key="pq_pictrue_advanced_local_dimming"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_local_dimming_entries"
+        android:entryValues="@array/pq_pictrue_advanced_local_dimming_entry_values"
+        android:title="@string/pq_pictrue_advanced_local_dimming"
+        android:summary="%s" />
+    <ListPreference
+        android:key="pq_pictrue_advanced_black_stretch"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_black_stretch_entries"
+        android:entryValues="@array/pq_pictrue_advanced_black_stretch_entry_values"
+        android:title="@string/pq_pictrue_advanced_black_stretch"
+        android:summary="%s" />
+    <ListPreference
+        android:key="pq_pictrue_advanced_dnlp"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_dnlp_entries"
+        android:entryValues="@array/pq_pictrue_advanced_dnlp_entry_values"
+        android:title="@string/pq_pictrue_advanced_dnlp"
+        android:summary="%s" />
+    <ListPreference
+        android:key="pq_pictrue_advanced_local_contrast"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_local_contrast_entries"
+        android:entryValues="@array/pq_pictrue_advanced_local_contrast_entry_values"
+        android:title="@string/pq_pictrue_advanced_local_contrast"
+        android:summary="%s" />
+    <ListPreference
+        android:key="pq_pictrue_advanced_sr"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_sr_entries"
+        android:entryValues="@array/pq_pictrue_advanced_sr_entry_values"
+        android:title="@string/pq_pictrue_advanced_sr"
+        android:summary="%s" />
+    <ListPreference
+        android:key="pq_dnr"
+        android:persistent="false"
+        android:entries="@array/pq_dnr_entries"
+        android:entryValues="@array/pq_dnr_entry_values"
+        android:title="@string/pq_dnr"
+        android:summary="%s" />
+    <ListPreference
+        android:key="pq_pictrue_advanced_deblock"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_deblock_entries"
+        android:entryValues="@array/pq_pictrue_advanced_deblock_entry_values"
+        android:title="@string/pq_pictrue_advanced_deblock"
+        android:summary="%s" />
+    <ListPreference
+        android:key="pq_pictrue_advanced_demosquito"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_demosquito_entries"
+        android:entryValues="@array/pq_pictrue_advanced_demosquito_entry_values"
+        android:title="@string/pq_pictrue_advanced_demosquito"
+        android:summary="%s" />
+    <ListPreference
+        android:key="pq_pictrue_advanced_decontour"
+        android:persistent="false"
+        android:entries="@array/pq_pictrue_advanced_decontour_entries"
+        android:entryValues="@array/pq_pictrue_advanced_decontour_entry_values"
+        android:title="@string/pq_pictrue_advanced_decontour"
+        android:summary="%s" />
+    <Preference
+        android:fragment="com.android.tv.settings.pqsettings.advanced.PQAdvancedMEMCFragment"
+        android:key="pq_pictrue_advanced_memc"
+        android:persistent="false"
+        android:title="@string/pq_pictrue_advanced_memc"/>
+
+</PreferenceScreen>

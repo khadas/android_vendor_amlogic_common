@@ -1,0 +1,28 @@
+cc_library_shared {
+    name: "libhdmicec",
+
+    srcs: [
+        "HdmiCecHidlClient.cpp",
+        "HdmiCecBase.cpp",
+    ],
+
+    header_libs: [
+        "libhardware_headers",
+    ],
+
+    export_include_dirs: ["."],
+
+    shared_libs: [
+        "vendor.amlogic.hardware.hdmicec@1.0",
+        "libbase",
+        "libbinder",
+        "libhidlbase",
+        "libcutils",
+        "libutils",
+        "liblog",
+    ],
+
+
+    proprietary: true,
+
+}

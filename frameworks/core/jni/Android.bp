@@ -1,0 +1,109 @@
+bootstrap_go_package {
+    name: "soong-droidlogic_jni",
+    pkgPath: "android/soong/vendor/amlogic/common/frameworks/core/jni",
+    deps: [
+        "blueprint",
+        "blueprint-pathtools",
+        "soong",
+        "soong-android",
+        "soong-cc",
+        "soong-genrule",
+    ],
+    srcs: [
+        "droidlogic_jni_default.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+
+subdirs = ["subtitle", "hdmi_cec", "screencontrol"]
+
+soong_config_module_type_import {
+    from: "device/amlogic/common/soong_config/Android.bp",
+    module_types: ["amlogic_vendorconfig_cc_defaults"],
+}
+
+amlogic_vendorconfig_cc_defaults {
+    name: "hdmiin_defaults",
+
+    soong_config_variables: {
+        support_hdmiin: {
+            cflags: ["-DSUPPORT_HDMI"],
+        },
+
+        build_alsa_audio: {
+            tiny: {
+                cflags: ["-DBOARD_ALSA_AUDIO_TINY"],
+            },
+        },
+    },
+}
+
+
+hdmiin_go_defaults {
+    name: "hdmiin_go_defaults",
+}
+
+cc_library_shared {
+    name: "libhdmiin",
+    defaults: ["hdmiin_go_defaults", "hdmiin_defaults"],
+
+    cflags: ["-Wno-unused-parameter", "-Wno-unused-variable"],
+
+    srcs: [
+        "droid_logic_server_HDMIIN.cpp",
+        "onload.cpp",
+        "HDMIIN/audio_utils_ctl.cpp",
+        "HDMIIN/mAlsa.cpp",
+        "HDMIIN/audiodsp_ctl.cpp",
+    ],
+
+    include_dirs: [
+        "frameworks/av/include",
+        "frameworks/av/media/libmediametrics/include",
+        "hardware/amlogic/screen_source",
+        "frameworks/av/media/libaudioclient/aidl",
+    ],
+
+    header_libs: [
+        "jni_headers",
+        "libaudioclient_headers",
+        "libgui_headers",
+        "libmedia_headers",
+        "gl_headers",
+    ],
+
+    shared_libs: [
+        "libbinder",
+        "libcutils",
+        "libutils",
+        "liblog",
+        "libhardware",
+        "libhardware_legacy",
+        "libui",
+       // "libmedia",
+    ],
+
+    proprietary: true,
+
+}
+
+cc_library_shared {
+    name: "libdisplaysetting",
+
+    defaults: ["hdmiin_go_defaults"],
+
+    srcs: ["droid_logic_DisplaySetting.cpp"],
+
+    header_libs: ["jni_headers"],
+
+    shared_libs: [
+        "liblog",
+        "libcutils",
+        "libutils",
+    ],
+
+
+    proprietary: true,
+
+}

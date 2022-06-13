@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:padding="40dp"
+    android:orientation="vertical"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:paddingTop="60dp"
+        android:id="@+id/layer_online"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_online"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/menu_heighlight"
+            style="@style/ActionPrimaryButton"
+            android:text="@string/update_online" />
+    </LinearLayout>
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider" />
+    <LinearLayout
+        android:layout_weight="1"
+        android:id="@+id/update_progress"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/running_status"
+            android:background="#03000000"
+            android:scrollbars="vertical"
+            android:singleLine="false"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+        />
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:min="0"
+            android:visibility="invisible"
+            android:max="100"
+            android:progressDrawable="@drawable/progress_gray"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <Button
+            android:id="@+id/rebootbtn"
+            android:visibility="gone"
+            android:background="@drawable/menu_heighlight"
+            style="@style/ActionPrimaryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/reboot_btn" />
+    </LinearLayout>
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:id="@+id/layer_local"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:id="@+id/logcal_zip_path"
+            android:hint="@string/path_hit"
+            ></TextView>
+        <Button
+            android:id="@+id/update_cmd"
+            android:enabled="false"
+            android:layout_width="@dimen/btn_width"
+            android:layout_height="@dimen/btn_height"
+            android:layout_weight="1"
+            android:layout_marginRight="@dimen/distance"
+            android:background="@drawable/menu_heighlight"
+            style="@style/ActionPrimaryButton"
+            android:text="@string/update_cmd" />
+        <Button
+            android:id="@+id/update_local"
+            android:layout_width="@dimen/btn_width"
+            android:layout_height="@dimen/btn_height"
+            android:layout_weight="1"
+            android:background="@drawable/menu_heighlight"
+            style="@style/ActionPrimaryButton"
+            android:text="@string/update_local" />
+    </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/file_path"
+        android:visibility="invisible"
+        ></TextView>
+</LinearLayout>

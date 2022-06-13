@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2018 The Android Open Source Project
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:custom="http://schemas.android.com/apk/res-auto"
+                  android:key="moresettings"
+                  android:title="@string/more_pref_category_title">
+
+    <Preference
+        android:fragment="com.android.tv.settings.display.DisplayFragment"
+        android:icon="@drawable/ic_settings_more_amlogic_display"
+        android:key="display"
+        android:title="@string/device_display" />
+    <Preference
+        android:fragment="com.android.tv.settings.tvoption.HdmiCecFragment"
+        android:icon="@drawable/ic_settings_more_amlogic_outputs"
+        android:key="hdmicec"
+        android:title="@string/system_cec" />
+    <Preference
+        android:fragment="com.android.tv.settings.PlaybackFragment"
+        android:icon="@drawable/ic_settings_more_amlogic_now_movies"
+        android:key="playback_settings"
+        android:title="@string/playback_settings" />
+    <Preference
+        android:fragment="com.android.tv.settings.soundeffect.SoundModeFragment"
+        android:icon="@drawable/ic_volume_up"
+        android:key="key_sound_effects"
+        android:title="@string/tv_sound" />
+    <Preference
+        android:fragment="com.android.tv.settings.SoundFragment"
+        android:icon="@drawable/ic_volume_up"
+        android:key="mbox_sound"
+        android:title="@string/device_sound" />
+    <Preference
+        android:fragment="com.android.tv.settings.PowerKeyActionDefinitionFragment"
+        android:icon="@drawable/ic_settings_more_amlogic_power"
+        android:key="powerkey_action"
+        android:title="@string/system_powerkeyaction" />
+    <Preference
+        android:fragment="com.android.tv.settings.PowerOnModeFragment"
+        android:icon="@drawable/ic_settings_more_amlogic_power"
+        android:key="poweronmode_action"
+        android:title="@string/power_on_mode" />
+    <Preference
+        android:icon="@drawable/ic_settings_more_amlogic_bluetooth"
+        android:key="upgrade_bluetooth_remote"
+        android:title="@string/upgrade_bluetooth_remote" >
+        <intent
+            android:targetClass="com.android.BluetoothRemote.ScanActivity"
+            android:targetPackage="com.android.BluetoothRemote" />
+    </Preference>
+    <Preference
+        android:icon="@drawable/ic_info_outline"
+        android:key="netflix_esn"
+        android:title="@string/netflix_esn"/>
+    <Preference
+        android:icon="@drawable/ic_info_outline"
+        android:key="hailstorm_ver"
+        android:title="@string/hailstorm_ver"/>
+    <Preference
+        android:fragment="com.android.tv.settings.pqsettings.PictrueModeFragment"
+        android:icon="@drawable/ic_settings_more_amlogic_display"
+        android:key="pictrue_mode"
+        android:title="@string/pq_pictrue" />
+    <Preference
+        android:icon="@drawable/ic_settings_more_amlogic_display"
+        android:key="keyStone"
+        android:title="@string/keystone" />
+    <Preference
+        android:fragment="com.android.tv.settings.tvoption.TvOptionFragment"
+        android:icon="@drawable/ic_settings_more_amlogic_tv"
+        android:key="tv_option"
+        android:title="@string/tv_name" />
+    <Preference
+        android:icon="@drawable/ic_settings_more_amlogic"
+        android:key="more"
+        android:title="@string/system_more_setting" >
+        <intent
+            android:targetClass="com.android.settings.Settings"
+            android:targetPackage="com.android.settings" />
+    </Preference>
+    <Preference
+        android:icon="@drawable/ic_settings_more_amlogic_tv"
+        android:key="channel"
+        android:title="@string/tv_channel" />
+    <Preference
+        android:icon="@drawable/ic_settings_more_amlogic"
+        android:key="tv_settings"
+        android:title="@string/system_setting"
+        android:fragment="com.android.tv.settings.tvoption.DroidSettingsModeFragment" />
+    <Preference
+        android:key="advanced_sound_settings"
+        android:icon="@drawable/ic_volume_up"
+        android:title="@string/advanced_sound_settings_title" />
+    <Preference
+        android:fragment="com.android.tv.settings.develop.DevelopFragment"
+        android:icon="@drawable/ic_settings_more_amlogic_develop"
+        android:key="amlogic_developer_options"
+        android:title="@string/amlogic_developer_options_title" />
+</PreferenceScreen>

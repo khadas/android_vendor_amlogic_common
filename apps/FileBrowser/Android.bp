@@ -1,0 +1,20 @@
+prebuilt_etc {
+    name: "privapp_whitelist_com.droidlogic.filebrowser",
+    vendor: true,
+    sub_dir: "permissions",
+    src: "com.droidlogic.filebrowser.xml",
+    filename_from_src: true,
+}
+android_app {
+    name: "FileBrowser",
+
+    srcs: ["**/*.java"],
+    libs: ["droidlogic"],
+
+    proprietary: true,
+    manifest: "AndroidManifest.xml",
+
+    certificate: "platform",
+    sdk_version: "system_current",
+    static_libs: ["androidx.appcompat_appcompat"],
+}

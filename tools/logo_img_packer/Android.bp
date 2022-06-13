@@ -1,0 +1,23 @@
+// Copyright 2005 The Android Open Source Project
+//
+//
+
+cc_binary {
+    name: "logo_img_packer",
+    host_supported: true,
+    proprietary: true,
+
+    srcs: [
+        "res_pack.cpp",
+        "crc32.cpp",
+    ],
+
+    target: {
+        host: {
+            static_libs: ["libhost"],
+        },
+        darwin: {
+            cflags: ["-DMACOSX_RSRC"],
+        },
+    },
+}

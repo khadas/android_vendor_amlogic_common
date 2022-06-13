@@ -1,0 +1,9 @@
+android_app {
+    name: "GoogleTVCustomizationSample",
+    srcs: ["src/**/*.java"],
+    static_libs: ["androidx.core_core"],
+    manifest: "AndroidManifest.xml",
+    certificate: "platform",
+    sdk_version: "system_current",
+    product_specific: true,
+}

@@ -1,0 +1,13 @@
+#
+# for nxp8987 bluetooth firmware download
+#
+
+service nxp_fwloader /vendor/bin/nxp_fwloader /dev/ttyS1 115200 0 /vendor/lib/firmware/nxp/uart8987_bt.bin 3000000
+    class core
+    user root
+    group root system shell bluetooth
+    disabled
+    oneshot
+
+on boot
+    start nxp_fwloader

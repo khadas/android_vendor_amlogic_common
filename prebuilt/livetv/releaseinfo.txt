@@ -1,0 +1,96 @@
+#the latest related commit information that produces current TV.apk
+commit 1d4a8afd44641f6b617dd61c3a875af26a52e8a1 (HEAD -> master, origin/master, origin/HEAD)
+Author: fei.zhang1 <fei.zhang1@amlogic.com>
+Date:   Tue Oct 12 12:20:01 2021 +0800
+
+    livetv:resolve epg Event display abnormal and add V-Chip in menu [1/1]
+
+    PD#
+
+    Problem:
+    epg Event display abnormal
+    add V-chip in munu
+
+    Solution:
+    :resolve epg Event display abnormal and add V-Chip in mene
+
+    Verify:
+    android-redi
+
+
+commit df0a1da8b3c9f564edaf5eda3c151633372bfd42 (HEAD -> master, origin/master, origin/HEAD)
+Author: fei.zhang1 <fei.zhang1@amlogic.com>
+Date:   Fri Oct 8 17:39:15 2021 +0800
+
+    livetv:Resolve null pointer exception[1/1]
+
+    PD#SWPL-59872
+    PD#SWPL-59949
+
+    Problem:
+    null pointer exception
+
+    Solution:
+    Resolve null pointer exception
+
+    Verify:
+    Android-redi
+
+commit 0432b5b9dec707fd40f82b327c6107c8e916bdcd (HEAD -> master, origin/master, origin/HEAD)
+Author: fei.zhang1 <fei.zhang1@amlogic.com>
+Date:   Thu Sep 30 15:06:15 2021 +0800
+
+    livetv: Inforbar needs to be modified after MultiAudio channge [1/1]
+
+    PD#SWPL-60149
+
+    Problem:
+    Inforbar cannot modified after MultiAudio channge
+
+    Solution:
+    Inforbar needs to be modified after MultiAudio channge
+
+    Verify:
+    android-ohm
+
+
+commit c496cec518c549d927389477d23d86159a8e400f (HEAD -> master, origin/master, origin/HEAD)
+Author: fei.zhang1 <fei.zhang1@amlogic.com>
+Date:   Wed Sep 29 14:38:02 2021 +0800
+
+    livetv : audio experiences list add SS logo [1/1]
+
+    PD#SWPL-60149
+    PD#SWPL-60652
+
+    Problem:
+    SS (spoken subtitles) logo should be shown in the audio experiences
+    list.
+
+    Solution:
+     audio experiences list add SS logo
+
+    Verify:
+    android-ohm
+
+
+commit 3949e1f8f5af6dcb5cc6b274f806350bf1de6e0b (HEAD -> master, origin/master, origin/HEAD)
+Author: fei.zhang1 <fei.zhang1@amlogic.com>
+Date:   Wed Sep 29 19:01:48 2021 +0800
+
+    live: No channel causes null pointer exception  [1/1]
+
+    PD#SWPL-60774
+
+    Problem:
+    If there is no channel, open the EPG interface and automatically return
+    to the home page
+
+    Solution:
+    Add null pointer protection
+
+    Verify:
+    Android-ohm
+	
+	
+

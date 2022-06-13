@@ -1,0 +1,39 @@
+// Copyright 2013 The Android Open Source Project
+
+// ANDROIDMK TRANSLATION ERROR: unsupported conditional
+// ifneq ($(BUILD_TINY_ANDROID),true)
+
+cc_library_static {
+    name: "libhealthd.mboxdefault",
+    srcs: ["healthd_board_mbox_default.cpp"],
+    include_dirs: [
+        "system/core/healthd",
+        "system/core/healthd/include/healthd",
+    ],
+    cflags: ["-Werror"],
+
+    header_libs: ["libbatteryservice_headers"],
+
+
+    proprietary: true,
+
+}
+
+cc_library_static {
+    name: "libhealthd.tablet",
+    srcs: ["healthd_board_tablet_default.cpp"],
+    include_dirs: [
+        "system/core/healthd",
+        "system/core/healthd/include/healthd",
+    ],
+    cflags: ["-Werror"],
+
+    header_libs: ["libbatteryservice_headers"],
+
+
+    proprietary: true,
+
+}
+
+// ANDROIDMK TRANSLATION ERROR: endif from unsupported conditional
+// endif

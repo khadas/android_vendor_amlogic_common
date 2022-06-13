@@ -1,0 +1,57 @@
+bootstrap_go_package {
+    name: "soong-amlogic_codec",
+    pkgPath: "android/soong/vendor/amlogic/common/prebuilt/libmedia/codec",
+    deps: [
+        "blueprint",
+        "blueprint-pathtools",
+        "soong",
+        "soong-android",
+        "soong-cc",
+        "soong-genrule",
+    ],
+    srcs: [
+        "codec_defaults.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+amlogic_codec_go_defaults {
+    name: "amlogic_codec_go_defaults",
+}
+
+
+cc_prebuilt_library_shared {
+
+    name: "libstagefright_soft_amsoftdec",
+    defaults: ["amlogic_codec_go_defaults"],
+    vendor: true,
+    compile_multilib: "32",
+
+    arch: {
+        arm: {
+            srcs: ["lib/libstagefright_soft_amsoftdec.so"],
+        },
+        arm64: {
+            enabled: false,
+            srcs: ["lib64/libstagefright_soft_amsoftdec.so"],
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+    shared_libs: [
+        "libamffmpegcodec",
+        "libammediaext",
+        "libdl",
+        "liblog",
+        "libstagefright_foundation",
+        "libstagefright_omx",
+        "libstagefright_softomx",
+        "libutils",
+    ],
+
+}
+

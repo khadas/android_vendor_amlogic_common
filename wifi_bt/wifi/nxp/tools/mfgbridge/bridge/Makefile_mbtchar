@@ -1,0 +1,71 @@
+#
+# File:	Makefile
+#
+# Copyright (C) 2009-2015, Marvell International Ltd.
+# All Rights Reserved
+#
+
+#mfgtool update
+CONFIG_MFG_UPDATE=y
+
+#marvell bluetooth stack(btchar only)
+CONFIG_MARVELL_BT=y
+
+# Enable PC based Build support
+CONFIG_NONPLUG_SUPPORT=y
+
+
+#CC=/usr/local/arm-marvell-krkwd-linux-gnueabi/gcc/bin/arm-none-linux-gnueabi-gcc
+CC=/bin/gcc
+APP=mfgbridge
+BINDIR=../bin_mfgbridge
+
+CFLAGS += -Wall
+CPPFLAGS += -Wall
+
+ifeq ($(CONFIG_MFG_UPDATE), y)
+CFLAGS += -DMFG_UPDATE
+DRV_DIR=../drvwrapper
+#include directories
+CFLAGS += -I. -I$(DRV_DIR)
+endif
+
+
+ifeq ($(CONFIG_NONPLUG_SUPPORT), y)
+CC=gcc -g
+CFLAGS += -DNONPLUG_SUPPORT
+CPPFLAGS += -DNONPLUG_SUPPORT
+
+ifeq ($(CONFIG_MARVELL_BT),y)
+CFLAGS += -DMARVELL_BT_STACK
+else
+LIBS = -lbluetooth
+endif
+endif
+
+all: $(APP)
+
+OBJS = mfgbridge.o \
+	   ../drvwrapper/drv_wrapper.o
+
+ifeq ($(CONFIG_MFG_UPDATE), y)
+OBJS += mfgdebug.o
+endif
+
+
+$(APP): $(OBJS) Makefile
+	$(CC) $(CFLAGS) -o $(APP) $(OBJS) $(LIBS)
+
+build: all
+	@if [ ! -d $(BINDIR) ]; then \
+		mkdir $(BINDIR); \
+	fi
+	@cp mfgbridge $(BINDIR)
+	@cp *.conf $(BINDIR)
+
+
+clean:
+	rm -f *.o
+	rm -f ../drvwrapper/*.o
+	rm -f *core
+	rm -f mfgbridge

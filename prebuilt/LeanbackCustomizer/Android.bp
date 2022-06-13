@@ -1,0 +1,12 @@
+android_app {
+    name: "DroidLeanbackCustomizer",
+
+    privileged: true,
+
+    srcs: ["src/**/*.java"],
+
+    sdk_version: "current",
+
+    proprietary: true,
+
+}

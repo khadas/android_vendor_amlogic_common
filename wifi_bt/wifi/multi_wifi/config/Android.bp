@@ -1,0 +1,7 @@
+cc_prebuilt_binary {
+    name: "iwpriv",
+
+    vendor: true,
+    srcs: ["iwpriv"],
+    check_elf_files: false,
+}

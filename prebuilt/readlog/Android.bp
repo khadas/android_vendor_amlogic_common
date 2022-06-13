@@ -1,0 +1,11 @@
+android_app_import {
+    name: "ReadLog",
+
+    certificate: "platform",
+
+    product_specific: true,
+    apk: "ReadLog.apk",
+
+}
+
+

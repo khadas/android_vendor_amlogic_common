@@ -1,0 +1,65 @@
+/******************************************************************************
+ *
+ *  Copyright 2018-2020 NXP
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at:
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
+
+libbt supports to configure some key parameters with conf file in default path /vendor/etc/bluetooth/bt_vendor.conf
+
+use "key = value" to set parameters in conf file
+
+optional keys are listed below:
+
+	mchar_port: port path used by Uart interface, the default BT uart port in libbt is /dev/ttyUSB0 
+                          if it's not the same as default port, could set mchar_port in conf file like below
+                          mchar_port = /dev/ttyXXX
+
+	mbt_port: port path used by SD or USB interface, the default BT SD/USB port in libbt is /dev/mbtchar0
+	               if it's not the same as default port, could set mbt_port in conf file like below
+		        mbt_port = /dev/mbtcharX
+
+	is_uart_port: set to 1 when using Uart interface like below
+                           is_uart_port = 1
+
+	baudrate_fw_init: default bardrate when bluetooth fw active after download. The default value is 115200 in libbt. It's not necessary to configure this key in conf unless it need to choose other baudrate.
+
+	baudrate_bt: the baudrate expect to working on when bt running. The default value is 3000000 in libbt. It's not necessary to configure this key in conf unless it need to choose other baudrate. 
+	
+	uart_break_before_open: set to 1 when need to send break before open port, default value in libbt is 0. It's not necessary to configure this key in conf.
+    bd_address: set bdaddress by configuration file, bdaddress is comprised by 6 bytes. You are expected to input as the format of "bd_address = xx:xx:xx:xx:xx:xx", where 'x' should be hexadecimal digits.
+
+       Below parameters are for fw download, if not use fw download by libbt, don't set any of below in conf file
+
+	enable_download_fw: set to 1 if need to download uart bt fw by libbt when bootup, default value is 0 in libbt, it always download combo fw by wifi side
+
+	pFileName_image: bt fw path, example: pFileName_image = /vendor/firmware/mrvl/uart8997_bt_v4.bin
+
+	pFileName_helper: bt fw helper path, example: pFileName_helper = /vendor/etc/firmware/mrvl/helper_uart_3000000.bin
+
+	iSecondBaudrate: second baudrate used when download fw. The default value is 0 in libbt, only need to configure it if for 90xx chips.
+	example: iSecondBaudrate = 3000000
+	
+
+       Below parameters are not necessary to configure in conf file when download fw by libbt.
+
+	baudrate_dl_helper: baudrate used when download helper. The default value is 115200 in libbt, only need to configure it if choose other baudrate. 
+
+	baudrate_dl_image: baudrate used when start download fw. The default value is 3000000 in libbt, only need to configure it if choose other baudrate.  
+	
+	uart_break_before_change_baudrate: set to 1 when need to send break before change bootloader baudrate. Default value in libbt is 0. Not necessary to set it in conf
+
+	uart_break_after_dl_helper: set to 1 when need to send break after helper has been downloaded, and before download fw. Default value in libbt is 0. Not necessary to set it in conf
+
+	uart_sleep_after_dl: sleep time after bt fw is downloaded, unit in ms. The default value is 700 ms, only need to configure it if need sleep for more time.

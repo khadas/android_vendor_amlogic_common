@@ -1,0 +1,28 @@
+
+cc_library_shared {
+  name: "libscreencontrol_jni",
+  vendor: true,
+
+  srcs: [
+    "com_droidlogic_app_ScreenControlManager.cpp",
+  ],
+
+  shared_libs: [
+    "vendor.amlogic.hardware.screencontrol@1.0",
+    "libscreencontrolclient",
+    "libcutils",
+    "libutils",
+    "liblog",
+  ],
+
+  header_libs: [
+    "jni_headers",
+  ],
+
+  include_dirs: [
+    "frameworks/base/core/jni/include",
+    "vendor/amlogic/common/frameworks/services/screencontrol",
+  ],
+}
+
+

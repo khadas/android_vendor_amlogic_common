@@ -1,0 +1,11 @@
+java_library {
+    name: "com.droidlogic.inputmethod.remote.lib",
+
+    srcs: [
+        "**/*.java",
+        "com/droidlogic/inputmethod/remote/IPinyinDecoderService.aidl",
+    ],
+    sdk_version: "system_current",
+    proprietary: true,
+
+}

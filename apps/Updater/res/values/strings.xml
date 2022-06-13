@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">Updater</string>
+    <string name="btn_check">"CHECK SYSTEM UPDATE"</string>
+    <string name="btn_update">"UPDATE IMMEDIATELY"</string>
+    <string name="update_update">"UPDATE NEW VERSION :"</string>
+    <string name="update_check">"Request ABUpdater Service, Finding Newest Version...\n"</string>
+    <string name="server_pre">"ABUpdate NetworkService: "</string>
+    <string name="update_newest">No Update</string>
+    <string name="alert_title">"Apply Update"</string>
+    <string name="alert_content">"Do you really want to apply this update?"</string>
+    <string name="system_status_pre">"Current System:"</string>
+    <string name="action">"Sending System Info to ABUpdater Server...\n"</string>
+    <string name="update_online">"Update Online"</string>
+    <string name="update_local">"Update Local"</string>
+    <string name="path_hit">"Your Selected Zip Path</string>
+    <string name="scan_title">Scanning</string>
+    <string name="scan_tip">Scanning,Please wait...</string>
+    <string name="update_cmd">UPDATE NOW</string>
+    <string name="error_failed">"UPDATE ERROR, error no"</string>
+    <string name="error_suffix">"\nPlease retry "</string>
+    <string name="prepare">"Start Update,Prepare Environment.Please Wait..."</string>
+    <string name="reboot_cmd">"System Updated,Reboot Your Device Make it Available."</string>
+    <string name="reboot_cmd_prepare">"Prepare , Not Power Off! Please Wait."</string>
+    <string name="running_pre">Running Status:"</string>
+    <string name="error_ver">"Error Ota Package Zip File"</string>
+    <string name="online_pre">"Online Update:"</string>
+    <string name="reboot_btn">"Reboot"</string>
+    <string name="update_success">"Update Success"</string>
+    <string name="update_fail">"Update Failed"</string>
+    <string name="result">"Checking Update Result"</string>
+    <string name="retry">"Please retry update again"</string>
+    <string name="wait_for_merge">"System is Merging"</string>
+    <string name="btn_cancel">"Cancel"</string>
+    <string name="update_hint">"Do You Want to Update Right Now?"</string>
+    <string name="running">"Update is Running, Downloading:"</string>
+    <string name="btn_ok">"Upgrade"</string>
+</resources>

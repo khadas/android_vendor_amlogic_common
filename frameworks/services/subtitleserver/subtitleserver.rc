@@ -1,0 +1,4 @@
+service subtitleserver /vendor/bin/hw/subtitleserver
+    class hal
+    user root
+    group system

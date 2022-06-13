@@ -1,0 +1,56 @@
+//================================
+//getbootenv
+
+cc_binary {
+    name: "getbootenv",
+    enabled: false,
+    srcs: [
+        "getbootenv.cpp",
+        "../ubootenv/Ubootenv.cpp",
+    ],
+
+    shared_libs: [
+        "libcutils",
+        "libutils",
+        "liblog",
+    ],
+
+    static_libs: ["libz"],
+
+    include_dirs: [
+        "system/core/include",
+        "vendor/amlogic/common/frameworks/services/systemcontrol",
+    ],
+
+    proprietary: true,
+
+}
+
+//================================
+//setbootenv
+
+cc_binary {
+    name: "setbootenv",
+    enabled: false,
+
+    srcs: [
+        "setbootenv.cpp",
+        "../ubootenv/Ubootenv.cpp",
+    ],
+
+    shared_libs: [
+        "libcutils",
+        "libutils",
+        "liblog",
+    ],
+
+    static_libs: ["libz"],
+
+    include_dirs: [
+        "system/core/include",
+        "vendor/amlogic/common/frameworks/services/systemcontrol",
+    ],
+
+    proprietary: true,
+
+}

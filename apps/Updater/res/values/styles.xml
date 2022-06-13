@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme" parent="@style/Theme.Leanback" >
+        <item name="android:windowShowWallpaper">false</item>
+        <item name="android:windowBackground">#FF101010</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Leanback</item>
+    </style>
+
+    <style name="activity_styles" parent="@style/AppTheme">
+        <item name="windowNoTitle">false</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+    <style name="activity_styles1" parent="@android:style/Theme.Dialog">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <item name="android:backgroundDimEnabled">true</item>
+    </style>
+    <style name="ActionPrimaryButton" parent="android:Widget.DeviceDefault.Button"/>
+
+    <style name="Theme.empty" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:animation">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowEnterAnimation">@null</item>
+        <item name="android:windowExitAnimation">@null</item>
+        <item name="android:windowEnterTransition">@null</item>
+        <item name="android:windowExitTransition">@null</item>
+    </style>
+</resources>

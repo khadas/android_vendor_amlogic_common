@@ -1,0 +1,139 @@
+soong_config_module_type_import {
+    from: "device/amlogic/common/soong_config/Android.bp",
+    module_types: ["amlogic_vendorconfig_cc_defaults"],
+}
+
+amlogic_vendorconfig_cc_defaults {
+    name: "sceneprocess_defaults",
+    cflags: [
+      "-Wno-unused-function",
+      "-Wno-unused-parameter",
+      "-Wno-unused-variable",
+      "-Wno-unused-label",
+      "-Werror", // must fix warnings(except unused).
+    ],
+}
+
+cc_library_static {
+    name: "libsyswrite_static",
+    vendor_available: true,
+    defaults: ["sceneprocess_defaults"],
+
+    srcs: [
+        "SysWrite.cpp",
+    ],
+
+    export_include_dirs: [
+        "include",
+    ],
+
+    shared_libs: [
+        "libutils",
+        "libcutils",
+        "liblog",
+    ],
+
+    cflags: [
+        "-Wno-unused-variable",
+        "-Wno-unused-parameter",
+        "-Wno-implicit-fallthrough",
+    ],
+}
+
+cc_library_static {
+    name: "libsceneprocess_static",
+    vendor_available: true,
+    defaults: ["sceneprocess_defaults"],
+
+    srcs: [
+        "SceneProcess.cpp",
+    ],
+
+    export_include_dirs: [
+        "include",
+    ],
+
+    static_libs: [
+        "libsyswrite_static",
+    ],
+
+    shared_libs: [
+        "libutils",
+        "libcutils",
+        "liblog",
+    ],
+
+    cflags: [
+        "-Wno-unused-variable",
+        "-Wno-unused-parameter",
+        "-Wno-implicit-fallthrough",
+        "-Wno-unused-variable",
+        "-Wno-unused-parameter",
+        "-Wno-implicit-fallthrough",
+    ],
+
+}
+
+//for recovery mode
+cc_library_static {
+    name: "libsyswrite_recovery_static",
+    vendor_available: true,
+    recovery_available: true,
+    defaults: ["sceneprocess_defaults"],
+
+    srcs: [
+        "SysWrite.cpp",
+    ],
+
+    export_include_dirs: [
+        "include",
+    ],
+
+    shared_libs: [
+        "libutils",
+        "libcutils",
+        "liblog",
+    ],
+
+    cflags: [
+        "-Wno-unused-variable",
+        "-Wno-unused-parameter",
+        "-Wno-implicit-fallthrough",
+        "-DRECOVERY_MODE",
+    ],
+}
+
+cc_library_static {
+    name: "libsceneprocess_recovery_static",
+    vendor_available: true,
+    recovery_available: true,
+    defaults: ["sceneprocess_defaults"],
+
+    srcs: [
+        "SceneProcess.cpp",
+    ],
+
+    export_include_dirs: [
+        "include",
+    ],
+
+    static_libs: [
+        "libsyswrite_recovery_static",
+    ],
+
+    shared_libs: [
+        "libutils",
+        "libcutils",
+        "liblog",
+    ],
+
+    cflags: [
+        "-Wno-unused-variable",
+        "-Wno-unused-parameter",
+        "-Wno-implicit-fallthrough",
+        "-Wno-unused-variable",
+        "-Wno-unused-parameter",
+        "-Wno-implicit-fallthrough",
+        "-DRECOVERY_MODE",
+    ],
+}

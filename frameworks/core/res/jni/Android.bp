@@ -1,0 +1,29 @@
+
+cc_library_shared {
+    name: "libjniuevent",
+
+    srcs: ["uevent.cpp"],
+
+    header_libs: ["jni_headers"],
+
+    cflags: ["-Wno-unused-parameter"],
+
+    shared_libs: [
+        "liblog",
+        "libcutils",
+        "libutils",
+    ],
+
+    proprietary: false,
+
+}
+
+prebuilt_etc {
+    name: "bandwidth.rc",
+
+    proprietary: true,
+
+    src: "bandwidth.rc",
+    sub_dir: "init/",
+
+}
