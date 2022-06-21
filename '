@@ -1,0 +1,63 @@
+AmFFmpegExtractor: CB2 AAC ADTS audio decoding failed with C2 decoder [1/2]
+
+PD#SWPL-82973
+
+Problem:
+1. adts flag is not set to C2SoftAac decoder.
+2. AAC ADTS audio decoding failed with C2SoftAac decoder, C2SoftAacDec
+parse sample rate and channel count for CSD data, AmFFmpegExtractor
+not send CSD data while extract AAC ADTS Aduio stream, invaild sample
+rate or channel count will cause decode fail.
+
+Solution:
+1. set adts flag to metadata.
+2. add AVCTSFormatter to parse CSD from ES data.
+3. parse CSD at ffmpeg avformat_find_stream_info for Android CTS
+android.media.cts.DecoderTest#testDecodeAacTs.
+
+Verify:
+Android S
+
+Build Tag:
+Android_R_DRM_PATCHBUILD-5447
+
+Commits:
+vendor/amlogic/common/AmFFmpegAdapter:
+version: 2.6.28-gba8dd76(build:5447)
+ba8dd76 AmFFmpegAdapter: CB2 fix compile error with rebase submit [1/2]
+
+Git Hash-Object:
+2062e9991e24c5668865e07efbcaf11a3ab61a12
+prebuilt/libmedia/libavenhancements/lib/libamffmpegadapter.so
+52ef9490fdb440bb11863028d78e0e9904688a90
+prebuilt/libmedia/libavenhancements/lib/libmediavendor_ext.so
+
+Change-Id: I763e42d1450d5612c2591a8b4c4f1b6dc327211f
+Signed-off-by: DRM Auto Build <tao.guo@amlogic.com>
+
+# Conflicts:
+#	prebuilt/libmedia/libavenhancements/lib/libamffmpegadapter.so
+#	prebuilt/libmedia/libavenhancements/lib/libmediavendor_ext.so
+#
+# It looks like you may be committing a cherry-pick.
+# If this is not correct, please remove the file
+#	.git/CHERRY_PICK_HEAD
+# and try again.
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Author:    Qiang Guo <qiang.guo@amlogic.com>
+# Date:      Fri Jun 17 21:44:58 2022 +0800
+#
+# On branch patch_7_22
+# Your branch is ahead of 'trunk/openlinux/ds/r-amlogic-64-bit-20220111' by 6 commits.
+#   (use "git push" to publish your local commits)
+#
+# You are currently cherry-picking commit 31035089a.
+#
+# Changes to be committed:
+#	modified:   lib/libamffmpegadapter.so
+#	modified:   lib/libmediavendor_ext.so
+#
