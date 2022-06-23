@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <ListPreference
+        android:key="White_LED_KEY"
+        android:title="@string/LED_white"
+        android:summary="@string/LEDs_default"
+        android:defaultValue="2"
+        android:dialogTitle="@string/LED_white"
+        android:entries="@array/LEDs_array"
+        android:entryValues="@array/LEDs_array_value">
+    </ListPreference>
+
+    <ListPreference
+        android:key="Red_LED_KEY"
+        android:title="@string/LED_red"
+        android:summary="@string/LED_red_default"
+        android:defaultValue="1"
+        android:dialogTitle="@string/LED_red"
+        android:entries="@array/Red_LEDs_array"
+        android:entryValues="@array/Red_LEDs_array_value">
+    </ListPreference>
+
+</PreferenceScreen>

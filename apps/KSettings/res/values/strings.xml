@@ -1,0 +1,152 @@
+<resources>
+    <string name="app_name">Khadas settings</string>
+    <string name="HDMI_IN">HDMI IN</string>
+    <string name="Ethernet">Ethernet</string>
+    <string name="Hotspot">Hotspot Source</string>
+    <string name="DisplaySound_Setting">Display &amp; Sound</string>
+    <string name="PowerKey">PowerKey definition</string>
+    <string name="FunctionKey">FunctionKey definition</string>
+    <string name="LEDs">LEDs control</string>
+    <string name="Cooling_fan">Cooling fan</string>
+    <string name="WOL">WOL</string>
+    <string name="Status_bar_control">Status bar control</string>
+    <string name="Logo_LED_control">Logo LED control</string>
+    <string name="Timer">Timer</string>
+    <string name="USB_PCIE">Toggle USB-3.0/PCI-E</string>
+    <string name="USB_PCIE_Dialog_title">Effective after restart</string>
+    <string name="USB_PCIE_default">USB-3.0 Mode</string>
+
+    <string name="Gsensor">G-Sensor data</string>
+    <string name="Updater" translatable="false">Updater</string>
+
+
+    <string name="WOL_summary">Wake on LAN</string>
+
+    <string name="Hotspot_summary">WLAN/RSDB</string>
+
+    <string name="Status_bar_control_bottom">Show the bottom status bar</string>
+    <string name="Status_bar_control_upper">Show the upper status bar</string>
+
+    <string name="Eth_Proxy_settings">Proxy Settings</string>
+    <string name="Eth_IP_settings">IP Settings</string>
+
+    <string name="Eth_Status_n">Not connected</string>
+    <string name="Eth_Status_y">Connected</string>
+    <string name="Eth_Port">Ethernet Port</string>
+    <string name="Eth_Port_summary">Active:M2X(Reboot for changes to take effect)</string>
+
+    <string name="FunctionKey_dialog">Please enter the key value</string>
+
+    <string name="More_DisplaySound_Setting">More display &amp; sound settings</string>
+    <string name="Display_screen_rotation">Screen rotation</string>
+    <string name="Display_screen_density">Screen density</string>
+
+    <string name="Force_land_for_app">Force land for application</string>
+
+    <string name="Screen_density_default">480</string>
+    <string-array name="Screen_density_array">
+        <item>120</item>
+        <item>160</item>
+        <item>200</item>
+        <item>240</item>
+        <item>280</item>
+        <item>320</item>
+        <item>480</item>
+    </string-array>
+    <string-array name="Screen_density_array_value">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+    </string-array>
+
+    <string name="Screen_rotation_default">0</string>
+    <string-array name="Screen_rotation_array">
+        <item>0</item>
+        <item>90</item>
+        <item>180</item>
+        <item>270</item>
+    </string-array>
+    <string-array name="Screen_rotation_array_value">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <string-array name="USB_PCIE_array">
+        <item>USB-3.0 Mode</item>
+        <item>PCI-E Mode</item>
+    </string-array>
+    <string-array name="USB_PCIE_array_value">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string name="PowerKey_suspend">suspend</string>
+    <string-array name="PowerKey_array">
+        <item>suspend</item>
+        <item>shutdown</item>
+        <item>restart</item>
+    </string-array>
+    <string-array name="PowerKey_array_value">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string name="LED_white">White LED</string>
+    <string name="LED_red">Red LED</string>
+    <string name="Logo_LED" translatable="false">Logo LED</string>
+    <string name="LEDs_default">Always on</string>
+
+    <string-array name="LEDs_array">
+        <item>Breath mode</item>
+        <item>Always on</item>
+        <item>Always off</item>
+    </string-array>
+    <string-array name="LEDs_array_value">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <string name="LED_red_default">Always on</string>
+    <string-array name="Red_LEDs_array">
+        <item>Always off</item>
+        <item>Always on</item>
+        <item>Breath mode</item>
+        <item>Heartbeat mode</item>
+    </string-array>
+    <string-array name="Red_LEDs_array_value">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+
+    <string name="FAN_default">Automatic speed control(temperature dependent)</string>
+    <string-array name="FAN_array">
+        <item>Off</item>
+        <item>Automatic speed control(temperature dependent)</item>
+        <item>Level 1</item>
+        <item>Level 2</item>
+        <item>Level 3</item>
+    </string-array>
+    <string-array name="FAN_array_value">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </string-array>
+
+    <string name="mipi_Brightness_title">MIPI Brightness level</string>
+    <string name="vbo_Brightness_title">VBO Brightness level</string>
+    <string name="logoled_Brightness_title">Logo LED Brightness level</string>
+    <string name="textview" translatable="false">TextView</string>
+
+</resources>

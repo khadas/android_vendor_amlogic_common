@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceScreen
+        android:key="HDMI_IN_KEY"
+        android:title="@string/HDMI_IN"
+        android:iconSpaceReserved="false">
+    </PreferenceScreen>
+
+    <SwitchPreference
+        android:key="HOTSPOT_KEY"
+        android:iconSpaceReserved="false"
+        android:title="@string/Hotspot"
+        android:summary="@string/Hotspot_summary"/>
+
+    <PreferenceScreen
+        android:title="@string/DisplaySound_Setting"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.ksettings.DisplaySound_Preference"
+            android:targetPackage="com.khadas.ksettings" />
+    </PreferenceScreen>
+
+    <ListPreference
+        android:key="POWER_KEY"
+        android:iconSpaceReserved="false"
+        android:title="@string/PowerKey"
+        android:summary="@string/PowerKey_suspend"
+        android:defaultValue="0"
+        android:dialogTitle="@string/PowerKey"
+        android:entries="@array/PowerKey_array"
+        android:entryValues="@array/PowerKey_array_value">
+    </ListPreference>
+
+    <EditTextPreference
+        android:key="FUNCTION_KEY"
+        android:iconSpaceReserved="false"
+        android:title="@string/FunctionKey"
+        android:dialogTitle="@string/FunctionKey_dialog"
+        android:summary="3"/>
+
+    <PreferenceScreen
+        android:title="@string/LEDs"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.ksettings.LEDs_Preference"
+            android:targetPackage="com.khadas.ksettings" />
+    </PreferenceScreen>
+
+    <ListPreference
+        android:key="FAN_KEY"
+        android:iconSpaceReserved="false"
+        android:title="@string/Cooling_fan"
+        android:summary="@string/FAN_default"
+        android:defaultValue="2"
+        android:dialogTitle="@string/Cooling_fan"
+        android:entries="@array/FAN_array"
+        android:entryValues="@array/FAN_array_value">
+    </ListPreference>
+
+    <SwitchPreference
+        android:key="WOL_KEY"
+        android:iconSpaceReserved="false"
+        android:title="@string/WOL"
+        android:summary="@string/WOL_summary"/>
+
+    <PreferenceScreen
+        android:title="@string/Status_bar_control"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.ksettings.Status_bar_Preference"
+            android:targetPackage="com.khadas.ksettings" />
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/Logo_LED_control"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.ksettings.LogoLED_Preference"
+            android:targetPackage="com.khadas.ksettings" />
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/Timer"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.schpwronoff.AlarmClock"
+            android:targetPackage="com.khadas.schpwronoff" />
+    </PreferenceScreen>
+
+<!--    <PreferenceScreen-->
+<!--        android:title="@string/Gsensor"-->
+<!--        android:iconSpaceReserved="false">-->
+<!--        <intent-->
+<!--            android:targetClass="com.khadas.ksettings.Gsensor_Preference"-->
+<!--            android:targetPackage="com.khadas.ksettings" />-->
+<!--    </PreferenceScreen>-->
+
+    <PreferenceScreen
+        android:title="@string/Updater"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.droidlogic.updater.ui.MainActivity"
+            android:targetPackage="com.droidlogic.updater" />
+    </PreferenceScreen>
+
+    <ListPreference
+        android:key="USB_PCIE_KEY"
+        android:iconSpaceReserved="false"
+        android:title="@string/USB_PCIE"
+        android:summary="@string/USB_PCIE_default"
+        android:defaultValue="1"
+        android:dialogTitle="@string/USB_PCIE_Dialog_title"
+        android:entries="@array/USB_PCIE_array"
+        android:entryValues="@array/USB_PCIE_array_value">
+    </ListPreference>
+
+
+</PreferenceScreen>
