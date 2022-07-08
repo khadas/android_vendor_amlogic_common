@@ -26,7 +26,8 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
 
 LOCAL_JNI_SHARED_LIBRARIES := \
     libjnidtvepgscanner \
-    libjnifont
+    libjnifont \
+    libsubtitlemanager_jni
 
 LOCAL_REQUIRED_MODULES := libsubtitlemanager_jni
 LOCAL_VENDOR_MODULE := true

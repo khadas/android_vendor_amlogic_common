@@ -228,6 +228,10 @@ public class SubtitleManager {
 
     private Rect mDisplayRect;
 
+    private static final String[] sJNI_LIBRARY_NAME = {
+        "subtitlemanager_jni" };
+
+
     private static final String[] sJNI_LIBRARY = {
         "/vendor/lib/libsubtitlemanager_jni.so",
         "/product/lib/libsubtitlemanager_jni.so",
@@ -243,9 +247,9 @@ public class SubtitleManager {
     static {
         if (Build.SUPPORTED_64_BIT_ABIS.length > 0) {
             Log.d(TAG,"is 64bit system");
-            for (String s:sJNI_LIBRARY_64) {
+            for (String s:sJNI_LIBRARY_NAME) {
                 try {
-                    System.load(s);
+                    System.loadLibrary(s);
                 } catch (UnsatisfiedLinkError e) {
                     Log.d(TAG, "Error try next!", e);
                     continue;
@@ -255,9 +259,9 @@ public class SubtitleManager {
             }
         } else {
             Log.d(TAG,"is 32bit system");
-            for (String s:sJNI_LIBRARY) {
+            for (String s:sJNI_LIBRARY_NAME) {
                 try {
-                    System.load(s);
+                    System.loadLibrary(s);
                 } catch (UnsatisfiedLinkError e) {
                     Log.d(TAG, "Error try next!", e);
                     continue;
