@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.khadas.ksettings.LogoLEDBarPreference
+        android:dialogTitle="@string/logoled_Brightness_title"
+        android:title="@string/logoled_Brightness_title"
+        android:summary="32"
+        android:key="logoled_Brightness"
+        android:dialogLayout="@layout/brightness_prefs" />
+
+    <ListPreference
+        android:key="LOGO_LED_KEY"
+        android:title="@string/Logo_LED"
+        android:summary="@string/LEDs_default"
+        android:defaultValue="2"
+        android:dialogTitle="@string/LED_red"
+        android:entries="@array/Red_LEDs_array"
+        android:entryValues="@array/Red_LEDs_array_value">
+    </ListPreference>
+
+</PreferenceScreen>

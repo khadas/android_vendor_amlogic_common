@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="分组显示">
+        <CheckBoxPreference android:title="开启声音" android:key="open_sound" android:summary="当有新消息通知时播放声音提示" android:defaultValue="true" />
+        <SwitchPreference android:title="控制开关" />
+        <PreferenceScreen android:title="点击操作" android:key="xxx">
+        </PreferenceScreen>
+        <PreferenceScreen android:title="跳转页面">
+            <intent android:targetPackage="com.yy.testpreferences" android:targetClass="com.yy.testpreferences.SkinActivity" />
+        </PreferenceScreen>
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="辅助功能">
+        <EditTextPreference android:key="number_edit"  android:title="输入电话号码"/>
+        <!--单选-->
+        <!--<ListPreference-->
+            <!--android:key="depart_value"-->
+            <!--android:title="类别设置"-->
+            <!--android:dialogTitle="选择类别"-->
+            <!--android:entries="@array/cates"-->
+            <!--android:entryValues="@array/cates_value">-->
+        <!--</ListPreference>-->
+        <!--&lt;!&ndash;多选&ndash;&gt;-->
+        <!--<MultiSelectListPreference-->
+            <!--android:key="abc"-->
+            <!--android:entries="@array/days"-->
+            <!--android:entryValues="@array/day_value"-->
+            <!--android:title="重复"-->
+            <!--android:summary="无"-->
+            <!--/>-->
+        <RingtonePreference
+            android:key="ring_key"
+            android:title="铃声选择"
+            android:ringtoneType="all"
+            android:showDefault="true"
+            android:showSilent="true">
+        </RingtonePreference>
+    </PreferenceCategory>
+</PreferenceScreen>
