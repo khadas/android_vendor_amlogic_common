@@ -47,3 +47,8 @@
 *.symtypes
 *.order
 libsecdmx_release/
+arm_isp/
+external/dvb/
+libdvr/
+libencoder/
+npu/
