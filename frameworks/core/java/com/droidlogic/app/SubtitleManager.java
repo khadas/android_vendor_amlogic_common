@@ -20,6 +20,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.Process;
 import android.os.RemoteException;
 
 import android.os.SystemProperties;
@@ -241,8 +242,8 @@ public class SubtitleManager {
             "/system/lib64/libsubtitlemanager_jni.so" };
 
     static {
-        if (Build.SUPPORTED_64_BIT_ABIS.length > 0) {
-            Log.d(TAG,"is 64bit system");
+        if (Process.is64Bit()) {
+            Log.d(TAG,"is 64bit process");
             for (String s:sJNI_LIBRARY_64) {
                 try {
                     System.load(s);
@@ -254,7 +255,7 @@ public class SubtitleManager {
                 break;
             }
         } else {
-            Log.d(TAG,"is 32bit system");
+            Log.d(TAG,"is 32bit process");
             for (String s:sJNI_LIBRARY) {
                 try {
                     System.load(s);
