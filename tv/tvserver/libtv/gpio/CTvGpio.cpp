@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <tvutils.h>
+#include <assert.h>
 
 #include "CTvGpio.h"
 
@@ -32,6 +33,33 @@ CTvGpio::~CTvGpio()
         tvWriteSysfs(GPIO_UNEXPORT, mGpioPinNum);
 }
 
+char* CTvGpio::convertPortName(char* port_id, const char* port_name, const char* path){
+    char line[128] = {0};
+    char* search_result = NULL;
+    char* result = port_id;
+
+    assert(port_id && port_name && path);
+
+    FILE* fp = fopen(path, "r+");
+    if (NULL == fp) {
+        LOGV("%s, Error open file", __FUNCTION__);
+        return result;
+    }
+
+    while (fgets(line, 128, fp)) {
+        search_result = strstr(line, port_name);
+        if (search_result) {
+            //LOGV("%s, line=[%s]", __FUNCTION__, line);
+            strcpy(port_id, strtok(line, " gpio-"));
+            LOGV("%s, result=[%s]", __FUNCTION__, result);
+            break;
+        }
+    }
+
+    fclose(fp);
+    return result;
+}
+
 int CTvGpio::processCommand(const char *port_name, bool is_out, int edge)
 {
     LOGV("%s, port_name=[%s], is_out=[%d], edge=[%d], gpio_pin=[%d]", __FUNCTION__, port_name, is_out, edge, mGpioPinNum);
@@ -39,9 +67,14 @@ int CTvGpio::processCommand(const char *port_name, bool is_out, int edge)
         return -1;
 
     char pin_value[10] = {0};
-    if (strcmp(mGpioName, port_name) != 0 && tvWriteSysfs(GPIO_NAME_TO_PIN, port_name)) {
+    char* convertPortId = convertPortName(pin_value, port_name, GPIO_KERNEL_DEBUG);
+    if (NULL == convertPortId) {
+        return -1;
+    }
+    LOGV("%s, pin_value=[%s]", __FUNCTION__, pin_value);
+
+    if (strcmp(mGpioName, port_name) != 0) {
         strcpy(mGpioName, port_name);
-        tvReadSysfs(GPIO_NAME_TO_PIN, pin_value);
         mGpioPinNum = atoi(pin_value);
     }
     LOGV("%s, port_name=[%s], is_out=[%d], edge=[%d], gpio_pin=[%d]", __FUNCTION__, port_name, is_out, edge, mGpioPinNum);
