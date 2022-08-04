@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+int CANVAS_ALIGNED(int x);
+int YV12_Y_ALIGNED(int x);
+
 #define GE2D_MAX_PLANE  4
 typedef enum {
     GE2D_CANVAS_OSD0 = 0,

@@ -21,15 +21,29 @@
 
 #define   FILE_NAME_GE2D        "/dev/ge2d"
 
-#define CANVAS_ALIGNED(x)        (((x) + 31) & ~31)
-#define YV12_Y_ALIGNED(x)        (((x) + 63) & ~63)
-
-
 #define GE2D_BPP_32  32
 #define GE2D_BPP_24  24
 #define GE2D_BPP_16  16
 #define GE2D_BPP_12  12
 #define GE2D_BPP_8   8
+
+int has_canvas = 0;
+
+int CANVAS_ALIGNED(int x)
+{
+    if (has_canvas)
+        return (x + 31) & ~31;
+    else
+        return (x + 7) & ~7;
+}
+
+int YV12_Y_ALIGNED(int x)
+{
+    if (has_canvas)
+        return (x + 63) & ~63;
+    else
+        return (x + 15) & ~15;
+}
 
 static int  pixel_to_ge2d_format(int *img_format, int *pge2d_format,int *p_bpp)
 {
@@ -2979,6 +2993,19 @@ static int ge2d_blend_noalpha(int fd, aml_ge2d_info_t *pge2dinfo,
     return GE2D_SUCCESS;
 }
 
+void ge2d_set_canvas_align(int cap_attr)
+{
+    /*
+     *  if CANVAS_STATUS = 0, it means platform has canvas
+     *  else if CANVAS_STATUS = 1, it means canvas only support one plane
+     *  else CANVAS_STATUS = 2, it means canvas support mult planes
+     */
+    if (cap_attr & CANVAS_STATUS)
+        has_canvas = 0;
+    else
+        has_canvas = 1;
+}
+
 int ge2d_get_cap(int fd)
 {
     int ret = -1;
@@ -2991,6 +3018,7 @@ int ge2d_get_cap(int fd)
         return cap_attr;
     }
     cap_attr = cap_mask;
+    ge2d_set_canvas_align(cap_attr);
     return cap_attr;
 }
 

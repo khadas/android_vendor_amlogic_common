@@ -22,8 +22,6 @@
 #include "aml_ge2d.h"
 #include <linux/ge2d.h>
 
-#define CANVAS_ALIGNED(x)    (((x) + 31) & ~31)
-
 static void ge2d_calculate_buffer_size(const buffer_info_t* buffer,
                                        unsigned int* size_out)
 {
@@ -34,48 +32,48 @@ static void ge2d_calculate_buffer_size(const buffer_info_t* buffer,
         case PIXEL_FORMAT_RGBA_8888:
         case PIXEL_FORMAT_BGRA_8888:
         case PIXEL_FORMAT_RGBX_8888:
-            size_out[0] = CANVAS_ALIGNED(image_width * buffer->canvas_h * 4);
+            size_out[0] = CANVAS_ALIGNED(image_width * 4) * buffer->canvas_h;
             break;
         case PIXEL_FORMAT_YCbCr_422_UYVY:
         case PIXEL_FORMAT_RGB_565:
         case PIXEL_FORMAT_ARGB_4444:
         case PIXEL_FORMAT_RGBA_4444:
         case PIXEL_FORMAT_ARGB_1555:
-            size_out[0] = CANVAS_ALIGNED(image_width * buffer->canvas_h * 2);
+            size_out[0] = CANVAS_ALIGNED(image_width * 2) * buffer->canvas_h;
             break;
         case PIXEL_FORMAT_RGB_888:
         case PIXEL_FORMAT_BGR_888:
-            size_out[0] = CANVAS_ALIGNED(image_width * buffer->canvas_h * 3);
+            size_out[0] = CANVAS_ALIGNED(image_width * 3) * buffer->canvas_h;
             break;
         case PIXEL_FORMAT_YCrCb_420_SP:
         case PIXEL_FORMAT_YCbCr_420_SP_NV12:
             if (buffer->plane_number == 1)
-                size_out[0] = CANVAS_ALIGNED(image_width * buffer->canvas_h * 3 / 2);
+                size_out[0] = CANVAS_ALIGNED(image_width) * buffer->canvas_h * 3 / 2;
             else if (buffer->plane_number == 2) {
-                size_out[0] = CANVAS_ALIGNED(image_width * buffer->canvas_h);
-                size_out[1] = CANVAS_ALIGNED(image_width * buffer->canvas_h / 2);
+                size_out[0] = CANVAS_ALIGNED(image_width) * buffer->canvas_h;
+                size_out[1] = CANVAS_ALIGNED(image_width) * buffer->canvas_h / 2;
             }
             break;
           case PIXEL_FORMAT_YV12:
             if (buffer->plane_number == 1)
-                size_out[0] = CANVAS_ALIGNED(image_width * buffer->canvas_h * 3 / 2);
+                size_out[0] = CANVAS_ALIGNED(image_width) * buffer->canvas_h * 3 / 2;
             else if (buffer->plane_number == 3) {
-                size_out[0] = CANVAS_ALIGNED(image_width * buffer->canvas_h);
-                size_out[1] = CANVAS_ALIGNED(image_width * buffer->canvas_h / 4);
-                size_out[2] = CANVAS_ALIGNED(image_width * buffer->canvas_h / 4);
+                size_out[0] = CANVAS_ALIGNED(image_width) * buffer->canvas_h;
+                size_out[1] = CANVAS_ALIGNED(image_width / 2) * buffer->canvas_h / 2;
+                size_out[2] = CANVAS_ALIGNED(image_width / 2) * buffer->canvas_h / 2;
             }
             break;
           case PIXEL_FORMAT_YCbCr_422_SP:
             if (buffer->plane_number == 1)
-                size_out[0] = CANVAS_ALIGNED(image_width * buffer->canvas_h * 2);
+                size_out[0] = CANVAS_ALIGNED(image_width) * buffer->canvas_h * 2;
             else if (buffer->plane_number == 2) {
-                size_out[0] = CANVAS_ALIGNED(image_width * buffer->canvas_h);
-                size_out[1] = CANVAS_ALIGNED(image_width * buffer->canvas_h);
+                size_out[0] = CANVAS_ALIGNED(image_width) * buffer->canvas_h;
+                size_out[1] = CANVAS_ALIGNED(image_width) * buffer->canvas_h;
             }
             break;
         case PIXEL_FORMAT_Y8:
         case PIXEL_FORMAT_CLUT8:
-            size_out[0] = CANVAS_ALIGNED(image_width * buffer->canvas_h);
+            size_out[0] = CANVAS_ALIGNED(image_width) * buffer->canvas_h;
             break;
         default:
             E_GE2D("%s,%d,format not support now\n",__func__, __LINE__);
