@@ -302,9 +302,32 @@ DisplayMode::DisplayMode(const char *path, Ubootenv *ubootenv)
 
     parseConfigFile();
     parseFilterEdidConfigFile();
+
+#ifdef SYSTEMCONTROL_DISPLAY_TYPE
+    SYS_LOGI("display type: %s", SYSTEMCONTROL_DISPLAY_TYPE);
+    if (!strcmp(SYSTEMCONTROL_DISPLAY_TYPE, DEVICE_STR_MBOX)) {
+        mDisplayType = DISPLAY_TYPE_MBOX;
+    } else if (!strcmp(SYSTEMCONTROL_DISPLAY_TYPE, DEVICE_STR_MID)) {
+        mDisplayType = DISPLAY_TYPE_TABLET;
+    } else if (!strcmp(SYSTEMCONTROL_DISPLAY_TYPE, DEVICE_STR_TV)) {
+        if (pSysWrite->getPropertyBoolean(PROP_TVSOC_AS_MBOX, false)) {
+            mDisplayType = DISPLAY_TYPE_REPEATER;
+        } else {
+            mDisplayType = DISPLAY_TYPE_TV;
+        }
+    }
+#endif
+
+#ifdef SYSTEMCONTROL_UI_TYPE
+    int ui_type;
+    ui_type = SYSTEMCONTROL_UI_TYPE;
+    SYS_LOGI("UI type: %d", ui_type);
+    sprintf(mDefaultUI, "%d", ui_type);
+#endif
+
     pFrameRateAutoAdaption = new FrameRateAutoAdaption(this);
 
-    SYS_LOGI("type: %d [0:none 1:tablet 2:mbox 3:tv], soc type:%s, default UI:%s",
+    SYS_LOGI("type: %d [0:none 1:tablet 2:mbox 3:tv 4:repeater], soc type:%s, default UI:%s",
         mDisplayType, mSocType, mDefaultUI);
 
     // check dolby vision is support or not
@@ -2026,7 +2049,7 @@ void DisplayMode::updateDefaultUI() {
     } else if (!strncmp(mDefaultUI, "1080", 4)) {
         mDisplayWidth = FULL_WIDTH_1080;
         mDisplayHeight = FULL_HEIGHT_1080;
-    } else if (!strncmp(mDefaultUI, "4k2k", 4)) {
+    } else if (!strncmp(mDefaultUI, "4k2k", 4) || !strncmp(mDefaultUI, "2160", 4)) {
         mDisplayWidth = FULL_WIDTH_4K2K;
         mDisplayHeight = FULL_HEIGHT_4K2K;
     }

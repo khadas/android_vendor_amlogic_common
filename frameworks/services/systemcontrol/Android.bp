@@ -38,6 +38,30 @@ amlogic_vendorconfig_cc_defaults {
         hwc_dynamic_switch_viu: {
             cflags: ["-DHWC_DYNAMIC_SWITCH_VIU"],
         },
+
+        systemcontrol_display_type: {
+            TV: {
+                cflags: ["-DSYSTEMCONTROL_DISPLAY_TYPE=\"TV\""],
+            },
+            MID: {
+                cflags: ["-DSYSTEMCONTROL_DISPLAY_TYPE=\"MID\""],
+            },
+            MBOX: {
+                cflags: ["-DSYSTEMCONTROL_DISPLAY_TYPE=\"MBOX\""],
+            },
+        },
+
+        systemcontrol_ui_type: {
+            HD: {
+                cflags: ["-DSYSTEMCONTROL_UI_TYPE=720"],
+            },
+            FHD: {
+                cflags: ["-DSYSTEMCONTROL_UI_TYPE=1080"],
+            },
+            UHD: {
+                cflags: ["-DSYSTEMCONTROL_UI_TYPE=2160"],
+            },
+        },
     },
 }
 
