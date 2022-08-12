@@ -21,10 +21,16 @@
          this key. -->
     <key keyCode="KEYCODE_F1" component="com.droidlogic/.GlobalKeyReceiver" dispatchWhenNonInteractive="true" />
     <key keyCode="KEYCODE_F2" component="com.droidlogic/.GlobalKeyReceiver" dispatchWhenNonInteractive="true" />
+    <key keyCode="KEYCODE_F3" component="com.droidlogic/.GlobalKeyReceiver" dispatchWhenNonInteractive="true" />
+    <key keyCode="KEYCODE_F4" component="com.droidlogic/.GlobalKeyReceiver" dispatchWhenNonInteractive="true" />
     <key keyCode="KEYCODE_SETTINGS" component="com.droidlogic/.GlobalKeyReceiver" />
     <key keyCode="KEYCODE_PAIRING" component="com.droidlogic/.GlobalKeyReceiver" />
     <key keyCode="KEYCODE_F6" component="com.droidlogic/.GlobalKeyReceiver" />
     <key keyCode="KEYCODE_EXPLORER" component="com.android.tv.settings/.GlobalKeyReceiver" />
+    <key keyCode="KEYCODE_BUTTON_3" component="com.droidlogic/.GlobalKeyReceiver" />
+    <key keyCode="KEYCODE_BUTTON_4" component="com.droidlogic/.GlobalKeyReceiver" />
+    <key keyCode="KEYCODE_BUTTON_6" component="com.droidlogic/.GlobalKeyReceiver" />
+    <key keyCode="KEYCODE_BUTTON_7" component="com.droidlogic/.GlobalKeyReceiver" />
     <!-- disable TV global key as LiveTv need them -->
     <!--<key keyCode="KEYCODE_DVR" component="com.google.android.tv/.receiver.GlobalKeyReceiver1" />
     <key keyCode="KEYCODE_GUIDE" component="com.google.android.tv/.receiver.GlobalKeyReceiver" />

@@ -119,6 +119,7 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
                     break;
 
                 case KeyEvent.KEYCODE_F1:
+                case KeyEvent.KEYCODE_BUTTON_3:
                     if (keyAction == KeyEvent.ACTION_UP) {
                         oneTouchPlay(context);
                         intent1.setComponent(new ComponentName(PACKAGE_NAME_YOUTUBE, "com.google.android.apps.youtube.tv.activity.MainActivity"))
@@ -128,18 +129,21 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
                     break;
 
                 case KeyEvent.KEYCODE_F3:
+                case KeyEvent.KEYCODE_BUTTON_6:
+                    if (keyAction == KeyEvent.ACTION_UP) {
+                        intent1.setComponent(new ComponentName("com.amazon.amazonvideo.livingroom", "com.amazon.ignition.IgnitionActivity"));
+                    }
+                    break;
+
+                case KeyEvent.KEYCODE_F4:
+                case KeyEvent.KEYCODE_BUTTON_7:
                     if (keyAction == KeyEvent.ACTION_UP) {
                         intent1.setComponent(new ComponentName("com.android.vending", "com.google.android.finsky.tvmainactivity.TvMainActivity"));
                     }
                     break;
 
-                case KeyEvent.KEYCODE_F4:
-                    if (keyAction == KeyEvent.ACTION_UP) {
-                        intent1.setComponent(new ComponentName(PACKAGE_NAME_PLAYMOVIE, "com.google.android.apps.play.movies.tv.usecase.home.TvHomeActivity"));
-                    }
-                    break;
-
                 case KeyEvent.KEYCODE_F2:
+                case KeyEvent.KEYCODE_BUTTON_4:
                     if (keyAction == KeyEvent.ACTION_UP) {
                         Log.i(TAG, "onReceive:  receive from interactive " + fromNonInteractive );
                         oneTouchPlay(context);
@@ -149,7 +153,9 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
 
                 case KeyEvent.KEYCODE_SETTINGS:
                     if (keyAction == KeyEvent.ACTION_UP) {
+                        oneTouchPlay(context);
                         intent1.setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.MainSettings"));
+                        wakeUp(context);
                     }
                     break;
                 case KeyEvent.KEYCODE_F6:
