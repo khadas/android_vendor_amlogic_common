@@ -12,7 +12,7 @@
         android:key="LOGO_LED_KEY"
         android:title="@string/Logo_LED"
         android:summary="@string/LEDs_default"
-        android:defaultValue="2"
+        android:defaultValue="1"
         android:dialogTitle="@string/LED_red"
         android:entries="@array/Red_LEDs_array"
         android:entryValues="@array/Red_LEDs_array_value">
