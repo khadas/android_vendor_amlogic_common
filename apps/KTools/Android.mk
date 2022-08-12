@@ -8,9 +8,11 @@ LOCAL_MODULE_TAGS   := optional
 LOCAL_MODULE_CLASS  := APPS
 LOCAL_CERTIFICATE   := platform
 LOCAL_MODULE_SUFFIX := .apk
-LOCAL_DEX_PREOPT    := true
 LOCAL_SRC_FILES     := KTools.apk
-LOCAL_MODULE_PATH   := $(PRODUCT_OUT)/system/priv-app
+LOCAL_MODULE_PATH   := $(PRODUCT_OUT)/system_ext/priv-app
+LOCAL_PROGUARD_ENABLED := disabled
+LOCAL_DEX_PREOPT := false
+LOCAL_MULTILIB := 32
 include $(BUILD_PREBUILT)
 
 
