@@ -42,7 +42,8 @@
             android:name=".Launcher"
             android:launchMode="singleTask"
             android:clearTaskOnLaunch="true"
-            android:stateNotNeeded="true">
+            android:stateNotNeeded="true"
+            android:configChanges="orientation|keyboardHidden">
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
