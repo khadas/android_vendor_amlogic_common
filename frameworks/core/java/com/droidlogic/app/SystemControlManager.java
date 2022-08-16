@@ -36,7 +36,6 @@ public class SystemControlManager {
     private static final String TAG                 = "SysControlManager";
 
     //must sync with DisplayMode.h
-    public static final boolean USE_BEST_MODE       = false;
     public static final int DISPLAY_TYPE_NONE       = 0;
     public static final int DISPLAY_TYPE_TABLET     = 1;
     public static final int DISPLAY_TYPE_MBOX       = 2;
