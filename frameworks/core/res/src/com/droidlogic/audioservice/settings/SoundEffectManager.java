@@ -1431,6 +1431,7 @@ public class SoundEffectManager {
        if (Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_SAVED, 0) == 0) {
            Log.i(TAG, "initDap_2_4 first boot.");
            int mode = getDapParamInternal(AudioEffectManager.CMD_DAP_2_4_PROFILE);
+           Log.i(TAG, "PROFILE first boot init mode: " + mode);
            saveDbDap24Param(AudioEffectManager.CMD_DAP_2_4_PROFILE, mode);
            for (int i = AudioEffectManager.SOUND_EFFECT_DAP_2_4_PROFILE_MIN; i < AudioEffectManager.SOUND_EFFECT_DAP_2_4_PROFILE_MAX; i++) {
                mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_PROFILE - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, i);
@@ -1439,6 +1440,10 @@ public class SoundEffectManager {
            Settings.Global.putInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_DAP_SAVED, 1);
        } else {
            value = getDbDap24Param(AudioEffectManager.CMD_DAP_2_4_PROFILE);
+           if (value < 0) {
+                value = getDapParamInternal(AudioEffectManager.CMD_DAP_2_4_PROFILE);
+                saveDbDap24Param(AudioEffectManager.CMD_DAP_2_4_PROFILE, value);
+           }
            Log.i(TAG, "PROFILE init value: " + value);
            mDap.setParameter(AudioEffectManager.CMD_DAP_2_4_PROFILE - AudioEffectManager.CMD_DAP_2_4_BASE_VALUE, value);
 
