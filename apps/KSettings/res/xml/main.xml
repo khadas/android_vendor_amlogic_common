@@ -3,15 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceScreen
-        android:title="@string/Ethernet"
-        android:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.khadas.ksettings.Ethernet_Preference"
-            android:targetPackage="com.khadas.ksettings" />
-    </PreferenceScreen>
-
-
-    <PreferenceScreen
         android:title="@string/DisplaySound_Setting"
         android:iconSpaceReserved="false">
         <intent
@@ -72,14 +63,6 @@
             android:targetPackage="com.khadas.schpwronoff" />
     </PreferenceScreen>
 
-<!--    <PreferenceScreen-->
-<!--        android:title="@string/Gsensor"-->
-<!--        android:iconSpaceReserved="false">-->
-<!--        <intent-->
-<!--            android:targetClass="com.khadas.ksettings.Gsensor_Preference"-->
-<!--            android:targetPackage="com.khadas.ksettings" />-->
-<!--    </PreferenceScreen>-->
-
     <PreferenceScreen
         android:title="@string/Updater"
         android:iconSpaceReserved="false">
@@ -87,17 +70,5 @@
             android:targetClass="com.droidlogic.updater.ui.MainActivity"
             android:targetPackage="com.droidlogic.updater" />
     </PreferenceScreen>
-
-<!--    <ListPreference-->
-<!--        android:key="USB_PCIE_KEY"-->
-<!--        android:iconSpaceReserved="false"-->
-<!--        android:title="@string/USB_PCIE"-->
-<!--        android:summary="@string/USB_PCIE_default"-->
-<!--        android:defaultValue="1"-->
-<!--        android:dialogTitle="@string/USB_PCIE_Dialog_title"-->
-<!--        android:entries="@array/USB_PCIE_array"-->
-<!--        android:entryValues="@array/USB_PCIE_array_value">-->
-<!--    </ListPreference>-->
-
 
 </PreferenceScreen>

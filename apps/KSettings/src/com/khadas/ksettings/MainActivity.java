@@ -19,29 +19,20 @@ import android.widget.Toast;
 import java.io.IOException;
 
 
-public class MainActivity extends PreferenceActivity implements Preference.OnPreferenceClickListener {
+public class MainActivity extends PreferenceActivity {
 
-    private ListPreference USB_PCIE_Preference;
     private ListPreference FAN_Preference;
 
     private ListPreference POWERKEY_Preference;
 
     private EditTextPreference FUNCTIONKEY_Preference;
 
-    private SwitchPreference WOL_Preference;
-    private SwitchPreference HOTSPOT_Preference;
-
-    //private PreferenceScreen HDMI_IN_Preference;
-
     private Context mContext;
 
-    //private static final String USB_PCIE_KEY = "USB_PCIE_KEY";
     private static final String FAN_KEY = "FAN_KEY";
     private static final String POWER_KEY = "POWER_KEY";
     private static final String FUNCTION_KEY = "FUNCTION_KEY";
-    //private static final String WOL_KEY = "WOL_KEY";
-    private static final String HOTSPOT_KEY = "HOTSPOT_KEY";
-    private static final String HDMI_IN_KEY = "HDMI_IN_KEY";
+    //private TvOptionSettingManager mTvOptionSettingManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,9 +42,6 @@ public class MainActivity extends PreferenceActivity implements Preference.OnPre
         getActionBar().setHomeButtonEnabled(true);
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
-//        USB_PCIE_Preference = (ListPreference) findPreference(USB_PCIE_KEY);
-//        bindPreferenceSummaryToValue(USB_PCIE_Preference);
-//        getPreferenceScreen().removePreference(USB_PCIE_Preference);
 
         FAN_Preference = (ListPreference) findPreference(FAN_KEY);
         bindPreferenceSummaryToValue(FAN_Preference);
@@ -63,30 +51,6 @@ public class MainActivity extends PreferenceActivity implements Preference.OnPre
 
         FUNCTIONKEY_Preference = (EditTextPreference) findPreference(FUNCTION_KEY);
         bindPreferenceSummaryToValue(FUNCTIONKEY_Preference);
-
-        //WOL_Preference = (SwitchPreference)findPreference(WOL_KEY);
-        //WOL_Preference.setChecked(true);
-        //WOL_Preference.setOnPreferenceClickListener(this);
-//        try {
-//            String ret = ComApi.execCommand(new String[]{"sh", "-c", "cat /sys/class/mcu/wol_enable"});
-//            if(ret.equals("1")){
-//                WOL_Preference.setChecked(true);
-//            }else{
-//                WOL_Preference.setChecked(false);
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-//        HOTSPOT_Preference = (SwitchPreference)findPreference(HOTSPOT_KEY);
-//        //HOTSPOT_Preference.setChecked(true);
-//        HOTSPOT_Preference.setOnPreferenceClickListener(this);
-//        getPreferenceScreen().removePreference(HOTSPOT_Preference);
-
-        //HDMI_IN_Preference = (PreferenceScreen) findPreference(HDMI_IN_KEY);
-        //HDMI_IN_Preference.setOnPreferenceClickListener(this);
-
-
     }
 
     /**
@@ -187,56 +151,5 @@ public class MainActivity extends PreferenceActivity implements Preference.OnPre
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
 
-    }
-
-    @Override
-    public boolean onPreferenceClick(Preference preference) {
-        final String key = preference.getKey();
-//        if (WOL_KEY.equals(key)){
-//            if (WOL_Preference.isChecked()) {
-//                //Toast.makeText(this,"true",Toast.LENGTH_SHORT).show();
-//                try {
-//                    ComApi.execCommand(new String[]{"sh", "-c", "echo 1 > /sys/class/mcu/wol_enable"});
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }else {
-//                //Toast.makeText(this,"false",Toast.LENGTH_SHORT).show();
-//                try {
-//                    ComApi.execCommand(new String[]{"sh", "-c", "echo 0 > /sys/class/mcu/wol_enable"});
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }else if (HOTSPOT_KEY.equals(key)){
-//            if (HOTSPOT_Preference.isChecked()) {
-//                Toast.makeText(this,"true",Toast.LENGTH_SHORT).show();
-//            }else {
-//                Toast.makeText(this,"false",Toast.LENGTH_SHORT).show();
-//            }
-//        }else if (HDMI_IN_KEY.equals(key)){
-//
-////            TvInputManager mTvInputManager = (TvInputManager)mContext.getSystemService(Context.TV_INPUT_SERVICE);
-////            List<TvInputInfo> inputList = mTvInputManager.getTvInputList();
-////            for (TvInputInfo input : inputList) {
-////                DroidLogicTvUtils.setSearchType(mContext, input.getId());
-////                Log.d("wjh","===" + input.getId());
-////                if(input.getId().contains(".Hdmi2InputService/HW6")) {
-////                    Intent intent = new Intent(TvInputManager.ACTION_SETUP_INPUTS);
-////                    intent.putExtra("from_tv_source", true);
-////                    intent.putExtra(TvInputInfo.EXTRA_INPUT_ID, input.getId());
-////                    startActivity(intent);
-////                    break;
-////                }
-////            }
-//            //HDMI2
-//            Intent intent = new Intent(TvInputManager.ACTION_SETUP_INPUTS);
-//            intent.putExtra("from_tv_source", true);
-//            intent.putExtra(TvInputInfo.EXTRA_INPUT_ID, "com.droidlogic.tvinput/.services.Hdmi2InputService/HW6");
-//            startActivity(intent);
-//            //Settings.System.putInt(mContext.getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, TvControlManager.AM_AUDIO_HDMI2);
-//
-//        }
-        return true;
     }
 }

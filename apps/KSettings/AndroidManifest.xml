@@ -42,29 +42,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Ethernet_Preference"
-            android:label="@string/Ethernet">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-            </intent-filter>
-        </activity>
-        <activity
             android:name=".DisplaySound_Preference"
             android:label="@string/DisplaySound_Setting">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".LogoLED_Preference"
-            android:label="@string/Logo_LED_control">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".Gsensor_Preference"
-            android:label="@string/Gsensor">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>

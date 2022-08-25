@@ -1,23 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
-    <com.khadas.ksettings.MipiSeekBarPreference
-        android:dialogTitle="@string/mipi_Brightness_title"
-        android:title="@string/mipi_Brightness_title"
-        android:summary="100"
-        android:key="mipi_Brightness"
-        android:dialogLayout="@layout/brightness_prefs" />
-
-    <com.khadas.ksettings.VboSeekBarPreference
-        android:dialogTitle="@string/vbo_Brightness_title"
-        android:title="@string/vbo_Brightness_title"
-        android:summary="100"
-        android:key="vbo_Brightness"
-        android:dialogLayout="@layout/brightness_prefs" />
-
-    <SwitchPreference
-        android:key="FORCE_LAN_FOR_APP_KEY"
-        android:title="@string/Force_land_for_app"/>
 
     <ListPreference
         android:key="DISPLAY_ROTATION_KEY"
@@ -33,7 +16,7 @@
         android:key="DISPLAY_DENSITY_KEY"
         android:title="@string/Display_screen_density"
         android:summary="@string/Screen_density_default"
-        android:defaultValue="7"
+        android:defaultValue="4"
         android:dialogTitle="@string/Display_screen_density"
         android:entries="@array/Screen_density_array"
         android:entryValues="@array/Screen_density_array_value">

@@ -23,67 +23,12 @@ public class DisplaySound_Preference extends PreferenceActivity implements Prefe
     private ListPreference Screen_rotation_Preference;
     private ListPreference Screen_density_Preference;
 
-    private SwitchPreference Force_land_Preference;
-
-    private MipiSeekBarPreference mipi_Preference;
-    private VboSeekBarPreference vbo_Preference;
-
     private PreferenceScreen MORE_DISPLAY_Preference;
-
-    private static final String MIPI_BRIGHTNESS_KEY = "mipi_Brightness";
-    private static final String VBO_BRIGHTNESS_KEY = "vbo_Brightness";
 
     private static final String DISPLAY_ROTATION_KEY = "DISPLAY_ROTATION_KEY";
     private static final String DISPLAY_DENSITY_KEY = "DISPLAY_DENSITY_KEY";
-
-
-    private static final String FORCE_LAN_FOR_APP_KEY = "FORCE_LAN_FOR_APP_KEY";
-
     private static final String MORE_DISPLAY_SETTINGS = "MORE_DISPLAY_SETTINGS";
-
-    private String mipi,vbo;
-
     private static Context mContext;
-
-    private static boolean status_flag = true;
-
-    public static final int MSG_UI_BL = 101;
-
-    private Handler uiHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_UI_BL:
-                    //mipi -- /sys/class/backlight/aml-bl/brightness
-                    //vbo -- /sys/class/backlight/aml-bl1/brightness
-                    try {
-                        mipi = ComApi.execCommand(new String[]{"sh", "-c", "cat /sys/class/backlight/aml-bl/brightness"});
-                        if(mipi.equals("") || mipi.contains("No such file or directory")){
-                            mipi_Preference.setSummary("No MIPI Panel");
-                            mipi_Preference.setEnabled(false);
-                        }else {
-                            mipi_Preference.setSummary("" + mipi);
-                            mipi_Preference.setEnabled(true);
-                        }
-
-                        vbo = ComApi.execCommand(new String[]{"sh", "-c", "cat /sys/class/backlight/aml-bl1/brightness"});
-                        if(vbo.equals("") || vbo.contains("No such file or directory")){
-                            vbo_Preference.setSummary("No VBO Panel");
-                            vbo_Preference.setEnabled(false);
-                        }else {
-                            vbo_Preference.setSummary("" + vbo);
-                            vbo_Preference.setEnabled(true);
-                        }
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,18 +40,11 @@ public class DisplaySound_Preference extends PreferenceActivity implements Prefe
 
         mContext = this;
 
-        mipi_Preference = (MipiSeekBarPreference) findPreference(MIPI_BRIGHTNESS_KEY);
-        vbo_Preference = (VboSeekBarPreference) findPreference(VBO_BRIGHTNESS_KEY);
-
         Screen_rotation_Preference = (ListPreference) findPreference(DISPLAY_ROTATION_KEY);
         bindPreferenceSummaryToValue(Screen_rotation_Preference);
 
         Screen_density_Preference = (ListPreference) findPreference(DISPLAY_DENSITY_KEY);
         bindPreferenceSummaryToValue(Screen_density_Preference);
-
-        Force_land_Preference = (SwitchPreference)findPreference(FORCE_LAN_FOR_APP_KEY);
-        Force_land_Preference.setOnPreferenceClickListener(this);
-        getPreferenceScreen().removePreference(Force_land_Preference);
 
         MORE_DISPLAY_Preference = (PreferenceScreen)findPreference(MORE_DISPLAY_SETTINGS);
         MORE_DISPLAY_Preference.setOnPreferenceClickListener(this);
@@ -115,33 +53,12 @@ public class DisplaySound_Preference extends PreferenceActivity implements Prefe
     @Override
     protected void onResume() {
         super.onResume();
-        status_flag = true;
-        new Thread (new Runnable() {
-            @Override
-            public void run() {
-                // do ui operate
-                while (status_flag){
-                    //uiHandler.removeMessages(MSG_UI_BL);
-                    //uiHandler.sendEmptyMessageDelayed(MSG_UI_BL,100);
-                    //Message msg= uiHandler.obtainMessage(MSG_UI_BL,"HW Addr:"+hwaddr+"  IP Addr: "+ip);
-                    //uiHandler.sendMessageDelayed(msg,100);
-
-                    try {
-                        Thread.sleep(1 * 1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }).start();
-
     }
 
 
     @Override
     protected void onStop() {
         super.onStop();
-        status_flag = false;
     }
 
     /**
@@ -200,13 +117,7 @@ public class DisplaySound_Preference extends PreferenceActivity implements Prefe
     @Override
     public boolean onPreferenceClick(Preference preference) {
         final String key = preference.getKey();
-        if (FORCE_LAN_FOR_APP_KEY.equals(key)){
-            if (Force_land_Preference.isChecked()) {
-                Toast.makeText(this,"true",Toast.LENGTH_SHORT).show();
-            }else {
-                Toast.makeText(this,"false",Toast.LENGTH_SHORT).show();
-            }
-        }else if (MORE_DISPLAY_SETTINGS.equals(key)){
+        if (MORE_DISPLAY_SETTINGS.equals(key)){
             SystemProperties.set("persist.sys.use.tv_settings","1");
             Intent intent = new Intent();
             intent.setClassName("com.android.tv.settings", "com.android.tv.settings.device.displaysound.DisplaySoundActivity");
