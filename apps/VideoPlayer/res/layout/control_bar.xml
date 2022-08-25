@@ -104,13 +104,13 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_marginTop="20dip"
-        android:layout_marginRight="30dip">
+        android:layout_marginLeft="30dip">
         <ImageView
             android:id="@+id/CertificationDoblyVision"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:src="@drawable/certifi_dobly_vision_gray"
-            android:layout_marginLeft="200dp"
+
             android:visibility="gone">
         </ImageView>
         <ImageView
@@ -118,6 +118,8 @@
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:src="@drawable/certifi_dobly_gray"
+            android:layout_toRightOf="@+id/CertificationDoblyVision"
+            android:layout_marginLeft="5dip"
             android:visibility="gone">
         </ImageView>
         <ImageView
@@ -271,6 +273,7 @@
                     android:layout_weight="1"
                     android:src="@drawable/play_3d"
                     android:background="@drawable/btn_button"
+                    android:visibility="gone"
                     android:gravity="center">
                 </ImageButton>
 

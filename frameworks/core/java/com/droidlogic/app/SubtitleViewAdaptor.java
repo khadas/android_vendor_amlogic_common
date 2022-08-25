@@ -115,6 +115,7 @@ class SubtitleViewAdaptor {
         tlayout.setPadding(0, 0, 0, 50);
         tlayout.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
         mTextView = (TextView) new TextView(mContext);
+        mTextView.setTextDirection(View.TEXT_DIRECTION_LTR);
         tlayout.addView(mTextView, lparams);
 
         RelativeLayout ilayout = new RelativeLayout(mContext);

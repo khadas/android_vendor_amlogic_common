@@ -124,6 +124,7 @@ import java.util.Locale;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.BroadcastReceiver;
+import android.content.ActivityNotFoundException;
 
 
 public class VideoPlayer extends Activity {
@@ -142,7 +143,7 @@ public class VideoPlayer extends Activity {
         private String mPicStrs[] = new String[]{"01_colorChecker_FHD_Rec709_Gamma2.2","02_colorSquare_FHD_Rec709_Gamma2.2"
                                                                           ,"03_colorSquare_UHD_Rec709_Gamma2.2","04_colorSquare_transparent"};
 
-        private LinearLayout ctlbar = null; //for OSD bar layer 1; controller bar
+        private LinearLayout controlBar = null; //for OSD bar layer 1; controller bar
         private LinearLayout optbar = null; //for OSD bar layer 2; option bar
         private LinearLayout subwidget = null; //for subtitle switch
         //private LinearLayout audioTuningwidget = null;// audio tuning
@@ -308,6 +309,7 @@ public class VideoPlayer extends Activity {
 
         private static final String DTS_TYPE = "DTS";
         private static final String DOLBY_TYPE = "Dolby Audio";
+        private boolean mStartActivity = false;
 
         private final BroadcastReceiver mVolumeReceiver = new BroadcastReceiver() {
             @Override
@@ -340,12 +342,12 @@ public class VideoPlayer extends Activity {
             if (isDolbyVision) {
                 certificationDoblyVisionView.setImageResource(R.drawable.cert_dolby_vision_gray_w);
                 certificationDoblyVisionView.setVisibility (View.VISIBLE);
-                certificationDoblyView.setVisibility (View.VISIBLE);
+                certificationDoblyView.setVisibility (View.GONE);
                 certificationDoblyPlusView.setVisibility (View.GONE);
                 certificationDTSView.setVisibility (View.GONE);
                 certificationDTSExpressView.setVisibility (View.GONE);
                 certificationDTSHDMasterAudioView.setVisibility (View.GONE);
-                mHandler.sendEmptyMessageDelayed(MSG_CLOSE, 2000);
+                mHandler.sendEmptyMessageDelayed(MSG_CLOSE_DV, 3000);
                 return;
             }
 
@@ -402,6 +404,25 @@ public class VideoPlayer extends Activity {
                  certificationDTSExpressView.setVisibility (View.GONE);
                  certificationDTSHDMasterAudioView.setVisibility (View.GONE);
                  mHandler.sendEmptyMessageDelayed(MSG_CLOSE, 2000);
+            }
+        }
+        private boolean isNeedShowDolbyVersionLogo() {
+            if (mSystemControl != null) {
+               boolean ret = mSystemControl.getPropertyBoolean("ro.vendor.platform.has.tvuimode", false);//is tv
+               ret = ret & mSystemControl.getPropertyBoolean("vendor.system.support.dolbyvision", false);//has dv ko
+               return ret;
+            } else {
+               return false;
+            }
+        }
+        private void showDolbyVersionLogo() {
+            if (mOption== null || mMediaInfo== null || mMediaInfo.getVideoTotalNum() <= 0) {
+                return;
+            }
+            String videoMime = mMediaInfo.getVideoFormatByMetrics();
+            if (videoMime!= null && videoMime.contains("dolby-vision")) {
+                Log.i(TAG, "dolby vision, show icon");
+                showCertification(true, 0);
             }
         }
 
@@ -573,7 +594,10 @@ public class VideoPlayer extends Activity {
         public void onPause() {
             super.onPause();
             LOGI (TAG, "[onPause]");
-            pause();
+            if (!mStartActivity) {
+                pause();
+                mStartActivity = false;
+            }
         }
 
         @Override
@@ -692,6 +716,7 @@ public class VideoPlayer extends Activity {
         private static final int MSG_SHOW_CERTIFICATION = 0xF9;
         private static final int MSG_CONTINUE_SWITCH_DELAY = 0xFA;
         private static final int MSG_CLOSE = 0xFB;    //
+        private static final int MSG_CLOSE_DV = 0xFC;
         private boolean ignoreUpdateProgressbar = false;
         private Handler mHandler = new Handler() {
             @Override
@@ -768,11 +793,14 @@ public class VideoPlayer extends Activity {
                          if (certificationDoblyView.getVisibility() == View.VISIBLE) {
                              certificationDoblyView.setVisibility (View.GONE);
                          }
-                         if (certificationDoblyVisionView.getVisibility() == View.VISIBLE) {
-                    certificationDoblyVisionView.setVisibility (View.GONE);
-                         }
                         //mHandler.removeCallbacksAndMessages(null);
                         break;
+                    case MSG_CLOSE_DV:
+                        Log.d(TAG,"dolby version close time");
+                         if (certificationDoblyVisionView.getVisibility() == View.VISIBLE) {
+                             certificationDoblyVisionView.setVisibility (View.GONE);
+                         }
+                         break;
                 }
             }
         };
@@ -790,10 +818,10 @@ public class VideoPlayer extends Activity {
                     }
                     updateIconResource();
                 }
-                LOGI (TAG, "[updateProgressbar]curtime:" + curtime + ",totaltime:" + totaltime + ",progressBar:" + progressBar + ",ctlbar:" + ctlbar + ",ctlbar.getVisibility():" + ctlbar.getVisibility());
+
                 if (curTimeTx != null && totalTimeTx != null && progressBar != null) {
                     int flag = getCurOsdViewFlag();
-                    if ( (OSD_CTL_BAR == flag) && (null != ctlbar) && (View.VISIBLE == ctlbar.getVisibility())) { // check control bar is showing
+                    if ( (OSD_CTL_BAR == flag) && (null != controlBar) && (View.VISIBLE == controlBar.getVisibility())) { // check control bar is showing
                         curTimeTx.setText (secToTime (curtime / 1000));
                         totalTimeTx.setText (secToTime (totaltime / 1000));
                         if (totaltime != 0) {
@@ -954,7 +982,7 @@ public class VideoPlayer extends Activity {
             certificationDTSView.setVisibility (View.GONE);
             certificationDTSExpressView.setVisibility (View.GONE);
             certificationDTSHDMasterAudioView.setVisibility (View.GONE);
-            ctlbar = (LinearLayout) findViewById (R.id.infobarLayout);
+            controlBar = (LinearLayout) findViewById (R.id.infobarLayout);
             optbar = (LinearLayout) findViewById (R.id.morebarLayout);
             subwidget = (LinearLayout) findViewById (R.id.LinearLayout_sub);
             //audioTuningwidget = (LinearLayout) findViewById (R.id.LinearLayout_audioTuning);
@@ -965,7 +993,7 @@ public class VideoPlayer extends Activity {
             audioOffset = (LinearLayout) findViewById (R.id.audio_offset);
 
             infowidget = (LinearLayout) findViewById (R.id.dialog_layout);
-            ctlbar.setVisibility (View.GONE);
+            controlBar.setVisibility (View.GONE);
             optbar.setVisibility (View.GONE);
             subwidget.setVisibility (View.GONE);
             //audioTuningwidget.setVisibility (View.GONE);
@@ -1853,8 +1881,8 @@ public class VideoPlayer extends Activity {
                     //exitOtherWidget(play3dBtn);
                     if ((null != otherwidget) && (View.VISIBLE == otherwidget.getVisibility())) {
                         otherwidget.setVisibility(View.GONE);
-                        if ((null != ctlbar) && (View.GONE == ctlbar.getVisibility()))
-                            ctlbar.setVisibility(View.VISIBLE);
+                        if ((null != controlBar) && (View.GONE == controlBar.getVisibility()))
+                            controlBar.setVisibility(View.VISIBLE);
                         play3dBtn.requestFocus();
                         play3dBtn.requestFocusFromTouch();
                         startOsdTimeout();
@@ -3178,7 +3206,7 @@ public class VideoPlayer extends Activity {
         private void sendContinueSwitchDelayMsg() {
             if (mHandler != null) {
                 Message msg = mHandler.obtainMessage (MSG_CONTINUE_SWITCH_DELAY);
-                mHandler.sendMessageDelayed (msg, 1000);
+                mHandler.sendMessageDelayed (msg, 2000);
                 LOGI (TAG, "[sendContinueSwitchDelayMsg]sendMessageDelayed MSG_CONTINUE_SWITCH_DELAY");
             }
         }
@@ -3308,6 +3336,9 @@ public class VideoPlayer extends Activity {
                     Message msg = mHandler.obtainMessage (MSG_UPDATE_PROGRESS);
                     mHandler.sendMessageDelayed (msg, MSG_SEND_DELAY);
                 }
+                if (isNeedShowDolbyVersionLogo()) {
+                    showDolbyVersionLogo();
+                }
             }
         }
 
@@ -3346,6 +3377,7 @@ public class VideoPlayer extends Activity {
                 ///mMediaPlayer.setIgnoreSubtitle(false); //should sync with MediaPlayer.java
                 mMediaPlayer = null;
                 mSubtitleManager.release();
+                mSubtitleManager.destory();
                 mSubtitleManager = null;
                 mState = STATE_STOP;
                 //mStateBac = STATE_STOP; //shield for resume play while is in pause status
@@ -3882,6 +3914,9 @@ public class VideoPlayer extends Activity {
                     return;
                 }
                 sendShowCertificationMsg();
+                if (isNeedShowDolbyVersionLogo()) {
+                    showDolbyVersionLogo();
+                }
             }
         };
 
@@ -4408,8 +4443,8 @@ public class VideoPlayer extends Activity {
                     otherwidget.setVisibility (View.VISIBLE);
                     if ( (null != optbar) && (View.VISIBLE == optbar.getVisibility()))
                         optbar.setVisibility (View.GONE);
-                    if ((null != ctlbar) && (View.VISIBLE == ctlbar.getVisibility()))
-                        ctlbar.setVisibility(View.GONE);
+                    if ((null != controlBar) && (View.VISIBLE == controlBar.getVisibility()))
+                        controlBar.setVisibility(View.GONE);
                 }
                 otherwidgetTitleTx.setText (StrId);
                 otherwidget.requestFocus();
@@ -4534,9 +4569,9 @@ public class VideoPlayer extends Activity {
         }
 
         private void showCtlBar() {
-            LOGI (TAG, "[showCtlBar]ctlbar:" + ctlbar + ",ctlbar.getVisibility():" + ctlbar.getVisibility());
+            LOGI (TAG, "[showCtlBar]controlBar:" + controlBar + ",controlBar.getVisibility():" + controlBar.getVisibility());
             LOGI (TAG, "[showCtlBar]optbar:" + optbar + ",optbar.getVisibility():" + optbar.getVisibility());
-            if ( (null != ctlbar) && (View.GONE == ctlbar.getVisibility())) {
+            if ( (null != controlBar) && (View.GONE == controlBar.getVisibility())) {
                 //@@getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
                 if ( (null != optbar) && (View.VISIBLE == optbar.getVisibility())) {
                     optbar.setVisibility (View.GONE);
@@ -4553,9 +4588,9 @@ public class VideoPlayer extends Activity {
                 if ( (null != infowidget) && (View.VISIBLE == infowidget.getVisibility())) {
                     infowidget.setVisibility (View.GONE);
                 }
-                ctlbar.setVisibility (View.VISIBLE);
-                ctlbar.requestFocus();
-                //ctlbar.requestFocusFromTouch();
+                controlBar.setVisibility (View.VISIBLE);
+                controlBar.requestFocus();
+                //controlBar.requestFocusFromTouch();
                 //optBtn.requestFocus();
                 //optBtn.requestFocusFromTouch();
                 setCurOsdViewFlag (OSD_CTL_BAR);
@@ -4567,8 +4602,8 @@ public class VideoPlayer extends Activity {
         private void showOptBar() {
             if ( (null != optbar) && (View.GONE == optbar.getVisibility())) {
                 //@@getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                if ( (null != ctlbar) && (View.VISIBLE == ctlbar.getVisibility())) {
-                    ctlbar.setVisibility (View.GONE);
+                if ( (null != controlBar) && (View.VISIBLE == controlBar.getVisibility())) {
+                    controlBar.setVisibility (View.GONE);
                 }
                 if ( (null != subwidget) && (View.VISIBLE == subwidget.getVisibility())) {
                     subwidget.setVisibility (View.GONE);
@@ -4595,8 +4630,8 @@ public class VideoPlayer extends Activity {
         private void showNoOsdView() {
             stopOsdTimeout();
             closeCertification();
-            if ( (null != ctlbar) && (View.VISIBLE == ctlbar.getVisibility())) {
-                ctlbar.setVisibility (View.GONE);
+            if ( (null != controlBar) && (View.VISIBLE == controlBar.getVisibility())) {
+                controlBar.setVisibility (View.GONE);
             }
             if ( (null != optbar) && (View.VISIBLE == optbar.getVisibility())) {
                 optbar.setVisibility (View.GONE);
@@ -4620,7 +4655,7 @@ public class VideoPlayer extends Activity {
 
         private void showOsdView() {
             LOGI (TAG, "[showOsdView]");
-            if (null == ctlbar) {
+            if (null == controlBar) {
                 return;
             }
             if (null == optbar) {
@@ -4646,7 +4681,7 @@ public class VideoPlayer extends Activity {
         }
 
         private void switchOsdView() {
-            if (null == ctlbar) {
+            if (null == controlBar) {
                 return;
             }
             if (null == optbar) {
@@ -4772,10 +4807,10 @@ public class VideoPlayer extends Activity {
 
         //@@--------this part for touch and key event-------------------------------------------------------------------
         public boolean onTouchEvent (MotionEvent event) {
-            LOGI (TAG, "[onTouchEvent]ctlbar.getVisibility():" + ctlbar.getVisibility() + ",event.getAction():" + event.getAction());
+            LOGI (TAG, "[onTouchEvent]controlBar.getVisibility():" + controlBar.getVisibility() + ",event.getAction():" + event.getAction());
             super.onTouchEvent (event);
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                if ( (ctlbar.getVisibility() == View.VISIBLE) || (optbar.getVisibility() == View.VISIBLE)) {
+                if ( (controlBar.getVisibility() == View.VISIBLE) || (optbar.getVisibility() == View.VISIBLE)) {
                     showNoOsdView();
                 }
                 else if ( (View.VISIBLE == otherwidget.getVisibility())
@@ -4796,19 +4831,19 @@ public class VideoPlayer extends Activity {
         }
 
         public boolean onKeyUp (int keyCode, KeyEvent msg) {
-            LOGI (TAG, "[onKeyUp]keyCode:" + keyCode + ",ctlbar.getVisibility():" + ctlbar.getVisibility());
+            LOGI (TAG, "[onKeyUp]keyCode:" + keyCode + ",controlBar.getVisibility():" + controlBar.getVisibility());
             /*if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
                 startOsdTimeout();
             }*/
-            if (!browserBackDoing && ( (ctlbar.getVisibility() == View.VISIBLE) || (optbar.getVisibility() == View.VISIBLE))) {
+            if (!browserBackDoing && ( (controlBar.getVisibility() == View.VISIBLE) || (optbar.getVisibility() == View.VISIBLE))) {
                 startOsdTimeout();
             }
             return false;
         }
 
         public boolean onKeyDown (int keyCode, KeyEvent msg) {
-            LOGI (TAG, "[onKeyDown]keyCode:" + keyCode + ",ctlbar.getVisibility():" + ctlbar.getVisibility() + ",intouch_flag:" + intouch_flag);
-            if ( (ctlbar.getVisibility() == View.VISIBLE) || (optbar.getVisibility() == View.VISIBLE)) {
+            LOGI (TAG, "[onKeyDown]keyCode:" + keyCode + ",controlBar.getVisibility():" + controlBar.getVisibility() + ",intouch_flag:" + intouch_flag);
+            if ( (controlBar.getVisibility() == View.VISIBLE) || (optbar.getVisibility() == View.VISIBLE)) {
                 if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
                     startOsdTimeout();
                 }
@@ -4817,14 +4852,14 @@ public class VideoPlayer extends Activity {
                 }
             }
             if (intouch_flag) {
-                if ( (ctlbar.getVisibility() == View.VISIBLE) || (optbar.getVisibility() == View.VISIBLE)) {
+                if ( (controlBar.getVisibility() == View.VISIBLE) || (optbar.getVisibility() == View.VISIBLE)) {
                     if (keyCode == KeyEvent.KEYCODE_DPAD_UP
                             || keyCode == KeyEvent.KEYCODE_DPAD_DOWN
                             || keyCode == KeyEvent.KEYCODE_DPAD_LEFT
                             || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
                         int flag = getCurOsdViewFlag();
                         if (OSD_CTL_BAR == flag) {
-                            ctlbar.requestFocusFromTouch();
+                            controlBar.requestFocusFromTouch();
                         }
                         else if (OSD_OPT_BAR == flag) {
                             optbar.requestFocusFromTouch();
@@ -4834,7 +4869,7 @@ public class VideoPlayer extends Activity {
                 }
             }
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP) { // add for progressBar request focus fix bug 87713
-                if ( (getCurOsdViewFlag() == OSD_CTL_BAR) && (ctlbar.getVisibility() == View.VISIBLE)) {
+                if ( (getCurOsdViewFlag() == OSD_CTL_BAR) && (controlBar.getVisibility() == View.VISIBLE)) {
                     if (progressBar != null) {
                         progressBar.requestFocus();
                     }
@@ -4844,7 +4879,7 @@ public class VideoPlayer extends Activity {
                 }
             }
             if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
-                if ( (ctlbar.getVisibility() == View.GONE) && (optbar.getVisibility() == View.GONE)) {
+                if ( (controlBar.getVisibility() == View.GONE) && (optbar.getVisibility() == View.GONE)) {
                     showOsdView();
                     int flag = getCurOsdViewFlag();
                     if (OSD_CTL_BAR == flag) {
@@ -4945,7 +4980,7 @@ public class VideoPlayer extends Activity {
                         play3dBtn.requestFocus();
                     }
                     else {
-                        if ((null != ctlbar) && (View.VISIBLE == ctlbar.getVisibility())) {
+                        if ((null != controlBar) && (View.VISIBLE == controlBar.getVisibility())) {
                             showNoOsdView();
                         }
                         else {
@@ -4954,8 +4989,8 @@ public class VideoPlayer extends Activity {
                     }
                 }
             }
-            else if (keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_9) {
-                if ( (ctlbar.getVisibility() == View.VISIBLE) || (optbar.getVisibility() == View.VISIBLE)) {
+            else if (keyCode == KeyEvent.KEYCODE_9) {
+                if ( (controlBar.getVisibility() == View.VISIBLE) || (optbar.getVisibility() == View.VISIBLE)) {
                     showNoOsdView();
                 }
                 else {
@@ -5055,6 +5090,21 @@ public class VideoPlayer extends Activity {
                 Intent intent = new Intent();
                 intent.setComponent(ComponentName.unflattenFromString(TV_GLOBAL_SETTINGS));
                 startActivity(intent);
+            }
+            else if (keyCode == KeyEvent.KEYCODE_MENU) {
+                try {
+                    String TV_PICTURE_MODE = "com.android.tv.settings/.pqsettings.PictureModeActivity";
+                    Intent intent = new Intent();
+                    intent.setComponent(ComponentName.unflattenFromString(TV_PICTURE_MODE));
+                    startActivity(intent);
+                    mStartActivity = true;
+                } catch (ActivityNotFoundException e) {
+                    Log.e(TAG, "activity not found");
+                    mStartActivity = false;
+                } catch (SecurityException e) {
+                    Log.e(TAG, "security Exception");
+                    mStartActivity = false;
+                }
             }
             else {
                 return super.onKeyDown (keyCode, msg);

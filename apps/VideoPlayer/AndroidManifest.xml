@@ -25,6 +25,7 @@
 
     <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="false"
                  android:banner="@drawable/banner" android:requestLegacyExternalStorage="true"
+                 android:supportsRtl="true"
                  android:usesCleartextTraffic="true">
 
         <uses-library android:name="droidlogic.software.core" />
