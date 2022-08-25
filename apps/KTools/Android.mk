@@ -6,11 +6,12 @@ LOCAL_MODULE        := KTools
 LOCAL_MODULE_OWNER  := khadas
 LOCAL_MODULE_TAGS   := optional
 LOCAL_MODULE_CLASS  := APPS
-LOCAL_CERTIFICATE   := PRESIGNED
+LOCAL_CERTIFICATE   := platform
 LOCAL_MODULE_SUFFIX := .apk
-LOCAL_DEX_PREOPT    := true
 LOCAL_SRC_FILES     := KTools.apk
-LOCAL_MODULE_PATH   := $(PRODUCT_OUT)/system/priv-app
+LOCAL_MODULE_PATH   := $(PRODUCT_OUT)/system_ext/priv-app
+LOCAL_PROGUARD_ENABLED := disabled
+LOCAL_DEX_PREOPT := false
 include $(BUILD_PREBUILT)
 
 
