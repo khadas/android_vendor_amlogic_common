@@ -65,6 +65,7 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
     private static final int  PENDING_KEY_NULL = -1;
     private static final String EXTRA_BEGAN_FROM_NON_INTERACTIVE =
             "EXTRA_BEGAN_FROM_NON_INTERACTIVE";
+    private boolean mIsBootCompleted = false;
     private static final String HOTWORDMIC_AUTH = "atv.hotwordmic";
     //table name
     private static final String TOGGLESTATE = "togglestate";
@@ -110,6 +111,10 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+            mIsBootCompleted = true;
+        }
+
         if ("android.intent.action.GLOBAL_BUTTON".equals(intent.getAction())) {
             String component ;
             Intent intent1 = new Intent();
@@ -120,7 +125,7 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
             int keyCode = event.getKeyCode();
             int keyAction = event.getAction();
             Log.i(TAG, "onReceive:"+"keyAction<" + keyAction+"> keyCode: " + keyCode );
-            if (!isTvSetupComplete(context)) {
+            if (!mIsBootCompleted || !isTvSetupComplete(context)) {
                   Log.i(TAG, "Set up incomplete. Ignoring KeyEvent: " + keyCode);
                   return;
             }
@@ -235,15 +240,14 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
     private UserHandle getCurrentUser(Context context) {
         final ActivityManager activityManager = (ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
         final UserManager userManager = (UserManager)context.getSystemService(Context.USER_SERVICE);
-        boolean isUserRunning = false;
 
         List<UserInfo> userList = userManager.getUsers();
         for (UserInfo user : userList) {
             if (user.id == 0) {
                 continue;
             }
-            isUserRunning = activityManager.isUserRunning(user.id);
-            Log.d(TAG, "userid = " + user.id + "isUserRunning = " + isUserRunning);
+            boolean isUserRunning = activityManager.isUserRunning(user.id);
+            Log.d(TAG, "userid = " + user.id + " isUserRunning = " + isUserRunning);
 
             if (isUserRunning) {
                 return new UserHandle(user.id);
