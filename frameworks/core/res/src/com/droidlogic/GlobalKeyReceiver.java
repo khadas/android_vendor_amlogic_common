@@ -130,7 +130,7 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
                   return;
             }
 
-            switch (keyCode) {
+/*             switch (keyCode) {
                 case KeyEvent.KEYCODE_F5:
                     if (keyAction == KeyEvent.ACTION_UP) {
                         intent1.setComponent(new ComponentName("com.google.android.music", "com.google.android.music.tv.HomeActivity"));
@@ -198,7 +198,7 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
             if (keyAction == KeyEvent.ACTION_UP && isIntentAvailable(context,intent1)) {
                 Log.i(TAG, "startActivity" );
                 context.startActivity(intent1);
-            }
+            } */
         }
     }
 
