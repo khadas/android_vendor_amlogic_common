@@ -1,0 +1,10 @@
+cc_library_shared {
+    name: "libwifi-hal-common-info",
+
+    proprietary: true,
+
+	srcs: [
+        "wifi_info.cc",
+    ],
+}
+

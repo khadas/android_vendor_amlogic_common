@@ -1,0 +1,37 @@
+cc_library_static {
+    name: "libinstall_amlogic",
+    vendor_available: true,
+    //vndk: {
+    //    enabled: true,
+    //},
+    srcs: [
+        "install_amlogic.cpp",
+        "uboot_env.cpp",
+        "dtbcheck.cpp",
+        "security.cpp",
+        ],
+    static_libs: [
+        "libfstab",
+        "libbase",
+        "libotautil",
+        "libziparchive",
+        "libsystemcontrol_static",
+    ],
+    shared_libs: ["libtinyxml2"],
+    include_dirs: [
+        "bootable/recovery",
+        "bootable/recovery/updater/include",
+        "bootable/recovery/edify/include",
+        "bootable/recovery/otautil/include/otautil",
+        "bootable/recovery/bootloader_message/include",
+        "bootable/recovery/recovery_ui/include/recovery_ui",
+        "system/core/libcutils/include",
+        "system/core/libutils/include",
+        "system/core/fs_mgr/include",
+        "vendor/amlogic/common/external/recovery",
+        "external/zlib",
+        "external/dtc/libfdt",
+        "vendor/amlogic/common/frameworks/services/systemcontrol",
+        "external/tinyxml2",
+    ],
+}

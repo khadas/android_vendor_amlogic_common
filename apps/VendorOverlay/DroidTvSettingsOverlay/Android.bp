@@ -1,0 +1,6 @@
+runtime_resource_overlay {
+    name: "DroidTvSettingsOverlay",
+    resource_dirs: ["res"],
+    product_specific: true,
+    sdk_version: "current",
+}

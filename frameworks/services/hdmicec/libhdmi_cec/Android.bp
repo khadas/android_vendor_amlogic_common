@@ -1,0 +1,26 @@
+cc_library_static {
+    name: "libhdmi_cec_static",
+    proprietary: true,
+
+    srcs: [
+        "HdmiCecControl.cpp",
+        "CMsgQueue.cpp",
+        "HdmiCecCompat.cpp",
+        "HdmiCecUtils.cpp",
+    ],
+
+    header_libs: [
+        "libhardware_headers",
+    ],
+
+    export_include_dirs: ["."],
+
+    shared_libs: [
+        "libcutils",
+        "libhdmicec",
+        "libutils",
+        "liblog",
+        "libbinder",
+    ],
+
+}

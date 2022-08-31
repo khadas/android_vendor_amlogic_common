@@ -1,0 +1,78 @@
+bootstrap_go_package {
+    name: "soong-droidlogic_secmem",
+    pkgPath: "android/soong/vendor/amlogic/common/prebuilt/libmediadrm/secmem",
+    deps: [
+        "blueprint",
+        "blueprint-pathtools",
+        "soong",
+        "soong-android",
+        "soong-cc",
+        "soong-genrule",
+    ],
+    srcs: [
+        "droidlogic_secmem.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+droidlogic_secmem_go_defaults {
+    name: "droidlogic_secmem_go_defaults",
+}
+
+cc_prebuilt_library_shared {
+    name: "libsecmem",
+    compile_multilib: "32",
+
+    defaults: ["droidlogic_secmem_go_defaults"],
+    proprietary: true,
+
+    strip: {
+        none: true,
+    },
+
+    check_elf_files: false,
+    export_include_dirs: ["include"],
+    arch: {
+        arm: {
+            srcs: ["libsecmem.so"],
+        },
+        arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+}
+
+cc_prebuilt_library_shared {
+    name: "libsecmem_sys",
+    compile_multilib: "32",
+
+    defaults: ["droidlogic_secmem_go_defaults"],
+    system_ext_specific: true,
+
+    strip: {
+        none: true,
+    },
+
+    check_elf_files: false,
+    export_include_dirs: ["include"],
+    arch: {
+        arm: {
+            srcs: ["libsecmem_sys.so"],
+        },
+        arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+}

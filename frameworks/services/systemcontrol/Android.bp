@@ -1,0 +1,228 @@
+
+soong_config_module_type_import {
+    from: "device/amlogic/common/soong_config/Android.bp",
+    module_types: ["amlogic_vendorconfig_cc_defaults"],
+}
+
+amlogic_vendorconfig_cc_defaults {
+    name: "systemcontrol_defaults",
+    cflags: [
+      "-Wno-unused-function",
+      "-Wno-unused-parameter",
+      "-Wno-unused-variable",
+      "-Wno-unused-label",
+      "-Werror", // must fix warnings(except unused).
+    ],
+
+    product_variables: {
+        platform_sdk_version: {
+            cflags: ["-DPLATFORM_SDK_VERSION=%d"],
+        },
+    },
+
+    soong_config_variables: {
+        board_platform: {
+            meson8: {
+                cflags: ["-DMESON8_ENVSIZE"],
+            },
+            gxbaby: {
+                cflags: ["-DGXBABY_ENVSIZE"],
+            },
+            gxtvbb: {
+                cflags: ["-DGXTVBB_ENVSIZE"],
+            },
+            gxl: {
+                cflags: ["-DGXL_ENVSIZE"],
+            },
+        },
+
+        hwc_dynamic_switch_viu: {
+            cflags: ["-DHWC_DYNAMIC_SWITCH_VIU"],
+        },
+    },
+}
+
+cc_library_static {
+    name: "libsystemcontrol_static",
+    defaults: ["systemcontrol_defaults"],
+    vendor_available: true,
+    recovery_available: true,
+
+    srcs: [
+        "main_recovery.cpp",
+        "ubootenv/Ubootenv.cpp",
+        "logo_img_packer/res_pack.cpp",
+        "logo_img_packer/crc32.cpp",
+        "SysWrite.cpp",
+        "SceneProcess.cpp",
+        "DisplayMode.cpp",
+        "DisplayModeMgr.cpp",
+        "SysTokenizer.cpp",
+        "UEventObserver.cpp",
+        "HDCP/HdcpKeyDecrypt.cpp",
+        "HDCP/HDCPRxKey.cpp",
+        "HDCP/HDCPRxAuth.cpp",
+        "HDCP/HDCPTxAuth.cpp",
+        "HDCP/sha1.cpp",
+        "HDCP/HDCPRx22ImgKey.cpp",
+        "FrameRateAutoAdaption.cpp",
+        "FormatColorDepth.cpp"
+    ],
+
+    static_libs: [
+        "libcutils",
+        "libz",
+    ],
+     shared_libs: [
+        "liblog",
+    ],
+
+    whole_static_libs: [
+        "libmeson_display_adapter_local_static",
+    ],
+
+    include_dirs: [
+        "external/zlib",
+        "external/libcxx/include",
+        "system/core/libutils/include",
+    ],
+    cflags: [
+        "-DRECOVERY_MODE",
+    ],
+}
+
+cc_library_shared {
+    name: "libsystemcontrolservice",
+    defaults: ["systemcontrol_defaults"],
+    vendor_available: true,
+    system_ext_specific: true,
+    cflags: [
+        "-Wno-unused-parameter",
+        "-Wno-unused-variable",
+    ],
+    srcs: [
+        "SystemControlClient.cpp",
+    ],
+    export_include_dirs: [
+        "PQ/include",
+        ".",
+    ],
+    shared_libs: [
+        "libutils",
+        "libcutils",
+        "liblog",
+        "vendor.amlogic.hardware.systemcontrol@1.0",
+        "vendor.amlogic.hardware.systemcontrol@1.1",
+        "libbase",
+        "libhidlbase",
+        "libbinder",
+    ],
+
+
+}
+
+cc_binary {
+    name: "systemcontrol",
+    defaults: ["systemcontrol_defaults"],
+
+    cflags: [
+        "-DHDCP_AUTHENTICATION",
+    ],
+
+
+    srcs: [
+        "main_systemcontrol.cpp",
+        "ubootenv/Ubootenv.cpp",
+        "logo_img_packer/res_pack.cpp",
+        "logo_img_packer/crc32.cpp",
+        "VdcLoop.c",
+        "SysWrite.cpp",
+        "SystemControlHal.cpp",
+        "SystemControlService.cpp",
+        "DisplayMode.cpp",
+        "DisplayModeMgr.cpp",
+        "Dimension.cpp",
+        "SceneProcess.cpp",
+        "SysTokenizer.cpp",
+        "UEventObserver.cpp",
+        "HDCP/HdcpKeyDecrypt.cpp",
+        "HDCP/HDCPRxKey.cpp",
+        "HDCP/HDCPRxAuth.cpp",
+        "HDCP/HDCPTxAuth.cpp",
+        "HDCP/sha1.cpp",
+        "HDCP/HDCPRx22ImgKey.cpp",
+        "FrameRateAutoAdaption.cpp",
+        "FormatColorDepth.cpp",
+    ],
+
+    shared_libs: [
+        "libbase",
+        "libhidlbase",
+        "libsystemcontrolservice",
+        "libcutils",
+        "libutils",
+        "liblog",
+        "libbinder",
+        "libm",
+        "libpqcontrol",
+        "libsqlite",
+        "libjsoncpp",
+        "libfbc",
+        "vendor.amlogic.hardware.droidvold@1.0",
+        "vendor.amlogic.hardware.systemcontrol@1.0",
+        "vendor.amlogic.hardware.systemcontrol@1.1",
+        "libmeson_display_adapter_remote",
+    ],
+
+    init_rc: ["systemcontrol.rc"],
+
+    static_libs: ["libz"],
+
+    proprietary: true,
+
+}
+
+// build for recovery mode
+// =========================================================
+cc_binary {
+    name: "systemcontrol_static",
+    defaults: ["systemcontrol_defaults"],
+
+    cflags: [
+         "-DRECOVERY_MODE",
+        "-Wno-unused-variable",
+        "-Wno-unused-parameter",
+    ],
+
+    srcs: [
+        "main_recovery.cpp",
+        "ubootenv/Ubootenv.cpp",
+        "logo_img_packer/res_pack.cpp",
+        "logo_img_packer/crc32.cpp",
+        "SysWrite.cpp",
+        "DisplayMode.cpp",
+        "DisplayModeMgr.cpp",
+        "SceneProcess.cpp",
+        "SysTokenizer.cpp",
+        "UEventObserver.cpp",
+        "HDCP/HdcpKeyDecrypt.cpp",
+        "HDCP/HDCPRxKey.cpp",
+        "HDCP/HDCPRxAuth.cpp",
+        "HDCP/HDCPTxAuth.cpp",
+        "FrameRateAutoAdaption.cpp",
+        "FormatColorDepth.cpp",
+    ],
+
+    static_libs: [
+        "libz",
+        "libjsoncpp",
+        "libmeson_display_adapter_local_static",
+        "libbase",
+        "libcutils",
+    ],
+
+
+    recovery: true,
+    //proprietary: true,
+}
+

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/white"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/LinearLayout_tile"
+        android:layout_width="fill_parent"
+        android:layout_height="52dp"
+        android:background="@drawable/top_bar2"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/Button_home"
+            android:layout_width="50dp"
+            android:layout_height="52dp"
+            android:layout_marginLeft="12dp"
+            android:layout_weight="0"
+            android:background="@drawable/home_button"></Button>
+
+        <TextView
+            android:id="@+id/TextView_path"
+            android:layout_width="wrap_content"
+            android:layout_height="52dp"
+            android:layout_gravity="center"
+            android:layout_weight="45"
+            android:ellipsize="middle"
+            android:focusableInTouchMode="true"
+            android:gravity="center"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textColor="@drawable/white"
+            android:textSize="24px"></TextView>
+
+        <Button
+            android:id="@+id/Button_online"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:background="@drawable/online_button"></Button>
+
+        <Button
+            android:id="@+id/Button_exit"
+            android:layout_width="wrap_content"
+            android:layout_height="52dp"
+            android:layout_gravity="right"
+            android:background="@drawable/exit_button"></Button>
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/FrameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dip"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/TextView_nofile"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/no_file"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@drawable/black"
+            android:visibility="invisible"></TextView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ProgressBar
+                android:id="@+id/spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/TextView_searching"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/spinner"
+                android:text="@string/searching"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@drawable/black"
+                android:visibility="invisible"></TextView>
+
+        </LinearLayout>
+
+        <ListView
+            android:id="@android:id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:cacheColorHint="#00000000"
+            android:focusableInTouchMode="true"
+            android:visibility="visible"></ListView>
+
+    </FrameLayout>
+</LinearLayout>

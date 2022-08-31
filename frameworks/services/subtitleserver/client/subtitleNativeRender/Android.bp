@@ -1,0 +1,149 @@
+cc_library_headers {
+    name: "libsubtitlenativerender_header",
+    sdk_version: "current",
+    export_include_dirs: ["."],
+}
+
+
+
+cc_library_shared {
+    name: "libsubtitlenativerender",
+    vendor_available: true,
+    system_ext_specific: true,
+
+    required: [
+        "font.bin",
+        "font.bin.vendor",
+    ],
+
+    srcs: [
+        "inteface.cpp",
+        "NativeRender.cpp",
+        "SubtitleContext.cpp",
+        "BitmapDrawer.cpp",
+        "TextDrawer.cpp",
+        "CloseCaptionDrawer.cpp",
+        "CloseCaptionFont.cpp",
+        "CloseCaption.cpp",
+        "ZipFileRO.cpp",
+        "urlHandler.cpp",
+        "WebTask.cpp",
+        "libheif_stub/HeifDecoderImpl.cpp",
+    ],
+
+local_include_dirs: [
+    "libheif_stub",
+  ],
+
+    cflags: [
+        "-O0",
+        "-Wall",
+        "-Wno-unused-function",
+        "-Wno-unused-parameter",
+        //"-Wno-unused-private-field",
+        "-Wno-unused-variable",
+    ],
+
+    static_libs: [
+        "libskia_prebuilt",
+        "libwebp-encode_prebuilt",
+        "libwebp-decode_prebuilt",
+        "libfontdec",
+    ],
+
+    shared_libs: [
+        "libutils",
+        "libutilscallstack",
+        "libcutils",
+        "liblog",
+        "libft2-aml",
+        "libjsoncpp",
+
+        "libssl",
+        "libcrypto",
+        "libcurl",
+
+        "libz",
+        "libziparchive",
+        "libpng",
+        "libjpeg",
+        "libexpat",
+        "libpiex",
+        "libdng_sdk",
+        "libEGL",
+        "libGLESv1_CM",
+        "libGLESv2",
+        "libGLESv3",
+        "libnativewindow",
+        "libSubtitleClient",
+    ],
+
+}
+
+prebuilt_etc {
+    name: "font.bin",
+    //vendor: true,
+    system_ext_specific: true,
+    src: "font.bin",
+}
+
+prebuilt_etc {
+    name: "font.bin.vendor",
+    vendor: true,
+    src: "font.bin",
+}
+
+
+cc_library_static {
+    name: "libfontdec",
+    vendor_available: true,
+    system_ext_specific: true,
+
+    srcs: [
+       "VendorFontDec.c",
+    ],
+
+    include_dirs: [
+       //"external/boringssl/include",
+    ],
+
+    shared_libs: [
+       "libssl",
+       "libcrypto",
+    ],
+}
+
+cc_binary {
+    name: "subtitlenativerendetest",
+    vendor_available: true,
+    system_ext_specific: true,
+
+    srcs: ["test.cpp"],
+
+    shared_libs: [
+        "libsubtitlenativerender",
+        "libSubtitleClient",
+        "libSubtitleClient",
+        "liblog",
+    ],
+
+
+    sanitize: {
+        address: true,
+        integer_overflow: true,
+
+        misc_undefined: [
+            "alignment",
+            "bounds",
+            "null",
+            "unreachable",
+            "unsigned-integer-overflow",
+            "signed-integer-overflow",
+            "integer",
+        ],
+
+        diag: {
+            undefined : true
+        },
+    },
+}

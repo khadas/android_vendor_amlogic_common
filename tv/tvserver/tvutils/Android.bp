@@ -1,0 +1,55 @@
+// Copyright (c) 2014 Amlogic, Inc. All rights reserved.
+//
+// This source code is subject to the terms and conditions defined in the
+// file 'LICENSE' which is part of this source code package.
+//
+// Description: makefile
+
+cc_library_static {
+    name: "libtv_utils",
+    proprietary: true,
+
+    srcs: [
+        "CFile.cpp",
+        "CTvLog.cpp",
+        "CMsgQueue.cpp",
+        "CSqlite.cpp",
+        "serial_base.cpp",
+        "serial_operate.cpp",
+        "tvutils.cpp",
+        "zepoll.cpp",
+        "tvconfig/CIniFile.cpp",
+        "tvconfig/tvconfig.cpp",
+        "tvconfig/tvscanconfig.cpp",
+    ],
+
+    include_dirs: [
+        "vendor/amlogic/common/frameworks/services",
+        //"frameworks/native/libs/binder/include",
+        "external/jsoncpp/include",
+    ],
+
+    export_include_dirs: ["include"],
+
+    shared_libs: [
+        "vendor.amlogic.hardware.systemcontrol@1.0",
+        "vendor.amlogic.hardware.systemcontrol@1.1",
+        "libsystemcontrolservice",
+        "libpqcontrol",
+        "liblog",
+        "libbinder",
+        "libsqlite",
+    ],
+
+    static_libs: ["libjsoncpp"],
+
+
+
+
+    //DVB define
+    // ANDROIDMK TRANSLATION ERROR: unsupported conditional
+    // ifeq ($(BOARD_HAS_ADTV),true)
+    cflags: ["-DSUPPORT_ADTV"],
+    // endif
+
+}

@@ -1,0 +1,10 @@
+How to generate the interface hash?
+
+We can check the Google doc:
+https://source.android.com/devices/architecture/hidl/hashing
+
+For Example:
+hidl-gen -L hash -r vendor.amlogic.hardware:vendor/amlogic/common/interfaces -r android.hardware:hardware/interfaces -r android.hidl:system/libhidl/transport vendor.amlogic.hardware.systemcontrol@1.0::ISystemControl
+
+We will get:
+17f4735ec94348019451ed1a20aff38acfad5a06861e58a893fcf249c127a290 vendor.amlogic.hardware.systemcontrol@1.0::ISystemControl

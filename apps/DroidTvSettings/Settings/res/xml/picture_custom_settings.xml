@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2015 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License
+  -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+        android:key="pq_custom"
+        android:title="@string/pq_custom">
+       <PreferenceCategory
+            android:key="pq_brightness">
+           <Preference
+                android:key="pq_brightness_in"
+                android:title="@string/pq_brightness_zoomin"/>
+           <Preference
+                android:key="pq_brightness_out"
+                android:title="@string/pq_brightness_zoomout"/>
+        </PreferenceCategory>
+        <PreferenceCategory
+            android:key="pq_contrast">
+           <Preference
+                android:key="pq_contrast_in"
+                android:title="@string/pq_contrast_zoomin"/>
+           <Preference
+                android:key="pq_contrast_out"
+                android:title="@string/pq_contrast_zoomout"/>
+        </PreferenceCategory>
+        <PreferenceCategory
+            android:key="pq_saturation">
+           <Preference
+                android:key="pq_saturation_in"
+                android:title="@string/pq_saturation_zoomin"/>
+           <Preference
+                android:key="pq_saturation_out"
+                android:title="@string/pq_saturation_zoomout"/>
+        </PreferenceCategory>
+        <PreferenceCategory
+            android:key="pq_sharpness">
+           <Preference
+                android:key="pq_sharpness_in"
+                android:title="@string/pq_sharpness_zoomin"/>
+           <Preference
+                android:key="pq_sharpness_out"
+                android:title="@string/pq_sharpness_zoomout"/>
+        </PreferenceCategory>
+        <PreferenceCategory
+            android:key="pq_hue">
+           <Preference
+                android:key="pq_hue_in"
+                android:title="@string/pq_hue_zoomin"/>
+           <Preference
+                android:key="pq_hue_out"
+                android:title="@string/pq_hue_zoomout"/>
+        </PreferenceCategory>
+</PreferenceScreen>

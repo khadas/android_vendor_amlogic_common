@@ -1,0 +1,16 @@
+cc_binary {
+    name: "remotecfg",
+
+    srcs: [
+        "main.c",
+        "parse.c",
+        "device.c",
+    ],
+
+    cflags: ["-Wno-unused-variable"],
+
+    static_libs: ["libcutils"],
+
+    proprietary: true,
+
+}

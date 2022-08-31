@@ -1,0 +1,18 @@
+#the latest related commit information that produces current TV.apk
+commit 72cb8ac10c426c546cb28086c9a24f5bb999b257 (HEAD -> master, origin/master, origin/HEAD)
+Author: fei.zhang1 <fei.zhang1@amlogic.com>
+Date:   Tue Nov 9 19:21:19 2021 +0800
+
+    livetv: IndexOutOfBoundsException and luncher flash channel blocked [1/1]
+
+    PD#SWPL-63894
+    PD#SWPL-61627
+
+    Problem:
+
+    Solution:
+    resolve
+
+    Verify:
+    android-redi
+

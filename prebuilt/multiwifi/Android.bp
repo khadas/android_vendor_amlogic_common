@@ -1,0 +1,43 @@
+bootstrap_go_package {
+    name: "soong-droidlogic_multiwifi",
+    pkgPath: "android/soong/vendor/amlogic/common/prebuilt/multiwifi",
+    deps: [
+        "blueprint",
+        "blueprint-pathtools",
+        "soong",
+        "soong-android",
+        "soong-cc",
+        "soong-genrule",
+    ],
+    srcs: [
+        "droidlogic_multiwifi.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+multiwifi_go_defaults {
+    name: "multiwifi_go_defaults",
+}
+
+cc_prebuilt_library_shared {
+    name: "libwifi-hal-common-ext",
+    defaults: ["multiwifi_go_defaults"],
+
+    proprietary: true,
+    arch: {
+        arm: {
+            srcs: ["lib/libwifi-hal-common-ext.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libwifi-hal-common-ext.so"],
+        },
+    },
+    shared_libs: [
+        "libbase",
+        "libcutils",
+        "liblog",
+        "libnetutils",
+        "libwifi-hal-common-info",
+    ],
+}
+

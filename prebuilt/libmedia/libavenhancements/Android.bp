@@ -1,0 +1,268 @@
+bootstrap_go_package {
+    name: "soong-droidlogic_avenhancements",
+    pkgPath: "android/soong/vendor/amlogic/common/prebuilt/libmedia/libavenhancements",
+    deps: [
+        "blueprint",
+        "blueprint-pathtools",
+        "soong",
+        "soong-android",
+        "soong-cc",
+        "soong-genrule",
+    ],
+    srcs: [
+        "avenhancements_defaults.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+avenhancements_adapter_go_defaults {
+    name: "avenhancements_adapter_go_defaults",
+}
+avenhancements_amnuplayer_go_defaults {
+    name: "avenhancements_amnuplayer_go_defaults",
+}
+
+cc_prebuilt_library_shared {
+    name: "libamffmpegadapter",
+    system_ext_specific: true,
+    defaults: ["avenhancements_adapter_go_defaults"],
+    compile_multilib: "32",
+    check_elf_files: false,
+
+    arch: {
+        arm: {
+            srcs: ["lib/libamffmpegadapter.so"],
+        },
+        arm64: {
+            enabled: false,
+            srcs: ["lib64/libamffmpegadapter.so"],
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+    shared_libs: [
+        "libammediaext",
+        "libbinder",
+        "libc++",
+        "libc",
+        "libcutils",
+        "libdl",
+        "liblog",
+        "libm",
+        "libmedia",
+        "libmediandk",
+        "libstagefright",
+        "libstagefright_foundation",
+        "libutils",
+    ],
+}
+
+cc_prebuilt_library_shared {
+    name: "libavenhancements",
+    system_ext_specific: true,
+    defaults: ["avenhancements_adapter_go_defaults"],
+    compile_multilib: "32",
+    arch: {
+        arm: {
+            srcs: ["lib/libavenhancements.so"],
+        },
+        arm64: {
+            enabled: false,
+            srcs: ["lib64/libavenhancements.so"],
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+    shared_libs: [
+        "libammediaext",
+        "libbinder",
+        "libc++",
+        "libc",
+        "libcutils",
+        "libdl",
+        "liblog",
+        "libm",
+        "libmedia_omx",
+        "libstagefright_foundation",
+        "libstagefright_omx",
+        "libstagefright_xmlparser",
+        "libutils",
+    ],
+
+}
+
+cc_prebuilt_library_shared {
+    name: "libmediavendor_ext",
+    system_ext_specific: true,
+    defaults: ["avenhancements_adapter_go_defaults"],
+    compile_multilib: "32",
+    arch: {
+        arm: {
+            srcs: ["lib/libmediavendor_ext.so"],
+        },
+        arm64: {
+            enabled: false,
+            //srcs: ["lib64/libmediavendor_ext.so"],
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+    shared_libs: [
+        "libammediaext",
+        "libbinder",
+        "libc++",
+        "libc",
+        "libcutils",
+        "libdl",
+        "liblog",
+        "libm",
+        "libmedia_omx",
+        "libstagefright_foundation",
+        "libstagefright_omx",
+        "libstagefright_xmlparser",
+        "libutils",
+    ],
+
+}
+
+cc_prebuilt_library_shared {
+    name: "libamffmpegcodec",
+    vendor: true,
+    check_elf_files: false,
+    defaults: ["avenhancements_adapter_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libamffmpegcodec.so"],
+        },
+        arm64: {
+           enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+    shared_libs: [
+        "libammediaext",
+        "libbinder",
+        "libc++",
+        "libcutils",
+        "libdl",
+        "liblog",
+        "libm",
+        "libstagefright_foundation",
+        "libutils",
+    ],
+}
+
+cc_prebuilt_library_shared {
+    name: "libamextractor",
+    system_ext_specific: true,
+    defaults: ["avenhancements_adapter_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libamextractor.so"],
+        },
+    },
+
+    shared_libs: [
+        "libbinder",
+        "libc++",
+        "libc",
+        "libcutils",
+        "libdl",
+        "liblog",
+        "libm",
+        "libstagefright_foundation",
+        "libutils",
+    ],
+
+    relative_install_path: "extractors",
+}
+
+cc_prebuilt_library_shared {
+    name: "libamnuplayer",
+    system_ext_specific: true,
+    defaults: ["avenhancements_amnuplayer_go_defaults"],
+    check_elf_files: false,
+
+    arch: {
+        arm: {
+            srcs: ["lib/libamnuplayer.so"],
+        },
+    },
+    shared_libs: [
+        "android.hardware.cas.native@1.0",
+        "android.hardware.cas@1.0",
+        "android.hidl.memory@1.0",
+        "android.hidl.token@1.0-utils",
+        "libammediaext",
+        "libaudioclient",
+        "libbinder",
+        "libc++",
+        "libc",
+        "libcrypto",
+        "libcutils",
+        "libdl",
+        "libdrmframework",
+        "libgui",
+        "libhidlbase",
+        "libhidlmemory",
+        "liblog",
+        "libm",
+        "libmedia",
+        "libmedia_omx",
+        "libmediadrm",
+        //"libmediametrics",
+        "libmediandk",
+        "libmediaplayerservice",
+        "libnetd_client",
+        "libstagefright",
+        "libstagefright_foundation",
+        "libutils",
+
+    ],
+
+}
+
+cc_prebuilt_library_shared {
+    name: "libwfd_hdcp_adaptor",
+    defaults: ["avenhancements_amnuplayer_go_defaults"],
+    check_elf_files: false,
+
+    arch: {
+        arm: {
+            srcs: ["lib/libwfd_hdcp_adaptor.so"],
+        },
+    },
+    shared_libs: [
+        "libbinder",
+        "libutils",
+        "libcutils",
+        "liblog",
+        "libhidlbase",
+        "libhidlmemory",
+        "libhardware",
+        "android.hidl.memory@1.0",
+        "android.hidl.token@1.0-utils",
+        "libstagefright_foundation",
+        "libc++",
+        "libc",
+        "libm",
+        "libdl",
+    ],
+}

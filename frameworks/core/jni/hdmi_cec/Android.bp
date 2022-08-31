@@ -1,0 +1,20 @@
+
+
+cc_library_shared {
+    name: "libhdmicec_jni",
+
+    proprietary: true,
+
+    srcs: ["HdmiCecExtend.cpp"],
+
+    header_libs: ["jni_headers", "libhardware_headers"],
+
+    shared_libs: [
+        "vendor.amlogic.hardware.hdmicec@1.0",
+        "libcutils",
+        "libutils",
+        "libhdmicec",
+        "libbinder",
+        "liblog",
+    ],
+}

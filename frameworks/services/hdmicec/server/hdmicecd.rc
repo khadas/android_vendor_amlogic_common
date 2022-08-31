@@ -1,0 +1,3 @@
+service hdmicecd /vendor/bin/hdmicecd
+    class hal
+    group system

@@ -1,0 +1,181 @@
+cc_library_shared {
+  name: "libscreencontrolservice",
+  vendor: true,
+  cflags: [
+    "-std=c++17",
+  ],
+  srcs: [
+    "IScreenControlService.cpp",
+    "SysWrite.cpp",
+    "ScreenManager.cpp",
+    "ScreenControlDebug.cpp",
+    "ScreenCatch/ScreenCatch.cpp",
+    "Media2Ts/esconvertor.cpp",
+    "Media2Ts/tspack.cpp",
+  ],
+  include_dirs: [
+    "frameworks/native/headers/media_plugin/media/hardware",
+    "frameworks/av/drm/libmediadrm/interface/mediadrm",
+    "frameworks/av/media/libstagefright/foundation/include/media/stagefright/foundation",
+    "frameworks/av/include",
+    "frameworks/native/libs/gui/include",
+  ],
+  shared_libs: [
+    "vendor.amlogic.hardware.screencontrol@1.0",
+    "libbase",
+    "libutils",
+    "libcutils",
+    "liblog",
+    "libbinder",
+    "libhidlbase",
+    "libhardware",
+    "libdl",
+    "libstagefright_foundation",
+    "libmedia_omx",
+    "libmediandk",
+  ],
+}
+
+cc_library_shared {
+  name: "libscreencontrolclient",
+  vendor: true,
+  cflags: [
+    "-std=c++17",
+  ],
+  srcs: [
+    "ScreenControlClient.cpp",
+  ],
+  include_dirs: [
+    "system/libhidl/libhidlmemory/include",
+  ],
+  shared_libs: [
+    "android.hidl.memory@1.0",
+    "vendor.amlogic.hardware.screencontrol@1.0",
+    "libbase",
+    "libutils",
+    "libcutils",
+    "liblog",
+    "libhidlbase",
+    "libhidlmemory",
+  ],
+}
+
+cc_binary {
+  name: "screencontrol",
+  init_rc: ["screencontrol.rc"],
+  vintf_fragments: ["vendor.amlogic.hardware.screencontrol@1.0.xml"],
+  vendor: true,
+  compile_multilib: "32",
+
+  srcs: [
+    "ScreenControlHal.cpp",
+    "ScreenControlService.cpp",
+    "main_screencontrol.cpp",
+  ],
+
+  shared_libs: [
+    "vendor.amlogic.hardware.screencontrol@1.0",
+    "android.hidl.allocator@1.0",
+    "android.hidl.memory@1.0",
+    "libbinder",
+    "libhardware",
+    "libhidlbase",
+    "libhidlmemory",
+    "libcutils",
+    "libutils",
+    "liblog",
+    "libdl",
+    "libstagefright_foundation",
+    "libscreencontrolservice",
+    "libmediandk",
+  ],
+
+  include_dirs: [
+    "system/libhidl/transport/include/hidl",
+    "frameworks/av/include",
+    "frameworks/native/include",
+    "frameworks/native/headers/media_plugin/media/hardware",
+    "frameworks/native/libs/ui/include",
+  ],
+
+  cflags: [
+    "-std=c++17",
+  ],
+}
+
+cc_binary {
+  name: "screencatch",
+  vendor: true,
+  srcs: [
+    "ScreenCatch/screencatchtest.cpp",
+    "ScreenCatch/Bitmap.cpp"
+  ],
+
+  shared_libs: [
+    "vendor.amlogic.hardware.screencontrol@1.0",
+    "libbinder",
+    "libstagefright_foundation",
+    "libhardware",
+    "libutils",
+    "libcutils",
+    "liblog",
+    "libscreencontrolservice",
+    "libmediandk",
+  ],
+
+  include_dirs: [
+    "frameworks/native/include",
+    "frameworks/av/include",
+  ],
+}
+
+cc_binary {
+  name: "tspacktest",
+  vendor: true,
+  srcs: [
+    "Media2Ts/tspacktest.cpp",
+  ],
+
+  shared_libs: [
+    "vendor.amlogic.hardware.screencontrol@1.0",
+    "libbinder",
+    "libstagefright_foundation",
+    "libhardware",
+    "libutils",
+    "libcutils",
+    "liblog",
+    "libscreencontrolservice",
+    "libmediandk",
+  ],
+
+  include_dirs: [
+    "frameworks/native/include",
+    "frameworks/av/include",
+  ],
+}
+
+cc_binary {
+  name: "videomediaconvertortest",
+  vendor: true,
+  srcs: [
+    "Media2Ts/videomediaconvertortest.cpp",
+  ],
+
+  shared_libs: [
+    "vendor.amlogic.hardware.screencontrol@1.0",
+    "libbinder",
+    "libstagefright_foundation",
+    "libhardware",
+    "libutils",
+    "libcutils",
+    "liblog",
+    "libscreencontrolservice",
+    "libmediandk",
+  ],
+
+  include_dirs: [
+    "frameworks/native/include",
+    "frameworks/av/include",
+  ],
+}
+

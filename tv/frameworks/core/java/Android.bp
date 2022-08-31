@@ -1,0 +1,33 @@
+java_library {
+    name: "droidlogic-tv",
+
+    vendor: true,
+    sdk_version: "system_current",
+    installable: true,
+
+    srcs: [
+        "**/*.java",
+        "com/droidlogic/tvinput/services/ITvScanService.aidl",
+        "com/droidlogic/tvinput/services/IUpdateUiCallbackListener.aidl",
+        "com/droidlogic/audioservice/services/IAudioEffectsService.aidl",
+    ],
+
+    dxflags: ["--core-library"],
+
+    libs: [
+        "droidlogic",
+        "android.hidl.base-V1.0-java",
+        "android.hidl.manager-V1.0-java",
+    ],
+    static_libs: ["vendor.amlogic.hardware.tvserver-V1.0-java"],
+}
+
+prebuilt_etc {
+    name: "droidlogic.tv.software.core.xml",
+
+    vendor: true,
+    proprietary: true,
+    src: "droidlogic.tv.software.core.xml",
+    sub_dir: "permissions",
+
+}

@@ -1,0 +1,43 @@
+// Copyright (c) 2014 Amlogic, Inc. All rights reserved.
+//
+// This source code is subject to the terms and conditions defined in the
+// file 'LICENSE' which is part of this source code package.
+//
+// Description: makefile
+
+android_app {
+    name: "MboxLauncher",
+
+    system_ext_specific: true,
+    platform_apis: true,
+    srcs: ["src/**/*.java"],
+    libs: [
+        "droidlogic",
+        "droidlogic-tv",
+    ],
+
+    privileged: true,
+    overrides: [
+        "Home",
+        "Launcher3QuickStep",
+        "Provision",
+    ],
+
+    optimize: {
+        enabled: true,
+        proguard_flags_files: ["proguard.flags"],
+    },
+
+    certificate: "platform",
+    required: ["com.droidlogic.mboxlauncher.xml"],
+
+}
+
+//copy xml to permissions directory
+prebuilt_etc {
+    name: "com.droidlogic.mboxlauncher.xml",
+
+    system_ext_specific: true,
+    src: "com.droidlogic.mboxlauncher.xml",
+    sub_dir: "permissions",
+}

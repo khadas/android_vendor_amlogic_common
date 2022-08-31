@@ -1,0 +1,23 @@
+cc_binary {
+    name: "miracast_hdcp2",
+    init_rc: ["miracast_hdcp2.rc"],
+    vendor: true,
+    srcs: [
+        "hdcp2_service.cpp",
+        "HDCP.cpp",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
+    shared_libs: [
+        "libhidlbase",
+        "liblog",
+        "libutils",
+        "libcutils",
+        "vendor.amlogic.hardware.miracast_hdcp2@1.0",
+    ],
+    include_dirs: [
+        "frameworks/native/headers/media_plugin",
+    ],
+}

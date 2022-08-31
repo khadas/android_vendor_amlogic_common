@@ -1,0 +1,28 @@
+How to use secureboot_sign/Android.mk to make signed Amlogic target
+Step 1> fetch latest version of Aml_Linux_SecureBootV3_SignTool.zip from FAE
+Step 2> unzip Aml_Linux_SecureBootV3_SignTool.zip in path vendor/amlogic/common/tools/secureboot_sign/Aml_Linux_SecureBootV3_SignTool, 
+	check file exist vendor/amlogic/common/tools/secureboot_sign/Aml_Linux_SecureBootV3_SignTool/amlogic_secureboot_sign_whole_pkg.bash
+step 3> configure soc family type and secure-boot key path
+	3.1 take device/amlogic/franklin as example:
+		diff --git a/franklin.mk b/franklin.mk
+		index 72018dc..fbbed63 100644
+		--- a/franklin.mk
+		+++ b/franklin.mk
+		@@ -70,8 +70,8 @@ PRODUCT_USE_DYNAMIC_PARTITIONS := true
+		 #
+		  #########################################################################
+		   #########Support compiling out encrypted zip/aml_upgrade_package.img directly
+		   -#PRODUCT_BUILD_SECURE_BOOT_IMAGE_DIRECTLY := true
+		   -#PRODUCT_AML_SECURE_BOOT_VERSION3 := true
+		   +BOARD_AML_SECUREBOOT_KEY_DIR := ./bootloader/uboot-repo/bl33/v2015/board/amlogic/g12a_u212_v1/aml-key
+		   +BOARD_AML_SECUREBOOT_SOC_TYPE := sm1
+
+	3.2 if u do not have aml-key folder
+		Refer vendor/amlogic/common/tools/secureboot_sign/Aml_Linux_SecureBootV3_SignTool/Readme.txt
+	
+step 4> make out signed target
+	4.1> 'make signed_otapackage' 	to compile out signed otapackage
+	4.2> 'make signed_aml_upgrade' 	to compile out signed burning package
+	4.3> 'make signed_fastboot_zip' to compile out signed burning package
+	4.4> 'make signed_target_zip' 	to compile out signed target package for incremental zip
+

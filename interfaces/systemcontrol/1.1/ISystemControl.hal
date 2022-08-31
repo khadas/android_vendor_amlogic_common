@@ -1,0 +1,93 @@
+/*
+ * Copyright 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package vendor.amlogic.hardware.systemcontrol@1.1;
+import vendor.amlogic.hardware.systemcontrol@1.0;
+
+interface ISystemControl extends @1.0::ISystemControl{
+
+  //Provision key start
+  checkPlayreadyKey(string path, int32_t[4096] value, uint32_t key_type, int32_t size)
+      generates (Result result);
+
+  checkNetflixKey(int32_t[4096] value, uint32_t key_type, int32_t size)
+      generates (Result result);
+
+  checkWidevineKey(int32_t[4096] value, uint32_t key_type, int32_t size)
+      generates (Result result);
+
+  checkAttestationKey(int32_t[10240] value, uint32_t key_type, int32_t size) 
+      generates (Result result);
+
+  checkHDCP14Key(int32_t[4096] value, uint32_t key_type, int32_t size)
+      generates (Result result);
+
+  checkHDCP22Key(string path, int32_t[4096] value, uint32_t key_type, int32_t size)
+      generates (Result result);
+  //Provision key end
+
+  /**
+   * This returns whether the sink supports ALLM
+   */
+  getAllmSupport()
+      generates (bool ret);
+
+  /**
+  * set Auto Low Latency Mode
+  * @param      0 : off
+  *             1 : on
+  */
+  setALLMState(int32_t state);
+
+  /**
+   * This returns whether the sink supports game content type
+   */
+  getGameContentTypeSupport()
+      generates (bool ret);
+
+  /**
+  * This should send a game content type to the sink.
+  * @param      0 : off
+  *             1 : graphics
+  *             2 : photo
+  *             3 : cinema
+  *             4 : game
+  */
+  sendHDMIContentType(int32_t state);
+
+  /**
+  * get support hdmi allm & content type list
+  * @param supportModes return data
+  *
+  * @return result OK if get data
+  *                FAIL if do not get data
+  *
+  */
+  getSupportALLMContentTypeList()
+      generates (Result result, vec<string> supportModes);
+
+  /**
+  * read original sysfs
+  */
+  readSysfsOri(string path)
+      generates (Result result, string value);
+
+  memcContrl (bool on)
+      generates (Result result);
+
+  hasMemcFunc ()
+      generates (Result result);
+};

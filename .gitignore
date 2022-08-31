@@ -1,0 +1,47 @@
+#
+# NOTE! Don't add files that are generated in specific
+# subdirectories here. Add them in the ".gitignore" file
+# in that subdirectory instead.
+#
+# Normal rules
+#
+
+/apps/AppInstaller
+/apps/DLNA
+/apps/NativeImagePlayer
+/prebuilt/libmediadrm/verimatrix
+/gpu
+/gpu-lib
+/tdk
+/tdk_v3
+/tdk_linuxdriver
+/tdk/linuxdriver
+/provision
+/hdcp
+/broadcom
+/external/DTVKit/android-inputsource
+/external/DTVKit/cas_hal
+/external/DTVKit/releaseDTVKit
+/external/freetype
+/libdvr_release
+/mediahal_sdk
+/external/ffmpeg
+/frameworks/av
+/kernel
+/prebuilt/libmediadrm/playready
+/dsp
+/aml_mp_sdk
+/system/libgdc
+/pre_submit_for_google
+*.bak
+*.revise
+/apps/Miracast
+*.o
+*.o.*
+*.mod.c
+*.ko.cmd
+.tmp_versions/
+*.order
+*.symtypes
+*.order
+libsecdmx_release/

@@ -1,0 +1,125 @@
+/*
+ * Copyright 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package vendor.amlogic.hardware.subtitleserver@1.0;
+
+import ISubtitleCallback;
+
+interface ISubtitleServer {
+
+  /*****************************************************************
+   *
+   *              Session API
+   *
+   *****************************************************************/
+  /* open a connection */
+  /*** return sessionID, SessionID is unique id to specify
+   *  the subtitle. We support multi subtitle here.
+  */
+  openConnection() generates (Result result, int32_t sId);
+  closeConnection(int32_t sId) generates (Result result);
+
+
+  /*****************************************************************
+   *
+   *              General API
+   *
+   *****************************************************************/
+  open(int32_t sId, handle file, int32_t ioType, OpenType openType) generates (Result result);
+  close(int32_t sId) generates (Result result);
+  resetForSeek(int32_t sId) generates (Result result);
+  /* for extenal subtitle update pts */
+  updateVideoPos(int32_t sId, int32_t pos) generates (Result result);
+
+
+    /* Some Infos for clients */
+  getTotalTracks(int32_t sId) generates (Result result, int32_t val);
+  getType(int32_t sId) generates (Result result, int32_t val);
+  getLanguage(int32_t sId) generates (Result result, string language);
+
+  /************** DTV subtitle related *********/
+
+  // most of the subtitle type we can get from stream, but some, e.g
+  // CC, we cannot get, so need keep this api.
+  setSubType(int32_t sId, int32_t type) generates (Result result);
+
+  // some stream, e.g scte27, need the pid.
+  setSubPid(int32_t sId, int32_t pid) generates (Result result);
+
+  setPageId(int32_t sId, int32_t pageId) generates (Result result);
+  setAncPageId(int32_t sId, int32_t ancPageId) generates (Result result);
+
+  // for CC channel id
+  setChannelId(int32_t sId, int32_t channelId) generates (Result result);
+
+  // for CC. format
+  setClosedCaptionVfmt(int32_t sId, int32_t vfmt) generates (Result result);
+
+  // for CC. lang
+  setClosedCaptionLang(int32_t sId, string lang) generates (Result result);
+  //userdata device
+  userDataOpen(int32_t sId) generates (Result result);
+  userDataClose(int32_t sId) generates (Result result);
+
+  /* Teletext UI operation */
+  ttControl(int32_t sId, int32_t cmd, int32_t pageNo, int32_t subPageNo, int32_t pageDir, int32_t subPageDir) generates (Result result);
+
+  // legacy
+  ttGoHome(int32_t sId) generates (Result result);
+  ttNextPage(int32_t sId, int32_t dir) generates (Result result);
+  ttNextSubPage(int32_t sId, int32_t dir) generates (Result result);
+  ttGotoPage(int32_t sId, int32_t pageNo, int32_t subPageNo) generates (Result result);
+
+
+  /*    Call backs     */
+  setCallback(ISubtitleCallback callback, ConnectType type);
+  setFallbackCallback(ISubtitleCallback callback, ConnectType type);
+
+  removeCallback(ISubtitleCallback callback);
+
+
+  /* For transmit data, discard socket, use FMQ */
+  prepareWritingQueue(int32_t sId, int32_t size)  generates (Result retval, fmq_sync<uint8_t> dataMQ);
+
+  /* Set the player/media id for pip mode*/
+  setPipId(int32_t sId, int32_t mode, int32_t id) generates (Result result);
+
+  /******************************************************************
+   *
+   *        UI related, optional solution for 3rd player
+   *  use for the app which cannot integrate our subtitle SDK api
+   *
+   *     If use these api, subtitle do not support Z order
+   *
+   ******************************************************************/
+  show(int32_t sId) generates (Result result);
+  hide(int32_t sId) generates (Result result);
+
+
+  setTextColor(int32_t sId, int32_t color) generates (Result result);
+  setTextSize(int32_t sId, int32_t size) generates (Result result);
+  setGravity(int32_t sId, int32_t gravity) generates (Result result);
+  setTextStyle(int32_t sId, int32_t style) generates (Result result);
+  setPosHeight(int32_t sId, int32_t height) generates (Result result);
+  setImgRatio(int32_t sId, float ratioW, float ratioH, int32_t maxW, int32_t maxH)
+    generates (Result result);
+  getSubDemision(int32_t sId) generates (Result result, int32_t width, int32_t height);
+  setSubDemision(int32_t sId, int32_t width, int32_t height) generates (Result result);
+  setSurfaceViewRect(int32_t sId, int32_t x, int32_t y, int32_t w, int32_t h)
+    generates (Result result);
+
+
+};

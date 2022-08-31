@@ -1,0 +1,14 @@
+
+service unloadamlbtsdio /system/bin/rmmod sdio_bt
+    #user bluetooth
+    #class main
+    #group bluetooth net_bt_stack
+    disabled
+    oneshot
+on property:vendor.sys.amlbtsdiodriver=true
+    insmod /vendor/lib/modules/aml_sdio.ko
+    insmod /vendor/lib/modules/sdio_bt.ko
+
+on property:vendor.sys.amlbtsdiodriver=false
+    start unloadamlbtsdio
+

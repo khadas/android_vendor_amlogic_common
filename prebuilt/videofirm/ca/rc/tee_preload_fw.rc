@@ -1,0 +1,9 @@
+on property:init.svc.vendor.tee_supplicant=running
+    start vendor.tee_preload_fw
+
+service vendor.tee_preload_fw /vendor/bin/tee_preload_fw
+    class early_hal
+    user root
+    group system
+    disabled
+    oneshot

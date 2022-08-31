@@ -1,0 +1,45 @@
+
+
+//## shared library
+
+cc_library_shared {
+    name: "libjni_remoteime",
+
+    srcs: [
+        "android/com_droidlogic_inputmethod_remote_PinyinDecoderService.cpp",
+        "share/dictbuilder.cpp",
+        "share/dictlist.cpp",
+        "share/dicttrie.cpp",
+        "share/lpicache.cpp",
+        "share/matrixsearch.cpp",
+        "share/mystdlib.cpp",
+        "share/ngram.cpp",
+        "share/pinyinime.cpp",
+        "share/searchutility.cpp",
+        "share/spellingtable.cpp",
+        "share/spellingtrie.cpp",
+        "share/splparser.cpp",
+        "share/userdict.cpp",
+        "share/utf16char.cpp",
+        "share/utf16reader.cpp",
+        "share/sync.cpp",
+    ],
+
+    //include_dirs: JNI_H_INCLUDE,
+        header_libs: [
+        "jni_headers",
+    ],
+    //LOCAL_LDFLAGS += -lpthread
+    shared_libs: [
+        "libcutils",
+        "libutils",
+    ],
+
+    // ANDROIDMK TRANSLATION ERROR: unsupported conditional
+    // ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
+
+    proprietary: true,
+    // ANDROIDMK TRANSLATION ERROR: endif from unsupported conditional
+    // endif
+
+}

@@ -1,0 +1,84 @@
+
+
+// libge2d-2.0
+cc_library_shared {
+    name: "libge2d-2.0",
+    proprietary: true,
+
+    srcs: [
+        "ge2d_port.c",
+        "aml_ge2d.c",
+        "IONmem.c",
+        "dmabuf.c",
+    ],
+
+    shared_libs: [
+        "liblog",
+        "libion",
+    ],
+
+    export_include_dirs: [
+        "include",
+        "kernel-headers",
+    ],
+    cflags: ["-Werror"],
+}
+
+// ge2d_feature_test-2.0
+cc_binary {
+    name: "ge2d_feature_test-2.0",
+    proprietary: true,
+
+    srcs: [
+        "ge2d_feature_test.c",
+    ],
+
+    shared_libs: [
+        "liblog",
+        "libge2d-2.0",
+        "libion",
+    ],
+
+    cflags: ["-g"],
+    cppflags: ["-g"],
+}
+
+// ge2d_load_test-2.0
+cc_binary {
+    name: "ge2d_load_test-2.0",
+    proprietary: true,
+
+    srcs: [
+        "ge2d_load_test.c",
+    ],
+
+    shared_libs: [
+        "liblog",
+        "libge2d-2.0",
+        "libion",
+    ],
+
+    cflags: ["-g"],
+    cppflags: ["-g"],
+
+}
+
+// ge2d_chip_check-2.0
+cc_binary {
+    name: "ge2d_chip_check-2.0",
+    proprietary: true,
+
+    srcs: [
+        "ge2d_chip_check.c",
+    ],
+
+    shared_libs: [
+        "liblog",
+        "libge2d-2.0",
+        "libion",
+    ],
+
+    cflags: ["-g"],
+    cppflags: ["-g"],
+
+}

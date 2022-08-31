@@ -1,0 +1,142 @@
+bootstrap_go_package {
+    name: "soong-droidlogic_wvcas",
+    pkgPath: "android/soong/vendor/amlogic/common/prebuilt/libmediadrm/wvcas",
+    deps: [
+        "blueprint",
+        "blueprint-pathtools",
+        "soong",
+        "soong-android",
+        "soong-cc",
+        "soong-genrule",
+    ],
+    srcs: [
+        "droidlogic_wvcas.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+droidlogic_wvcas_go_defaults {
+    name: "droidlogic_wvcas_go_defaults",
+}
+
+cc_prebuilt_library_shared {
+    name: "libcasoemcrypto",
+    compile_multilib: "32",
+
+    defaults: ["droidlogic_wvcas_go_defaults"],
+    proprietary: true,
+
+    strip: {
+        none: true,
+    },
+
+    check_elf_files: false,
+    arch: {
+        arm: {
+            srcs: ["libcasoemcrypto.so"],
+        },
+        arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+}
+
+cc_prebuilt_library_shared {
+    name: "libwvmediacas",
+    compile_multilib: "32",
+
+    defaults: ["droidlogic_wvcas_go_defaults"],
+    proprietary: true,
+    relative_install_path: "mediacas",
+
+    strip: {
+        none: true,
+    },
+
+    check_elf_files: true,
+    arch: {
+        arm: {
+            srcs: ["libwvmediacas.so"],
+        },
+        arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+    shared_libs: [
+        "libcrypto",
+        "libcutils",
+        "liblog",
+        "libprotobuf-cpp-lite",
+        "libutils"
+    ],
+}
+
+cc_prebuilt_library_shared {
+    name: "libdec_ca_wvcas",
+    compile_multilib: "32",
+
+    defaults: ["droidlogic_wvcas_go_defaults"],
+    proprietary: true,
+
+    strip: {
+        none: true,
+    },
+
+    check_elf_files: false,
+    export_include_dirs: ["include"],
+    arch: {
+        arm: {
+            srcs: ["libdec_ca_wvcas.so"],
+        },
+        arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+}
+
+cc_prebuilt_library_shared {
+    name: "libdec_ca_wvcas.system",
+    compile_multilib: "32",
+
+    defaults: ["droidlogic_wvcas_go_defaults"],
+    system_ext_specific: true,
+
+    strip: {
+        none: true,
+    },
+
+    check_elf_files: false,
+    export_include_dirs: ["include"],
+    arch: {
+        arm: {
+            srcs: ["libdec_ca_wvcas.system.so"],
+        },
+        arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+}

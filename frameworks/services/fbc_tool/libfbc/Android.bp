@@ -1,0 +1,39 @@
+// Copyright (c) 2014 Amlogic, Inc. All rights reserved.
+//
+// This source code is subject to the terms and conditions defined in the
+// file 'LICENSE' which is part of this source code package.
+//
+// Description: makefile
+
+cc_library_shared {
+    name: "libfbc",
+
+    vendor: true,
+
+    srcs: [
+        "CFbcCommunication.cpp",
+        "CFbcLinker.cpp",
+        "CFbcProtocol.cpp",
+        "CFbcUpgrade.cpp",
+        "CSerialPort.cpp",
+        "CVirtualInput.cpp",
+        "CFbcLog.cpp",
+        "CFile.cpp",
+        "CFbcEpoll.cpp",
+    ],
+
+    export_include_dirs: ["include"],
+
+    shared_libs: [
+        "libcutils",
+        "liblog",
+        "libutils",
+        "libsystemcontrolservice",
+        "vendor.amlogic.hardware.systemcontrol@1.1",
+        "libbinder",
+    ],
+
+
+    proprietary: true,
+
+}

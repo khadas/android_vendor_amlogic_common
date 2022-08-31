@@ -1,0 +1,16 @@
+android_app {
+    name: "MicToggleProvider",
+
+    system_ext_specific: true,
+    platform_apis: true,
+
+    srcs: ["**/*.java"],
+    certificate: "platform",
+
+    libs: ["droidlogic"],
+    optimize: {
+        enabled: false,
+    },
+    privileged: true,
+
+}

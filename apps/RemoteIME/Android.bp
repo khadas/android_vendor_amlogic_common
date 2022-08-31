@@ -1,0 +1,33 @@
+
+
+android_app {
+    name: "RemoteIME",
+
+    srcs: ["**/*.java"],
+
+    required: ["libjni_remoteime"],
+
+    //ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
+    proprietary: true,
+    //endif
+
+    static_libs: ["com.droidlogic.inputmethod.remote.lib"],
+
+    certificate: "shared",
+    sdk_version: "system_current",
+    // Make sure our dictionary file is not compressed, so we can read it with
+    // a raw file descriptor.
+    aaptflags: [
+        "-0",
+        ".dat",
+    ],
+
+    optimize: {
+        enabled: false,
+    },
+
+    //ifndef PRODUCT_SHIPPING_API_LEVEL
+    //LOCAL_PRIVATE_PLATFORM_APIS := true
+    //endif
+
+}

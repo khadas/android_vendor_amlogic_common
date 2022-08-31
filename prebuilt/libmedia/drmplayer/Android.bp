@@ -1,0 +1,90 @@
+bootstrap_go_package {
+    name: "soong-amlogic_drmplayer",
+    pkgPath: "android/soong/vendor/amlogic/common/prebuilt/libmedia/drmplayer",
+    deps: [
+        "blueprint",
+        "blueprint-pathtools",
+        "soong",
+        "soong-android",
+        "soong-cc",
+        "soong-genrule",
+    ],
+    srcs: [
+        "drmplayer_defaults.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+amlogic_drmplayer_go_defaults {
+    name: "amlogic_drmplayer_go_defaults",
+}
+
+
+cc_prebuilt_library_shared {
+
+    name: "libDrmPlayer",
+    system_ext_specific: true,
+    defaults: ["amlogic_drmplayer_go_defaults"],
+    compile_multilib: "32",
+    check_elf_files: false,
+
+    arch: {
+        arm: {
+            srcs: ["lib/libDrmPlayer.so"],
+        },
+        arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+}
+
+cc_prebuilt_library_shared {
+    name: "libdrmp",
+    system_ext_specific: true,
+    defaults: ["amlogic_drmplayer_go_defaults"],
+    compile_multilib: "32",
+    check_elf_files: false,
+    arch: {
+        arm: {
+            srcs: ["lib/libdrmp.so"],
+        },
+        arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+}
+
+
+cc_prebuilt_library_shared {
+    name: "libdec_ca",
+    system_ext_specific: true,
+    defaults: ["amlogic_drmplayer_go_defaults"],
+    compile_multilib: "32",
+    check_elf_files: false,
+    arch: {
+        arm: {
+            srcs: ["lib/libdec_ca.so"],
+        },
+        arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+}

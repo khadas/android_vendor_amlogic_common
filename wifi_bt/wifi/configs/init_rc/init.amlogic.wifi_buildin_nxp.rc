@@ -1,0 +1,3 @@
+on boot
+    insmod /vendor/lib/modules/mlan.ko
+    insmod /vendor/lib/modules/moal.ko fw_name=nxp/sd8987_wlan.bin fw_serial=0 ps_mode=2 auto_ds=2 cal_data_cfg=nxp/WlanCalData_ext.conf cfg80211_wext=0xf sta_name=wlan uap_name=wlan wfd_name=p2p

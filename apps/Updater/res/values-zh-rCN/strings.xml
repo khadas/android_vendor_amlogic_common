@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">Updater</string>
+    <string name="btn_check">"检查更新"</string>
+    <string name="btn_update">"立即更新"</string>
+    <string name="update_update">"新版本信息:"</string>
+    <string name="update_check">"正在连接升级服务器，请稍等\n"</string>
+    <string name="server_pre">"升级服务器信息: "</string>
+    <string name="update_newest">"当前已经是最新版本"</string>
+    <string name="alert_title">"更新"</string>
+    <string name="alert_content">"你希望进行此更新吗?"</string>
+    <string name="system_status_pre">"当前系统信息:"</string>
+    <string name="action">"发送系统信息到升级服务器...\n"</string>
+    <string name="update_online">"在线更新"</string>
+    <string name="update_local">"选择文件"</string>
+    <string name="path_hit">"你选择的升级文件地址"</string>
+    <string name="scan_title">"正在扫描文件"</string>
+    <string name="scan_tip">"扫描中，请等待"</string>
+    <string name="update_cmd">"本地更新"</string>
+    <string name="error_failed">"更新出错,错误原因:"</string>
+    <string name="error_suffix">"\n请重新升级"</string>
+    <string name="prepare">"准备升级，准备中，请等待"</string>
+    <string name="reboot_cmd">"系统已更新，重启后，更新将生效"</string>
+    <string name="reboot_cmd_prepare">"准备中，请不要关机。"</string>
+    <string name="running_pre">"更新运行状态"</string>
+    <string name="error_ver">"错误的升级文件"</string>
+    <string name="online_pre">"在线更新:"</string>
+    <string name="reboot_btn">"重启"</string>
+    <string name="update_success">"升级成功"</string>
+    <string name="update_fail">"升级失败"</string>
+    <string name="result">"正在查询升级结果"</string>
+    <string name="retry">"请重新升级"</string>
+    <string name="wait_for_merge">"系统正在更新，请等待"</string>
+    <string name="update_hint">"立即升级?"</string>
+    <string name="btn_cancel">"取消"</string>
+    <string name="btn_ok">"升级"</string>
+    <string name="running">"系统正在更新,已经下载:"</string>
+</resources>

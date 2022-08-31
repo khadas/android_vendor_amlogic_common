@@ -1,0 +1,296 @@
+bootstrap_go_package {
+    name: "soong-droidlogic_stagefrighthw",
+    pkgPath: "android/soong/vendor/amlogic/common/prebuilt/libstagefrighthw",
+    deps: [
+        "blueprint",
+        "blueprint-pathtools",
+        "soong",
+        "soong-android",
+        "soong-cc",
+        "soong-genrule",
+    ],
+    srcs: [
+        "droidlogic_stagefrighthw.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+soong_config_module_type_import {
+    from: "device/amlogic/common/soong_config/Android.bp",
+    module_types: ["amlogic_vendorconfig_cc_defaults"],
+}
+
+stagefrighthw_go_defaults {
+    name: "stagefrighthw_go_defaults",
+}
+
+
+stagefrighthw_ddlib_go_defaults {
+    name: "stagefrighthw_ddlib_go_defaults",
+}
+
+stagefrighthw_videodec_go_defaults {
+    name: "stagefrighthw_videodec_go_defaults",
+}
+
+
+cc_prebuilt_library_shared {
+    name: "libstagefrighthw",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libstagefrighthw.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libstagefrighthw.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+
+cc_prebuilt_library_shared {
+    name: "libthreadworker_alt",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libthreadworker_alt.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libthreadworker_alt.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+
+cc_prebuilt_library_shared {
+    name: "libOmxVideo",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libOmxVideo.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libOmxVideo.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+
+cc_prebuilt_library_shared {
+    name: "libOmxAudio",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libOmxAudio.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libOmxAudio.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+
+cc_prebuilt_library_shared {
+    name: "libHwAudio_dcvdec",
+    device_specific: true,
+
+    // for condition build.
+    // if TARGET_DDLIB_BUILT_FROM_CUSTOMER is true, not build.
+    defaults: ["stagefrighthw_go_defaults", "stagefrighthw_ddlib_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libHwAudio_dcvdec.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libHwAudio_dcvdec.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+
+cc_prebuilt_library_shared {
+    name: "libHwAudio_dtshd",
+    device_specific: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libHwAudio_dtshd.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libHwAudio_dtshd.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libOmxCore",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libOmxCore.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libOmxCore.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libOmxCoreSw",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libOmxCoreSw.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libOmxCoreSw.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libOmxBase",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libOmxBase.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libOmxBase.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libomx_worker_peer_alt",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libomx_worker_peer_alt.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libomx_worker_peer_alt.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libomx_timed_task_queue_alt",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libomx_timed_task_queue_alt.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libomx_timed_task_queue_alt.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libomx_framework_alt",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libomx_framework_alt.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libomx_framework_alt.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libomx_clock_utils_alt",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libomx_clock_utils_alt.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libomx_clock_utils_alt.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libomx_av_core_alt",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libomx_av_core_alt.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libomx_av_core_alt.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libfpscalculator_alt",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libfpscalculator_alt.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libfpscalculator_alt.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libdatachunkqueue_alt",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libdatachunkqueue_alt.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libdatachunkqueue_alt.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libvideo_dec",
+    vendor: true,
+    defaults: ["stagefrighthw_go_defaults", "stagefrighthw_videodec_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libvideo_dec.so"],
+        },
+    },
+    check_elf_files: false,
+}
+

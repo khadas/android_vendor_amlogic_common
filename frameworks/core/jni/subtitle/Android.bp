@@ -1,0 +1,46 @@
+
+cc_library_shared {
+    name: "libsubtitlemanager_jni",
+    vendor_available:true,
+    system_ext_specific: true,
+    srcs: [
+        "com_droidlogic_app_SubtitleManager.cpp",
+    ],
+
+    shared_libs: [
+        "vendor.amlogic.hardware.subtitleserver@1.0",
+        "android.hidl.memory@1.0",
+        "libbase",
+        "libvendorfont",
+        "libhidlbase",
+        "libhidlmemory",
+        "liblog",
+        "libcutils",
+        "libutils",
+    ],
+
+	header_libs: [
+		"jni_headers",
+	],
+
+    static_libs: ["libsubtitleclient_static"],
+
+    cppflags: [
+        "-std=c++14",
+        "-Wno-unused-parameter",
+        "-Wno-unused-const-variable",
+        "-O0",
+    ],
+
+}
+
+cc_prebuilt_library_shared {
+   name: "libvendorfont",
+    vendor_available:true,
+    system_ext_specific: true,
+   srcs: [
+      "arm/libvendorfont.so",
+   ],
+}
+
+

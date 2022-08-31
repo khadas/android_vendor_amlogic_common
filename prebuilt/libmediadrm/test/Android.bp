@@ -1,0 +1,39 @@
+
+cc_prebuilt_binary {
+    name: "secmem_test",
+
+    vendor: true,
+    srcs: ["secmem_test"],
+    check_elf_files: false,
+}
+
+cc_prebuilt_binary {
+    name: "oemcrypto_test_aml",
+    vendor: true,
+
+    srcs: ["oemcrypto_test_aml"],
+    check_elf_files: false,
+}
+
+cc_prebuilt_binary {
+    name: "oemcrypto_cas_test",
+    vendor: true,
+
+    srcs: ["oemcrypto_cas_test"],
+    check_elf_files: false,
+}
+
+cc_prebuilt_binary {
+    name: "wvcas_iptv_test",
+    vendor: true,
+
+    srcs: ["wvcas_iptv_test"],
+    check_elf_files: false,
+}
+
+cc_prebuilt_binary {
+    name: "wvcas_iptv_test_sys",
+
+    srcs: ["wvcas_iptv_test_sys"],
+    check_elf_files: false,
+}

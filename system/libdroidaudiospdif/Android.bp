@@ -1,0 +1,28 @@
+
+
+cc_library_shared {
+    name: "libdroidaudiospdif",
+
+    srcs: [
+        "BitFieldParser.cpp",
+        "FrameScanner.cpp",
+        "AC3FrameScanner.cpp",
+        "DTSFrameScanner.cpp",
+	"MatFrameScanner.cpp",
+        "SPDIFEncoder.cpp",
+    ],
+
+    include_dirs: [
+        "system/core/libutils/include",
+        "system/media/audio/include",
+    ],
+
+    shared_libs: [
+        "libcutils",
+        "liblog",
+    ],
+
+
+    proprietary: true,
+
+}
