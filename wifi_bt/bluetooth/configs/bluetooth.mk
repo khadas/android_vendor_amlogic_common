@@ -31,17 +31,18 @@ $(warning BLUETOOTH_INF is not set)
 endif
 
 ifeq ($(BOARD_HAVE_BLUETOOTH),true)
-    PRODUCT_PROPERTY_OVERRIDES += config.disable_bluetooth=false \
+PRODUCT_PRODUCT_PROPERTIES += \
+    config.disable_bluetooth=false \
     ro.vendor.autoconnectbt.isneed=false \
     ro.vendor.autoconnectbt.macprefix=00:CD:FF \
     ro.vendor.autoconnectbt.btclass=50c \
-    ro.vendor.autoconnectbt.nameprefix?=Amlogic_RC \
+    ro.vendor.autoconnectbt.nameprefix=Amlogic_RC \
     ro.vendor.autoconnectbt.rssilimit=70 \
     persist.bluetooth.bluetooth_audio_hal.disabled = false
 
 else
-    PRODUCT_PROPERTY_OVERRIDES += config.disable_bluetooth=true
-
+PRODUCT_PRODUCT_PROPERTIES += \
+    config.disable_bluetooth=true
 endif
 
 ifeq ($(BOARD_HAVE_BLUETOOTH),true)
