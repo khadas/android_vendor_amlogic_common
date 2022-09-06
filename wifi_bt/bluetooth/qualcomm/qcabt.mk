@@ -19,5 +19,5 @@ PRODUCT_COPY_FILES += frameworks/native/data/etc/android.hardware.bluetooth.xml:
 
 PRODUCT_PRODUCT_PROPERTIES += poweroff.doubleclick=1
 PRODUCT_PRODUCT_PROPERTIES += qcom.bluetooth.soc=rome_uart
-PRODUCT_PRODUCT_PROPERTIES += wc_transport.soc_initialized=0
-
+PRODUCT_PRODUCT_PROPERTIES += \
+    wc_transport.soc_initialized=0

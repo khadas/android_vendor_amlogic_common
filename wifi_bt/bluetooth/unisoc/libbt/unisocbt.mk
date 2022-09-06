@@ -19,7 +19,8 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.bluetooth.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth.xml \
     frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml
 
-PRODUCT_PROPERTY_OVERRIDES += wc_transport.soc_initialized=0
+PRODUCT_PRODUCT_PROPERTIES += \
+    wc_transport.soc_initialized=0
 
 PRODUCT_PACKAGES += \
     libbt-vendor_unisoc \
