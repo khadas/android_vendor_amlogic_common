@@ -11,6 +11,7 @@
 #define _C_TV_GPIO_H_
 
 #define GPIO_NAME_TO_PIN      "/sys/class/aml_gpio/name_to_pin"
+#define GPIO_KERNEL_DEBUG     "/sys/kernel/debug/gpio"
 #define GPIO_EXPORT           "/sys/class/gpio/export"
 #define GPIO_UNEXPORT         "/sys/class/gpio/unexport"
 #define GPIO_DIRECTION(x, y)  sprintf(x, "/sys/class/gpio/gpio%d/direction", y)
@@ -33,6 +34,7 @@ private:
     int setGpioOutEdge(int edge);
     int getGpioInEdge();
     bool needExportAgain(char *path);
+    char* convertPortName(char* port_id, const char* port_name, const char* path);
 
     int mGpioPinNum;
     char mGpioName[64];
