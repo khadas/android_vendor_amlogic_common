@@ -18,6 +18,7 @@ import android.content.SharedPreferences.Editor;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -70,7 +71,26 @@ public class OutputUiManager {
         "576p50hz",
         "480p60hz",
         "576i50hz",
-        "480i60hz"
+        "480i60hz",
+        "3440x1440p60hz",
+        "2560x1600p60hz",
+        "2560x1440p60hz",
+        "2560x1080p60hz",
+        "1920x1200p60hz",
+        "1680x1050p60hz",
+        "1600x1200p60hz",
+        "1600x900p60hz",
+        "1440x900p60hz",
+        "1360x768p60hz",
+        "1280x1024p60hz",
+        "1280x800p60hz",
+        "1280x480p60hz",
+        "1024x768p60hz",
+        "1024x600p60hz",
+        "800x600p60hz",
+        "800x480p60hz",
+        "640x480p60hz",
+        "480x320p60hz"
     };
     private static final String[] HDMI_TITLE = {
         "4k2k-60hz",
@@ -89,7 +109,26 @@ public class OutputUiManager {
         "576p-50hz",
         "480p-60hz",
         "576i-50hz",
-        "480i-60hz"
+        "480i-60hz",
+        "3440x1440p60hz",
+        "2560x1600p60hz",
+        "2560x1440p60hz",
+        "2560x1080p60hz",
+        "1920x1200p60hz",
+        "1680x1050p60hz",
+        "1600x1200p60hz",
+        "1600x900p60hz",
+        "1440x900p60hz",
+        "1360x768p60hz",
+        "1280x1024p60hz",
+        "1280x800p60hz",
+        "1280x480p60hz",
+        "1024x768p60hz",
+        "1024x600p60hz",
+        "800x600p60hz",
+        "800x480p60hz",
+        "640x480p60hz",
+        "480x320p60hz"
     };
 
     public static final String[] HDMI_COLOR_LIST = {
@@ -436,11 +475,19 @@ public class OutputUiManager {
         }
 
         String strEdid = mOutputModeManager.getHdmiSupportList();
-        if (strEdid != null && strEdid.length() != 0 && !strEdid.contains("null")) {
+        String strVesaEdid = null;
+        String Edid = null;
+        if (Build.MODEL.equals("VIM1") || Build.MODEL.equals("VIM1S")) {
+            strVesaEdid = mOutputModeManager.getHdmiVesaSupportList();
+            Edid = strEdid.concat(strVesaEdid);
+        } else {
+            Edid = strEdid;
+        }
+        if (Edid != null && Edid.length() != 0 && !Edid.contains("null")) {
             List<String> listHdmiMode = new ArrayList<String>();
             List<String> listHdmiTitle = new ArrayList<String>();
             for (int i = 0; i < listValue.size(); i++) {
-                if (strEdid.contains(listValue.get(i))) {
+                if (Edid.contains(listValue.get(i))) {
                     listHdmiMode.add(listValue.get(i));
                     listHdmiTitle.add(listTitle.get(i));
                 }
