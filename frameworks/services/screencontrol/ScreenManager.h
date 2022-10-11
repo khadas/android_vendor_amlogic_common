@@ -112,7 +112,7 @@ public:
 
     virtual int dataCallBack(aml_screen_buffer_info_t *buffer);
 
-    virtual status_t setVideoRotation(int degree);
+    virtual status_t setVideoRotation(int32_t client_id, int degree);
     virtual status_t setVideoCrop(int32_t client_id, const int32_t x, const int32_t y, const int32_t width, const int32_t height);
     bool mIsScreenRecord;
 

@@ -33,7 +33,6 @@
 #include <MetadataBufferType.h>
 
 #include <ui/GraphicBuffer.h>
-#include <cutils/properties.h>
 
 #include <binder/IPCThreadState.h>
 #include <binder/IServiceManager.h>
@@ -78,7 +77,6 @@ namespace android {
 #define PORTTYPE_VALUE_VIDEO_ONLY 0x11000000
 
 #define SCREENMANAGER_DUMP_BASEDIR "/data/temp/sm-drvin"
-#define PERSIST_SYS_ROTATION_PROP "persist.sys.builtinrotation"
 
 static const int64_t VDIN_MEDIA_SOURCE_TIMEOUT_NS = 3000000000LL;
 
@@ -86,20 +84,6 @@ static void VdinDataCallBack(void *user, aml_screen_buffer_info_t *buffer){
     ScreenManager *source = static_cast<ScreenManager *>(user);
     source->dataCallBack(buffer);
     return;
-}
-
-static int getRotationDegree(){
-    char prop[PROPERTY_VALUE_MAX];
-    if (property_get(PERSIST_SYS_ROTATION_PROP, prop, "0") > 0) {
-       ALOGI("start prop =%s",prop);
-        char *tmp = NULL;
-        long int degree = strtol(prop, &tmp, 0);
-        ALOGI("propValue =%ld",degree);
-        if (LONG_MIN != degree && LONG_MAX != degree ) {
-            return degree;
-        }
-    }
-    return -1;
 }
 
 ScreenManager::ScreenManager() :
@@ -356,7 +340,7 @@ int32_t ScreenManager::getFrameRate( )
     return mFrameRate;
 }
 
-status_t ScreenManager::setVideoRotation(int degree)
+status_t ScreenManager::setVideoRotation(int32_t client_id, int degree)
 {
     int angle;
 
@@ -376,7 +360,7 @@ status_t ScreenManager::setVideoRotation(int degree)
     }
 
     if (mScreenDev != NULL) {
-        ALOGI("[%s %d] setVideoRotation angle:%d", __FUNCTION__, __LINE__, angle);
+        ALOGI("[%s %d] setVideoRotation angle:%x", __FUNCTION__, __LINE__, angle);
         mScreenDev->ops.set_rotation(mScreenDev, angle);
     }
 
@@ -431,11 +415,7 @@ status_t ScreenManager::start(int32_t client_id)
         }
 
         ALOGI("[%s %d] start AML_SCREEN_SOURCE", __FUNCTION__, __LINE__);
-        int degree = getRotationDegree();
-        if ( degree > 0) {
-            setVideoRotation(degree);
 
-        }
         mScreenDev->ops.set_port_type(mScreenDev, port_type);
         mScreenDev->ops.set_frame_rate(mScreenDev, mFrameRate);
         if (mIsSoftwareEncoder && mIsScreenRecord) {

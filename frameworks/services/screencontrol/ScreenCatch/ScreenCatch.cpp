@@ -77,6 +77,11 @@ ScreenCatch::~ScreenCatch() {
     ALOGI("~ScreenCatch");
 }
 
+void ScreenCatch::setVideoRotation(int degree)
+{
+    int angle;
+    ALOGI("[%s %d] setVideoRotation degree:%x", __FUNCTION__, __LINE__, degree);
+}
 
 void ScreenCatch::setVideoCrop(int x, int y, int width, int height)
 {
