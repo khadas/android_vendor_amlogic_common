@@ -30,7 +30,9 @@ import java.util.List;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Iterator;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import java.io.InputStream;
@@ -556,7 +558,11 @@ public class FileOp {
                                 if (!file_new.exists()) {
                                     copying_file = file_new;
                                     FileUtils.setCurPage(cur_page);
-                                    FileUtils.copyDirectoryToDirectory(file, new File(FileBrower.cur_path));
+				    if (cur_page.equals("list")) {
+                                        FileUtils.copyDirectoryToDirectory(file, new File(FileBrower.cur_path));
+                                    } else if(cur_page.equals("thumbnail1")){
+                                        FileUtils.copyDirectoryToDirectory(file, new File(ThumbnailView1.cur_path));
+                                    }
 
                                     if (!copy_cancel) {
                                         if (file_op_todo == FileOpTodo.TODO_CUT)

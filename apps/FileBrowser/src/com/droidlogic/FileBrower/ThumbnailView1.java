@@ -54,6 +54,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.KeyEvent;
+import android.view.Gravity;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.AdapterView;
@@ -806,14 +808,14 @@ public class ThumbnailView1 extends Activity{
                         }
                     }
                     else {
-                        if (!cur_path.equals(FileListManager.STORAGE) && (item.get("item_sel") != null)) {
-                            if (item.get("item_sel").equals(R.drawable.item_img_unsel)) {
+                        if (!cur_path.equals(FileListManager.STORAGE) && (item.get(KEY_SELE) != null)) {
+                            if (item.get(KEY_SELE).equals(R.drawable.item_img_unsel)) {
                                 FileOp.updateFileStatus(file_path, 1,"thumbnail1");
-                                item.put("item_sel", R.drawable.item_img_sel);
+                                item.put(KEY_SELE, R.drawable.item_img_sel);
                             }
-                            else if (item.get("item_sel").equals(R.drawable.item_img_sel)) {
+                            else if (item.get(KEY_SELE).equals(R.drawable.item_img_sel)) {
                                 FileOp.updateFileStatus(file_path, 0,"thumbnail1");
-                                item.put("item_sel", R.drawable.item_img_unsel);
+                                item.put(KEY_SELE, R.drawable.item_img_unsel);
                             }
 
                             ((BaseAdapter) ThumbnailView.getAdapter()).notifyDataSetChanged();
@@ -868,7 +870,7 @@ public class ThumbnailView1 extends Activity{
         });
 
         /*edit button*/
-        /*Button btn_thumbedit = (Button) findViewById(R.id.btn_thumbedit);
+        Button btn_thumbedit = (Button) findViewById(R.id.btn_thumbedit);
         btn_thumbedit.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 if (!cur_path.equals(FileListManager.STORAGE))
@@ -879,7 +881,7 @@ public class ThumbnailView1 extends Activity{
                         Toast.LENGTH_SHORT).show();
                 }
             }
-        });*/
+        });
 
         /* btn_help_listener */
         Button btn_thumbhelp = (Button) findViewById(R.id.btn_thumbhelp);
@@ -1303,23 +1305,68 @@ public class ThumbnailView1 extends Activity{
 
         buttonOK.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                if ( null != mRenameDialog ) {
-                    mRenameDialog.dismiss();
-                    mRenameDialog = null;
-                }
-
                 String newFileName = String.valueOf(mRenameEdit.getText());
                 if (!name.equals(newFileName)) {
-                    newFileName = path.substring(0, path.lastIndexOf('/') + 1) + newFileName;
+                    String fileType = name.substring(name.lastIndexOf('.') + 1);
+                    String newFileType = newFileName.substring(newFileName.lastIndexOf('.') + 1);
+                    if (!fileType.equals(newFileType)) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(ThumbnailView1.this);
+                        AlertDialog alertDialog = builder.setMessage(R.string.dialog_rename_confirm_str)
+                                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
 
-                    if (mRenameFile.renameTo(new File(newFileName))) {
-                        db.deleteAllFileMark();
-                        ThumbnailView.setAdapter(getFileListAdapterSorted(cur_path, lv_sort_flag));
+                                        mRenameEdit.setText(name);
+                                    }
+                                })
+                                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        mRenameDialog.dismiss();
+                                        mRenameDialog = null;
+                                        String newFileName = path.substring(0, path.lastIndexOf('/') + 1) + String.valueOf(mRenameEdit.getText());
+                                        if (mRenameFile.renameTo(new File(newFileName))) {
+                                            db.deleteAllFileMark();
+                                            ThumbnailView.setAdapter(getFileListAdapterSorted(cur_path, lv_sort_flag));
+                                            scanAll();
+                                        } else {
+                                            Toast.makeText(ThumbnailView1.this,
+                                                    getText(R.string.Toast_msg_rename_error),
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                })
+                                .create();
+                        Window window = alertDialog.getWindow();
+                        window.setGravity(Gravity.BOTTOM);
+                        WindowManager.LayoutParams params = window.getAttributes();
+                        params.y = 100;
+                        params.height = 200;
+                        window.setAttributes(params);
+                        alertDialog.show();
+                    } else {
+                        if (null != mRenameDialog) {
+                            mRenameDialog.dismiss();
+                            mRenameDialog = null;
+                        }
+                        newFileName = path.substring(0, path.lastIndexOf('/') + 1) + newFileName;
+                        if (mRenameFile.renameTo(new File(newFileName))) {
+                            db.deleteAllFileMark();
+                            ThumbnailView.setAdapter(getFileListAdapterSorted(cur_path, lv_sort_flag));
+                            scanAll();
+                        } else {
+                            Toast.makeText(ThumbnailView1.this,
+                                    getText(R.string.Toast_msg_rename_error),
+                                    Toast.LENGTH_SHORT).show();
+                        }
                     }
-                    else {
-                        Toast.makeText(ThumbnailView1.this,
-                            getText(R.string.Toast_msg_rename_error),
-                            Toast.LENGTH_SHORT).show();
+                } else {
+                    if (null != mRenameDialog) {
+                        mRenameDialog.dismiss();
+                        mRenameDialog = null;
+			db.deleteAllFileMark();
+                        ThumbnailView.setAdapter(getFileListAdapterSorted(cur_path, lv_sort_flag));
+                        scanAll();
                     }
                 }
             }

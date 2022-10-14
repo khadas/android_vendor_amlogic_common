@@ -76,6 +76,7 @@ DROP TABLE IF EXISTS file_thumbnails_table
     <string name="Toast_msg_rename_diffpath">不能在不同路径下重命名:</string>
     <string name="Toast_msg_paste_sub_folder">无法粘贴，目标文件夹是源文件夹的子文件夹！</string>
     <string name="Toast_msg_no_applicaton">没有合适的应用打开文件.</string>
+	<string name="Toast_msg_no_write">文件不可写</string>
 
     <string name="dialog_help_item_home_str">显示设备列表</string>
     <string name="dialog_help_item_edit_str">显示编辑菜单</string>
@@ -85,6 +86,7 @@ DROP TABLE IF EXISTS file_thumbnails_table
     <string name="dialog_help_item_thumb_str">缩略图显示文件</string>
     <string name="dialog_help_item_list_str">列表显示文件</string>
     <string name="dialog_help_item_close_str">关闭文件管理器</string>
+	<string name="dialog_rename_confirm_str">修改文件类型可能会导致文件无法打开，确认修改？</string>
     <string name="memory_device_str">内部存储器 </string>
     <string name="sdcard_device_str">本机磁盘</string>
     <string name="ext_sdcard_device_str">外部存储卡</string>
