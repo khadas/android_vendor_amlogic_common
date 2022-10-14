@@ -86,6 +86,7 @@ DROP TABLE IF EXISTS file_thumbnails_table
     <string name="dialog_help_item_thumb_str">View by thumbnail </string>
     <string name="dialog_help_item_list_str">View by list</string>
     <string name="dialog_help_item_close_str">Close FileBrowser</string>
+	<string name="dialog_rename_confirm_str">Modifying the file type may result in the file not being opened. Are you sure you want to modify it?</string>
     <string name="memory_device_str">Internal Memory </string>
     <string name="sdcard_device_str">Local Disk</string>
     <string name="ext_sdcard_device_str">External Storage Card</string>

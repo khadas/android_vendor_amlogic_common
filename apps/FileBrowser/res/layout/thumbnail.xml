@@ -37,11 +37,11 @@
                 android:background="@drawable/btn_mode"
                 android:textOn=""
                 android:textOff=""/>
-            <!--
+            
             <Button style="@style/btn_style"
                 android:id="@+id/btn_thumbedit"
                 android:background="@drawable/btn_edit"/>
-            -->
+            
             <Button style="@style/btn_style"
                 android:id="@+id/btn_thumbsort"
                 android:background="@drawable/btn_sort"/>
