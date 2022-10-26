@@ -642,6 +642,7 @@ public:
     int  getHdmiSinkType(void);
     void getHdmiEdidStatus(char* edidstatus);
     void getHdmiDispCap(char* disp_cap);
+    void getHdmiVesaEdid(char* vesa_edid);
     void getHdmiDcCap(char* dc_cap);
     void getHdmiDvCap(hdmi_data_t* data);
     void getCommonData(hdmi_data_t* data);

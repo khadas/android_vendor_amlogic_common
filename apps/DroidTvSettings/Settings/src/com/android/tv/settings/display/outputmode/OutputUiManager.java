@@ -477,7 +477,7 @@ public class OutputUiManager {
         String strEdid = mOutputModeManager.getHdmiSupportList();
         String strVesaEdid = null;
         String Edid = null;
-        if (Build.MODEL.equals("VIM1") || Build.MODEL.equals("VIM1S")) {
+        if (Build.MODEL.equals("VIM4")) {
             strVesaEdid = mOutputModeManager.getHdmiVesaSupportList();
             Edid = strEdid.concat(strVesaEdid);
         } else {
