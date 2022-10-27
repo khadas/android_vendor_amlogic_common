@@ -52,3 +52,5 @@ external/dvb/
 libdvr/
 libencoder/
 npu/
+adla/
+cve/
