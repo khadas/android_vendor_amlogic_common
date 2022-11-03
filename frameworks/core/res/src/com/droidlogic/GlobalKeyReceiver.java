@@ -11,6 +11,7 @@
 package com.droidlogic;
 
 import android.app.ActivityManager;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.ComponentName;
@@ -29,6 +30,7 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.os.UserHandle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.os.SystemProperties;
@@ -46,12 +48,19 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
     private static final String ACTIVITY_NAME_TVSOURCE = "com.droidlogic.tv.settings.TvSourceActivity";
     private static final String PACKAGE_NAME_NETFLIX = "com.netflix.ninja";
     private static final String PACKAGE_NAME_YOUTUBE = "com.google.android.youtube.tv";
+    private static final String ACTIVITY_NAME_YOUTUBE = "com.google.android.apps.youtube.tv.activity.MainActivity";
     private static final String PACKAGE_NAME_PLAYMOVIE = "com.google.android.videos";
+    private static final String PACKAGE_NAME_PRIMEVIDEO = "com.amazon.amazonvideo.livingroom";
+    private static final String PACKAGE_NAME_GOOGLEPLAY = "com.android.vending";
+    private static final String ACTIVITY_NAME_GOOGLEPLAY = "com.google.android.finsky.tvmainactivity.TvMainActivity";
+    private static final String PACKAGE_NAME_DISNEY = "com.disney.disneyplus";
+    private static final String PACKAGE_NAME_PARAMOUNT = "com.cbs.ott";
     private static final String NETFLIX_PERMISSION = "com.netflix.ninja.permission.NETFLIX_KEY";
     private static final String NETFLIX_ACTION = "com.netflix.ninja.intent.action.NETFLIX_KEY";
     private static final int NETFLIX_SOURCE_TYPE_NETFLIX_BUTTON = 1;
     private static final int NETFLIX_SOURCE_TYPE_POWER_ON_FROM_NETFLIX_BUTTON = 19;
     private static final String URI_NETFLIX = "nflx://www.netflix.com/";
+    private static final String REMOTE_BUTTON_START = "remote_button";
     private static final String REMOTE_YT_BUTTON = "yt_remote_button";
     private static final int  PENDING_KEY_NULL = -1;
     private static final String EXTRA_BEGAN_FROM_NON_INTERACTIVE =
@@ -68,6 +77,15 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
                         0) != 0;
     }
 
+    private static boolean isPackageRunning(String packageName) {
+        try {
+            List<ActivityManager.RunningTaskInfo> tasks = ActivityManager.getService().getTasks(1);
+            ComponentName componentInfo = tasks.get(0).topActivity;
+            return componentInfo.getPackageName().equals(packageName);
+        } catch (Exception e) {
+        }
+        return false;
+    }
     private boolean isInteractive(Context context) {
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         if (powerManager == null) return true;
@@ -123,7 +141,7 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
                 case KeyEvent.KEYCODE_BUTTON_3:
                     if (keyAction == KeyEvent.ACTION_UP) {
                         oneTouchPlay(context);
-                        intent1.setComponent(new ComponentName(PACKAGE_NAME_YOUTUBE, "com.google.android.apps.youtube.tv.activity.MainActivity"))
+                        intent1.setComponent(new ComponentName(PACKAGE_NAME_YOUTUBE, ACTIVITY_NAME_YOUTUBE))
                                .putExtra(REMOTE_YT_BUTTON, true);
                         wakeUp(context);
                     }
@@ -132,14 +150,17 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
                 case KeyEvent.KEYCODE_F3:
                 case KeyEvent.KEYCODE_BUTTON_6:
                     if (keyAction == KeyEvent.ACTION_UP) {
-                        intent1.setComponent(new ComponentName("com.amazon.amazonvideo.livingroom", "com.amazon.ignition.IgnitionActivity"));
+                        oneTouchPlay(context);
+                        launchAppByPackageName(context, PACKAGE_NAME_PRIMEVIDEO);
+                        wakeUp(context);
                     }
-                    break;
+                    return;
+
 
                 case KeyEvent.KEYCODE_F4:
                 case KeyEvent.KEYCODE_BUTTON_7:
                     if (keyAction == KeyEvent.ACTION_UP) {
-                        intent1.setComponent(new ComponentName("com.android.vending", "com.google.android.finsky.tvmainactivity.TvMainActivity"));
+                        intent1.setComponent(new ComponentName(PACKAGE_NAME_GOOGLEPLAY, ACTIVITY_NAME_GOOGLEPLAY));
                     }
                     break;
 
@@ -153,6 +174,7 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
                     return;//netflix button is a special case, all things are processed in launchNetflix()
 
                 case KeyEvent.KEYCODE_SETTINGS:
+                case KeyEvent.KEYCODE_NOTIFICATION:
                     if (keyAction == KeyEvent.ACTION_UP) {
                         if (SystemProperties.get("sys.vendor.global.settingskey").equals("dashboard")) {
                             intent1.setComponent(new ComponentName("com.google.android.apps.tv.launcherx", "com.google.android.apps.tv.launcherx.dashboard.DashboardActivity"));
@@ -175,6 +197,20 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
                         intent1.setComponent(new ComponentName(PACKAGE_NAME_DROIDTVSETTINGS, ACTIVITY_NAME_TVSOURCE));
                     }
                     break;
+                case KeyEvent.KEYCODE_BUTTON_9:
+                    if (keyAction == KeyEvent.ACTION_UP) {
+                        oneTouchPlay(context);
+                        launchAppByPackageName(context, PACKAGE_NAME_DISNEY);
+                        wakeUp(context);
+                    }
+                    return;
+                case KeyEvent.KEYCODE_BUTTON_10:
+                    if (keyAction == KeyEvent.ACTION_UP) {
+                        oneTouchPlay(context);
+                        launchAppByPackageName(context, PACKAGE_NAME_PARAMOUNT);
+                        wakeUp(context);
+                    }
+                    return;
                 case KeyEvent.KEYCODE_PAIRING:
                     if (keyAction == KeyEvent.ACTION_UP) {
                         intent1.setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.accessories.AddAccessoryActivity"));
@@ -197,7 +233,7 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
 
     private void oneTouchPlay(Context context) {
         Log.d(TAG, "oneTouchPlay");
-        HdmiControlManager manager = (HdmiControlManager)context.getSystemService(Context.HDMI_CONTROL_SERVICE);
+        HdmiControlManager manager = context.getSystemService(HdmiControlManager.class);
         HdmiPlaybackClient playback = null;
         if (manager != null) {
             playback = manager.getPlaybackClient();
@@ -301,4 +337,57 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
         }
         return false;
     }
+    private boolean launchAppByPackageName(Context context, String packageName) {
+        Intent globalButtonIntent = getGlobalButtonLaunchReceiver(context);
+        if (globalButtonIntent != null) {
+            globalButtonIntent.putExtra(EXTRA_PACKAGE_NAME, packageName);
+            context.sendBroadcast(globalButtonIntent);
+            return true;
+        }
+
+        PackageManager packageManager = context.getPackageManager();
+        Intent launchIntent = packageManager.getLaunchIntentForPackage(packageName);
+        if (launchIntent == null) {
+            Log.e(TAG, "Cannot find intent for package: " + packageName);
+            String uri = "https://play.google.com/store/apps/details?id=" + packageName;
+            Intent installIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+            installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                context.startActivity(installIntent);
+            } catch (ActivityNotFoundException e) {
+                Log.e(TAG, "Failed to launch Play Store for package: " + packageName, e);
+                return false;
+            }
+            return false;
+            }
+
+        if (isPackageRunning(packageName)) {
+            Log.d(TAG, "Package already running: " + packageName);
+            return true;
+        }
+        if (packageName.equals(PACKAGE_NAME_DISNEY)
+                || packageName.equals(PACKAGE_NAME_PARAMOUNT)) {
+            launchIntent.putExtra(REMOTE_BUTTON_START, true);
+        }
+        context.startActivity(launchIntent);
+        return true;
+    }
+
+    // Return Global button launch receiver or null if not exists.
+    private static Intent getGlobalButtonLaunchReceiver(Context context) {
+        String receiverComponent = context.getString(R.string.config_globalButtonLaunch);
+        if (TextUtils.isEmpty(receiverComponent)) {
+            return null;
+        }
+        Intent intent = new Intent(ACTION_LAUNCH_APP);
+        intent.setFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+        intent.setComponent(ComponentName.unflattenFromString(receiverComponent));
+        List<ResolveInfo> resolved =
+                context.getPackageManager().queryBroadcastReceivers(intent, 0);
+        if (resolved != null && resolved.size() > 0) {
+            return intent;
+        }
+        return null;
+    }
+
 }
