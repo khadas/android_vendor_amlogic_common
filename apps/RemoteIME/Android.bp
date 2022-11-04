@@ -8,8 +8,9 @@ android_app {
     required: ["libjni_remoteime"],
 
     //ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
+    proprietary: true,
     //endif
-    product_specific: true,
+
     static_libs: ["com.droidlogic.inputmethod.remote.lib"],
 
     certificate: "shared",
