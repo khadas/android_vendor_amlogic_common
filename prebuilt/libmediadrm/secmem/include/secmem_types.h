@@ -35,7 +35,8 @@ enum {
 enum {
     SECMEM_TVP_TYPE_NONE                               = 0,
     SECMEM_TVP_TYPE_FHD,
-    SECMEM_TVP_TYPE_UHD
+    SECMEM_TVP_TYPE_UHD,
+    SECMEM_TVP_TYPE_CUSTOM
 };
 
 enum {
@@ -49,7 +50,7 @@ enum {
     SECMEM_V2_USAGE_DRM_PLAYBACK                       = 0,
     SECMEM_V2_USAGE_CAS_LIVE,
     SECMEM_V2_USAGE_CAS_RECORD,
-    SEMEMM_V2_USAGE_CAS_REPLAY
+    SECMEM_V2_USAGE_CAS_REPLAY
 };
 
 enum {
@@ -69,6 +70,9 @@ enum {
     SECMEM_ERROR_OPEN_TVP_CHANNEL,
     SECMEM_ERROR_OPEN_TVP_TIMER,
     SECMEM_ERROR_INVALID_AUDIO_CONTENT,
+    SECMEM_ERROR_INVALID_CMD,
+    SECMEM_ERROR_INVALID_PROP,
+    SECMEM_ERROR_INVALID_MEM_LEVEL,
     SECMEM_ERROR_MAX
 };
 
@@ -127,6 +131,20 @@ enum {
     CAS_DSC_ERROR_MAX
 };
 
+enum {
+    SECMEM_MEM_LEVEL1                                  = 1,
+    SECMEM_MEM_LEVEL2,
+    SECMEM_MEM_LEVEL3,
+    SECMEM_MEM_LEVEL4,
+    SECMEM_MEM_LEVEL5,
+    SECMEM_MEM_LEVEL6,
+    SECMEM_MEM_LEVEL7,
+};
+
+enum {
+    SECMEM_PROP_MEM_LEVEL                             = 0x1000,
+    SECMEM_PROP_MAX
+};
 typedef struct {
     uint32_t kt_count;
     uint32_t kt_buf_len;

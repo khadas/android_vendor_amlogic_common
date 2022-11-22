@@ -36,10 +36,11 @@ extern "C" {
 #endif
 
 #define FLAG_(x, mask, shift) ((x & (mask)) << shift)
-#define SECMME_V2_FLAGS_TVP(x) FLAG_(x, 0xF, 0)
-#define SECMME_V2_FLAGS_VP9(x) FLAG_(x, 0xF, 4)
-#define SECMME_V2_FLAGS_VD_INDEX(x) FLAG_(x, 0xF, 9)
-#define SECMME_V2_FLAGS_USAGE(x) FLAG_(x, 0x7, 13)
+#define SECMEM_V2_FLAGS_TVP(x) FLAG_(x, 0xF, 0)
+#define SECMEM_V2_FLAGS_VP9(x) FLAG_(x, 0xF, 4)
+#define SECMEM_V2_FLAGS_VD_INDEX(x) FLAG_(x, 0xF, 9)
+#define SECMEM_V2_FLAGS_USAGE(x) FLAG_(x, 0x7, 13)
+#define SECMEM_V2_FLAGS_MEM_LEVEL(x) FLAG_(x, 0xF, 17)
 
 /**
  * Common API
@@ -55,7 +56,7 @@ unsigned int Secure_GetBufferConfig(uint32_t *count, uint32_t *size);
 unsigned int Secure_AllocSecureMem(unsigned int length,
                             unsigned int tvp_set);
 unsigned int Secure_ReleaseResource(void);
-unsigned int Secure_GetCsdDataDrmInfo(unsigned int srccsdaddr,
+unsigned int Secure_GetCsdDataDrmInfo(unsigned int src_csd_addr,
                             unsigned int csd_len,
                             unsigned int* store_csd_phyaddr,
                             unsigned int* store_csd_size,
@@ -76,7 +77,7 @@ unsigned int Secure_V2_Init(void *sess,
                            uint32_t source,
                            uint32_t flags,
                            uint32_t paddr,
-                           uint32_t msize);
+                           uint32_t size);
 unsigned int Secure_V2_MemCreate(void *sess,
                            uint32_t *handle);
 unsigned int Secure_V2_MemAlloc(void *sess,
@@ -91,6 +92,13 @@ unsigned int Secure_V2_MemFill(void *sess,
                            uint32_t offset,
                            uint8_t *buffer,
                            uint32_t size);
+unsigned int Secure_V2_MemCopy(void *sess,
+                           uint32_t out_handle,
+                           uint32_t in_handle,
+                           uint32_t ranges,
+                           uint32_t dst_offset[],
+                           uint32_t src_offset[],
+                           uint32_t size[]);
 unsigned int Secure_V2_MemCheck(void *sess,
                            uint32_t handle,
                            uint8_t *buffer,
@@ -113,7 +121,7 @@ unsigned int Secure_V2_SetCsdData(void*sess,
                            unsigned char *csd,
                            unsigned int csd_len);
 unsigned int Secure_V2_GetCsdDataDrmInfo(void *sess,
-                           unsigned int srccsdaddr,
+                           unsigned int src_csd_addr,
                            unsigned int csd_len,
                            unsigned int *store_csd_phyaddr,
                            unsigned int *store_csd_size,
@@ -129,10 +137,10 @@ unsigned int Secure_V2_GetVp9HeaderSize(void *sess,
                            uint32_t *frames);
 unsigned int Secure_V2_MergeCsdDataDrmInfo(void *sess,
                            uint32_t *phyaddr,
-                           uint32_t *csdlen);
+                           uint32_t *csd_len);
 unsigned int Secure_V2_MergeCsdData(void *sess,
                            uint32_t handle,
-                           uint32_t *csdlen);
+                           uint32_t *csd_len);
 unsigned int Secure_V2_Parse(void *sess,
                            uint32_t type,
                            uint32_t handle,
