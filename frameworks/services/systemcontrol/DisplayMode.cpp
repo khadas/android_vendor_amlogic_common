@@ -2043,6 +2043,7 @@ int DisplayMode::getBootenvInt(const char* key, int defaultVal) {
 }
 
 void DisplayMode::updateDefaultUI() {
+	char value[PROPERTY_VALUE_MAX];
     if (!strncmp(mDefaultUI, "720", 3)) {
         mDisplayWidth= FULL_WIDTH_720;
         mDisplayHeight = FULL_HEIGHT_720;
@@ -2050,8 +2051,19 @@ void DisplayMode::updateDefaultUI() {
         mDisplayWidth = FULL_WIDTH_1080;
         mDisplayHeight = FULL_HEIGHT_1080;
     } else if (!strncmp(mDefaultUI, "4k2k", 4) || !strncmp(mDefaultUI, "2160", 4)) {
+	#ifndef RECOVERY_MODE
         mDisplayWidth = FULL_WIDTH_4K2K;
         mDisplayHeight = FULL_HEIGHT_4K2K;
+	#else
+		property_get("sys.lcd.reverse", value, "0");
+		if (atoi(value) == 1) {
+			mDisplayWidth = FULL_HEIGHT_4K2K;
+			mDisplayHeight = FULL_WIDTH_4K2K;
+		} else {
+			mDisplayWidth = FULL_WIDTH_4K2K;
+			mDisplayHeight = FULL_HEIGHT_4K2K;
+		}
+	#endif
     }
 }
 
