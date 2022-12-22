@@ -40,7 +40,7 @@
 
     <string name="Force_land_for_app">強制橫屏</string>
 
-    <string name="Screen_density_default">280</string>
+    <string name="Screen_density_default">480</string>
     <string-array name="Screen_density_array">
         <item>120</item>
         <item>160</item>
@@ -48,6 +48,7 @@
         <item>240</item>
         <item>280</item>
         <item>320</item>
+        <item>480</item>
     </string-array>
     <string-array name="Screen_density_array_value">
         <item>1</item>
@@ -56,6 +57,7 @@
         <item>4</item>
         <item>5</item>
         <item>6</item>
+        <item>7</item>
     </string-array>
 
     <string name="Screen_rotation_default">0</string>
