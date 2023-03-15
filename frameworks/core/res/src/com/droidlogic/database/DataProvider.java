@@ -32,7 +32,7 @@ public class DataProvider extends ContentProvider {
     private DbOpenHelper mDbOpenHelper = null;
 
     public static final String DB_NAME = "database.db";
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
     public static final String TABLE_SCAN_NAME = "tv_control_scan";
     public static final String TABLE_SOUND_NAME = "tv_control_sound";
     public static final String TABLE_PPPOE_NAME = "tv_control_pppoe";
@@ -160,6 +160,7 @@ public class DataProvider extends ContentProvider {
         }
         long rowId = db.insert(table, null, values);
         Uri newUri = ContentUris.withAppendedId(uri, rowId);
+        getContext().getContentResolver().notifyChange(newUri, null);
         return newUri;
     }
 
@@ -172,7 +173,11 @@ public class DataProvider extends ContentProvider {
         } else {
             Log.d(TAG, "update db null");
         }
-        return db.update(table, values, selection, selectionArgs);
+        int row = db.update(table, values, selection, selectionArgs);
+        if (row > 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return row;
     }
 
     @Override
@@ -184,7 +189,11 @@ public class DataProvider extends ContentProvider {
         } else {
             Log.d(TAG, "delete db null");
         }
-        return db.delete(table, selection, selectionArgs);
+        int row = db.delete(table, selection, selectionArgs);
+        if (row > 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return row;
     }
 
     @Override
