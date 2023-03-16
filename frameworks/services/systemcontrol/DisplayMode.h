@@ -289,8 +289,12 @@ using namespace android;
 
 #define FULL_WIDTH_480                  720
 #define FULL_HEIGHT_480                 480
+#define FULL_WIDTH_M480                 800
+#define FULL_HEIGHT_M480                480
 #define FULL_WIDTH_576                  720
 #define FULL_HEIGHT_576                 576
+#define FULL_WIDTH_M600                 1024
+#define FULL_HEIGHT_M600                600
 #define FULL_WIDTH_720                  1280
 #define FULL_HEIGHT_720                 720
 #define FULL_WIDTH_768                  1366
@@ -370,9 +374,11 @@ enum {
 #define MODE_480I                       "480i60hz"
 #define MODE_480P                       "480p60hz"
 #define MODE_480CVBS                    "480cvbs"
+#define MODE_M480P                      "800x480p60hz"
 #define MODE_576I                       "576i50hz"
 #define MODE_576P                       "576p50hz"
 #define MODE_576CVBS                    "576cvbs"
+#define MODE_M600P                      "1024x600p60hz"
 #define MODE_720P50HZ                   "720p50hz"
 #define MODE_720P                       "720p60hz"
 #define MODE_768P                       "768p60hz"
@@ -467,50 +473,52 @@ enum {
     DISPLAY_MODE_480I                   = 0,
     DISPLAY_MODE_480P                   = 1,
     DISPLAY_MODE_480CVBS                = 2,
-    DISPLAY_MODE_576I                   = 3,
-    DISPLAY_MODE_576P                   = 4,
-    DISPLAY_MODE_576CVBS                = 5,
-    DISPLAY_MODE_720P50HZ               = 6,
-    DISPLAY_MODE_720P                   = 7,
-    DISPLAY_MODE_1080P24HZ              = 8,
-    DISPLAY_MODE_1080I50HZ              = 9,
-    DISPLAY_MODE_1080P50HZ              = 10,
-    DISPLAY_MODE_1080I                  = 11,
-    DISPLAY_MODE_1080P                  = 12,
-    DISPLAY_MODE_4K2K24HZ               = 13,
-    DISPLAY_MODE_4K2K25HZ               = 14,
-    DISPLAY_MODE_4K2K30HZ               = 15,
-    DISPLAY_MODE_4K2K50HZ               = 16,
-    DISPLAY_MODE_4K2K60HZ               = 17,
-    DISPLAY_MODE_4K2KSMPTE              = 18,
-    DISPLAY_MODE_4K2KSMPTE30HZ          = 19,
-    DISPLAY_MODE_4K2KSMPTE50HZ          = 20,
-    DISPLAY_MODE_4K2KSMPTE60HZ          = 21,
-    DISPLAY_MODE_768P                   = 22,
-    DISPLAY_MODE_PANEL                  = 23,
-    DISPLAY_MODE_PAL_M                  = 24,
-    DISPLAY_MODE_PAL_N                  = 25,
-    DISPLAY_MODE_NTSC_M                  = 26,
-    DISPLAY_MODE_480x320P               = 27,
-    DISPLAY_MODE_640x480P               = 28,
-    DISPLAY_MODE_800x480P               = 29,
-    DISPLAY_MODE_800x600P               = 30,
-    DISPLAY_MODE_1024x600P              = 31,
-    DISPLAY_MODE_1024x768P              = 32,
-    DISPLAY_MODE_1280x480P              = 33,
-    DISPLAY_MODE_1280x800P              = 34,
-    DISPLAY_MODE_1280x1024P             = 35,
-    DISPLAY_MODE_1360x768P              = 36,
-    DISPLAY_MODE_1440x900P              = 37,
-    DISPLAY_MODE_1600x900P              = 38,
-    DISPLAY_MODE_1600x1200P             = 39,
-    DISPLAY_MODE_1680x1050P             = 40,
-    DISPLAY_MODE_1920x1200P             = 41,
-    DISPLAY_MODE_2560x1080P             = 42,
-    DISPLAY_MODE_2560x1440P             = 43,
-    DISPLAY_MODE_2560x1600P             = 44,
-    DISPLAY_MODE_3440x1440P             = 45,
-    DISPLAY_MODE_TOTAL                  = 46
+    DISPLAY_MODE_M480                   = 3,
+    DISPLAY_MODE_576I                   = 4,
+    DISPLAY_MODE_576P                   = 5,
+    DISPLAY_MODE_576CVBS                = 6,
+    DISPLAY_MODE_M600                   = 7,
+    DISPLAY_MODE_720P50HZ               = 8,
+    DISPLAY_MODE_720P                   = 9,
+    DISPLAY_MODE_1080P24HZ              = 10,
+    DISPLAY_MODE_1080I50HZ              = 11,
+    DISPLAY_MODE_1080P50HZ              = 12,
+    DISPLAY_MODE_1080I                  = 13,
+    DISPLAY_MODE_1080P                  = 14,
+    DISPLAY_MODE_4K2K24HZ               = 15,
+    DISPLAY_MODE_4K2K25HZ               = 16,
+    DISPLAY_MODE_4K2K30HZ               = 17,
+    DISPLAY_MODE_4K2K50HZ               = 18,
+    DISPLAY_MODE_4K2K60HZ               = 19,
+    DISPLAY_MODE_4K2KSMPTE              = 20,
+    DISPLAY_MODE_4K2KSMPTE30HZ          = 21,
+    DISPLAY_MODE_4K2KSMPTE50HZ          = 22,
+    DISPLAY_MODE_4K2KSMPTE60HZ          = 23,
+    DISPLAY_MODE_768P                   = 24,
+    DISPLAY_MODE_PANEL                  = 25,
+    DISPLAY_MODE_PAL_M                  = 26,
+    DISPLAY_MODE_PAL_N                  = 27,
+    DISPLAY_MODE_NTSC_M                  = 28,
+    DISPLAY_MODE_480x320P               = 29,
+    DISPLAY_MODE_640x480P               = 30,
+    DISPLAY_MODE_800x480P               = 31,
+    DISPLAY_MODE_800x600P               = 32,
+    DISPLAY_MODE_1024x600P              = 33,
+    DISPLAY_MODE_1024x768P              = 34,
+    DISPLAY_MODE_1280x480P              = 35,
+    DISPLAY_MODE_1280x800P              = 36,
+    DISPLAY_MODE_1280x1024P             = 37,
+    DISPLAY_MODE_1360x768P              = 38,
+    DISPLAY_MODE_1440x900P              = 39,
+    DISPLAY_MODE_1600x900P              = 40,
+    DISPLAY_MODE_1600x1200P             = 41,
+    DISPLAY_MODE_1680x1050P             = 42,
+    DISPLAY_MODE_1920x1200P             = 43,
+    DISPLAY_MODE_2560x1080P             = 44,
+    DISPLAY_MODE_2560x1440P             = 45,
+    DISPLAY_MODE_2560x1600P             = 46,
+    DISPLAY_MODE_3440x1440P             = 47,
+    DISPLAY_MODE_TOTAL                  = 48
 };
 
 typedef enum {

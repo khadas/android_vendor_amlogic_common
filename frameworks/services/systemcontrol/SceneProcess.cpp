@@ -58,9 +58,11 @@
 #define MODE_480I                       "480i60hz"
 #define MODE_480P                       "480p60hz"
 #define MODE_480CVBS                    "480cvbs"
+#define MODE_M480P                      "800x480p60hz"
 #define MODE_576I                       "576i50hz"
 #define MODE_576P                       "576p50hz"
 #define MODE_576CVBS                    "576cvbs"
+#define MODE_M600P                      "1024x600p60hz"
 #define MODE_720P50HZ                   "720p50hz"
 #define MODE_720P                       "720p60hz"
 #define MODE_768P                       "768p60hz"
@@ -108,31 +110,33 @@ enum {
     DISPLAY_MODE_480I                   = 0,
     DISPLAY_MODE_480P                   = 1,
     DISPLAY_MODE_480CVBS                = 2,
-    DISPLAY_MODE_576I                   = 3,
-    DISPLAY_MODE_576P                   = 4,
-    DISPLAY_MODE_576CVBS                = 5,
-    DISPLAY_MODE_720P50HZ               = 6,
-    DISPLAY_MODE_720P                   = 7,
-    DISPLAY_MODE_1080P24HZ              = 8,
-    DISPLAY_MODE_1080I50HZ              = 9,
-    DISPLAY_MODE_1080P50HZ              = 10,
-    DISPLAY_MODE_1080I                  = 11,
-    DISPLAY_MODE_1080P                  = 12,
-    DISPLAY_MODE_4K2K24HZ               = 13,
-    DISPLAY_MODE_4K2K25HZ               = 14,
-    DISPLAY_MODE_4K2K30HZ               = 15,
-    DISPLAY_MODE_4K2K50HZ               = 16,
-    DISPLAY_MODE_4K2K60HZ               = 17,
-    DISPLAY_MODE_4K2KSMPTE              = 18,
-    DISPLAY_MODE_4K2KSMPTE30HZ          = 19,
-    DISPLAY_MODE_4K2KSMPTE50HZ          = 20,
-    DISPLAY_MODE_4K2KSMPTE60HZ          = 21,
-    DISPLAY_MODE_768P                   = 22,
-    DISPLAY_MODE_PANEL                  = 23,
-    DISPLAY_MODE_PAL_M                  = 24,
-    DISPLAY_MODE_PAL_N                  = 25,
-    DISPLAY_MODE_NTSC_M                 = 26,
-    DISPLAY_MODE_TOTAL                  = 27
+    DISPLAY_MODE_M480                   = 3,
+    DISPLAY_MODE_576I                   = 4,
+    DISPLAY_MODE_576P                   = 5,
+    DISPLAY_MODE_576CVBS                = 6,
+    DISPLAY_MODE_M600                   = 7,
+    DISPLAY_MODE_720P50HZ               = 8,
+    DISPLAY_MODE_720P                   = 9,
+    DISPLAY_MODE_1080P24HZ              = 10,
+    DISPLAY_MODE_1080I50HZ              = 11,
+    DISPLAY_MODE_1080P50HZ              = 12,
+    DISPLAY_MODE_1080I                  = 13,
+    DISPLAY_MODE_1080P                  = 14,
+    DISPLAY_MODE_4K2K24HZ               = 15,
+    DISPLAY_MODE_4K2K25HZ               = 16,
+    DISPLAY_MODE_4K2K30HZ               = 17,
+    DISPLAY_MODE_4K2K50HZ               = 18,
+    DISPLAY_MODE_4K2K60HZ               = 19,
+    DISPLAY_MODE_4K2KSMPTE              = 20,
+    DISPLAY_MODE_4K2KSMPTE30HZ          = 21,
+    DISPLAY_MODE_4K2KSMPTE50HZ          = 22,
+    DISPLAY_MODE_4K2KSMPTE60HZ          = 23,
+    DISPLAY_MODE_768P                   = 24,
+    DISPLAY_MODE_PANEL                  = 25,
+    DISPLAY_MODE_PAL_M                  = 26,
+    DISPLAY_MODE_PAL_N                  = 27,
+    DISPLAY_MODE_NTSC_M                 = 28,
+    DISPLAY_MODE_TOTAL                  = 29
 };
 
 static const char* DV_MODE_LIST[DV_MODE_LIST_SIZE] = {
@@ -152,9 +156,11 @@ static const char* DISPLAY_MODE_LIST[DISPLAY_MODE_TOTAL] = {
     MODE_480I,
     MODE_480P,
     MODE_480CVBS,
+    MODE_M480P,
     MODE_576I,
     MODE_576P,
     MODE_576CVBS,
+    MODE_M600P,
     MODE_720P,
     MODE_720P50HZ,
     MODE_1080P24HZ,
@@ -194,6 +200,8 @@ static const char* MODE_RESOLUTION_FIRST[] = {
     MODE_4K2K30HZ,
     MODE_4K2K50HZ,
     MODE_4K2K60HZ,
+    MODE_M600P,
+    MODE_M480P,
 };
 
 static const char* MODE_FRAMERATE_FIRST[] = {
@@ -212,6 +220,8 @@ static const char* MODE_FRAMERATE_FIRST[] = {
     MODE_1080P,
     MODE_4K2K50HZ,
     MODE_4K2K60HZ,
+    MODE_M600P,
+    MODE_M480P,
 };
 
 //this is prior selected list  of 4k2k50hz, 4k2k60hz smpte50hz, smpte60hz

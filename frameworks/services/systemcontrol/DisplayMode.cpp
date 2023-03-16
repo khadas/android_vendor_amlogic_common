@@ -58,9 +58,11 @@ static const char* DISPLAY_MODE_LIST[DISPLAY_MODE_TOTAL] = {
     MODE_480I,
     MODE_480P,
     MODE_480CVBS,
+    MODE_M480P,
     MODE_576I,
     MODE_576P,
     MODE_576CVBS,
+    MODE_M600P,
     MODE_720P,
     MODE_720P50HZ,
     MODE_1080P24HZ,
@@ -118,6 +120,8 @@ static const char* MODE_RESOLUTION_FIRST[] = {
     MODE_4K2K30HZ,
     MODE_4K2K50HZ,
     MODE_4K2K60HZ,
+    MODE_M600P,
+    MODE_M480P,
 };
 static const char* MODE_FRAMERATE_FIRST[] = {
     MODE_480I,
@@ -135,6 +139,8 @@ static const char* MODE_FRAMERATE_FIRST[] = {
     MODE_1080P,
     MODE_4K2K50HZ,
     MODE_4K2K60HZ,
+    MODE_M600P,
+    MODE_M480P,
 };
 
 // Sink reference table, sorted by priority, per CDF
@@ -2002,6 +2008,10 @@ void DisplayMode::getPosition(const char* curMode, int *position) {
         strcpy(keyValue, MODE_PAL_N);
         defaultWidth = FULL_WIDTH_576;
         defaultHeight = FULL_HEIGHT_576;
+    } else if (strstr(curMode, MODE_M600P)) {
+        strcpy(keyValue, MODE_M600P);
+        defaultWidth = FULL_WIDTH_M600;
+        defaultHeight = FULL_HEIGHT_M600;
     } else if (strstr(curMode, MODE_NTSC_M)) {
         strcpy(keyValue, MODE_NTSC_M);
         defaultWidth = FULL_WIDTH_480;
@@ -2148,6 +2158,8 @@ void DisplayMode::setPosition(const char* curMode, int left, int top, int width,
     char ubootvar[100] = {0};
     if (strstr(curMode, MODE_480CVBS)) {
         strcpy(keyValue, MODE_480CVBS);
+    } else if (strstr(curMode, MODE_M480P)) {
+        strcpy(keyValue, MODE_M480P);
     } else if (strstr(curMode, "480")) {
         strcpy(keyValue, strstr(curMode, MODE_480P_PREFIX) ? MODE_480P_PREFIX : MODE_480I_PREFIX);
     } else if (strstr(curMode, MODE_576CVBS)) {
@@ -2160,6 +2172,8 @@ void DisplayMode::setPosition(const char* curMode, int left, int top, int width,
         strcpy(keyValue, MODE_PAL_N);
     } else if (strstr(curMode, MODE_NTSC_M)) {
         strcpy(keyValue, MODE_NTSC_M);
+    } else if (strstr(curMode, MODE_M600P)) {
+        strcpy(keyValue, MODE_M600P);
     } else if (strstr(curMode, MODE_720P_PREFIX)) {
         strcpy(keyValue, MODE_720P_PREFIX);
     } else if (strstr(curMode, MODE_768P_PREFIX)) {
