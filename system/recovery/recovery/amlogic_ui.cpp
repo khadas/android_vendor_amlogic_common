@@ -236,6 +236,12 @@ class AmlogicUI : public ScreenRecoveryUI {
 int fb0_enable() {
 
     int ret = 0;
+    if (access("/dev/dri/card0", R_OK | W_OK) == 0) {
+        //drm no need
+        printf("drm mode, skip\n");
+        return 0;
+    }
+
     int fd = open("/sys/class/graphics/fb0/blank",O_RDWR);
     if (fd == -1) {
         printf("open %s failed\n", "/sys/class/graphics/fb0/blank");
