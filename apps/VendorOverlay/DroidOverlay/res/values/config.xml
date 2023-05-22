@@ -78,8 +78,8 @@
          STREAM_MUSIC as if it's on TV platform. -->
     <bool name="config_single_volume">true</bool>
 
-    <bool name="config_quickSettingsSupported">false</bool>
-    <bool name="config_supportsSplitScreenMultiWindow">false</bool>
+    <bool name="config_quickSettingsSupported">true</bool>
+    <bool name="config_supportsSplitScreenMultiWindow">true</bool>
     <string name="config_deviceConfiguratorPackageName" translatable="false">com.google.android.gms</string>
     <string name="config_defaultSupervisionProfileOwnerComponent" translatable="false">com.google.android.gms/.kids.account.receiver.ProfileOwnerReceiver</string>
     <!-- Packages to pin via Pinner Service -->
