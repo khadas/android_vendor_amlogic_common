@@ -4,14 +4,14 @@
     <com.khadas.ksettings.MipiSeekBarPreference
         android:dialogTitle="@string/mipi_Brightness_title"
         android:title="@string/mipi_Brightness_title"
-        android:summary="100"
+        android:summary="102"
         android:key="mipi_Brightness"
         android:dialogLayout="@layout/brightness_prefs" />
 
     <com.khadas.ksettings.VboSeekBarPreference
         android:dialogTitle="@string/vbo_Brightness_title"
         android:title="@string/vbo_Brightness_title"
-        android:summary="100"
+        android:summary="102"
         android:key="vbo_Brightness"
         android:dialogLayout="@layout/brightness_prefs" />
 

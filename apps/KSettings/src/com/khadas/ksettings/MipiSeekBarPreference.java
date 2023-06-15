@@ -60,14 +60,13 @@ public class MipiSeekBarPreference extends DialogPreference implements OnSeekBar
         //vbo -- /sys/class/backlight/aml-bl1/brightness
         try {
             value = ComApi.execCommand(new String[]{"sh", "-c", "cat /sys/class/backlight/aml-bl/brightness"});
-            //Log.d("wjh","Mipi=" + value);
+            Log.d("hlm0","Mipi=" + value);
             if(value.equals("") || value.contains("No such file or directory")){
                 textView.setText("No MIPI Panel");
             }else {
                 textView.setText(value);
                 if(Integer.parseInt(value) >= 0 && Integer.parseInt(value) <= 255) {
                     seekBar.setProgress(Integer.parseInt(value));
-                    SystemProperties.set("persist.sys.mipi_bl_value", value);
                 }
             }
         } catch (IOException e) {
@@ -80,6 +79,13 @@ public class MipiSeekBarPreference extends DialogPreference implements OnSeekBar
         // TODO Auto-generated method stub
         if (positiveResult) {
             Log.i("Dialog closed", "You click positive button");
+            try {
+                value = ComApi.execCommand(new String[]{"sh", "-c", "cat /sys/class/backlight/aml-bl/brightness"});
+                Log.d("hlm1","Mipi=" + value);
+                SystemProperties.set("persist.sys.mipi_bl_value", value);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             Log.i("Dialog closed", "You click negative button");
         }

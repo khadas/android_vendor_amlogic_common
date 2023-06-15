@@ -66,7 +66,6 @@ public class VboSeekBarPreference extends DialogPreference implements OnSeekBarC
                 textView.setText(value);
                 if(Integer.parseInt(value) >= 0 && Integer.parseInt(value) <= 255) {
                     seekBar.setProgress(Integer.parseInt(value));
-                    SystemProperties.set("persist.sys.vbo_bl_value", value);
                 }
             }
         } catch (IOException e) {
@@ -79,6 +78,13 @@ public class VboSeekBarPreference extends DialogPreference implements OnSeekBarC
         // TODO Auto-generated method stub
         if (positiveResult) {
             Log.i("Dialog closed", "You click positive button");
+            try {
+                value = ComApi.execCommand(new String[]{"sh", "-c", "cat /sys/class/backlight/aml-bl1/brightness"});
+                Log.d("hlm1","Vbo=" + value);
+                SystemProperties.set("persist.sys.vbo_bl_value", value);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             Log.i("Dialog closed", "You click negative button");
         }
