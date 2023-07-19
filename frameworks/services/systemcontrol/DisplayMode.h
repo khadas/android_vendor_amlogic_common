@@ -187,8 +187,6 @@ using namespace android;
 #define PROP_SDR_MODE_STATE             "persist.vendor.sys.sdr.state"
 #define PROP_DISPLAY_SIZE_CHECK         "vendor.display-size.check"
 #define PROP_ENABLE_SDR2HDR             "ro.vendor.sdr2hdr.enable"
-#define PROP_HDMI_FRAMERATE_PRIORITY    "persist.vendor.sys.framerate.priority"
-#define PROP_HDR_RESOLUTION_PRIORITY    "persist.vendor.hdr.resolution.priority"
 
 #define HDR_MODE_OFF                    "0"
 #define HDR_MODE_ON                     "1"
@@ -321,6 +319,9 @@ using namespace android;
  *sdr content force be converted to hdr content
  */
 #define UBOOTENV_SDR2HDR                "ubootenv.var.sdr2hdr"
+
+#define UBOOTENV_FRAMERATE_PRIORITY      "ubootenv.var.framerate_priority"
+#define UBOOTENV_HDR_RESOLUTION_PRIORITY "ubootenv.var.hdr_resolution_priority"
 
 //memc
 #define PROP_DISPLAY_MEMC               "persist.vendor.sys.memc"

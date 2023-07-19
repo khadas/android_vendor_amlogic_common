@@ -1830,11 +1830,19 @@ bool DisplayMode::isBestColorSpace() {
 }
 
 bool DisplayMode::isHdrResolutionPriority() {
-    return pSysWrite->getPropertyBoolean(PROP_HDR_RESOLUTION_PRIORITY, true);
+   char isHdrResolutionPriority[MODE_LEN] = {0};
+    if (DISPLAY_TYPE_TV == mDisplayType) {
+        return false;
+    }
+    return !getBootEnv(UBOOTENV_HDR_RESOLUTION_PRIORITY, isHdrResolutionPriority) || strcmp(isHdrResolutionPriority, "true") == 0;
 }
 
 bool DisplayMode::isFrameratePriority() {
-    return pSysWrite->getPropertyBoolean(PROP_HDMI_FRAMERATE_PRIORITY, true);
+   char isFrameratePriority[MODE_LEN] = {0};
+    if (DISPLAY_TYPE_TV == mDisplayType) {
+        return false;
+    }
+    return !getBootEnv(UBOOTENV_FRAMERATE_PRIORITY, isFrameratePriority) || strcmp(isFrameratePriority, "true") == 0;
 }
 
 bool DisplayMode::isSupport4K() {
