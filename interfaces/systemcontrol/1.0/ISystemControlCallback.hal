@@ -24,4 +24,5 @@ interface ISystemControlCallback {
     oneway notifyHdrInfoChangedCallback(int32_t newHdrInfo);
     oneway notifyAudioCallback(int32_t param1, int32_t param2, int32_t param3, int32_t param4);
     oneway notifyDensityChange(int32_t param1, int32_t param2, int32_t param3);
+	oneway notifyScreenColorChange(int32_t newColor);
 };

@@ -359,6 +359,7 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     virtual void onDensityChange(int32_t param1,int32_t param2, int32_t param3);
     virtual void onAudioEvent(int32_t param1, int32_t param2, int32_t param3, int32_t param4);
     Return<void> setAudioParam(int32_t param1, int32_t param2, int32_t param3, int32_t param4, setAudioParam_cb _hidl_cb);
+    virtual void onScreenColorChange(int32_t newColor);
 
     // Methods from ::android::hidl::base::V1_0::IBase follow.
     Return<void> debug(const hidl_handle& fd, const hidl_vec<hidl_string>& args) override;

@@ -43,6 +43,11 @@ SystemControlClient::SystemControlClient() {
          ALOGE("tryGet system control daemon Service");
     };
 
+    mSystemControlHidlCallback = new SystemControlHidlCallback(this);
+    Return<void> ret = ctrl->setCallback(mSystemControlHidlCallback);
+    if (!ret.isOk()) {
+        ALOGE("Failed to setCallback %s", ret.description().c_str());
+    }
     mDeathRecipient = new SystemControlDeathRecipient();
     Return<bool> linked = ctrl->linkToDeath(mDeathRecipient, /*cookie*/ 0);
     if (!linked.isOk()) {
@@ -1545,7 +1550,7 @@ int SystemControlClient::setVideoScreenColor(int color)
 }
 /*
 *parm:
-*window: 0:main_window, 1:sub_window
+*window: 1:main_window, 2:sub_window
 *Color: 0:black, 1:blue
 *frequency: 4: only once, 5:always, 6:disable show color frame
 */
@@ -1678,6 +1683,21 @@ Return<void> SystemControlClient::SystemControlHidlCallback::notifyDensityChange
 
     return Void();
 }
+
+Return<void> SystemControlClient::SystemControlHidlCallback::notifyScreenColorChange(int newColor) {
+    sp<SysCtrlListener> listener;
+
+    listener = SysCtrlClient->mListener;
+    if (listener != NULL) {
+        listener->onScreenColorChange(newColor);
+    } else {
+        ALOGI("%s: listener is NULL.", __FUNCTION__);
+    }
+
+    return Void();
+
+}
+
 void SystemControlClient::SystemControlDeathRecipient::serviceDied(uint64_t cookie,
         const ::android::wp<::android::hidl::base::V1_0::IBase>& who) {
     LOG(ERROR) << "system control service died. need release some resources";

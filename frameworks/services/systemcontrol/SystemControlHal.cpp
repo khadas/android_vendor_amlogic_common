@@ -177,6 +177,23 @@ void SystemControlHal::onAudioEvent(int32_t param1, int32_t param2, int32_t para
     }
 }
 
+void SystemControlHal::onScreenColorChange(int32_t newColor) {
+    AutoMutex _l(mLock);
+    ALOGD("onScreenColorChange newColor:%d.", newColor);
+    for (auto it = mClients.begin(); it != mClients.end();) {
+        if (it->second == nullptr) {
+            it = mClients.erase(it);
+            continue;
+        }
+        auto ret = (it->second)->notifyScreenColorChange(newColor);
+        if (!ret.isOk() && ret.isDeadObject()) {
+            it = mClients.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 Return<void> SystemControlHal::getSupportDispModeList(getSupportDispModeList_cb _hidl_cb) {
     std::vector<std::string> supportModes;
     mSysControl->getSupportDispModeList(&supportModes);
@@ -804,7 +821,7 @@ Return<void> SystemControlHal::setCallback(const sp<ISystemControlCallback>& cal
         int clientSize = mClients.size();
         for (int i = 0; i < clientSize; i++) {
             if (mClients[i] == nullptr) {
-                SYS_LOGI("%s, client index:%d had died, this id give the new client", __FUNCTION__, i);
+                SYS_LOGD("%s, client index:%d had died, this id give the new client", __FUNCTION__, i);
                 cookie = i;
                 mClients[i] = callback;
                 break;
@@ -821,9 +838,8 @@ Return<void> SystemControlHal::setCallback(const sp<ISystemControlCallback>& cal
         if (!linkSuccess) {
             SYS_LOGE("Couldn't link death recipient for cookie: %d", cookie);
         }
-        SYS_LOGI("%s cookie:%d, client size:%d", __FUNCTION__, cookie, (int)mClients.size());
+        SYS_LOGD("%s cookie:%d, client size:%d", __FUNCTION__, cookie, (int)mClients.size());
     }
-
     return Void();
 }
 

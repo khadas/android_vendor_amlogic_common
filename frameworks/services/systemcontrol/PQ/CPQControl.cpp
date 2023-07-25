@@ -4950,9 +4950,9 @@ int CPQControl::SetScreenColorForSignalChange(int screenColor, int isSave)
         } else {
             setVideoScreenColor(3);
         }
-    } else if (screenColorEnable) {
+    } /*else if (screenColorEnable) {
         setVideoScreenColor(screenColor);
-    }
+    }*/
     /*
     if (screenColor == 0) {//black screen
         SetVideoLayerColor(VIDEO_LAYER_COLOR_BLACK, VIDEO_LAYER_COLOR_BLACK);

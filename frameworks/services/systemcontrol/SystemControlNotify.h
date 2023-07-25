@@ -36,6 +36,7 @@ public:
     virtual void onSetDisplayMode(int mode) = 0;
     virtual void onAudioEvent(int param1, int param2, int param3, int param4) = 0;
     virtual void onDensityChange(int param1,int param2, int param3) = 0;
+    virtual void onScreenColorChange(int newColor) = 0;
 };
 
 }; // namespace android
