@@ -1,0 +1,36 @@
+package {
+    // See: http://go/android-license-faq
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "vendor_amlogic_common_license"
+    // to get the below license kinds:
+    //   SPDX-license-identifier-Apache-2.0
+    default_applicable_licenses: ["vendor_amlogic_common_license"],
+}
+
+cc_binary {
+    name: "vmx_webclient",
+    init_rc: ["vmx_webclient.rc"],
+    vintf_fragments: ["manifest_vmx_webclient.xml"],
+    vendor: true,
+    relative_install_path: "hw",
+    srcs: [
+        "VmxWebClient.cpp",
+        "Service.cpp",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
+    shared_libs: [
+        "libbase",
+        "liblog",
+        "libutils",
+        "libcutils",
+        "vendor.amlogic.hardware.vmx_webclient-ndk",
+        "libbinder_ndk",
+    ],
+    static_libs: [
+        "android.hardware.common-V2-ndk",
+        "libaidlcommonsupport",
+    ]
+}

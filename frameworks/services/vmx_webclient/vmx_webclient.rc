@@ -1,0 +1,6 @@
+on init
+    start vmx_webclient
+
+service vmx_webclient /vendor/bin/hw/vmx_webclient
+    user media
+    group media mediadrm drmrpc system inet

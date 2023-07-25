@@ -1,0 +1,10 @@
+<manifest version="1.0" type="device" target-level="8">
+    <hal format="aidl" optional="true">
+        <name>vendor.amlogic.hardware.vmx_webclient</name>
+        <version>1</version>
+        <interface>
+            <name>IVmxWebClient</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+</manifest>
