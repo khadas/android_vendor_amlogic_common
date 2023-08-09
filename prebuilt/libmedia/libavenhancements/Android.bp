@@ -40,6 +40,10 @@ avenhancements_amnuplayer_go_defaults {
 
 cc_prebuilt_library_shared {
     name: "libamffmpegadapter",
+    apex_available: [
+        "//apex_available:platform",
+        "com.amlogic.mediaextractor",
+    ],
     system_ext_specific: true,
     defaults: ["avenhancements_adapter_go_defaults"],
     compile_multilib: "both",
@@ -60,19 +64,11 @@ cc_prebuilt_library_shared {
         },
     },
     shared_libs: [
-        "libammediaext",
-        "libbinder",
-        "libc++",
-        "libc",
         "libcutils",
-        "libdl",
-        "liblog",
-        "libm",
-        "libmedia",
+        "libamffmpeg",
         "libmediandk",
-        "libstagefright",
-        "libstagefright_foundation",
         "libutils",
+        "liblog",
     ],
 }
 
@@ -147,6 +143,10 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libamextractor",
+    apex_available: [
+        "//apex_available:platform",
+        "com.amlogic.mediaextractor",
+    ],
     system_ext_specific: true,
     defaults: ["avenhancements_adapter_go_defaults"],
     arch: {
@@ -158,15 +158,9 @@ cc_prebuilt_library_shared {
         },
     },
     shared_libs: [
-        "libbinder",
-        "libc++",
-        "libc",
         "libcutils",
-        "libdl",
-        "liblog",
-        "libm",
-        "libstagefright_foundation",
         "libutils",
+        "liblog",
     ],
 
     relative_install_path: "extractors",
