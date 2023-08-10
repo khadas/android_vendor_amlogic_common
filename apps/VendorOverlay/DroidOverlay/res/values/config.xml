@@ -44,16 +44,29 @@
         <item>"9,1"</item>
     </string-array>
 
-	<!-- CEC config values -->
+    <!-- CEC config values -->
 
     <bool name="config_cecPowerStateChangeOnActiveSourceLostNone_default">false</bool>
     <bool name="config_cecPowerStateChangeOnActiveSourceLostStandbyNow_default">true</bool>
+
+    <bool name="config_cecPowerControlModeTvAndAudioSystem_default">false</bool>
+    <bool name="config_cecPowerControlModeBroadcast_default">true</bool>
+
+    <!-- Comatibility Cec Configuration -->
+    <bool name="config_cecUseAndroidVolumeBar">false</bool>
+    <bool name="config_cecSendStandbyNoneActive">false</bool>
+    <bool name="config_cecSendInactiveSource">false</bool>
+    <bool name="config_cecBootOneTouchPlay">true</bool>
+    <bool name="config_cecSuspendedByAutoDeviceOff">false</bool>
+    <bool name="config_cec_hdmiFullVolume">false</bool>
+    <bool name="config_cec_showPassthroughWarningAlways">false</bool>
+    <integer name="config_cec_passthroughMode">2</integer>
 
     <!-- Which Short Audio Descriptors a TV should query via CEC -->
     <bool name="config_cecQuerySadLpcmEnabled_default">false</bool>
     <bool name="config_cecQuerySadLpcmDisabled_default">true</bool>
 
-	<!-- AC3/DD -->
+    <!-- AC3/DD -->
     <bool name="config_cecQuerySadDdEnabled_default">true</bool>
     <bool name="config_cecQuerySadDdDisabled_default">false</bool>
 

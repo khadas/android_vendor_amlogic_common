@@ -132,7 +132,7 @@ public class HdmiCecManager {
             mHdmiControlManager.setTvSendStandbyOnSleep(value ? ON : OFF);
         } else {
             mHdmiControlManager.setPowerControlMode(value
-                ? HdmiControlManager.POWER_CONTROL_MODE_TV_AND_AUDIO_SYSTEM
+                ? HdmiControlManager.POWER_CONTROL_MODE_BROADCAST
                 : HdmiControlManager.POWER_CONTROL_MODE_NONE);
         }
     }
