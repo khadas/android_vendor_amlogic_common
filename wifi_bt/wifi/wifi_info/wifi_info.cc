@@ -103,6 +103,7 @@ static const dongle_info dongle_registerd[]={\
     {"0000","0000","8821au","/vendor/lib/modules/8821au.ko","ifname=wlan0 if2name=ap0",no_base,"rtl8821au",0x0811,""},\
     {"0000","0000","8812au","/vendor/lib/modules/8812au.ko","ifname=wlan0 if2name=ap0",no_base,"rtl8812au",0x881a,""},\
     {"c822","0000","8822cs","/vendor/lib/modules/8822cs.ko","ifname=wlan0 if2name=ap0",no_base,"rtl8822cs",0x0,""}, \
+    {"a822","0000","8822es","/vendor/lib/modules/8822es.ko","ifname=wlan0 if2name=ap0",no_base,"rtl8822es",0x0,""}, \
     {"0000","0000","8188fu","/vendor/lib/modules/8188fu.ko","ifname=wlan0 if2name=ap0",no_base,"rtl8188ftv",0xf179,""},\
     {"0000","0000","8192eu","/vendor/lib/modules/8192eu.ko","ifname=wlan0 if2name=ap0",no_base,"rtl8192eu",0x818b,""},\
     {"0000","0000","8192fu","/vendor/lib/modules/8192fu.ko","ifname=wlan0 if2name=ap0",no_base,"rtl8192fu",0xf192,""},\
