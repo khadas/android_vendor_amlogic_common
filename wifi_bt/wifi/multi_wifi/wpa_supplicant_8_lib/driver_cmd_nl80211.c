@@ -465,67 +465,45 @@ int wpa_driver_nl80211_driver_cmd(void *priv, char *cmd, char *buf,
 
 	if (os_strncasecmp(wifi_status, "nxp", 3) == 0)
 		return wpa_driver_nl80211_driver_cmd_nxp(priv, cmd, buf, buf_len);
-	if (bss->ifindex <= 0 && bss->wdev_id > 0) {
+
+	do {
+		if (bss->ifindex <= 0 && bss->wdev_id > 0) {
 		/* DRIVER CMD received on the DEDICATED P2P Interface which doesn't
-		 * have an NETDEVICE associated with it. So we have to re-route the
-		 * command to the parent NETDEVICE
-		 */
+		* have an NETDEVICE associated with it. So we have to re-route the
+		* command to the parent NETDEVICE
+		*/
 		struct wpa_supplicant *wpa_s = (struct wpa_supplicant *)(drv->ctx);
+
+		if (os_strncmp(bss->ifname, "p2p-dev-wlan", 12) == 0 &&
+			(os_strncasecmp(wifi_status, "bcm", 3) == 0)) {
+			 wpa_printf(MSG_WARNING, "%s:%d bcmwifi"
+			"ignore re-route cmd when ifindex was wrong", __func__, __LINE__);
+			break;
+		}
 
 		if (wpa_s && wpa_s->parent && wpa_s->parent->drv_priv) {
 			/* Update the nl80211 pointers corresponding to parent iface */
 			bss = wpa_s->parent->drv_priv;
-		    drv = bss->drv;
+			drv = bss->drv;
 			wpa_printf(MSG_DEBUG, "Re-routing command to iface: %s"
-					      " cmd (%s)", bss->ifname, cmd);
+				" cmd (%s)", bss->ifname, cmd);
+			}
+		}
+	} while(0);
+
+	if (os_strncasecmp(cmd, "BTCOEXMODE", 10) == 0 || os_strncasecmp(cmd, "MIRACAST", 8) == 0 ||
+		os_strncasecmp(cmd, "WLS_BATCHING", 12) == 0 || os_strcasecmp(cmd, "BTCOEXSCAN-STOP") == 0 ||
+		os_strncasecmp(cmd, "RXFILTER", 8) == 0 || os_strncasecmp(cmd, "SETSUSPENDMODE", 14) == 0 ||
+		os_strncasecmp(cmd, "SETBAND", 7) == 0)
+		return 0;
+
+	if (os_strncasecmp(cmd, "SET_AP_WPS_P2P_IE", 17) == 0) {
+		if ((os_strncasecmp(wifi_status, "mtk", 3) == 0) ||
+			(os_strncasecmp(wifi_status, "rtl8852bs", 9) == 0) ||
+			(os_strncasecmp(wifi_status, "uwe", 3) ==0 )) {
+			return 0;
 		}
 	}
-#if 0
-	if (os_strncasecmp(wifi_status, "rtl", 3) != 0) {
-		if (os_strncasecmp(cmd, "COUNTRY", 7) == 0) {
-		    char alpha2[3];
-		    struct nl_msg *msg;
-		    msg = nlmsg_alloc();
-		    if (!msg)
-		        return -ENOMEM;
-
-		    memcpy(alpha2, cmd + strlen("COUNTRY") + 1, strlen(cmd) - strlen("COUNTRY") - 1);
-		    alpha2[2] = '\0';
-		    if (!nl80211_cmd(drv, msg, 0, NL80211_CMD_RELOAD_REGDB))
-		    {
-		                wpa_printf(MSG_ERROR, "debug for fw reload\n");
-		                nlmsg_free(msg);
-		                        return -EINVAL;
-		    }
-		    if (send_and_recv_msgs(drv, msg, NULL, NULL, NULL, NULL))
-		        return -EINVAL;
-		    msg = nlmsg_alloc();
-		    if (!msg)
-		        return -ENOMEM;
-		    if (!nl80211_cmd(drv, msg, 0, NL80211_CMD_REQ_SET_REG) ||
-		        nla_put_string(msg, NL80211_ATTR_REG_ALPHA2, alpha2)) {
-		        nlmsg_free(msg);
-		        return -EINVAL;
-		    }
-		    if (send_and_recv_msgs(drv, msg, NULL, NULL, NULL, NULL))
-		        return -EINVAL;
-		}
-	}
-#endif
-
-       if (os_strncasecmp(cmd, "BTCOEXMODE", 10) == 0 || os_strncasecmp(cmd, "MIRACAST", 8) == 0 ||
-        os_strncasecmp(cmd, "WLS_BATCHING", 12) == 0 || os_strcasecmp(cmd, "BTCOEXSCAN-STOP") == 0 ||
-        os_strncasecmp(cmd, "RXFILTER", 8) == 0 || os_strncasecmp(cmd, "SETSUSPENDMODE", 14) == 0 ||
-        os_strncasecmp(cmd, "SETBAND", 7) == 0)
-        return 0;
-
-    if (os_strncasecmp(cmd, "SET_AP_WPS_P2P_IE", 17) == 0) {
-        if ((os_strncasecmp(wifi_status, "mtk", 3) == 0) ||
-            (os_strncasecmp(wifi_status, "rtl8852bs", 9) == 0) ||
-            (os_strncasecmp(wifi_status, "uwe", 3) ==0 )) {
-            return 0;
-        }
-    }
 
 	if (os_strcasecmp(cmd, "STOP") == 0) {
 		linux_set_iface_flags(drv->global->ioctl_sock, bss->ifname, 0);
