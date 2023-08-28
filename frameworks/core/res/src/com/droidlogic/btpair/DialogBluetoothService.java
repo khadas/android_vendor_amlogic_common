@@ -27,7 +27,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.media.AudioDeviceAttributes;
-import android.media.AudioManager;
 import android.media.AudioSystem;
 import android.os.Handler;
 import android.os.IBinder;
@@ -135,7 +134,6 @@ public class DialogBluetoothService extends Service {
     private BluetoothGattCharacteristic rep6Characteristic = null;
     private BluetoothGattCharacteristic rep7Characteristic = null;
     private int prevInstance = 0; // for checking audio data notifications sequence
-    private AudioManager mAudioManager = null;
     private int connectedState = 0;
 
     private static int UNPAIR_SHOW_INSTRUMENT = 0;
@@ -165,8 +163,8 @@ public class DialogBluetoothService extends Service {
             else */if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                 Log.i(TAG, ">ACL LINK CONNECTED ["+device.getName()+"] - checking for supported devices after delay");
                 if (isBleVoiceDevice(device)) {
-                    mAudioManager.setWiredDeviceConnectionState(new AudioDeviceAttributes(
-                            AudioSystem.DEVICE_IN_BLUETOOTH_BLE, macAddress, deviceName), AudioSystem.DEVICE_STATE_AVAILABLE);
+                    AudioSystem.setDeviceConnectionState(new AudioDeviceAttributes(
+                            AudioSystem.DEVICE_IN_BLUETOOTH_BLE, macAddress, deviceName), AudioSystem.DEVICE_STATE_AVAILABLE, AudioSystem.AUDIO_FORMAT_DEFAULT);
                 }
                 if (isRemoteAudioCapable(device)) {
                     Log.i(TAG, "pending.isEmpty()="+pending.isEmpty());
@@ -186,8 +184,8 @@ public class DialogBluetoothService extends Service {
             else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 Log.i(TAG, ">ACL LINK DISCONNECTED ["+device.getName()+"]");
                 if (isBleVoiceDevice(device)) {
-                    mAudioManager.setWiredDeviceConnectionState(new AudioDeviceAttributes(
-                            AudioSystem.DEVICE_IN_BLUETOOTH_BLE, macAddress, deviceName), AudioSystem.DEVICE_STATE_UNAVAILABLE);
+                    AudioSystem.setDeviceConnectionState(new AudioDeviceAttributes(
+                            AudioSystem.DEVICE_IN_BLUETOOTH_BLE, macAddress, deviceName), AudioSystem.DEVICE_STATE_UNAVAILABLE, AudioSystem.AUDIO_FORMAT_DEFAULT);
                 }
                 if (isRemoteAudioCapable(device)) {
                     pending.remove(device);
@@ -308,8 +306,8 @@ public class DialogBluetoothService extends Service {
         for (Iterator<BluetoothDevice> it = bondedDevices.iterator(); it.hasNext();) {
             BluetoothDevice dev = (BluetoothDevice) it.next();
             if (isBleVoiceDevice(dev)) {
-                mAudioManager.setWiredDeviceConnectionState(new AudioDeviceAttributes(
-                        AudioSystem.DEVICE_IN_BLUETOOTH_BLE, dev.getAddress(), dev.getName()), AudioSystem.DEVICE_STATE_AVAILABLE);
+                AudioSystem.setDeviceConnectionState(new AudioDeviceAttributes(
+                        AudioSystem.DEVICE_IN_BLUETOOTH_BLE, dev.getAddress(), dev.getName()), AudioSystem.DEVICE_STATE_AVAILABLE, AudioSystem.AUDIO_FORMAT_DEFAULT);
             }
         }
     }
@@ -361,14 +359,10 @@ public class DialogBluetoothService extends Service {
     // Service lifecycle callbacks
     @Override
     public void onCreate() {
-
         Log.d(TAG, "Service onCreate");
-
         mContext = this;
         mHandler = new Handler();
         initializeBTManager();
-        mAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
@@ -380,7 +374,6 @@ public class DialogBluetoothService extends Service {
         // On service start, check for supported devices
         mHandler.postDelayed(mConnRunnable, CONNECT_DELAY_MS_BOOT);
         mHandler.postDelayed(mStartDiscoveryRunnable, CONNECTING_TIMEOUT);
-
     }
 
     @Override
@@ -738,8 +731,8 @@ public class DialogBluetoothService extends Service {
             if (isRemoteAudioCapable(dev)) {
                 Log.i(TAG, "amlogic rc " + (status == 1 ? "input" : "remove"));
                 connectedState = status;
-                mAudioManager.setWiredDeviceConnectionState(new AudioDeviceAttributes(
-                        AudioSystem.DEVICE_IN_WIRED_HEADSET, dev.getAddress(), dev.getName()), connectedState);
+                AudioSystem.setDeviceConnectionState(new AudioDeviceAttributes(
+                        AudioSystem.DEVICE_IN_WIRED_HEADSET, dev.getAddress(), dev.getName()), connectedState, AudioSystem.AUDIO_FORMAT_DEFAULT);
                 break;
             }
         }

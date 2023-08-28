@@ -280,52 +280,58 @@ public class AudioSystemCmdService extends Service {
         }
     };
 
+    private void updateAudioPatch() {
+        if (!updateAudioSinkLocked()) {
+            Slog.i(TAG, "updateAudioPatch cur sink does not change.");
+            return;
+        }
+        if (mAudioSink.size() == 0) {
+            Slog.w(TAG, "updateAudioPatch sink changed. sinks num is 0");
+        } else {
+            for (AudioDevicePort sink : mAudioSink) {
+                Slog.i(TAG, "updateAudioPatch sink changed. sink:" + sink.toString());
+            }
+        }
+        sinkUpdated = true;
+        mHasStartedDecoder = false;
+        mHandler.removeCallbacks(mHandleAudioSinkUpdatedRunnable);
+        if (mTvInputManager != null) {
+            if (mTvInputManager.getHardwareList() == null) {
+                mHandler.post(mHandleAudioSinkUpdatedRunnable);
+            } else {
+                boolean isA2dpOutput = false;
+                int curOutdevices = AudioSystem.getDevicesForStream(AudioSystem.STREAM_MUSIC);
+                int i = 0;
+                int device = 0;
+                while ((device = 1 << i) != AudioSystem.DEVICE_OUT_DEFAULT) {
+                    if ((curOutdevices & device) != 0) {
+                        if (AudioSystem.DEVICE_OUT_ALL_A2DP_SET.contains(device)) {
+                            isA2dpOutput = true;
+                            break;
+                        }
+                    }
+                    i++;
+                }
+                if (DroidLogicUtils.isTv())
+                    mHandler.postDelayed(mHandleAudioSinkUpdatedRunnable, isA2dpOutput ? 2500 : 500);
+                else
+                    mHandler.postDelayed(mHandleAudioSinkUpdatedRunnable, 500);
+            }
+        }
+    }
 
     private final AudioManager.OnAudioPortUpdateListener mAudioListener =
             new AudioManager.OnAudioPortUpdateListener() {
                 @Override
                 public void onAudioPortListUpdate(AudioPort[] portList) {
-                    if (!updateAudioSinkLocked()) {
-                        Slog.i(TAG, "onAudioPortListUpdate cur sink does not change.");
-                        return;
-                    }
-                    if (mAudioSink.size() == 0) {
-                        Slog.w(TAG, "onAudioPortListUpdate sink changed. sinks num is 0");
-                    } else {
-                        for (AudioDevicePort sink : mAudioSink) {
-                            Slog.i(TAG, "onAudioPortListUpdate sink changed. sink:" + sink.toString());
-                        }
-                    }
-                    sinkUpdated = true;
-                    mHasStartedDecoder = false;
-                    mHandler.removeCallbacks(mHandleAudioSinkUpdatedRunnable);
-                    if (mTvInputManager != null) {
-                        if (mTvInputManager.getHardwareList() == null) {
-                            mHandler.post(mHandleAudioSinkUpdatedRunnable);
-                        } else {
-                            boolean isA2dpOutput = false;
-                            int curOutdevices = AudioSystem.getDevicesForStream(AudioSystem.STREAM_MUSIC);
-                            int i = 0;
-                            int device = 0;
-                            while ((device = 1 << i) != AudioSystem.DEVICE_OUT_DEFAULT) {
-                                if ((curOutdevices & device) != 0) {
-                                    if (AudioSystem.DEVICE_OUT_ALL_A2DP_SET.contains(device)) {
-                                        isA2dpOutput = true;
-                                        break;
-                                    }
-                                }
-                                i++;
-                            }
-                            if (DroidLogicUtils.isTv())
-                                mHandler.postDelayed(mHandleAudioSinkUpdatedRunnable, isA2dpOutput ? 2500 : 500);
-                            else
-                                mHandler.postDelayed(mHandleAudioSinkUpdatedRunnable, 500);
-                        }
-                   }
+                    Log.i(TAG, "onAudioPortListUpdate");
+                    updateAudioPatch();
                 }
 
                 @Override
                 public void onAudioPatchListUpdate(AudioPatch[] patchList) {
+                    Log.i(TAG, "onAudioPatchListUpdate");
+                    updateAudioPatch();
                 }
 
                 @Override
@@ -386,6 +392,30 @@ public class AudioSystemCmdService extends Service {
         mAudioEventThread.start();
         mAudioEventHandler = new Handler(mAudioEventThread.getLooper());
         updateCoexistSpdifOther();
+        checkDefaultMuteStreams();
+    }
+
+    private static final int DEFAULT_MUTE_STREAMS_AFFECTED =
+                    (1 << AudioSystem.STREAM_VOICE_CALL) |
+                    (1 << AudioSystem.STREAM_SYSTEM) |
+                    (1 << AudioSystem.STREAM_RING) |
+                    (1 << AudioSystem.STREAM_MUSIC) |
+                    (1 << AudioSystem.STREAM_ALARM) |
+                    (1 << AudioSystem.STREAM_NOTIFICATION) |
+                    (1 << AudioSystem.STREAM_BLUETOOTH_SCO) |
+                    (1 << AudioSystem.STREAM_DTMF) |
+                    (1 << AudioSystem.STREAM_TTS) |
+                    (1 << AudioSystem.STREAM_ACCESSIBILITY) |
+                    (1 << AudioSystem.STREAM_ASSISTANT);
+    // need mute all stream volume
+    private void checkDefaultMuteStreams() {
+        int muteStreamsMask = Settings.System.getInt(mContext.getContentResolver(),
+                android.provider.Settings.System.MUTE_STREAMS_AFFECTED, AudioSystem.DEFAULT_MUTE_STREAMS_AFFECTED);
+        if (muteStreamsMask != DEFAULT_MUTE_STREAMS_AFFECTED) {
+            Settings.System.putInt(mContext.getContentResolver(),
+                    android.provider.Settings.System.MUTE_STREAMS_AFFECTED, DEFAULT_MUTE_STREAMS_AFFECTED);
+            mAudioManager.reloadAudioSettings();
+        }
     }
 
     @Override
@@ -919,8 +949,6 @@ public class AudioSystemCmdService extends Service {
                 Slog.w(TAG, "handleVolumeChange action:" + action + ", Unrecognized intent: " + intent);
                 return;
         }
-
-        setAudioPortGain();
     }
 
     private boolean mShowingPassthroughHint = false;
@@ -956,7 +984,7 @@ public class AudioSystemCmdService extends Service {
         findAudioSinkFromAudioPolicy(mAudioSink);
 
         // Returns true if mAudioSink and previousSink differs.
-        Log.w(TAG, "mAudioSink " + mAudioSink + "previousSink" + previousSink);
+        Log.i(TAG, "mAudioSink:" + mAudioSink + ", previousSink:" + previousSink);
         if (mAudioSink.size() != previousSink.size()) {
             return true;
         } else {
@@ -1222,7 +1250,6 @@ public class AudioSystemCmdService extends Service {
                 Log.d(TAG, "updateAudioPortGain source type:" + sourceTypeToString(sourceType) + "[" + sourceType + "]");
             }
             mCurSourceType = sourceType;
-            setAudioPortGain();
         }
 
         public void openTvAudio(int sourceType) {
