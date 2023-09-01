@@ -19,10 +19,6 @@ ifeq ($(PRODUCT_USE_PREBUILT_GTVS), yes)
   $(call inherit-product, vendor/google_gtvs/products/gtvs.mk)
   ifeq ($(ATV_LAUNCHER),amati)
     $(call inherit-product, vendor/google_gtvs_gtv/products/gtvs_gtv.mk)
-
-    # gsi test will missing product partition, copy one to vendor
-    PRODUCT_COPY_FILES += \
-        vendor/google_gtvs_gtv/etc/permissions/unavailable-features-atv-amati-product.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/unavailable-features-atv-amati-product.xml
   endif
 else
   $(call inherit-product-if-exists, vendor/google_atv/products/atv_mainline_modules.mk)
