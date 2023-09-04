@@ -353,19 +353,24 @@ static unsigned short get_dev_info(std::string path)
 {
     char info[16];
     unsigned short val;
+    int ret;
     int fp = open(path.c_str(), O_RDONLY);
     if (fp < 0) {
         PR_ERR("Open file(%s) failed !!! %s(%d)", path.c_str(), strerror(errno), errno);
         return 0xFF;
     }
     memset(info, 0, sizeof(info));
-    if(read(fp, info, sizeof(info)) < 0) {
+    ret = read(fp, info, sizeof(info));
+    if( ret < 0) {
 		PR_ERR(" %s read failed",__func__);
 		close(fp);
 		return 0xFF;
 	}
     close(fp);
-
+    if (ret < 16)
+        info[ret] = '\0';
+    else
+        info[15] = '\0';
     val = std::strtol(info, nullptr, 16);
     return val;
 }
