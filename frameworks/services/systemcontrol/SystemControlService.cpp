@@ -141,13 +141,12 @@ int SystemControlService::permissionCheck() {
 
 bool SystemControlService::getSupportDispModeList(std::vector<std::string> *supportDispModes) {
     const char *delim = "\n";
-    char value[MODE_LEN] = {0};
-    hdmi_data_t data;
     char *save_ptr = NULL;
+    char disp_cap[MAX_STR_LEN];
+    memset(disp_cap, 0, sizeof(disp_cap));
 
-    memset(&data, 0, sizeof(hdmi_data_t));
-    pDisplayMode->getHdmiData(&data);
-    char *ptr = strtok_r(data.disp_cap, delim, &save_ptr);
+    pDisplayMode->getSupportDispModeList(disp_cap);
+    char *ptr = strtok_r(disp_cap, delim, &save_ptr);
     while (ptr != NULL) {
         int len = strlen(ptr);
         if (ptr[len - 1] == '*')

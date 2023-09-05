@@ -1667,6 +1667,22 @@ void DisplayMode::getHdmiData_cached(hdmi_data_t* data) {
     memcpy(data, &mHdmidata, sizeof(hdmi_data_t));
 }
 
+void DisplayMode::getSupportDispModeList(char * modelist) {
+    if (!modelist) {
+        SYS_LOGE("%s modelist is NULL\n", __FUNCTION__);
+    } else {
+        //read hdmi disp_cap
+        hdmi_data_t data;
+        getHdmiDispCap(data.disp_cap);
+
+        //filter hdmi disp_cap mode for compatibility
+        filterHdmiDispcap(&data);
+        strcpy(modelist, data.disp_cap);
+    }
+
+    return;
+}
+
 void DisplayMode::getHdmiData(hdmi_data_t* data) {
     if (!data) {
         SYS_LOGE("%s data is NULL\n", __FUNCTION__);
@@ -2335,24 +2351,35 @@ bool DisplayMode::isTvSupportHDR() {
  * else mode is ""
  */
 bool DisplayMode::isTvSupportDolbyVision(char *mode) {
-    char dv_cap[MAX_STR_LEN] = {0};
-    strcpy(mode, "");
+    bool ret = false;
+
     if (DISPLAY_TYPE_TV == mDisplayType) {
         SYS_LOGI("Current Device is TV, no dv_cap\n");
-        return false;
+    } else if (!mode) {
+        SYS_LOGI("%s mode is NULL\n", __FUNCTION__);
+    } else {
+        strcpy(mode, "");
+        hdmi_data_t data;
+        memset(&data, 0, sizeof(hdmi_data_t));
+        if (strlen(mHdmidata.dv_info.dv_cap) != 0) {
+            strcpy(data.dv_info.dv_cap, mHdmidata.dv_info.dv_cap);
+            strcpy(data.dv_info.dv_displaymode, mHdmidata.dv_info.dv_displaymode);
+            strcpy(data.dv_info.dv_deepcolor, mHdmidata.dv_info.dv_deepcolor);
+        } else {
+            getHdmiDvCap(&data);
+        }
+
+        if (strstr(data.dv_info.dv_cap, "DolbyVision RX support list") == NULL) {
+            SYS_LOGI("TV not support DV\n");
+        } else {
+            strcat(mode, data.dv_info.dv_displaymode);
+            strcat(mode, data.dv_info.dv_deepcolor);
+            ret = true;
+            SYS_LOGD("Current Tv Support DV type [%s]", mode);
+        }
     }
 
-    if (strstr(mHdmidata.dv_info.dv_cap, "DolbyVision RX support list") == NULL) {
-        SYS_LOGI("TV not support DV\n");
-        return false;
-    }
-
-    strcat(mode, mHdmidata.dv_info.dv_displaymode);
-    strcat(mode, mHdmidata.dv_info.dv_deepcolor);
-
-    SYS_LOGD("Current Tv Support DV type [%s]", mode);
-
-    return true;
+    return ret;
 }
 
 bool DisplayMode::isMboxSupportDolbyVision() {
@@ -3140,6 +3167,10 @@ void DisplayMode::onTxEvent (char* switchName, char* hpdstate, int outputState) 
     }
 
     if (isHWCProcess()) {
+        //update hdmi info when hdmi plug/suspend/resume
+        memset(&mHdmidata, 0, sizeof(hdmi_data_t));
+        mHdmidata.state = OUTPUT_MODE_STATE_POWER;
+        getHdmiData(&mHdmidata);
         SYS_LOGI("onTxEvent boot config enable do nothing, just return");
         return;
     }

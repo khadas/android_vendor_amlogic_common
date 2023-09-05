@@ -584,6 +584,7 @@ public:
     void getHdmiDvCap(hdmi_data_t* data);
     void getCommonData(hdmi_data_t* data);
     void getHdmiData(hdmi_data_t* data);
+    void getSupportDispModeList(char * modelist);
     void setActiveDispMode(const char*value);
     void notifyPlugin();
     int readHdcpRX22Key(char *value, int size);
