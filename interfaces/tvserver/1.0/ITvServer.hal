@@ -322,4 +322,13 @@ interface ITvServer {
 
   isSupportDLG()
     generates (int32_t ret);
+
+  StartTvInPIP(int32_t source_input)
+    generates (int32_t ret);
+
+  StopTvInPIP()
+    generates (int32_t ret);
+
+  IsSupportPIP()
+    generates (int32_t ret);
 };
