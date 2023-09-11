@@ -1548,6 +1548,11 @@ int CPQControl::Cpq_CheckColorTemperatureParamAlldata(source_input_param_t sourc
     int ret= -1;
     unsigned short ret1 = 0, ret2 = 0;
 
+    if (!mbCpqCfg_whitebalance_enable) {
+        SYS_LOGD("%s, whitebalance module disabled! no need check data!\n",__FUNCTION__);
+        return 0;
+    }
+
     ret = Cpq_CheckTemperatureDataLabel();
     ret1 = Cpq_CalColorTemperatureParamsChecksum();
     ret2 = Cpq_GetColorTemperatureParamsChecksum();
