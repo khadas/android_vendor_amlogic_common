@@ -168,12 +168,14 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.vendor.btmodule = multibt
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := vendor/amlogic/common/wifi_bt/bluetooth/common/btbuild
 
-$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/unisoc/libbt/unisocbt.mk )
-$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/realtek/rtkbt/rtkbt.mk )
-$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/mtk/mtkbt/mtkbt.mk )
-$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/broadcom/bcmbt.mk )
-$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/qualcomm/qcabt.mk )
-$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/amlogic/amlbt.mk )
+$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/unisoc/libbt/unisocbt.mk)
+$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/realtek/rtkbt/rtkbt.mk)
+$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/mtk/mtkbt/mtkbt.mk)
+$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/broadcom/bcmbt.mk)
+$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/qualcomm/qcabt.mk)
+ifeq ($(shell test -f vendor/amlogic/common/wifi_bt/bluetooth/amlogic/amlbt.mk && echo yes),yes)
+$(call inherit-product, vendor/amlogic/common/wifi_bt/bluetooth/amlogic/amlbt.mk)
+endif
 
 PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/bluetooth/configs/init_rc/init.amlogic.bluetooth_common.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/init.amlogic.bluetooth.rc
 
