@@ -48,6 +48,7 @@ cc_library_shared {
         "libhidlbase",
         "liblog",
         "libtinyxml2",
+        "libui",
         "libutils",
     ],
     static_libs: [
@@ -83,6 +84,7 @@ cc_defaults {
         "liblog",
         "libtinyxml2",
         "libutils",
+        "libui",
     ],
     static_libs: [
         "android.hardware.camera.common@1.0-helper",

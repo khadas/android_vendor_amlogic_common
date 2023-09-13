@@ -30,6 +30,7 @@
 #include <utils/Thread.h>
 #include <deque>
 #include <list>
+#include <map>
 
 #include "hardware/camera3.h"
 #include "hardware/camera_common.h"
@@ -40,7 +41,6 @@ namespace hardware {
 namespace camera {
 namespace device {
 namespace implementation {
-
 using ::aidl::android::hardware::camera::common::Status;
 using ::aidl::android::hardware::camera::device::BnCameraDeviceSession;
 using ::aidl::android::hardware::camera::device::BufferCache;
