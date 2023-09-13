@@ -30,6 +30,10 @@ else
 -include device/amlogic/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
 endif
 
+ifeq ($(PRODUCT_DIR),mercury)
+-include  device/amlogic_car/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
+endif
+
 WIFI_MODULES := $(CONFIG_WIFI_MODULES)
 
 PRODUCT_PROPERTY_OVERRIDES += persist.vendor.wifibt_name = "$(CONFIG_WIFIBT_NAME)"

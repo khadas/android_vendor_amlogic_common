@@ -23,6 +23,9 @@ else
 -include device/amlogic/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
 endif
 
+ifeq ($(PRODUCT_DIR),mercury)
+-include  device/amlogic_car/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
+endif
 
 BLUETOOTH_MODULE := $(CONFIG_BLUETOOTH_MODULES)
 ifeq ($(BLUETOOTH_MODULE), )

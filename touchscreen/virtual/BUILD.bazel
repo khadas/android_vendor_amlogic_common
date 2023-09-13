@@ -1,0 +1,21 @@
+load("//build/kernel/kleaf:kernel.bzl", "kernel_module")
+
+kernel_module(
+    name = "virtual_touchscreen",
+    srcs = glob(
+        ["**"],
+        exclude = [
+            "BUILD.bazel",
+            "**/*.bzl",
+            "**/*.mk",
+            "**/*.bp",
+        ],
+    ),
+    outs = [
+        "touchscreen_virtual.ko",
+    ],
+    kernel_build = "//common:amlogic",
+    visibility = [
+        "//common:__pkg__",
+    ],
+)
