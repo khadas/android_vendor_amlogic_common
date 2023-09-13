@@ -18,4 +18,7 @@
 -->
 <resources>
     <bool name="def_wifi_on">true</bool>
+
+    <!-- remove this overlay once roll-out to all TV devices b/294156275 -->
+    <bool name="def_enable_wifi_always_requested">true</bool>
 </resources>
