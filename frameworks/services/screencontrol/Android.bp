@@ -29,7 +29,6 @@ cc_library_shared {
     "frameworks/av/include",
     "frameworks/native/libs/gui/include",
     "hardware/amlogic/gralloc/amlogic",
-    "hardware/amlogic/hwcomposer/mesondisplay/include",
   ],
   local_include_dirs: [
       "include",
@@ -116,7 +115,6 @@ cc_binary {
     "frameworks/native/headers/media_plugin/media/hardware",
     "frameworks/native/libs/ui/include",
     "hardware/amlogic/gralloc/amlogic",
-    "hardware/amlogic/hwcomposer/mesondisplay/include",
   ],
   local_include_dirs: [
       "include",
@@ -154,7 +152,6 @@ cc_binary {
     "frameworks/av/include",
     "frameworks/native/libs/gui/include",
     "hardware/amlogic/gralloc/amlogic",
-    "hardware/amlogic/hwcomposer/mesondisplay/include",
     "frameworks/native/libs/ui/include",
   ],
   local_include_dirs: [
