@@ -74,6 +74,7 @@ $(BUILT_TARGET_SIGNED_PACKAGE): $(AML_TARGET).zip $(OTA_SIGN_KEYS)
 .PHONY: signed_target_zip
 signed_target_zip:$(BUILT_TARGET_SIGNED_PACKAGE)
 
+ifeq ($(build_ota_package),true)
 INSTALLED_OTA_SIGNED_PACKAGE := $(basename $(INTERNAL_OTA_PACKAGE_TARGET)).signed.zip
 $(INSTALLED_OTA_SIGNED_PACKAGE): $(INTERNAL_OTA_PACKAGE_TARGET) $(OTA_SIGN_KEYS)
 	@echo "Package $@"
@@ -88,7 +89,7 @@ $(INSTALLED_OTA_SIGNED_PACKAGE): $(INTERNAL_OTA_PACKAGE_TARGET) $(OTA_SIGN_KEYS)
 
 .PHONY: signed_otapackage
 signed_otapackage: $(INSTALLED_OTA_SIGNED_PACKAGE) otapackage
-
+endif
 
 .PHONY: signed_aml_all
 signed_aml_all: signed_target_zip signed_otapackage signed_aml_upgrade signed_fastboot_zip
