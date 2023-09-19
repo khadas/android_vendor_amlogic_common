@@ -57,12 +57,12 @@ char *no_base = NULL;
 
 static const dongle_info dongle_registerd[]={\
     {"0000","0000","sprdwl_ng","/vendor/lib/modules/sprdwl_ng.ko","",uwe5621_base,"uwe5621ds",0x0,""},\
-    {"0000","0602","w2p","/vendor/lib/modules/w2.ko","",aml_w2p_base,"aml_w2p",0x0,""},\
-    {"0000","0642","w2p","/vendor/lib/modules/w2.ko","",aml_w2p_base,"aml_w2p",0x0,""},\
-    {"0600","0000","w2s","/vendor/lib/modules/w2.ko","",aml_w2s_base,"aml_w2s",0x0,""},\
-    {"0640","0000","w2s","/vendor/lib/modules/w2.ko","",aml_w2s_base,"aml_w2s",0x0,""},\
-    {"0000","0000","w2u","/vendor/lib/modules/w2.ko","",aml_w2u_base,"aml_w2u",0x0601,""},\
-    {"0000","0000","w2u","/vendor/lib/modules/w2.ko","",aml_w2u_base,"aml_w2u",0x0641,""},\
+    {"0000","0602","w2p","/vendor/lib/modules/w2.ko","",aml_w2p_base,"aml_w2_p",0x0,""},\
+    {"0000","0642","w2p","/vendor/lib/modules/w2.ko","",aml_w2p_base,"aml_w2_p",0x0,""},\
+    {"0600","0000","w2s","/vendor/lib/modules/w2.ko","",aml_w2s_base,"aml_w2_s",0x0,""},\
+    {"0640","0000","w2s","/vendor/lib/modules/w2.ko","",aml_w2s_base,"aml_w2_s",0x0,""},\
+    {"0000","0000","w2u","/vendor/lib/modules/w2.ko","",aml_w2u_base,"aml_w2_u",0x0601,""},\
+    {"0000","0000","w2u","/vendor/lib/modules/w2.ko","",aml_w2u_base,"aml_w2_u",0x0641,""},\
     {"a962","0000","dhd","/vendor/lib/modules/dhd.ko","firmware_path=../../etc/wifi/40181/fw_bcm40181a2.bin nvram_path=../../etc/wifi/40181/nvram.txt",no_base,"bcm6210",0x0,"/vendor/etc/wifi/40181/fw_bcm40181a2"},\
     {"0000","0000","wlan_mt76x8_usb","/vendor/lib/modules/wlan_mt76x8_usb.ko","sta=wlan ap=ap p2p=p2p",no_base,"mtk7668u",0x7668,""},\
     {"4335","0000","dhd","/vendor/lib/modules/dhd.ko","firmware_path=../../etc/wifi/6335/fw_bcm4339a0_ag.bin nvram_path=../../etc/wifi/6335/nvram.txt",no_base,"bcm6335",0x0,"/vendor/etc/wifi/6335/fw_bcm4339a0_ag"},\

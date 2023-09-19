@@ -144,7 +144,13 @@ static const struct device_info bluetooth_dongle[] = {
 	{0x0000, "mtk7668s",  "libbt-vendor_mtkMulti.so", "btmtksdio", 0x7608, true},
 	{0x0000, "mtk7661s",  "libbt-vendor_mtkMulti.so", "btmtksdio", 0x7603, true},
 	{0x0000, "uwe5621ds", "libbt-vendor_uweMulti.so", "sprdbt_tty", 0x0000, true},
-	{0x4C55, "aml_w1u",   "libbt-vendor_amlMulti.so", "aml_w1u"  , 0x0000, true}
+	{0x4C55, "aml_w1u",   "libbt-vendor_amlMulti.so", "aml_w1u"  , 0x0000, true},
+	{0x0000, "aml_w2_p",  "libbt-vendor_amlMulti.so", "NULL"  , 0x0602, false},
+	{0x0000, "aml_w2_p",  "libbt-vendor_amlMulti.so", "NULL"  , 0x0642, false},
+	{0x0000, "aml_w2_s",  "libbt-vendor_amlMulti.so", "NULL"  , 0x0600, false},
+	{0x0000, "aml_w2_s",  "libbt-vendor_amlMulti.so", "NULL"  , 0x0640, false},
+	{0x0601, "aml_w2_u",  "libbt-vendor_amlMulti.so", "NULL"  , 0x0000, false},
+	{0x0641, "aml_w2_u",  "libbt-vendor_amlMulti.so", "NULL"  , 0x0000, false},
 };
 
 /******************************************************************************
