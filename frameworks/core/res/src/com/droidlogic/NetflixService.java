@@ -86,6 +86,8 @@ public class NetflixService extends Service {
     private static final int WAKEUP_REASON_CUSTOM = 9;
     private static final int UI_AUDIO_DELAY_OFFSET_TV_NON_DOLBY = 60;
     private static final int UI_AUDIO_DELAY_OFFSET_TV_MS12 = 110;
+    private static final int UI_AUDIO_DELAY_OFFSET_OTT_DOLBY = 70;
+    private static final int UI_AUDIO_DELAY_OFFSET_OTT_PCM = 75;
     private static boolean atmosSupported = false;
     private static boolean atmosSupportedByConfig = false;
     private static boolean doblySupported = false;
@@ -489,8 +491,8 @@ public class NetflixService extends Service {
         }
     }
 
-    private void setUiAudioBufferDelayOffset(boolean isDoblySupported) {
-        setUiAudioBufferDelayOffset(isDoblySupported ? 90 : 95);
+    private void setUiAudioBufferDelayOffset(boolean isDolbySupported) {
+        setUiAudioBufferDelayOffset(isDolbySupported ? UI_AUDIO_DELAY_OFFSET_OTT_DOLBY : UI_AUDIO_DELAY_OFFSET_OTT_PCM);
     }
 
     private void setUiAudioBufferDelayOffset(int setOffset) {
