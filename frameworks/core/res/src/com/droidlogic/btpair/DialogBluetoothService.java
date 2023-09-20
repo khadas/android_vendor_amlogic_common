@@ -213,7 +213,10 @@ public class DialogBluetoothService extends Service {
                     BluetoothClass btClass = device.getBluetoothClass();
                     if (btClass != null && btClass.getMajorDeviceClass() == BluetoothClass.Device.Major.PERIPHERAL && (!hasBondedDefaultDevices())) {
                         Intent intent1 = new Intent();
-                        intent1.setComponent(new ComponentName("com.droidlogic","com.droidlogic.btpair.BtSetupActivity"));
+                        intent1.setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.accessories.AddAccessoryActivity"));
+                        intent1.putExtra("no_input_mode", true);
+                        intent1.putExtra("show_remote_only", true);
+
                         intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(intent1);
                     }

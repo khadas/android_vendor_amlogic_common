@@ -31,7 +31,7 @@ public class BluetoothAutoPairReceiver extends BroadcastReceiver {
     private static final String TAG = "BluetoothAutoPairReceiver";
     private static final boolean DEBUG = true;
 
-	private static String DEFAULT_REMOTE_TYPE = "IR_NONE";
+    private static String DEFAULT_REMOTE_TYPE = "IR_NONE";
 
     private void Log(String msg) {
         if (DEBUG) {
@@ -56,8 +56,9 @@ public class BluetoothAutoPairReceiver extends BroadcastReceiver {
              if (isUserSetup == 1 && isAutoPairNeeded()) {
                 Log("No boned bt remote, show droidlogic BT pairing screen!");
                 Intent BtSetupIntent = new Intent();
-                BtSetupIntent.setComponent(new ComponentName("com.droidlogic","com.droidlogic.btpair.BtSetupActivity"));
+                BtSetupIntent.setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.accessories.AddAccessoryActivity"));
                 BtSetupIntent.putExtra("no_input_mode", true);
+                BtSetupIntent.putExtra("show_remote_only", true);
                 BtSetupIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(BtSetupIntent);
             } else {

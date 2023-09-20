@@ -179,19 +179,6 @@
             </intent-filter>
         </service>
 
-        <activity
-            android:name="com.droidlogic.btpair.BtSetupActivity"
-            android:excludeFromRecents="true"
-            android:exported="true"
-            android:enabled="true"
-            android:launchMode="singleTask"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-        </activity>
-
         <receiver
             android:exported="true"
             android:name="com.droidlogic.btpair.BluetoothAutoPairReceiver"
