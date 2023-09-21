@@ -1,156 +1,71 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-#ifndef ANDROID_GUI_TSPACK_H
-#define ANDROID_GUI_TSPACK_H
-
-#include <hardware/hardware.h>
-#include "../../../../../hardware/amlogic/screen_source/aml_screen.h"
-
-#include <media/stagefright/foundation/AHandler.h>
-#include <pthread.h>
-#include <utils/RefBase.h>
+* Copyright (C) 2011 The Android Open Source Project
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* 	 http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+#ifndef AMLOGIC_SCREENCONTROL_TSPACK_H
+#define AMLOGIC_SCREENCONTROL_TSPACK_H
 
 #include "esconvertor.h"
 
 namespace android {
-// ----------------------------------------------------------------------------
 
-class TSPacker : public MediaBufferObserver,
-                       public virtual RefBase {
-public:
-    TSPacker(int width, int height, int frameRate, int bitRate, int sourceType, bool hasAudio);
-
-    virtual ~TSPacker();
-
-    // For the MediaSource interface for use by StageFrightRecorder:
-    virtual status_t start();
-    virtual status_t stop();
-    virtual status_t read(MediaBufferBase **buffer);
-    virtual status_t readRawData(MediaBuffer *buffer, int width, int height);
-    // valid function after call setMaxFrameCount()
-    virtual status_t checkConvertDone();
-
-    // Get / Set the frame rate used for encoding. Default fps = 30
-    status_t setFrameRate(int32_t fps) ;
-    int32_t getFrameRate( ) const;
-
-    // Get / Set max frame count, default as -1, limit frame count when > 0
-    status_t setMaxFrameCount(int32_t maxFrameCnt);
-    int32_t getMaxFrameCount() const;
-
-    // Get / Set time limit in unit million second (ms)
-    // proiroty: setTimeLimit() > setMaxFrameCount()
-    status_t setTimeLimit(int32_t timeLimitMs);
-    int32_t getTimeLimit() const;
-
-    void setVideoCrop(int x, int y, int width, int height);
-
-    // The call for the StageFrightRecorder to tell us that
-    // it is done using the MediaBuffer data so that its state
-    // can be set to FREE for dequeuing
-    virtual void signalBufferReturned(MediaBufferBase* buffer);
-    // end of MediaSource interface
-
-    // getTimestamp retrieves the timestamp associated with the image
-    // set by the most recent call to read()
-    //
-    // The timestamp is in nanoseconds, and is monotonically increasing. Its
-    // other semantics (zero point, etc) are source-dependent and should be
-    // documented by the source.
-    int64_t getTimestamp();
-
-    // isMetaDataStoredInVideoBuffers tells the encoder whether we will
-    // pass metadata through the buffers. Currently, it is force set to true
-    bool isMetaDataStoredInVideoBuffers() const;
-
-    // To be called before start()
-    status_t setMaxAcquiredBufferCount(size_t count);
-
-    status_t packetize(
-            bool isAudio, const char *buffer_add,
-            int32_t buffer_size,
-            sp<ABuffer> *packets,
-            uint32_t flags,
-            const uint8_t *PES_private_data, size_t PES_private_data_len,
-            size_t numStuffingBytes, int64_t timeUs);
-    void headFinalize();
-
-    status_t incrementContinuityCounter(int isAudio);
-
-private:
-    mutable Mutex mMutex;
-    bool mStarted;
-    int mWidth;
-    int mHeight;
-    int mFrameRate;
-    int mBitRate;
-    int mSourceType;
-    bool mHasAudio;
-    int mheadFinalize;
-    bool mIsPcmAudio;
-    int mMaxFrameCnt;  // limit frame count when > 0
-    int mLimitTimeMs;  // limit time when > 0, priority: mLimitTimeMs > mMaxFrameCnt
-
-    sp<ESConvertor> mVideoConvertor;
-    sp<ESConvertor> mAudioConvertor;
-
-    pthread_t mThread;
-    int threadFunc();
-    static void *ThreadWrapper(void *me);
-    enum {
-        EMIT_PAT_AND_PMT                = 1,
-        EMIT_PCR                        = 2,
-        IS_ENCRYPTED                    = 4,
-        PREPEND_SPS_PPS_TO_IDR_FRAMES   = 8,
-    };
-    List<sp<ABuffer> > mOutputBufferQueue;
-    unsigned mPATContinuityCounter;
-    unsigned mPMTContinuityCounter;
-    unsigned mAudioContinuityCounter;
-    unsigned mVideoContinuityCounter;
-
-    enum {
-        kPID_PMT = 0x100,
-        kPID_PCR = 0x1000,
-        kPID_VIDEO = 0x1100,
-        kPID_AUDIO = 0x1110,
-    };
-    uint32_t mCrcTable[256];
-    Vector<sp<ABuffer> > mCSD;
-    Vector<sp<ABuffer> > mDescriptors;
-    void initCrcTable();
-    uint32_t crc32(const uint8_t *start, size_t size) const;
-    int64_t mPrevTimeUs;
-    int mFirstVideoFrame;
-    int mFirstAudioFrame;
-
-    int mDumpVideoEs;
-    int mDumpVideoTs;
-    int mDumpAudioEs;
-    int mDumpAudioPCM;
-
-    int32_t mCorpX;
-    int32_t mCorpY;
-    int32_t mCorpWidth;
-    int32_t mCorpHeight;
-    Vector<sp<ABuffer> > mProgramInfoDescriptors;
+enum {
+    kPID_PMT = 0x100,
+    kPID_PCR = 0x1000,
+    kPID_VIDEO = 0x1100,
+    kPID_AUDIO = 0x1110,
+};
+enum {
+    EMIT_PAT_AND_PMT                = 1,
+    EMIT_PCR                        = 2,
+    IS_ENCRYPTED                    = 4,
+    PREPEND_SPS_PPS_TO_IDR_FRAMES   = 8,
+};
+struct TSBufferInfo {
+    TSBufferInfo(uint8_t* buffer, int32_t size, int64_t pts): mTsbuffer(buffer),mSize(size),mPts(pts){};
+    TSBufferInfo(TSBufferInfo&&) = default;
+    ~TSBufferInfo() = default;
+    uint8_t* mTsbuffer;
+    int32_t mSize;
+    int64_t mPts;
 };
 
-// ----------------------------------------------------------------------------
-}; // namespace android
+class TSPacker : public ESConvertor::ESConvertorCallback {
+public:
+    TSPacker();
+    virtual ~TSPacker();
+    bool start(std::unique_ptr<ESConvertorParmeter>& input);
+    bool stop();
+    bool readBuffer(uint8_t** buffer, int32_t* size, int64_t* pts);
+    void onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts);
+private:
+    bool packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** packets
+                            ,int32_t * ts_size,int64_t timeUs, uint32_t flags);
+    int32_t incrementContinuityCounter();
+    bool mStart;
+    bool mFirstVideoFrame;
+    std::mutex mLock;
+    std::unique_ptr<ESConvertor> mConvertor;
+    int32_t mPATContinuityCounter;
+    int32_t mPMTContinuityCounter;
+    int32_t mVideoContinuityCounter;
+    int64_t mPrevTimeUs;
+    uint8_t* mVideoDescriptor;
+    uint8_t* mHdrDescriptor;
+    std::list<std::unique_ptr<TSBufferInfo>> mOutputQueue;
 
-#endif // ANDROID_GUI_SURFACEMEDIASOURCE_H
+};
+
+};//namespace android
+#endif // AMLOGIC_SCREENCONTROL_TSPACK_H

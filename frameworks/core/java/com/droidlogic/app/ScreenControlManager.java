@@ -47,6 +47,9 @@ public class ScreenControlManager {
     private YuvCallbackListener mYuvCbl = null;
     private AvcCallbackListener mAvcCbl = null;
 
+    static final int MSG_DATA_TYPE_YUV = 0;
+    static final int MSG_DATA_TYPE_AVC = 1;
+
     // Mutex for all mutable shared state.
     private final Object mLock = new Object();
 
@@ -56,17 +59,17 @@ public class ScreenControlManager {
 
     private native void native_ConnectScreenControl();
     private native int native_ScreenCap(int left, int top, int right, int bottom, int width, int height, int sourceType, String filename);
-    private native int native_ScreenRecord(int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename);
-    private native int native_ScreenRecordByCrop(int left, int top, int right, int bottom, int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename);
     private native byte[] native_ScreenCapBuffer(int left, int top, int right, int bottom, int width, int height, int sourceType);
-    private native void native_ForceStop();
+    private native int native_ScreenRecord(int left, int top, int right, int bottom, int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename);
+    private native void native_StartReceiver(WeakReference<ScreenControlManager> wo);
+    //avc
+    private native int native_startAvcRecord(int left, int top, int right, int bottom, int width, int height, int frameRate, int bitRate, int sourceType);
 
     //yuv
-    private native int native_startYuvRecord(int width, int height,int frameRate, int sourceType);
-    private native void native_StartYuvReceiver(WeakReference<ScreenControlManager> wo);
-    //avc
-    private native int native_startAvcRecord(int width, int height, int frameRate, int bitRate, int sourceType);
-    private native void native_StartAvcReceiver(WeakReference<ScreenControlManager> wo);
+    private native int native_startYuvRecord(int left, int top, int right, int bottom, int width, int height, int frameRate, int sourceType);
+
+
+    private native void native_ForceStop();
 
     public ScreenControlManager(Context context) {
         mContext = context;
@@ -85,6 +88,7 @@ public class ScreenControlManager {
     public void setAvcCallbackListener(AvcCallbackListener l) {
         mAvcCbl = l;
     }
+
 
     public static ScreenControlManager getInstance() {
          if (null == mInstance) mInstance = new ScreenControlManager();
@@ -148,59 +152,6 @@ public class ScreenControlManager {
         mStrReceiver = null;
     }
 
-    public int startScreenRecord(int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename) {
-        Log.d(TAG, "startScreenRecord wdith:" + width + ",height:"+ height + ",frameRate:" + frameRate + ",bitRate:" + bitRate + ",limitTimeSec:" + limitTimeSec + ",sourceType:" + sourceType + ",filename:" + filename);
-        synchronized (mLock) {
-            try {
-                return native_ScreenRecord(width, height, frameRate, bitRate, limitTimeSec, sourceType, filename);
-            } catch (Exception e) {
-                Log.e(TAG, "startScreenRecord: ScreenControlService is dead!:" + e);
-            }
-        }
-        return REMOTE_EXCEPTION;
-    }
-    public int startScreenRecord(int left, int top, int right, int bottom, int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename) {
-        Log.d(TAG, "startScreenRecord left:" +left + ",top:"+ top + ",right:" + right + ",bottom:" + bottom + ",width:"+  width + ",height:"+ height + ",frameRate:" + frameRate + ",bitRate:" + bitRate + ",limitTimeSec:" + limitTimeSec + ",sourceType:" + sourceType + ",filename:" + filename);
-        synchronized (mLock) {
-            try {
-                return native_ScreenRecordByCrop(left, top, right, bottom, width, height, frameRate, bitRate, limitTimeSec, sourceType, filename);
-            } catch (Exception e) {
-                Log.e(TAG, "startScreenRecord: ScreenControlService is dead!:" + e);
-            }
-        }
-        return REMOTE_EXCEPTION;
-    }
-
-    public int startYuvScreenRecord(int width, int height,int frameRate, int sourceType) {
-        Log.d(TAG, "startYuvScreenRecord wdith:" + width + ",height:"+ height  + ",sourceType:" + sourceType);
-        synchronized (mLock) {
-            try {
-                if (mYuvCbl == null)
-                    return REMOTE_EXCEPTION;
-                native_StartYuvReceiver(new WeakReference<ScreenControlManager>(this));
-                return native_startYuvRecord(width, height, frameRate, sourceType);
-            } catch (Exception e) {
-                Log.e(TAG, "startYuvScreenRecord: ScreenControlService is dead!:" + e);
-            }
-        }
-        return REMOTE_EXCEPTION;
-    }
-
-    public int startAvcScreenRecord(int width, int height, int frameRate, int bitRate, int sourceType) {
-        Log.d(TAG, "startAvcScreenRecord wdith:" + width + ",height:"+ height + ",frameRate:" + frameRate + ",bitRate:" + bitRate + ",sourceType:" + sourceType );
-        synchronized (mLock) {
-            try {
-                if (mAvcCbl == null)
-                    return REMOTE_EXCEPTION;
-                native_StartAvcReceiver(new WeakReference<ScreenControlManager>(this));
-                return native_startAvcRecord(width, height, frameRate, bitRate,sourceType);
-            } catch (Exception e) {
-                Log.e(TAG, "startAvcScreenRecord: ScreenControlService is dead!:" + e);
-            }
-        }
-        return REMOTE_EXCEPTION;
-    }
-
     public int startScreenCap(int left, int top, int right, int bottom, int width, int height, int sourceType, String filename) {
         Log.d(TAG, "startScreenCap left:" + left + ",top:"+ top + ",right:" + right + ",bottom:" + bottom + ",width:" + width + ",height:" + height + ",sourceType:" + sourceType + ",filename:" + filename);
         int result = 0;
@@ -229,6 +180,62 @@ public class ScreenControlManager {
             }
         }
         return null;
+    }
+
+    public int startScreenRecord(int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename) {
+        return startScreenRecord(0, 0, width, height, width, height, frameRate, bitRate, limitTimeSec, sourceType, filename);
+    }
+
+    public int startScreenRecord(int left, int top, int right, int bottom, int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename) {
+        Log.d(TAG, "startScreenRecord left:" + left + ",top:"+ top + ",right:" + right + ",bottom:" + bottom + ",width:" + width + ",height:" + height + ",sourceType:" + sourceType + ",frameRate:" + frameRate + ",bitRate:" + bitRate + ",limitTimeSec:" + limitTimeSec + ",filename:" + filename);
+        synchronized (mLock) {
+            try {
+                return native_ScreenRecord(left, top, right, bottom, width, height, frameRate, bitRate, limitTimeSec, sourceType, filename);
+            } catch (Exception e) {
+                Log.e(TAG, "startScreenRecord: ScreenControlService is dead!:" + e);
+            }
+        }
+        return REMOTE_EXCEPTION;
+    }
+
+    public int startAvcScreenRecord(int width, int height, int frameRate, int bitRate, int sourceType) {
+        return startAvcScreenRecord(0,0,width,height,width, height, frameRate, bitRate,sourceType);
+    }
+
+    public int startAvcScreenRecord(int left, int top, int right, int bottom, int width, int height, int frameRate, int bitRate, int sourceType) {
+        Log.d(TAG, "startAvcScreenRecord left:" + left + ",top:"+ top + ",right:" + right + ",bottom:" + bottom + ",width:" + width +
+                    ",height:"+ height + ",frameRate:" + frameRate + ",bitRate:" + bitRate + ",sourceType:" + sourceType );
+        synchronized (mLock) {
+            try {
+                if (mAvcCbl == null)
+                    return REMOTE_EXCEPTION;
+                native_StartReceiver(new WeakReference<ScreenControlManager>(this));
+                return native_startAvcRecord(left, top, right, bottom, width, height, frameRate, bitRate,sourceType);
+            } catch (Exception e) {
+                Log.e(TAG, "startAvcScreenRecord: ScreenControlService is dead!:" + e);
+            }
+        }
+        return REMOTE_EXCEPTION;
+    }
+
+    public int startYuvScreenRecord(int width, int height, int frameRate, int sourceType) {
+        return startYuvScreenRecord(0,0,width,height,width, height, frameRate,sourceType);
+    }
+
+    public int startYuvScreenRecord(int left, int top, int right, int bottom, int width, int height, int frameRate, int sourceType) {
+        Log.d(TAG, "startYuvScreenRecord left:" + left + ",top:"+ top + ",right:" + right + ",bottom:" + bottom + ",width:" + width + ",height:"+ height +
+                ",frameRate:" + frameRate  + ",sourceType:" + sourceType );
+        synchronized (mLock) {
+            try {
+                if (mYuvCbl == null)
+                    return REMOTE_EXCEPTION;
+                native_StartReceiver(new WeakReference<ScreenControlManager>(this));
+                return native_startYuvRecord(left, top, right, bottom, width, height, frameRate,sourceType);
+            } catch (Exception e) {
+                Log.e(TAG, "startYuvScreenRecord: ScreenControlService is dead!:" + e);
+            }
+        }
+        return REMOTE_EXCEPTION;
     }
 
     public void stopRecord() {
@@ -264,53 +271,25 @@ public class ScreenControlManager {
     public static interface YuvCallbackListener {
 
         void onYuvAvailable(byte[] data);
-
-        void onYuvReceiveOver();
     }
     public static interface AvcCallbackListener {
-
         void onAvcAvailable(byte[] data, int frameType, long pts);
-
-        void onAvcReceiveOver();
     }
 
-    static final int MSG_DATA_RECEIVE = 0;
-    static final int MSG_DATA_OVER = 1;
-
-    static final int MSG_DATA_TYPE_YUV = 0;
-    static final int MSG_DATA_type_AVC = 1;
-
-    private int onMesage(int type, int msg , int frameType, long pts , Object x){
+    private int onMessage(int type, int frameType, long pts , Object x){
         YuvCallbackListener yuvCb = mYuvCbl;
         AvcCallbackListener avcCb = mAvcCbl;
-        Log.i(TAG, "onMessage type=" + type + ",msg= " + msg+",frameType="+frameType + ",pts=" + pts);
-        if (type == MSG_DATA_TYPE_YUV && yuvCb != null ) {
-            switch ( msg ) {
-                case MSG_DATA_RECEIVE :
-                    yuvCb.onYuvAvailable((byte[]) x);
-                    break;
-                case MSG_DATA_OVER :
-                    yuvCb.onYuvReceiveOver();
-                    break;
-                default :
-                    break;
-              }
-        }else if (type == MSG_DATA_type_AVC && avcCb != null) {
-            switch ( msg ) {
-                case MSG_DATA_RECEIVE :
-                    avcCb.onAvcAvailable((byte[]) x, frameType, pts);
-                    break;
-                case MSG_DATA_OVER :
-                    avcCb.onAvcReceiveOver();
-                    break;
-                default :
-                    break;
-              }
+        Log.i(TAG, "onMessage type=" + type +",frameType="+frameType + ",pts=" + pts);
+        if (type == MSG_DATA_TYPE_AVC && avcCb != null) {
+            avcCb.onAvcAvailable((byte[]) x, frameType, pts);
+        }else if (type == MSG_DATA_TYPE_YUV && mYuvCbl != null ) {
+            yuvCb.onYuvAvailable((byte[]) x);
         }
         return 0;
 
     }
-    static int native_proc(Object o, int type, int msg,int frameType, long pts, Object x){
+
+    static int native_proc(Object o, int type,int frameType, long pts, Object x){
         WeakReference<ScreenControlManager> wo;
         ScreenControlManager f;
         if (o == null)
@@ -320,13 +299,14 @@ public class ScreenControlManager {
           f = wo.get();
           if (f == null )
             return 0;
-          return f.onMesage(type, msg, frameType, pts, x);
+          return f.onMessage(type, frameType, pts, x);
         }catch (Throwable e) {
           e.printStackTrace();
           return 0;
         }
 
     }
+
 
     final class DeathRecipient implements HwBinder.DeathRecipient {
         DeathRecipient() {

@@ -17,69 +17,36 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "screencatch"
 
-#include <errno.h>
 #include <cutils/log.h>
-#include <cutils/atomic.h>
-
-//#include <media/stagefright/MediaSource.h>
-//#include <media/stagefright/MediaBuffer.h>
-#include <OMX_IVCommon.h>
-
-#include <utils/List.h>
-#include <utils/RefBase.h>
-#include <utils/threads.h>
-
-#include <media/stagefright/MetaDataBase.h>
-
-#include <stdio.h>
-#include <assert.h>
-#include <limits.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sched.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <ui/PixelFormat.h>
-//#include <ui/DisplayInfo.h>
-
-#include <system/graphics.h>
-
-//#include <SkBitmap.h>
-//#include <SkDocument.h>
-//#include <SkStream.h>
-
-// TODO: Fix Skia.
-
 #include "ScreenCatch.h"
 #include "Bitmap.h"
-#include "../ScreenManager.h"
 
 using namespace android;
 
+static char dump_dir[64] = "/data/temp";
+
+#define MAX_FILE_PATH_SIZE 128
+
 /*****************************************************************************/
-enum {  // index for FILE_TYPE_STR_ARR
-    SAVE_FILE_PNG = 0,
-    SAVE_FILE_JPEG,
+enum {
     SAVE_FILE_BMP,
     SAVE_FILE_BIN,
+    SAVE_FILE_UNKNOWN
 };
 static const char* FILE_TYPE_STR_ARR[] = {
-    "PNG","JPEG", "BMP", "BINARY"
+    "BMP", "BINARY"
 };
 
-static const char *opt_str = "hpjmbc:t:";
+static const char *opt_str = "hmbc:t:";
 static void help(char *appName)
 {
     printf(
         "Usage:\n"
-        "  %s [-h] [-p/-j/-m/-b] [-c <counter>] [-t <type>] [left  top  right  bottom  outWidth  outHeight] \n"
+        "  %s [-h] [-m/-b] [-c <counter>] [-t <type>] [left  top  right  bottom  outWidth  outHeight] \n"
         "\n"
         "Parameters:\n"
         "  -h  :  show this help \n"
-        "  -p  :  save as png file (default) \n"
-        "  -j  :  save as jpeg file \n"
-        "  -m  :  save as bmp file \n"
+        "  -m  :  save as bmp file (default) \n"
         "  -b  :  save as binary file \n"
         "  -c <counter> : continually save file with counter, default as 1\n"
         "  -t <type> : set capture type:\n"
@@ -94,17 +61,6 @@ static void help(char *appName)
         , appName);
 }
 
-#if 0
-static SkColorType flinger2skia(PixelFormat f) {
-    switch (f) {
-        case PIXEL_FORMAT_RGB_565:
-            return kRGB_565_SkColorType;
-        default:
-            return kN32_SkColorType;
-    }
-}
-#endif
-
 static void argb8888_to_bmp32(void *src, void *dst, size_t size) {
     char *argb8888 = (char *)src;
     char *rgb32 = (char *)dst;
@@ -116,52 +72,26 @@ static void argb8888_to_bmp32(void *src, void *dst, size_t size) {
     }
 }
 
-static void rgb888_to_bmp24(void *src, void *dst, size_t size) {
-    char *rgb888 = (char *)src;
-    char *rgb24 = (char *)dst;
-    for (int i=0; i<size; i+=3) {
-        rgb24[i] = rgb888[i+2];   //B
-        rgb24[i+1] = rgb888[i+1]; //G
-        rgb24[i+2] = rgb888[i];   //R
-    }
-}
-
-static int getColorFormatSize(int32_t clrFormat, int32_t width, int32_t height) {
-    int size = 0;
-    switch (clrFormat) {
-    case OMX_COLOR_Format32bitARGB8888: size = width * height * 4; break;
-    case OMX_COLOR_Format24bitRGB888: size = width * height * 3; break;
-    case OMX_COLOR_FormatYUV420SemiPlanar: size = width * height * 3 / 2; break;
-    default: break;
-    }
-    return size;
-}
 
 int main(int argc, char **argv)
 {
     using namespace android;
 
-    status_t ret = NO_ERROR;
-    int status;
-    int dumpfd;
     uint32_t type = 1;
     int framecount = 0;
-    int32_t clrFormat = OMX_COLOR_Format32bitARGB8888;
     size_t size = 0;
     int ch;
-    int saveFileType = SAVE_FILE_PNG;
+    int saveFileType = SAVE_FILE_BMP;
     int left=0, top=0, right=1280, bottom=720;
     int outWidth=1280, outHeight=720;
     int tmpArgIdx = 0;
     int counter = 1;
+    char dump_path[128];
 
-    ScreenCatch* mScreenCatch;
 
     while ((ch = getopt(argc, argv, opt_str)) != -1) {
         switch (ch) {
         case 'h': help(argv[0]); exit(0);
-        case 'p': saveFileType = SAVE_FILE_PNG; break;
-        case 'j': saveFileType = SAVE_FILE_JPEG; break;
         case 'm': saveFileType = SAVE_FILE_BMP; break;
         case 'b': saveFileType = SAVE_FILE_BIN; break;
         case 'c': counter = atoi(optarg); break;
@@ -186,143 +116,73 @@ int main(int argc, char **argv)
         type, type==0?"video only":"video+osd",
         FILE_TYPE_STR_ARR[saveFileType],
         left, top, right, bottom, outWidth, outHeight, counter);
-    size = getColorFormatSize(clrFormat, outWidth, outHeight);
-    sp<MemoryHeapBase> memoryBase(new MemoryHeapBase(size, 0, "screen-capture"));
-    void* const base = memoryBase->getBase();
 
-    if (base != MAP_FAILED) {
-        fprintf(stderr, "start screencap\n");
-        mScreenCatch = new ScreenCatch(outWidth, outHeight, type);
-        mScreenCatch->setVideoCrop(left, top, right, bottom);
 
-        MetaDataBase* pMeta;
-        pMeta = new MetaDataBase();
-        pMeta->setInt32(kKeyColorFormat, clrFormat);
-        status = mScreenCatch->start(pMeta);
-        pMeta->clear();
-        delete pMeta;
-        if ( status != OK ) {
-            ALOGE("[%s %d] start mScreenCatch error\n", __FUNCTION__, __LINE__);
-            delete mScreenCatch;
-            return !-1;
+    for (int i = 0; i < counter; i++) {
+        framecount++;
+        std::unique_ptr<ScreenCatch> capture = std::make_unique<ScreenCatch>();
+        auto size = std::make_unique<Size>(outWidth,outHeight);
+        auto area = std::make_unique<Area>(left,top,right,bottom);
+        auto parmeter = std::make_unique<InputParmeter>();
+        parmeter->size = std::move(size);
+        parmeter->area = std::move(area);
+        parmeter->source_type = type;
+        bool ret = capture->start(parmeter);
+        if (!ret) {
+            printf("screencath start fail !!!\n");
+            return 0;
         }
-        char dump_path[128];
-        char dump_dir[64] = "/data/temp";
-
-        MediaBuffer *buffer = NULL;
-        while (framecount < counter) {
-            status = mScreenCatch->read(&buffer);
-            if (status != OK) {
-                usleep(100);
-                continue;
-            }
-
-            framecount++;
-            if (SAVE_FILE_PNG == saveFileType) {
-                snprintf(dump_path, 128, "%s/%d.png", dump_dir, framecount);
-            } else if (SAVE_FILE_JPEG == saveFileType) {
-                snprintf(dump_path, 128, "%s/%d.jpeg", dump_dir, framecount);
-            } else if (SAVE_FILE_BMP == saveFileType) {
-                snprintf(dump_path, 128, "%s/%d.bmp", dump_dir, framecount);
-            } else {
-                snprintf(dump_path, 128, "%s/%s-%dx%d-%d.bin", dump_dir,"argb8888",
+        memset (dump_path, 0, MAX_FILE_PATH_SIZE);
+        if (saveFileType == SAVE_FILE_BMP) {
+            snprintf(dump_path, 128, "%s/%d.bmp", dump_dir, framecount);
+        }else if (saveFileType == SAVE_FILE_BIN) {
+            snprintf(dump_path, 128, "%s/%s-%dx%d-%d.bin", dump_dir,"argb8888",
                     outWidth, outHeight, framecount);
-            }
-            printf("Try save:%s, size=%d\n", dump_path, buffer->size());
-
-            dumpfd = open(dump_path, O_CREAT | O_RDWR | O_TRUNC, 0644);
-             if (dumpfd < 0) {
-                ALOGE("[%s %d] can't open the file ", __FUNCTION__, __LINE__);
-                buffer->release();
-                buffer = NULL;
-                break;
-            }
-
-            if (SAVE_FILE_PNG == saveFileType || SAVE_FILE_JPEG == saveFileType) {
-#if 0
-                memcpy(base, buffer->data(), buffer->size());
-                const SkImageInfo info = SkImageInfo::Make(outWidth, outHeight, flinger2skia(f), kPremul_SkAlphaType, nullptr);
-                SkPixmap pixmap(info, base, outWidth * bytesPerPixel(f));
-                struct FDWStream final : public SkWStream {
-                    size_t fBytesWritten = 0;
-                    int fFd;
-                    FDWStream(int f) : fFd(f) {}
-                    size_t bytesWritten() const override {
-                        return fBytesWritten;
-                    }
-                    bool write(const void* buffer, size_t size) override {
-                        fBytesWritten += size;
-                        return size == 0 || ::write(fFd, buffer, size) > 0;
-                    }
-                } fdStream(dumpfd);
-                if (SAVE_FILE_PNG == saveFileType) {
-                    (void)SkEncodeImage(&fdStream, pixmap, SkEncodedImageFormat::kPNG, 100);
-                } else {
-                    (void)SkEncodeImage(&fdStream, pixmap, SkEncodedImageFormat::kJPEG, 100);
-                }
-#else
-                //TODO: save as jpeg/png file
-                fprintf(stderr, "TYPE: [%s] - Not Support!!!\n", saveFileType==SAVE_FILE_JPEG?"JPG/JPEG":"PNG");
-#endif
-            } else if (SAVE_FILE_BMP == saveFileType) {
-                //save bmp
-                int bytePerPixel = 4;
-                bool success = false;
-                void *rgb = calloc(1, buffer->size());
-                if (rgb != NULL) {
-                    switch (clrFormat) {
-                    case OMX_COLOR_Format32bitARGB8888:
-                        /*
-                         * argb8888 need to change Red and Blue order to adapter to BMP rgb32
-                         * RGB32    : B  G  R  A
-                         * ARGB8888 : R  G  B  A
-                         *          <low......high>
-                         */
-                        argb8888_to_bmp32(buffer->data(), rgb, buffer->size());
-                        bytePerPixel = 4;
-                        success = true;
-                        break;
-#if 0
-                    case OMX_COLOR_Format24bitRGB888:
-                        /*
-                         * rgb888 need to change Red and Blue order to adapter to BMP rgb24
-                         * RGB24  : B  G  R
-                         * RGB888 : R  G  B
-                         *        <low...high>
-                         */
-                        rgb888_to_bmp24(buffer->data(), rgb, buffer->size());
-                        bytePerPixel = 3;
-                        success = true;
-                        break;
-                    default: success = false; break;
-#endif
-                    }
-                    if (success) {
-                        Bitmap *bmp = new Bitmap((void *)rgb, outWidth, outHeight, bytePerPixel);
-                        success = bmp->save(dumpfd);
-                        delete bmp;
-                    }
-                    free(rgb);
-                }
-                printf("Save: %s %s\n", dump_path, success?"Ok":"Fail");
-            } else {
-                //save binary
-                write(dumpfd, buffer->data(), buffer->size());
-            }
-            fprintf(stderr, "Transform finish!\n");
-
-            close(dumpfd);
-            buffer->release();
-            buffer = NULL;
         }
-
-        memoryBase.clear();
-        mScreenCatch->stop();
-        delete mScreenCatch;
-    } else {
-        ret = UNKNOWN_ERROR;
+        printf("Try save:%s\n", dump_path);
+        int32_t dump_fd = open(dump_path, O_CREAT | O_RDWR | O_TRUNC, 0644);
+        if (dump_fd <= 0) {
+            printf("the path open %s fail,maybe don't have the dir !!!\n",dump_path);
+            capture->stop();
+            return 0;
+        }
+        uint8_t* buffer = new uint8_t[outWidth * outHeight * 4];
+        int32_t buffer_size = 0;
+        while (1) {
+            bool ret = capture->readBuffer(buffer,&buffer_size);
+            if (ret)
+                break;
+            usleep(5 * 1000);//5ms
+        }
+        printf("read buffer from screencatch buffer_size=%d\n",buffer_size);
+        if ( !buffer || buffer_size <= 0 ) {
+            printf("the buffer is not legal !!\n");
+            capture->stop();
+            return 0;
+        }
+        if (saveFileType == SAVE_FILE_BMP) {
+            uint8_t* rgb = new uint8_t[buffer_size];
+            if (!rgb) {
+                printf("new buffer fail !!!\n");
+                capture->stop();
+                return 0;
+            }
+            argb8888_to_bmp32(buffer, rgb, buffer_size);
+            printf("argb8888_to_bmp32 over\n");
+            Bitmap *bmp = new Bitmap((void *)rgb, outWidth, outHeight, 4);
+            bmp->save(dump_fd);
+            delete []rgb;
+            delete bmp;
+        }else if (saveFileType ==  SAVE_FILE_BIN) {
+            write(dump_fd, buffer, buffer_size);
+        }
+        delete []buffer;
+        buffer = nullptr;
+        capture->stop();
+        close(dump_fd);
+        dump_fd = -1;
     }
     ALOGI("[%s %d] screencap finish", __FUNCTION__, __LINE__);
-    return ret;
+    return 1;
 }
 /*****************************************************************************/

@@ -14,12 +14,13 @@ cc_library_shared {
     "-std=c++17",
   ],
   srcs: [
-    "IScreenControlService.cpp",
-    "ScreenManager.cpp",
-    "ScreenControlDebug.cpp",
     "ScreenCatch/ScreenCatch.cpp",
+    "Media2Ts/VideoEncoderWrapper.cpp",
     "Media2Ts/esconvertor.cpp",
     "Media2Ts/tspack.cpp",
+    "ScreenControlH264.cpp",
+    "ScreenManager.cpp",
+    "ScreenControlDebug.cpp",
   ],
   include_dirs: [
     "frameworks/native/headers/media_plugin/media/hardware",
@@ -29,6 +30,9 @@ cc_library_shared {
     "frameworks/native/libs/gui/include",
     "hardware/amlogic/gralloc/amlogic",
     "hardware/amlogic/hwcomposer/mesondisplay/include",
+  ],
+  local_include_dirs: [
+      "include",
   ],
   shared_libs: [
     "vendor.amlogic.hardware.screencontrol@1.0",
@@ -83,7 +87,6 @@ cc_binary {
     "ScreenControlHal.cpp",
     "ScreenControlService.cpp",
     "main_screencontrol.cpp",
-    "ScreenControlH264.cpp",
   ],
 
   shared_libs: [
@@ -115,7 +118,9 @@ cc_binary {
     "hardware/amlogic/gralloc/amlogic",
     "hardware/amlogic/hwcomposer/mesondisplay/include",
   ],
-
+  local_include_dirs: [
+      "include",
+  ],
   cflags: [
     "-std=c++17",
   ],
@@ -152,6 +157,38 @@ cc_binary {
     "hardware/amlogic/hwcomposer/mesondisplay/include",
     "frameworks/native/libs/ui/include",
   ],
+  local_include_dirs: [
+      "include",
+  ],
+}
+
+cc_binary {
+  name: "esconvertortest",
+  vendor: true,
+  srcs: [
+    "Media2Ts/esconvertortest.cpp",
+  ],
+
+  shared_libs: [
+    "vendor.amlogic.hardware.screencontrol@1.0",
+    "libbinder",
+    "libstagefright_foundation",
+    "libhardware",
+    "libutils",
+    "libcutils",
+    "liblog",
+    "libscreencontrolservice",
+    "libmediandk",
+  ],
+
+  include_dirs: [
+    "frameworks/native/include",
+    "frameworks/av/include",
+  ],
+  local_include_dirs: [
+      "include",
+  ],
+
 }
 
 cc_binary {
@@ -177,30 +214,8 @@ cc_binary {
     "frameworks/native/include",
     "frameworks/av/include",
   ],
-}
-
-cc_binary {
-  name: "videomediaconvertortest",
-  vendor: true,
-  srcs: [
-    "Media2Ts/videomediaconvertortest.cpp",
-  ],
-
-  shared_libs: [
-    "vendor.amlogic.hardware.screencontrol@1.0",
-    "libbinder",
-    "libstagefright_foundation",
-    "libhardware",
-    "libutils",
-    "libcutils",
-    "liblog",
-    "libscreencontrolservice",
-    "libmediandk",
-  ],
-
-  include_dirs: [
-    "frameworks/native/include",
-    "frameworks/av/include",
+  local_include_dirs: [
+      "include",
   ],
 }
 

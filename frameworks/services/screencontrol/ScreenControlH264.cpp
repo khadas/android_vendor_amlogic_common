@@ -35,8 +35,6 @@ int bs_read( bs_t *s, int i_count )
         {						//
             break;
         }
-		ALOGD("bs_read i_shr=%d,i_count=%d,s->i_left=%d,s->p[0]=%02X",i_shr,i_count,s->i_left,s->p[0]);
-
         if ( ( i_shr = s->i_left - i_count ) >= 0 )
         {
             i_result |= ( *s->p >> i_shr )&i_mask[i_count];
@@ -89,7 +87,6 @@ int bs_read_ue( bs_t *s )
 	{
 		i++;
 	}
-	ALOGD("bs_read_ue i=%d",i);
 	return( ( 1 << i) - 1 + bs_read( s, i ) );
 }
 
@@ -123,17 +120,13 @@ int GetFrameType(NALU_t * nal)
 		ALOGE("H264 read error");
 	}
 	bs_init( &s,OneFrameBuf_H264 + nal->startcodeprefix_len + 1  ,nal->len - 1 );
-	ALOGD("GetFrameType bs_init s->p_start[0]=0x%02X,s->p_start[1]=0x%02X", s.p_start[0], s.p_start[1]);
 
 	if (nal->nal_unit_type == NAL_SLICE || nal->nal_unit_type ==  NAL_SLICE_IDR )
 	{
 		/* i_first_mb */
-		ALOGD("GetFrameType i_first_mb");
 		bs_read_ue( &s );
 		/* picture type */
-		ALOGD("GetFrameType i_first_mb picture type");
 		frame_type =  bs_read_ue( &s );
-		ALOGD("GetFrameType frame_type=%d",frame_type);
 		switch (frame_type)
 		{
 		case 0: case 5: /* P */

@@ -38,21 +38,18 @@ using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControl;
 int main()
 {
     ALOGI("screen_control daemon starting");
-    bool treble = property_get_bool("persist.screen_control.treble", false);
     bool vendorTreble = property_get_bool("persist.vendor.screencontrol.treble", false);
-    bool lazyMode = property_get_bool("persist.vendor.screencontrol.lazymode", true);
-    bool lowMemory = property_get_bool("ro.config.low_ram", false);
-    if (treble || vendorTreble) {
+    if (vendorTreble) {
         ALOGI("screen_control init with vndbinder");
         android::ProcessState::initWithDriver("/dev/vndbinder");
     }
-    ALOGI("screen_control daemon starting in %s mode",
-        (treble || vendorTreble)?"treble":((lazyMode||lowMemory)?"lazy":"normal"));
+    ALOGI("screen_control daemon starting in %s mode", vendorTreble?"treble":"lazy");
     configureRpcThreadpool(4, false);
     sp<ProcessState> proc(ProcessState::self());
 
-    if (treble || vendorTreble) {
-        sp<IScreenControl> screen = new ScreenControlHal();
+    if (vendorTreble) {
+        ScreenControlService* service = ScreenControlService::getInstance();
+        sp<IScreenControl> screen = new ScreenControlHal(service);
         if (screen == nullptr) {
             ALOGE("Cannot create IScreenControl service");
         } else if (screen->registerAsService() != OK) {
@@ -61,10 +58,7 @@ int main()
             ALOGI("Treble IScreenControl service created.");
         }
     } else {
-        if (lazyMode || lowMemory) {
-            ALOGI("screencontrol use lazy service mode.");
-        }
-        ScreenControlService::instantiate(lazyMode || lowMemory);
+        ScreenControlService::instantiate();
     }
     IPCThreadState::self()->joinThreadPool();
 }

@@ -1,127 +1,85 @@
-/** @file ScreenControlService.h
- *  @par Copyright:
- *  - Copyright 2011 Amlogic Inc as unpublished work
- *  All Rights Reserved
- *  - The information contained herein is the confidential property
- *  of Amlogic.  The use, copying, transfer or disclosure of such information
- *  is prohibited except by express written agreement with Amlogic Inc.
- *  @author   liangzhuo xie
- *  @version  1.0
- *  @date     2018/08/18
- *  @par function description:
- *  - screen capture
- *  - screen record
- *  @warning This class may explode in your face.
- *  @note If you inherit anything from this class, you're doomed.
- */
+/*
+**
+** Copyright 2008, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
 
-#ifndef ANDROID_GUI_SCREENCONTROLSERVICE_H
-#define ANDROID_GUI_SCREENCONTROLSERVICE_H
+#ifndef ANDROID_SCREENCONTROL_SERVICE_H
+#define ANDROID_SCREENCONTROL_SERVICE_H
 
-#include <cutils/compiler.h>
-#include <stdint.h>
-#include <binder/Binder.h>
-#include <sys/types.h>
-#include <utils/String16.h>
-
-#include <media/stagefright/MediaSource.h>
-#include <media/stagefright/MediaBuffer.h>
-
-#include <utils/Errors.h>  // for status_t
-#include <utils/KeyedVector.h>
-#include <utils/String8.h>
-
-#include <binder/BinderService.h>
-#include <binder/MemoryDealer.h>
-
-//#include <android/native_window.h>
-#include <hardware/hardware.h>
-#include "../../../../../hardware/amlogic/screen_source/aml_screen.h"
-#include <utils/List.h>
 #include <utils/RefBase.h>
 #include <utils/threads.h>
-#include <ui/PixelFormat.h>
-
-#include "IScreenControlService.h"
+#include "ScreenCatch/ScreenCatch.h"
+#include "Media2Ts/tspack.h"
 #include "ScreenManager.h"
-#include <Media2Ts/esconvertor.h>
-#include <Media2Ts/tspack.h>
 
 
 
 namespace android {
 
-#define SCREENCONTROL_GRALLOC_USAGE  ( GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_SW_READ_RARELY | GRALLOC_USAGE_SW_WRITE_NEVER )
-
-class DeathNotifier;
-
-class ScreenControlService :
-            public BinderService<ScreenControlService>,
-            public BnScreenControlService {
-
-    friend class BinderService<ScreenControlService>;
+class ScreenControlNotify : virtual public RefBase
+{
 public:
-
-    ScreenControlService();
-
-    virtual ~ScreenControlService();
-
-    virtual int startScreenRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const char* filename);
-
-    virtual int startScreenCap(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, const char* filename);
-
-    virtual int startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, void *buffer, int32_t *bufSize);
-    virtual int setScreenRecordCropArea(int32_t left, int32_t top, int32_t right, int32_t bottom);
-    virtual void forceStop();
-
-    virtual int startYuvRecord(int32_t width, int32_t height, int32_t frameRate, int32_t sourceType);
-
-    virtual int getYuvRecordData(void *dstBuffer,int32_t bufSize);
+    ScreenControlNotify() {}
+    virtual ~ScreenControlNotify(){}
+    virtual void onEsBufferAvailable(void* data, int32_t size, int32_t frame_type, int64_t pts) = 0;
+    virtual void onYuvBufferAvailable(void* data, int32_t size) = 0;
+    virtual void onMicroDimAvailable(void* data, int32_t size) = 0;
+};
 
 
-    virtual bool isHaveYuvDate();
 
-    virtual int checkYuvRecordDone();
+class ScreenControlService : public ESConvertor::ESConvertorCallback,
+                             public ScreenManager::ScreenMangerCallback {
 
-    // H264/AVC record
-    virtual int startAvcRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t sourceType);
-    virtual int getAvcRecordData(void *dstBuffer, int32_t *dstBufferSize, int64_t *nowtime);
-    virtual bool isHaveAvcDate();
-    virtual int checkAvcRecordDone();
-
-    virtual int startMicroDim(int32_t width, int32_t height);
-
-    virtual int getMicroDimData(void *dstBuffer, int32_t bufSize);
-
-    virtual void stopMicroDim();
-
-    virtual int release();
-    static void instantiate(bool lazyMode=false);
+public:
+    static void instantiate();
     static ScreenControlService* getInstance();
-    virtual int notifyProcessDied(const sp<IBinder> &binder);
-//    virtual SkColorType flinger2skia(PixelFormat f);
+    ScreenControlService();
+    virtual ~ScreenControlService();
+    void setListener(const sp<ScreenControlNotify>& listener);
+    void forceStop();
+    int32_t startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom,
+                        int32_t width, int32_t height, int32_t sourceType, void *dstBuffer, int32_t *dstBufferSize);
+
+
+    int32_t startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
+                                int32_t frameRate, int32_t bitRate,int32_t limitTimeSec, int32_t sourceType, const char* filename);
+
+    int32_t startAvcRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
+                            int32_t frameRate, int32_t bitRate, int32_t sourceType);
+
+    int32_t startYuvRecord(int32_t left, int32_t top, int32_t right, int32_t bottom,
+                    int32_t width, int32_t height, int32_t frameRate, int32_t sourceType);
+
+    int32_t startMicroDim(int32_t width, int32_t height);
+
+    void onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts);
+
+    void PictureReady(const OutputRecord &output);
 
 private:
-    sp<DeathNotifier> mDeathNotifier;
-    bool mNeedStop;
-    int mPicFd;  // use for save picture
-    sp<ESConvertor> mVideoConvertor;
-    int32_t mRecordCorpX;
-    int32_t mRecordCorpY;
-    int32_t mRecordCorpWidth;
-    int32_t mRecordCorpHeight;
-    int32_t mRecordWidth;
-    int32_t mRecordHeight;
-    int mMicroClientId;
+    mutable Mutex mLock;
+    bool mStart;
     int32_t mMicroWidth;
     int32_t mMicroHeight;
+    int32_t mYuvRecordId;
+    wp<ScreenControlNotify> mNotifyListener;
+    std::unique_ptr<ESConvertor> mConvertor;
     ScreenManager* mScreenManager;
-    int mYuvClientId;
-    Mutex mLock;
-    int32_t mRecordSourceType;
-    sp<TSPacker> mTSPacker;
 };
 
 // ----------------------------------------------------------------------------
 }; // namespace android
-#endif
+#endif //ANDROID_SCREENCONTROL_SERVICE_H

@@ -26,6 +26,7 @@ static jobject g_obj = NULL;
 class AvcRecordMsg;
 class YuvRecordMsg;
 
+
 static sp<AvcRecordMsg> gAvcRecordMsg;
 static sp<YuvRecordMsg> gYuvRecordMsg;
 
@@ -48,36 +49,22 @@ JNIEnv *attach_java_thread(const char * threadName){
     return e;
 }
 
-class AvcRecordMsg:public ScreenControlClient::AvcCallback{
+class AvcRecordMsg:public ScreenControlClient::AvcRecordCallback {
 public:
     AvcRecordMsg(){
     }
     virtual ~AvcRecordMsg(){}
-    void onAvcDataArouse(void *data, int32_t size, uint8_t frameType, int64_t pts){
-        ALOGD("onAvcDataArouse------------- data=%p,size=%d,frameType=%d,pts=%lld",data,size,frameType,pts);
+    void onAvcDataArouse(void* data, int32_t size, int32_t frame_type, int64_t pts){
+        ALOGD("onAvcDataArouse----- data=%p,size=%d,frame_type=%d,pts=%lld",data,size,frame_type,pts);
         JNIEnv *env = attach_java_thread("screen_crontrol");
         jbyteArray arr = env->NewByteArray(size);
         env->SetByteArrayRegion(arr, 0, size, (jbyte *)data);
-        env->CallStaticIntMethod(g_jclazz, g_proc, g_obj, MSG_DATA_type_AVC, MSG_DATA_RECEIVE, frameType, pts, arr);
+        env->CallStaticIntMethod(g_jclazz, g_proc, g_obj, MSG_DATA_TYPE_AVC, frame_type, pts, arr);
         env->DeleteLocalRef(arr);
     }
-    void onAvcDataOver(){
-       ALOGE("onAvcDataOver-------------");
-        JNIEnv *env = attach_java_thread("screen_crontrol");
-        uint8_t *buf = new uint8_t[1];
-        char key[1]={0};
-        memcpy(buf, key, 1);
-        uint8_t frameType =0;
-        int64_t pts =0;
-        jbyte *by = (jbyte*)buf;
-        jbyteArray arr1 = env->NewByteArray(1);
-        env->SetByteArrayRegion(arr1, 0, 1, by);
-        env->CallStaticIntMethod(g_jclazz, g_proc, g_obj, MSG_DATA_type_AVC, MSG_DATA_OVER, frameType,pts, arr1);
-        delete [] buf;
-        env->DeleteLocalRef(arr1);
-    }
 };
-class YuvRecordMsg:public ScreenControlClient::YuvCallback{
+
+class YuvRecordMsg:public ScreenControlClient::YuvRecordCallback{
 public:
     YuvRecordMsg(){
     }
@@ -89,23 +76,8 @@ public:
         env->SetByteArrayRegion(arr, 0, size, (jbyte *)data);
         uint8_t frameType =0;
         int64_t pts =0;
-        env->CallStaticIntMethod(g_jclazz, g_proc, g_obj, MSG_DATA_TYPE_YUV, MSG_DATA_RECEIVE,frameType,pts,arr);
+        env->CallStaticIntMethod(g_jclazz, g_proc, g_obj, MSG_DATA_TYPE_YUV,frameType,pts,arr);
         env->DeleteLocalRef(arr);
-    }
-    void onYuvDataOver() {
-        ALOGD("onYuvDataOver-------------");
-        JNIEnv *env = attach_java_thread("screen_crontrol");
-        uint8_t *buf = new uint8_t[1];
-        char key[1]={0};
-        uint8_t frameType =0;
-        int64_t pts =0;
-        memcpy(buf, key, 1);
-        jbyte *by = (jbyte*)buf;
-        jbyteArray arr1 = env->NewByteArray(1);
-        env->SetByteArrayRegion(arr1, 0, 1, by);
-        env->CallStaticIntMethod(g_jclazz, g_proc, g_obj, MSG_DATA_TYPE_YUV, MSG_DATA_OVER, frameType,pts,arr1);
-        delete [] buf;
-        env->DeleteLocalRef(arr1);
     }
 };
 
@@ -121,42 +93,7 @@ static void ConnectScreenControl(JNIEnv *env __unused, jclass clazz __unused)
     ALOGI("Connect Screen Control");
 }
 
-static jint ScreenControlCapScreen(JNIEnv *env, jobject, jint left, jint top,
-    jint right, jint bottom, jint width, jint height, jint sourceType, jstring jfilename)
-{
-    sp<ScreenControlClient>& scc = getScreenControlClient();
-    if (scc != NULL) {
-        const char *filename = env->GetStringUTFChars(jfilename, nullptr);
-        return scc->startScreenCap(left, top, right,
-            bottom, width, height, sourceType, filename);
-    } else
-        return -1;
-}
 
-static jint ScreenControlRecordScreen(JNIEnv *env, jobject clazz, jint width, jint height,
-    jint frameRate, jint bitRate, jint limitTimeSec, jint sourceType, jstring jfilename)
-{
-    std::ignore = clazz;
-    sp<ScreenControlClient>& scc = getScreenControlClient();
-    if (scc != NULL) {
-        const char *filename = env->GetStringUTFChars(jfilename, nullptr);
-        return scc->startScreenRecord(width, height,
-            frameRate, bitRate, limitTimeSec, sourceType, filename);
-    } else
-        return -1;
-}
-static jint ScreenControlRecordScreenByCrop(JNIEnv *env, jobject, jint left,
-    jint top, jint right, jint bottom, jint width, jint height,jint frameRate, jint bitRate, jint limitTimeSec, jint sourceType, jstring jfilename)
-{
-    ALOGI("EScreenControlRecordScreenByCrop......\n");
-    sp<ScreenControlClient>& scc = getScreenControlClient();
-    if (scc != NULL) {
-        const char *filename = env->GetStringUTFChars(jfilename, nullptr);
-        return scc->startScreenRecord(left, top, right, bottom, width, height,
-            frameRate, bitRate, limitTimeSec, sourceType, filename);
-    } else
-        return -1;
-}
 
 static jbyteArray ScreenControlCapScreenBuffer(JNIEnv *env, jobject, jint left,
     jint top, jint right, jint bottom, jint width, jint height, jint sourceType)
@@ -177,7 +114,19 @@ static jbyteArray ScreenControlCapScreenBuffer(JNIEnv *env, jobject, jint left,
         return NULL;
 }
 
-static void ScreenControlStartYuvReceiver(JNIEnv *env , jobject, jobject wo)
+static jint ScreenControlRecordScreen(JNIEnv *env, jobject, jint left,
+    jint top, jint right, jint bottom, jint width, jint height,jint frameRate, jint bitRate, jint limitTimeSec, jint sourceType, jstring jfilename)
+{
+    sp<ScreenControlClient>& scc = getScreenControlClient();
+    if (scc != NULL) {
+        const char *filename = env->GetStringUTFChars(jfilename, nullptr);
+        return scc->startScreenRecord(left, top, right, bottom, width, height,
+            frameRate, bitRate, limitTimeSec, sourceType, filename);
+    } else
+        return -1;
+}
+
+static void ScreenControlStartReceiver(JNIEnv *env , jobject, jobject wo)
 {
     jclass cls;
     if ((cls = env->FindClass("com/droidlogic/app/ScreenControlManager")) == NULL) {
@@ -185,18 +134,18 @@ static void ScreenControlStartYuvReceiver(JNIEnv *env , jobject, jobject wo)
       return ;
     }
     g_jclazz = (jclass) env->NewGlobalRef(cls);
-    if ((g_proc = env->GetStaticMethodID(g_jclazz, "native_proc", "(Ljava/lang/Object;IIIJLjava/lang/Object;)I"))
+    if ((g_proc = env->GetStaticMethodID(g_jclazz, "native_proc", "(Ljava/lang/Object;IIJLjava/lang/Object;)I"))
         == NULL) {
       ALOGE("no such method: native_proc");
       return ;
     }
     if ((g_obj = env->NewGlobalRef(wo)) == NULL) {
-        ALOGE("ScreenControlStartYuvReceiver : no the boj");
-        return ;
+      return ;
     }
 }
 
-static jint ScreenControlStartAvcRecord(JNIEnv *, jobject,jint width, jint height, jint frameRate, int bitRate, jint sourceType)
+static jint ScreenControlStartAvcRecord(JNIEnv *, jobject, jint left,jint top, jint right, jint bottom,
+                                    jint width, jint height, jint frameRate, int bitRate, jint sourceType)
 {
     sp<ScreenControlClient>& scc = getScreenControlClient();
     if (scc != NULL) {
@@ -204,43 +153,27 @@ static jint ScreenControlStartAvcRecord(JNIEnv *, jobject,jint width, jint heigh
         if (gAvcRecordMsg ==NULL)
             return -1;
         scc->setAvcCallback(gAvcRecordMsg);
-        return spScreenCtrl->startAvcScreenRecord(width, height,frameRate, bitRate,sourceType);
+        return scc->startAvcScreenRecord(left, top, right, bottom, width, height,frameRate, bitRate,sourceType);
     }
     return -1;
 }
-static void ScreenControlStartAvcReceiver(JNIEnv *env , jobject, jobject wo)
-{
-    jclass cls;
-    if ((cls = env->FindClass("com/droidlogic/app/ScreenControlManager")) == NULL) {
-      ALOGE("Can't find class : com/droidlogic/app/ScreenControlManager");
-      return ;
-    }
-    g_jclazz = (jclass) env->NewGlobalRef(cls);
-    if ((g_proc = env->GetStaticMethodID(g_jclazz, "native_proc", "(Ljava/lang/Object;IIIJLjava/lang/Object;)I"))
-        == NULL) {
-      ALOGE("no such method: native_proc");
-      return ;
-    }
-    if ((g_obj = env->NewGlobalRef(wo)) == NULL) {
-      return ;
-    }
 
-
-
-}
-
-static jint ScreenControlStartYuvRecord(JNIEnv *, jobject, jint width, jint height, jint frameRate, jint sourceType)
+static jint ScreenControlStartYuvRecord(JNIEnv *, jobject, jint left,jint top, jint right, jint bottom,
+                                    jint width, jint height, jint frameRate, jint sourceType)
 {
     sp<ScreenControlClient>& scc = getScreenControlClient();
     if (scc != NULL) {
         gYuvRecordMsg= new YuvRecordMsg();
-        if (gYuvRecordMsg == NULL)
+        if (gYuvRecordMsg ==NULL)
             return -1;
         scc->setYuvCallback(gYuvRecordMsg);
-        return spScreenCtrl->startYuvScreenRecord(width, height, frameRate, sourceType);
+        return scc->startYuvScreenRecord(left, top, right, bottom, width, height,frameRate,sourceType);
     }
     return -1;
 }
+
+
+
 
 static void ScreenControlForceStop(JNIEnv *, jobject)
 {
@@ -250,17 +183,17 @@ static void ScreenControlForceStop(JNIEnv *, jobject)
     }
 }
 
+
+
+
 static JNINativeMethod ScreenControl_Methods[] = {
     {"native_ConnectScreenControl", "()V", (void *) ConnectScreenControl },
-    {"native_ScreenCap", "(IIIIIIILjava/lang/String;)I", (void *) ScreenControlCapScreen},
-    {"native_ScreenRecord", "(IIIIIILjava/lang/String;)I", (void *) ScreenControlRecordScreen},
-    {"native_ScreenRecordByCrop", "(IIIIIIIIIILjava/lang/String;)I", (void *) ScreenControlRecordScreenByCrop},
     {"native_ScreenCapBuffer", "(IIIIIII)[B", (void *) ScreenControlCapScreenBuffer},
+    {"native_ScreenRecord", "(IIIIIIIIIILjava/lang/String;)I", (void *) ScreenControlRecordScreen},
+    {"native_StartReceiver", "(Ljava/lang/ref/WeakReference;)V", (void *) ScreenControlStartReceiver },
+    {"native_startAvcRecord", "(IIIIIIIII)I", (void *) ScreenControlStartAvcRecord},
+    {"native_startYuvRecord", "(IIIIIIII)I", (void *) ScreenControlStartYuvRecord},
     {"native_ForceStop", "()V", (void *) ScreenControlForceStop },
-    {"native_StartAvcReceiver", "(Ljava/lang/ref/WeakReference;)V", (void *) ScreenControlStartAvcReceiver },
-    {"native_startAvcRecord", "(IIIII)I", (void *) ScreenControlStartAvcRecord},
-    {"native_StartYuvReceiver", "(Ljava/lang/ref/WeakReference;)V", (void *) ScreenControlStartYuvReceiver },
-    {"native_startYuvRecord", "(IIII)I", (void *) ScreenControlStartYuvRecord},
 };
 
 #define FIND_CLASS(var, className) \

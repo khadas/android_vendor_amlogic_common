@@ -32,7 +32,7 @@ enum msg_handle
 enum msg_type
 {
 	MSG_DATA_TYPE_YUV,
-    MSG_DATA_type_AVC
+    MSG_DATA_TYPE_AVC
 };
 
 #endif

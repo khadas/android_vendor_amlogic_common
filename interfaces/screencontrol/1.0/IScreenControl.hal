@@ -15,45 +15,27 @@
  */
 
 package vendor.amlogic.hardware.screencontrol@1.0;
+import IScreenControlCallback;
 
 interface IScreenControl {
-    startScreenRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, string filename)
-        generates (Result result);
-    startScreenRecordByCrop(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, string filename)
-        generates (Result result);
 
-    startScreenCap(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, string filename)
-        generates (Result result);
+    setCallback(IScreenControlCallback callback);
 
     startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType)
         generates(Result result, memory mem);
 
-    startAvcRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t sourceType)
+    startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, string filename)
         generates (Result result);
 
-    getAvcRecordData()
-        generates (Result result, memory mem, int32_t realMemSize, uint8_t frameType, int64_t nowtime);
-
-    checkAvcRecordDone()
+    startAvcRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t sourceType)
         generates (Result result);
 
-    startYuvRecord(int32_t width, int32_t height, int32_t frameRate,int32_t sourceType)
-        generates (Result result);
-
-    getYuvRecordData()
-        generates (Result result, memory mem, int32_t realMemSize);
-
-    checkYuvRecordDone()
+    startYuvRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t frameRate, int32_t sourceType)
         generates (Result result);
 
     startMicroDim(int32_t width, int32_t height)
         generates (Result result);
 
-    getMicroDimData()
-        generates (Result result, memory mem);
-
-    stopMicroDim()
-        generates (Result result);
-
     forceStop();
+
 };

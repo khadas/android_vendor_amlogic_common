@@ -1,59 +1,32 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-#define LOG_NDEBUG 1
+**
+** Copyright 2008, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+//#define LOG_NDEBUG 0
 #define LOG_TAG "ScreenCatch"
-
-#include <media/stagefright/foundation/ADebug.h>
-#include <media/stagefright/MediaDefs.h>
-#include <media/stagefright/MetaDataBase.h>
-#include <OMX_IVCommon.h>
-#include <media/hardware/MetadataBufferType.h>
-
-#include <ui/GraphicBuffer.h>
-#include <OMX_Component.h>
-#include <cutils/properties.h>
-
 #include <utils/Log.h>
-#include <utils/String8.h>
-
-#include "ScreenCatch.h"
-#include "../ScreenControlDebug.h"
+#include <cutils/properties.h>
+#include <ui/GraphicBuffer.h>
 #include "am_gralloc_ext.h"
-
-#include <binder/IPCThreadState.h>
-#include <binder/MemoryBase.h>
-#include <binder/MemoryHeapBase.h>
-
-#include <stdio.h>
-#include <assert.h>
-#include <limits.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sched.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <binder/IServiceManager.h>
-
-#define BOUNDARY 32
-
-#define ALIGN(x) (x + (BOUNDARY) - 1)& ~((BOUNDARY) - 1)
+#include "DisplayAdapter.h"
+#include "../ScreenControlDebug.h"
+#include "ScreenCatch.h"
 
 namespace android {
 
+#define PROP_KEYSTONE "persist.vendor.hwc.keystone"
 
 //////////////////////////////  screen capture when use keystone  //////////////////////////////
 
@@ -108,346 +81,156 @@ static inline void rgb24_to_rgb32(unsigned char *src, unsigned char *dist, int s
     }
 }
 
-ScreenCatch::ScreenCatch(uint32_t bufferWidth, uint32_t bufferHeight, uint32_t type) :
-    mStart(false),
-    mClientId(-1),
-    mThread((pthread_t)0),
-    mScreenManager(NULL),
-    mWidth(bufferWidth),
-    mHeight(bufferHeight),
-    mType(type),
-    mColorFormat(OMX_COLOR_Format32bitARGB8888),
-    mCorpX(-1),
-    mCorpY(-1),
-    mCorpWidth(-1),
-    mCorpHeight(-1),
-    mUseKeystone(false){
-    ALOGI("ScreenCatch: %dx%d", bufferWidth, bufferHeight);
-
-    if (bufferWidth <= 0 || bufferHeight <= 0 || bufferWidth > 1920 || bufferHeight > 1080) {
-        ALOGE("Invalid dimensions %dx%d", bufferWidth, bufferHeight);
-    }
-    mRawBufferQueue.clear();
+ScreenCatch::ScreenCatch():
+            mScreenManager(nullptr),
+            mStart(false),
+            mRawBufferSize(0),
+            mClientId(-1) {
+    ALOGI("[%s %d] Construct", __FUNCTION__, __LINE__);
     ScreenControlDebug::initDebug();
+    mOutputQueue.clear();
+
 }
 
 ScreenCatch::~ScreenCatch() {
     ALOGI("~ScreenCatch");
 }
-
-
-void ScreenCatch::setVideoCrop(int x, int y, int width, int height)
-{
-    mCorpX = x;
-    mCorpY = y;
-    mCorpWidth = width;
-    mCorpHeight = height;
-}
-
-static inline void yuv_to_rgb24(unsigned char y,unsigned char u,unsigned char v,unsigned char *rgb)
-{
-    int r,g,b;
-
-    r = (1192 * (y - 16) + 1634 * (v - 128) ) >> 10;
-    g = (1192 * (y - 16) - 833 * (v - 128) - 400 * (u -128) ) >> 10;
-    b = (1192 * (y - 16) + 2066 * (u - 128) ) >> 10;
-
-    r = r > 255 ? 255 : r < 0 ? 0 : r;
-    g = g > 255 ? 255 : g < 0 ? 0 : g;
-    b = b > 255 ? 255 : b < 0 ? 0 : b;
-
-    /*ARGB*/
-    *rgb = (unsigned char)r;
-    rgb++;
-    *rgb = (unsigned char)g;
-    rgb++;
-    *rgb = (unsigned char)b;
-}
-
-void nv21_to_rgb24(unsigned char *buf, unsigned char *rgb, int width, int height)
-{
-    int x,y,z=0;
-    int h,w;
-    int blocks;
-    unsigned char Y1, Y2, U, V;
-
-    blocks = (width * height) * 2;
-
-    for (h=0, z=0; h< height; h+=2) {
-        for (y = 0; y < width*2; y+=2) {
-
-            Y1 = buf[ h*width + y + 0];
-            V = buf[ blocks/2 + h*width/2 + y%width + 0 ];
-            Y2 = buf[ h*width + y + 1];
-            U = buf[ blocks/2 + h*width/2 + y%width + 1 ];
-
-            yuv_to_rgb24(Y1, U, V, &rgb[z]);
-            yuv_to_rgb24(Y2, U, V, &rgb[z + 3]);
-            z+=6;
-        }
+bool ScreenCatch::start(std::unique_ptr<InputParmeter>& input) {
+    std::lock_guard<std::mutex> lock(mLock);
+    int32_t size = 0;
+    char keystone[256] = {0};
+    if (mStart) {
+        ALOGE("[%s %d] it has been started", __FUNCTION__, __LINE__);
+        return false;
     }
-}
-
-
-int ScreenCatch::threadFuncForScreenManager()
-{
-    int index = 0;
-    int status;
-
-    sp<MemoryHeapBase> newMemoryHeap = new MemoryHeapBase(mWidth*mHeight*3/2);
-    sp<MemoryBase> buffer = new MemoryBase(newMemoryHeap, 0, mWidth*mHeight*3/2);
-    if (buffer->unsecurePointer() == NULL ) {
-        ALOGE("[%s %d] ,can't malloc memory !", __FUNCTION__, __LINE__);
-        return -1;
+    if (input->source_type < AML_CAPTURE_VIDEO || input->source_type > SCAML_CAPTURE_UNKNOWN) {
+        ALOGE("[%s %d] dont't support the type=%d", __FUNCTION__, __LINE__,input->source_type);
+        return false;
     }
+    ALOGI("[%s %d]  ScreenManager start finish source_type = %d (%d/%d)", __FUNCTION__, __LINE__,
+                input->source_type,input->size->width(),input->size->height());
+    if (property_get(PROP_KEYSTONE, keystone, "") > 0 && strlen(keystone) > 0 )
+        return captureforKeystone()?true:false;
 
-    ALOGI("[%s %d] empty:%d", __FUNCTION__, __LINE__, mRawBufferQueue.empty());
-
-    while (mStart == true) {
-        status = mScreenManager->readBuffer(mClientId, buffer, &index);
-
-        if (status != OK && mStart == true) {
-            usleep(100);
+    mScreenManager = ScreenManager::getInstance();
+    auto screenInput = std::make_unique<InputParmeter>();
+    screenInput->source_type = input->source_type;
+    screenInput->format = SCREENCONTROL_PIX_FMT_RGBA888;
+    screenInput->frame_rate = 1;
+    size = input->size->width() * input->size->height() * 4;
+    screenInput->size = std::move(input->size);
+    screenInput->area = std::move(input->area);
+    bool ret = mScreenManager->start(screenInput, this, &mClientId, false);
+    if (!ret) {
+        ALOGE("[%s %d] ScreenManager start fail!", __FUNCTION__, __LINE__);
+        return false;
+    }
+    ALOGI("[%s %d]  ScreenManager start finish mClientId=%d", __FUNCTION__, __LINE__, mClientId);
+    mRawBufferSize = size;
+    mStart =true;
+    return true;
+}
+bool ScreenCatch::stop() {
+    std::lock_guard<std::mutex> lock(mLock);
+    if (!mStart) {
+        ALOGE("[%s %d] the ScreenCatch has been started !", __FUNCTION__, __LINE__);
+        return false;
+    }
+    mScreenManager->stop(mClientId);
+    while (!mOutputQueue.empty()) {
+        auto output = mOutputQueue.begin();
+        if (!(*output)->raw) {
+            ALOGV("[%s %d] the buffer is not legal", __FUNCTION__, __LINE__);
+            mOutputQueue.erase(output);
             continue;
         }
-
-        if (mStart != true)
-            break;
-
-        {
-            Mutex::Autolock autoLock(mLock);
-            MediaBuffer* accessUnit = NULL;
-            long *raw = NULL;
-            mScreenManager->getBufferByID(index,&raw);
-
-            if (OMX_COLOR_Format24bitRGB888 == mColorFormat) {//rgb 24bit
-                accessUnit = new MediaBuffer(mWidth*mHeight*3);
-                if (accessUnit != NULL && accessUnit->data() != NULL) {
-                    nv21_to_rgb24((unsigned char *)raw, (unsigned char *)accessUnit->data(), mWidth, mHeight);
-                    accessUnit->set_range(0, mWidth*mHeight*3);
-                }
-            } else if (OMX_COLOR_Format32bitARGB8888 == mColorFormat) {//rgba 32bit
-                accessUnit = new MediaBuffer(mWidth*mHeight*4);
-                if (accessUnit != NULL && accessUnit->data() != NULL) {
-                    nv21_to_rgb32_((unsigned char *)raw, (unsigned char *)accessUnit->data(), mWidth, mHeight);
-                    accessUnit->set_range(0, mWidth*mHeight*4);
-                }
-            } else if (OMX_COLOR_FormatYUV420SemiPlanar ==  mColorFormat){//nv21
-                accessUnit = new MediaBuffer(mWidth*mHeight*3/2);
-                if (accessUnit != NULL && accessUnit->data() != NULL) {
-                    memcpy((unsigned char *)raw, (unsigned char *)buffer->unsecurePointer(), mWidth*mHeight*3/2);
-                    accessUnit->set_range(0, mWidth*mHeight*3/2);
-                }
-            }
-            long buf_info[3] ={0};
-            buf_info[1] = (long) raw;
-            memcpy(buffer->unsecurePointer(), buf_info, 3*sizeof(long));
-            mScreenManager->freeBuffer(mClientId, buffer);
-            if (accessUnit != NULL)
-                mRawBufferQueue.push_back(accessUnit);
+        if (mClientId > 0) {
+            delete [](*output)->raw;
         }
+        mOutputQueue.erase(output);
     }
-
-    //buffer->decStrong(this);
-    buffer.clear();
-    //newMemoryHeap->decStrong(this);
-    newMemoryHeap.clear();
-
-    return 0;
+    mStart = false;
+    mScreenManager = nullptr;
+    mRawBufferSize = 0;
+    mClientId = -1;
+    return true;
 }
 
-int ScreenCatch::threadFunc()
-{
-    int result = 0;
-    if (!mUseKeystone) {
-        result = threadFuncForScreenManager();
+bool ScreenCatch::readBuffer(uint8_t* buffer, int32_t* size) {
+    std::lock_guard<std::mutex> lock(mLock);
+    if (!mStart || mOutputQueue.empty()) {
+        ALOGV("[%s %d] the ScreenCatch has been started or mOutputQueue don't have any buffer ", __FUNCTION__, __LINE__);
+        return false;
     }
-    return result;
+    auto output = mOutputQueue.begin();
+    if (!(*output)->raw) {
+        ALOGV("[%s %d] the buffer is not legal", __FUNCTION__, __LINE__);
+        mOutputQueue.erase(mOutputQueue.begin());
+        return false;
+    }
+    memcpy(buffer,(*output)->raw,mRawBufferSize);
+    *size = mRawBufferSize;
+    if (mClientId > 0) {
+        delete [](*output)->raw;
+    }else
+        mScreenManager->realseBuffer(mClientId,(*output)->index);
+    mOutputQueue.erase(mOutputQueue.begin());
+    ALOGD("[%s %d] get the buffer size = %d", __FUNCTION__, __LINE__,mRawBufferSize);
+    return true;
 }
 
-void *ScreenCatch::ThreadWrapper(void *me) {
-    ScreenCatch *Convertor = static_cast<ScreenCatch *>(me);
-    Convertor->threadFunc();
-    return NULL;
-}
-
-
-status_t ScreenCatch::start(MetaDataBase *params)
-{
-    ALOGI("[%s %d] mWidth:%d mHeight:%d", __FUNCTION__, __LINE__, mWidth, mHeight);
-    Mutex::Autolock autoLock(mLock);
-
-    status_t status = 0;
-    int64_t pts;
-    int client_id = -1;
-    char postprocessor[8] = {0};
-    char keystone[256] = {0};
-
-
-    if (property_get(PROP_KEYSTONE, keystone, "") > 0 && strlen(keystone) > 0) {
-        //(PROP_KEYSTONE not empty)
-        mUseKeystone = true;
+bool ScreenCatch::captureforKeystone() {
+    const native_handle_t *outBufferHandle = nullptr;
+    native_handle_t *bufferHandle = nullptr;
+    int width=0, height=0, format=0, stride=0;
+    std::unique_ptr<meson::DisplayAdapter> displayAdapter = meson::DisplayAdapterCreateRemote();
+    if (!displayAdapter) {
+        ALOGE("DisplayAdapter init failed");
+        return false;
     }
-    ALOGI("Screencatch source from [%s]", mUseKeystone?"DisplayAdapter":"ScreenManager");
-
-    if (mUseKeystone) {
-        const native_handle_t *outBufferHandle = nullptr;
-        native_handle_t *bufferHandle = nullptr;
-        int width=0, height=0, format=0, stride=0;
-        std::unique_ptr<meson::DisplayAdapter> displayAdapter = meson::DisplayAdapterCreateRemote();
-        if (!displayAdapter) {
-            ALOGE("DisplayAdapter init failed");
-            return !OK;
-        }
-        if ((displayAdapter->captureDisplayScreen(&outBufferHandle))
-                && (NULL != outBufferHandle)) {
-            MediaBuffer* accessUnit = NULL;
-            size_t bufSize = 0;
-            void* mapBase = nullptr;
-            bufferHandle = const_cast<native_handle_t*> (outBufferHandle);
-
-            // get information
-            width = am_gralloc_get_width(bufferHandle);
-            height = am_gralloc_get_height(bufferHandle);
-            format = am_gralloc_get_format(bufferHandle);
-            stride = am_gralloc_get_stride_in_pixel(bufferHandle);
-            bufSize = stride * height * bytesPerPixel(format);
-            ALOGD("[%s %d]mDisplayAdapter get width=%d, height=%d, format=%d, stride=%d, bufSize=%d",
-                __func__, __LINE__, width, height, format, stride, bufSize);
-
-
-            if (!gralloc_lock_dma_buf(bufferHandle, &mapBase)) {
-                int unitSize = 0;
-                switch (mColorFormat) {  // app needed
-                case OMX_COLOR_Format24bitRGB888:
-                    unitSize = stride * height*3;
-                    accessUnit = new MediaBuffer(unitSize);
-                    accessUnit->set_range(0, unitSize);
-                    if (PIXEL_FORMAT_RGB_888 == format && accessUnit ->data() != NULL) {
-                        memcpy(accessUnit->data(), mapBase, bufSize); //HAL_PIXEL_FORMAT_RGB_888
-                    }
-                    break;
-                case OMX_COLOR_Format32bitARGB8888:
-                    unitSize = stride * height*4;
-                    accessUnit = new MediaBuffer(unitSize);
-                    accessUnit->set_range(0, unitSize);
-                    if (PIXEL_FORMAT_RGB_888 == format && accessUnit ->data() != NULL) {
-                        ALOGD("format rgb888, call rgb24_to_rgb32\n");
-                        rgb24_to_rgb32((unsigned char*)mapBase,
-                            (unsigned char*)accessUnit->data(), width, height);
-                    }
-                    break;
-
-                default:
-                    break;
-                }
-
-                gralloc_unlock_dma_buf(bufferHandle);
-                gralloc_unref_dma_buf(bufferHandle);
-
-                if (accessUnit != NULL) {
-                    mRawBufferQueue.push_back(accessUnit);
-                }
-                return OK;
-            } else  {
-                ALOGE("lock mem failed");
-                return !OK;
-            }
-
-        }else {
-            ALOGE("captureDisplayScreen failed");
-            return !OK;
-
+    if ((displayAdapter->captureDisplayScreen(&outBufferHandle))
+                && (nullptr != outBufferHandle)) {
+        void* mapBase = nullptr;
+        bufferHandle = const_cast<native_handle_t*> (outBufferHandle);
+        width = am_gralloc_get_width(bufferHandle);
+        height = am_gralloc_get_height(bufferHandle);
+        format = am_gralloc_get_format(bufferHandle);
+        stride = am_gralloc_get_stride_in_pixel(bufferHandle);
+        mRawBufferSize = stride * height * 4;
+        ALOGD("[%s %d]mDisplayAdapter get width=%d, height=%d, format=%d, stride=%d, bufSize=%d",
+            __func__, __LINE__, width, height, format, stride, mRawBufferSize);
+        if (!gralloc_lock_dma_buf(bufferHandle, &mapBase)) {
+            unsigned char* buffer = (unsigned char*)malloc(mRawBufferSize);
+            if (!buffer)
+                return false;
+            rgb24_to_rgb32((unsigned char*)mapBase, buffer, width, height);
+            free(buffer);
+            gralloc_unlock_dma_buf(bufferHandle);
+            gralloc_unref_dma_buf(bufferHandle);
+        } else {
+            ALOGE("lock mem failed");
+            return false;
         }
 
     } else {
-        mScreenManager = ScreenManager::instantiate();
-        ALOGI("[%s %d] mWidth:%d mHeight:%d", __FUNCTION__, __LINE__, mWidth, mHeight);
-
-        mScreenManager->init(mWidth, mHeight, mType, 1, SCREENCONTROL_RAWDATA_TYPE, &client_id);
-
-        ALOGI("[%s %d] client_id:%d, mType:%d", __FUNCTION__, __LINE__, client_id, mType);
-
-        mClientId = client_id;
-
-        if (status != OK) {
-            ALOGE("setResolutionRatio fail");
-            return !OK;
-        }
-
-        ALOGI("[%s %d] mCorpX:%d mCorpY:%d mCorpWidth:%d mCorpHeight:%d", __FUNCTION__, __LINE__,  mCorpX, mCorpY, mCorpWidth, mCorpHeight);
-
-        if (mCorpX != -1)
-            mScreenManager->setVideoCrop(mCorpX, mCorpY, mCorpWidth, mCorpHeight);
-
-        status = mScreenManager->start(client_id,SCREENCONTROL_SCREEN_CATCH);
-
-        if (status != OK) {
-            mScreenManager->uninit(mClientId);
-            ALOGE("ScreenControlService start fail");
-            return !OK;
-        }
-
+        ALOGE("captureDisplayScreen failed");
+        return false;
     }
+    return true;
 
 
-    if (!(params->findInt32(kKeyColorFormat, &mColorFormat)
-           && (mColorFormat != OMX_COLOR_FormatYUV420SemiPlanar
-            && mColorFormat != OMX_COLOR_Format24bitRGB888
-            && mColorFormat != OMX_COLOR_Format32bitARGB8888)))
-        mColorFormat = OMX_COLOR_Format32bitARGB8888;
-    mStart = true;
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-    pthread_create(&mThread, &attr, ThreadWrapper, this);
-    pthread_attr_destroy(&attr);
-
-
-
-    ALOGD("[%s %d]", __FUNCTION__, __LINE__);
-    return OK;
 }
 
-status_t ScreenCatch::stop()
-{
-    ALOGI("[%s %d]", __FUNCTION__, __LINE__);
-    status_t ret = OK;
-    Mutex::Autolock autoLock(mLock);
-    mStart = false;
-    void *dummy;
-    pthread_join(mThread, &dummy);
-    ALOGI("[%s %d]", __FUNCTION__, __LINE__);
-    ret = static_cast<status_t>(reinterpret_cast<uintptr_t>(dummy));
-    ALOGI("[%s %d], ret = %d", __FUNCTION__, __LINE__, ret);
-
-    while (!mRawBufferQueue.empty()) {
-		    ALOGE("[%s %d] free buffer", __FUNCTION__, __LINE__);
-        MediaBuffer* rawBuffer = *mRawBufferQueue.begin();
-        mRawBufferQueue.erase(mRawBufferQueue.begin());
-        if (rawBuffer != NULL)
-            rawBuffer->release();
+void ScreenCatch::PictureReady(const OutputRecord &output) {
+    ALOGI("PictureReady index =%d ",output.index);
+    if (!mStart || output.format != SCREENCONTROL_PIX_FMT_RGBA888 || !output.raw_buffer ||
+            output.raw_buffer_size <= 0 || output.raw_buffer_size > mRawBufferSize) {
+        ALOGE("[%s %d] the format is not RGBA888 or the buffer is wrong ,size = %d", __FUNCTION__, __LINE__,output.raw_buffer_size);
+        return;
     }
-    if (!mUseKeystone) {
-        mScreenManager->stop(mClientId);
-        mScreenManager->uninit(mClientId);
-    }
+    auto info = std::make_unique<OutputInfo>(output.raw_buffer,output.index);
 
-    return ret;
+    mOutputQueue.push_back(std::move(info));
 }
 
-status_t ScreenCatch::read(MediaBuffer **buffer)
-{
-    Mutex::Autolock autoLock(mLock);
-
-    if (!mRawBufferQueue.empty()) {
-        MediaBuffer* rawBuffer = *mRawBufferQueue.begin();
-        mRawBufferQueue.erase(mRawBufferQueue.begin());
-        *buffer = rawBuffer;
-        return OK;
-    }
-
-    return !OK;
-}
-
-} // end of namespace android
+};

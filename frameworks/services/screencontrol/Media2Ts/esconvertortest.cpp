@@ -13,22 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_NDEBUG 0
-#define LOG_TAG "TSPackerTest"
+
+
+
+#include <cutils/properties.h>
+
+#define LOG_TAG "MediaConvertorTest"
 
 #include <utils/Log.h>
-#include "tspack.h"
+
+#include "esconvertor.h"
 
 
 using namespace android;
 
+const char *filename = "/data/temp/video.es";
+
 static const char *opt_str = "hf:b:t:s:";
-const char *filename = "/data/temp/video.ts";
 static void help(char *appName)
 {
     printf(
         "Usage:\n"
-        "  %s [-h] [-f <framerate>] [-b <bitrate>] [-t <type>] [-s <second>] [<left>  <top>  <right>  <bottom> <width> <height>]\n"
+        "  %s [-h] [-f <framerate>] [-b <bitrate>] [-t <type>] [-s <second>] [<left>  <top>  <right>  <bottom>  <width> <height>]\n"
         "\n"
         "Parameters:\n"
         "  -h            : show this help\n"
@@ -49,6 +55,69 @@ static void help(char *appName)
         , AML_CAPTURE_OSD_VIDEO);
 }
 
+class EsConvertorTest : public ESConvertor::ESConvertorCallback {
+public:
+
+    EsConvertorTest() {
+        mFirstPts = 0;
+        mLastPts = 0;
+        fd = -1;
+    }
+
+    ~EsConvertorTest() {
+        if (fd > 0)
+            close(fd);
+    }
+
+
+    bool start(int left, int top,int right,int bottom,int width,int height,int source_type,int32_t frame_rate,int32_t bit_rate) {
+        convertor = std::make_unique<ESConvertor>();
+        auto parmeter = std::make_unique<ESConvertorParmeter>();
+        parmeter->size = std::make_unique<Size>(width,height);
+        parmeter->area = std::make_unique<Area>(left,top,right,bottom);
+        parmeter->source_type = source_type;
+        parmeter->frame_rate = frame_rate;
+        parmeter->bit_rate_ = bit_rate;
+        fd = open(filename, O_CREAT | O_RDWR, 0666);
+        if (fd <= 0 )
+            return false;
+
+        return convertor->start(parmeter,this);
+
+
+    }
+    bool stop() {
+        if (fd > 0) {
+            close(fd);
+            fd = -1;
+        }
+        return convertor?convertor->stop():false;
+
+    }
+    void onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts) {
+        printf("onEsBufferAvailable frame_type=%d,mFirstPts = %ld,pts =%ld,diff =%ld\n",frame_type,mFirstPts,pts,(pts-mFirstPts));
+        if (mFirstPts == 0)
+            mFirstPts = pts;
+        if (fd > 0) {
+            ALOGD("write in");
+            write(fd, data, size);
+            ALOGD("write out");
+
+        }
+        mLastPts = pts;
+    }
+    int64_t getLastPts(){return mLastPts;}
+    int64_t getFirstPts(){return mFirstPts;}
+    int64_t getDiffPts(){return (mFirstPts == 0||mLastPts == 0)?0:(mLastPts - mFirstPts);}
+
+private:
+    int64_t mFirstPts;
+    int64_t mLastPts;
+    int32_t fd;
+    std::unique_ptr<ESConvertor> convertor;
+};
+
+
 int main(int argc, char **argv) {
     int err;
     int ch;
@@ -56,7 +125,7 @@ int main(int argc, char **argv) {
     int left=0, top=0, right=1280, bottom=720;
     int outWidth=1280, outHeight=720;
     int tmpArgIdx = 0;
-    int64_t mFirstPts = 0;
+    int needDumpFrame = 0;
 
     while ((ch = getopt(argc, argv, opt_str)) != -1) {
         switch (ch) {
@@ -89,57 +158,40 @@ int main(int argc, char **argv) {
 
     }
 
+    needDumpFrame = framerate * timeSecond;
 
     printf("size     =[%dX%d]\n"
-           "(left,top,right,bottom)=(%d,%d,%d,%d)\n"
            "framerate=%dbps\n"
+           "left  =%d\n"
+           "top  =%d\n"
+           "right  =%d\n"
+           "bottom  =%d\n"
            "bitrate  =%d\n"
            "type     =%s\n"
            "time     =%ds\n"
            "save as [%s]\n",
-           outWidth, outHeight,left, top,right,bottom, framerate, bitrate,
-           type==AML_CAPTURE_OSD_VIDEO?"video+osd":type==AML_CAPTURE_VIDEO?"video only":"unknown",
+           outWidth, outHeight, framerate, left,top,right,bottom,bitrate,
+           type==AML_CAPTURE_OSD_VIDEO?"video+osd":(type==AML_CAPTURE_VIDEO?"video only":"unknown"),
            timeSecond, filename);
 
-    std::unique_ptr<TSPacker> tspacker = std::make_unique<TSPacker>();
-    auto parmeter = std::make_unique<ESConvertorParmeter>();
-    parmeter->size = std::make_unique<Size>(outWidth,outHeight);
-    parmeter->area = std::make_unique<Area>(left,top,right,bottom);
-    parmeter->source_type = type;
-    parmeter->frame_rate = framerate;
-    parmeter->bit_rate_ = bitrate;
-
-    if (!tspacker->start(parmeter)) {
-        printf("the tspacker start fail!!\n");
+    auto test = std::make_unique<EsConvertorTest>();
+    if (!test->start(left,top,right,bottom,outWidth, outHeight,type,framerate,bitrate)) {
+        printf("EsConvertorTest start fail\n");
         return 0;
     }
-    int32_t fd = open(filename, O_CREAT | O_RDWR, 0666);
-    if (fd <= 0 )
-        return 0;
-
+    int64_t diff = timeSecond * 1000 * 1000;
+    printf("EsConvertorTest diff=%ld\n",diff);
     while (1) {
-        uint8_t * buffer = nullptr;
-        int32_t size = 0;
-        int64_t pts = 0;
-        bool ret = tspacker->readBuffer(&buffer,&size,&pts);
-        if (!ret || !buffer || size <= 0 || pts <= 0) {
-            usleep(5 * 1000);//5ms
-            continue;
-        }
-        if (mFirstPts == 0)
-            mFirstPts = pts;
-        int64_t diff = timeSecond * 1000 * 1000;
-        int64_t diffPts = pts - mFirstPts;
-        write(fd, buffer, size);
-        delete []buffer;
-        printf("[%s %d] video dump_size = %d,pts = %ld,diffPts=%ld\n", __FUNCTION__, __LINE__,size,pts,diffPts);
-        if (diffPts >= diff)
+        int64_t diffpts = test->getDiffPts();
+        int64_t firstPts = test->getFirstPts();
+        int64_t lastPts = test->getLastPts();
+        if (diffpts >= diff ) {
+            printf("EsConvertorTest firstPts =%ld,lastPts=%ld,diffpts=%ld\n",firstPts,lastPts,diffpts);
             break;
-
+        }
+        usleep(5*1000);//5ms
     }
-    tspacker->stop();
-    close(fd);
-    fd = -1;
-    printf("TSPackerTest stop\n");
+    test->stop();
+    printf("mH264Convertor stop\n");
     return 0;
 }

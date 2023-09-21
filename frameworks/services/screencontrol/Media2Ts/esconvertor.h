@@ -14,192 +14,63 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_ESCONVERTOR_H
-#define ANDROID_GUI_ESCONVERTOR_H
+#ifndef AMLOGIC_SCREENCONTROL_ESCONVERTOR_H
+#define AMLOGIC_SCREENCONTROL_ESCONVERTOR_H
 
-#include <media/NdkMediaCodec.h>
-#include <media/NdkMediaFormat.h>
-#include <media/NdkMediaError.h>
-
-#include <pthread.h>
-
-#include <binder/MemoryDealer.h>
-#include <binder/MemoryBase.h>
-#include <binder/MemoryHeapBase.h>
 #include "../ScreenManager.h"
+#include "VideoEncoderWrapper.h"
+
 
 namespace android {
-// ----------------------------------------------------------------------------
-#define PROP_MAX_BUFSIZE "ro.vendor.screencontrol.maxbufsize" // means max buffer size to store unencoded yuv data
 
-void argb_scale(unsigned char *src, unsigned char* dst, int width, int height, int dWidth, int dHeight);
-
-
-
-class ESConvertor : public MediaBufferObserver,
-                            public virtual RefBase {
-public:
-    ESConvertor(int sourceType, int IsAudio);
-
-    virtual ~ESConvertor();
-
-    // For the MediaSource interface for use by StageFrightRecorder:
-    virtual status_t start(MetaDataBase *params = NULL);
-    virtual status_t stop();
-    virtual status_t read(MediaBufferBase **buffer);
-     virtual status_t readRawData(MediaBuffer *buffer, int width, int height);
-    virtual MetaDataBase* getFormat();
-
-    // valid function after call setMaxFrameCount()
-    virtual status_t checkConvertDone();
-
-    virtual status_t checkAvcConvertDone();
-
-    void setVideoCrop(int x, int y, int width, int height);
-
-    // Get / Set the frame rate used for encoding. Default fps = 30
-    status_t setFrameRate(int32_t fps) ;
-    int32_t getFrameRate( ) const;
-
-    // Get / Set max frame count, default as -1, limit frame count when set > 0
-    status_t setMaxFrameCount(int32_t maxFrameCnt);
-    int32_t getMaxFrameCount() const;
-
-    // Get / Set time limit in unit million second (ms)
-    // proiroty: setTimeLimit() > setMaxFrameCount()
-    status_t setTimeLimit(int32_t timeLimitMs);
-    int32_t getTimeLimit() const;
-
-    // The call for the StageFrightRecorder to tell us that
-    // it is done using the MediaBuffer data so that its state
-    // can be set to FREE for dequeuing
-    virtual void signalBufferReturned(MediaBufferBase* buffer);
-    // end of MediaSource interface
-
-    // getTimestamp retrieves the timestamp associated with the image
-    // set by the most recent call to read()
-    //
-    // The timestamp is in nanoseconds, and is monotonically increasing. Its
-    // other semantics (zero point, etc) are source-dependent and should be
-    // documented by the source.
-    int64_t getTimestamp();
-
-    // isMetaDataStoredInVideoBuffers tells the encoder whether we will
-    // pass metadata through the buffers. Currently, it is force set to true
-    bool isMetaDataStoredInVideoBuffers() const;
-
-    // To be called before start()
-    status_t setMaxAcquiredBufferCount(size_t count);
-
-    // To be called before start()
-    status_t setUseAbsoluteTimestamps();
-
-    int CanvasdataCallBack(const sp<IMemory>& data);
-
-    virtual bool isHaveOutputData();
-
-private:
-    enum {
-        kWhatDoMoreWork,
-        kWhatRequestIDRFrame,
-        kWhatShutdown,
-        kWhatMediaPullerNotify,
-        kWhatEncoderActivity,
-    };
-    Mutex mLock;
-    typedef struct FrameBufferInfo_s{
-        unsigned char* buf_ptr;
-        unsigned canvas;
-        int64_t timestampUs;
-    }FrameBufferInfo;
-
-    pthread_t mThread;
-
-    status_t feedEncoderInputBuffers();
-    status_t initEncoder();
-    sp<ABuffer> prependCSD(sp<ABuffer> &accessUnit, sp<ABuffer> CSDBuffer);
-    sp<ABuffer> prependStartCode(const sp<ABuffer> &accessUnit) const;
-    static void *ThreadWrapper(void *me);
-    sp<ABuffer> prependADTSHeader( const sp<ABuffer> &accessUnit) const;
-    int threadFunc();
-    int threadAudioFunc();
-    int threadVideoFunc();
-    int videoDequeueInputBuffer();
-    int videoFeedInputBuffer();
-    int videoSwEncoderFeedInputBuffer();
-    int videoDequeueOutputBuffer();
-    bool isBeyondMaxBuffer(int frameCnt, int frameSize);
-    bool isBeyondLimitTime();
-    int mWidth;
-    int mHeight;
-    int mSourceType;
-    int mVideoFrameRate;
-    int mVIdeoBitRate;
-    bool mIsSoftwareEncoder;
-    int mMaxInFrameCnt;  // limit input frame count when > 0
-    int mFrameCounter;   // all input frame counter (include droped)
-    int mInFrameCounter; // queue input frame to encode queue (not include droped)
-    int mOutFrameCounter;
-    int mDropFrameCounter; // droped frame counter
-    int64_t mFirstPtsUs;   // store first frame pts
-    int64_t mLastPtsUs;    // store lastest frame pts
-    int32_t mLimitTimeMs;  // limit time when > 0, priority: mLimitTimeMs > mMaxFrameCnt
-
-    // use prop value "ro.vendor.screencontrol.maxbufsize", default as -1(no limit)
-    // limit unencoded buffer size in buffer queue
-    // this might cause frame lost when buffer size overflow
-    int mMaxBufSize;
-
-    int mIsAudio;
-    int mIsPCMAudio;
-    AMediaFormat *mInputFormat;
-    AMediaFormat *mOutputFormat;
-    int64_t mStartTimeNs;
-    int mAudioChannelCount;
-    int mAudioSampleRate;
-    int mDumpYuvFd;
-    int mDumpEsFd;
-
-    Vector<sp<ABuffer> > mCSDADTS;
-
-    size_t mMaxAcquiredBufferCount;
-    bool mUseAbsoluteTimestamps;
-    mutable Mutex mMutex;
-    int32_t mFrameRate;
-    int64_t mCurrentTimestamp;
-    bool mStarted;
-    sp<ABuffer> mPartialAudioAU;
-
-    AMediaCodec *mEncoder;
-    List<size_t> mAvailEncoderInputIndices;
-
-    List<sp<ABuffer> > mInputBufferQueue;
-    List<sp<ABuffer> > mOutputBufferQueue;
-    List<MediaBuffer*> mFramesReceived;
-    KeyedVector<int, MediaBuffer* > mFrameEndecoding;
-
-    int32_t mClientId;
-    sp<MemoryHeapBase> mNewMemoryHeap;
-    sp<MemoryBase> mBufferGet;
-    sp<MemoryBase> mBufferRelease;
-    sp<ABuffer> mCSDbuffer;
-    void * mCaptureBuffer;
-    ScreenManager* mScreenManager;
-    int64_t mDequeueBufferTotal;
-    int64_t mQueueBufferTotal;
-
-    int mEscDumpAAC;
-    int mEscDumpPcm;
-
-    int32_t mCorpX;
-    int32_t mCorpY;
-    int32_t mCorpWidth;
-    int32_t mCorpHeight;
-
-    Condition mThreadOutCondition;
+struct BufferPtsInfo {
+    int32_t index;
+    int64_t pts;
 };
 
-// ----------------------------------------------------------------------------
+struct ESConvertorParmeter : public InputParmeter {
+    ESConvertorParmeter(): bit_rate_(0),i_frame_interval(0){};
+    ESConvertorParmeter(ESConvertorParmeter&&) = default;
+    ~ESConvertorParmeter() = default;
+    int32_t bit_rate_;
+    int32_t i_frame_interval;
+};
+
+class ESConvertor : public ScreenManager::ScreenMangerCallback,
+                    public VideoEncoderWrapper::VideoEncoderWrapperCallback {
+
+public:
+    class ESConvertorCallback {
+    public:
+        ESConvertorCallback() = default;
+        virtual ~ESConvertorCallback() = default;
+        virtual void onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts) = 0;
+    };
+    ESConvertor();
+    virtual ~ESConvertor();
+    bool start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertorCallback *client);
+    bool stop();
+    void PictureReady(const OutputRecord &output);
+    void onInputBufferAvailable(int64_t pts);
+    void onOutputBufferAvailable(void* const buffer, int32_t size, int32_t frame_type, int64_t pts);
+
+private:
+    ESConvertorCallback* mESConvertorCallback;
+    ScreenManager* mScreenManager;
+    std::mutex mLock;
+    bool mStart;
+    int32_t mClientId;
+    std::unique_ptr<ESConvertorParmeter> mInput;
+    std::unique_ptr<VideoEncoderWrapper> mEncoder;
+    std::unique_ptr<DataDumper> mDumper;
+    std::list<std::unique_ptr<BufferPtsInfo>> mWorkingInfoQueue;
+
+
+
+
+};
+
+
 }; // namespace android
 
-#endif // ANDROID_GUI_SURFACEMEDIASOURCE_H
+#endif // AMLOGIC_SCREENCONTROL_ESCONVERTOR_H

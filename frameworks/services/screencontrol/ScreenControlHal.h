@@ -30,72 +30,72 @@ namespace screencontrol {
 namespace V1_0 {
 namespace implementation {
     using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControl;
+    using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControlCallback;
     using ::vendor::amlogic::hardware::screencontrol::V1_0::Result;
     using ::android::hardware::hidl_string;
     using ::android::hardware::Return;
     using ::android::hardware::Void;
     using ::android::sp;
     using ::android::ScreenControlService;
+    using ::android::ScreenControlNotify;
 
-class ScreenControlHal : public IScreenControl {
-    public:
-        ScreenControlHal();
-        ~ScreenControlHal();
+class ScreenControlHal : public IScreenControl,
+                         public ScreenControlNotify {
+public:
+    ScreenControlHal(ScreenControlService * control);
+    ~ScreenControlHal();
 
-        Return<Result> startScreenRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const hidl_string& filename) override;
-        Return<Result> startScreenRecordByCrop(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
-                                                     int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const hidl_string& filename) override;
+    Return<void> setCallback(const sp<IScreenControlCallback>& callback) override;
 
-        Return<Result> startScreenCap(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, const hidl_string& filename) override;
+    Return<void> startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, startScreenCapBuffer_cb _hidl_cb);
 
-        Return<void> startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, startScreenCapBuffer_cb _hidl_cb);
+    Return<Result> startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
+                                        int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const hidl_string& filename) override;
 
-        Return<void> forceStop();
-        //YUV record
-        Return<Result> startYuvRecord(int32_t width, int32_t height,int32_t frameRate ,int32_t sourceType);
+    Return<Result> startAvcRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
+                                        int32_t frameRate, int32_t bitRate, int32_t sourceType) override;
+    Return<void> forceStop();
+    //avc record callback
+    void onEsBufferAvailable(void*data, int32_t size, int32_t frame_type, int64_t pts);
 
-        Return<Result> checkYuvRecordDone();
+    Return<Result> startYuvRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
+                                        int32_t frameRate, int32_t sourceType) override;
+    //yuv record callback
+    void onYuvBufferAvailable(void* data, int32_t size);
 
-        Return<void> getYuvRecordData(getYuvRecordData_cb _hidl_cb);
+    Return<Result> startMicroDim(int32_t width, int32_t height);
 
-         // H264/AVC record
-        Return<Result> startAvcRecord(int32_t width, int32_t height, int32_t frameRate, int32_t bitRate, int32_t sourceType);
+    // micro dim data callback
+    void onMicroDimAvailable(void* data, int32_t size);
 
-        Return<void> getAvcRecordData(getAvcRecordData_cb _hidl_cb);
 
-        Return<Result> checkAvcRecordDone();
+private:
+    void handleServiceDeath(uint32_t cookie);
+    ScreenControlService* mScreenControl;
+    sp<IScreenControlCallback> mCallBack;
+    int32_t mYuvRecordWidth;
+    int32_t mYuvRecordHeight;
+    mutable android::Mutex  mLock;
+    int32_t mAvcRecordWidth;
+    int32_t mAvcRecordHeight;
+    int32_t mAvcRecordFramerate;
+    int32_t mAvcRecordBitrate;
+    int32_t mAvcRecordSourceType;
+    int32_t mMicroWidth;
+    int32_t mMicroHeight;
 
-        Return<Result> startMicroDim(int32_t width, int32_t height);
+    class  DeathRecipient : public android::hardware::hidl_death_recipient  {
+        public:
+            DeathRecipient(sp<ScreenControlHal> sch);
 
-        Return<void> getMicroDimData(getMicroDimData_cb _hidl_cb);
-
-        Return<Result> stopMicroDim();
-
-    private:
-        void handleServiceDeath(uint32_t cookie);
-        ScreenControlService* mScreenControl;
-        int32_t mYuvRecordWidth;
-        int32_t mYuvRecordHeight;
-        mutable android::Mutex  mLock;
-        int32_t mAvcRecordWidth;
-        int32_t mAvcRecordHeight;
-        int32_t mAvcRecordFramerate;
-        int32_t mAvcRecordBitrate;
-        int32_t mAvcRecordSourceType;
-        int32_t mMicroWidth;
-        int32_t mMicroHeight;
-        class  DeathRecipient : public android::hardware::hidl_death_recipient  {
-            public:
-                DeathRecipient(sp<ScreenControlHal> sch);
-
-                // hidl_death_recipient interface
-                void serviceDied(uint64_t cookie,
-                    const ::android::wp<::android::hidl::base::V1_0::IBase>& who) override;
-            private:
-                sp<ScreenControlHal> mScreenControlHal;
-        };
-        sp<DeathRecipient> mDeathRecipient;
-    };//ScreenControl
+            // hidl_death_recipient interface
+            void serviceDied(uint64_t cookie,
+                const ::android::wp<::android::hidl::base::V1_0::IBase>& who) override;
+        private:
+            sp<ScreenControlHal> mScreenControlHal;
+    };
+    sp<DeathRecipient> mDeathRecipient;
+};//ScreenControl
 } //namespace implementation
 }//namespace V1_0
 } //namespace screencontrol

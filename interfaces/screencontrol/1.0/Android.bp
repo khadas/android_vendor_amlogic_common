@@ -16,6 +16,8 @@ hidl_interface {
     srcs: [
         "types.hal",
         "IScreenControl.hal",
+        "IScreenControlCallback.hal",
+
     ],
     interfaces: [
         "android.hidl.base@1.0",

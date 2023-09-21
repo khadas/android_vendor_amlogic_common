@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package vendor.amlogic.hardware.screencontrol@1.0;
+ package vendor.amlogic.hardware.screencontrol@1.0;
 
-enum Result : uint32_t {
-    OK,                  // Success
-    FAIL,                // Failure, unknown reason
+interface IScreenControlCallback {
+
+    oneway onAvcDataArouse(memory mem,int32_t size, int32_t frame_type,int64_t pts);
+    oneway onYuvDataArouse(memory mem,int32_t size);
+    oneway onMicroDimArouse(memory mem,int32_t size);
+
 };

@@ -27,7 +27,9 @@
 
 namespace android {
 
-#define SCREENCONTROL_DEBUG_PROP "ro.vendor.screencontrol.debug"
+#define SCREENCONTROL_DEBUG_MORE_LOG_PROP "ro.vendor.screencontrol.debug"
+#define SCREENCONTROL_DEBUG_DUMP_YUV_PROP "ro.vendor.screencontrol.dump.yuv"
+#define SCREENCONTROL_DEBUG_DUMP_ES_PROP "ro.vendor.screencontrol.dump.es"
 
 ScreenControlDebug::ScreenControlDebug() {
 }
@@ -35,19 +37,17 @@ ScreenControlDebug::ScreenControlDebug() {
 ScreenControlDebug::~ScreenControlDebug() {
 }
 
-bool ScreenControlDebug::mIsInit = false;
-bool ScreenControlDebug::mCanDebug = false;
+bool ScreenControlDebug::mPrintMoreInfo = false;
+bool ScreenControlDebug::mNeedDumpYuv = false;
+bool ScreenControlDebug::mNeedDumpEs = false;
 
 bool ScreenControlDebug::initDebug() {
-    if (mIsInit) {
-        return true;
-    }
 
     char prop[PROPERTY_VALUE_MAX] = {0};
     ALOGD("Initial debug property");
-    if (property_get(SCREENCONTROL_DEBUG_PROP, prop, "0") > 0) {
+    if (property_get(SCREENCONTROL_DEBUG_MORE_LOG_PROP, prop, "0") > 0) {
         bool result = false;
-        ALOGD("Prop [%s]=%s", SCREENCONTROL_DEBUG_PROP, prop);
+        ALOGD("Prop [%s]=%s", SCREENCONTROL_DEBUG_MORE_LOG_PROP, prop);
         if (!strcasecmp(prop, "true")) {
             result = true;
         } else {
@@ -58,15 +58,51 @@ bool ScreenControlDebug::initDebug() {
                 result = true;
             }
         }
-        mCanDebug = result;
+        mPrintMoreInfo = result;
     }
-    mIsInit = true;
+    if (property_get(SCREENCONTROL_DEBUG_DUMP_YUV_PROP, prop, "0") > 0) {
+        bool result = false;
+        ALOGD("Prop [%s]=%s", SCREENCONTROL_DEBUG_DUMP_YUV_PROP, prop);
+        if (!strcasecmp(prop, "true")) {
+            result = true;
+        } else {
+            // try convert to number value
+            char *tmp = NULL;
+            long int propValue = strtol(prop, &tmp, 0);
+            if (LONG_MIN != propValue && LONG_MAX != propValue && 0 != propValue) {
+                result = true;
+            }
+        }
+        mNeedDumpYuv = result;
+    }
+    if (property_get(SCREENCONTROL_DEBUG_DUMP_ES_PROP, prop, "0") > 0) {
+        bool result = false;
+        ALOGD("Prop [%s]=%s", SCREENCONTROL_DEBUG_DUMP_ES_PROP, prop);
+        if (!strcasecmp(prop, "true")) {
+            result = true;
+        } else {
+            // try convert to number value
+            char *tmp = NULL;
+            long int propValue = strtol(prop, &tmp, 0);
+            if (LONG_MIN != propValue && LONG_MAX != propValue && 0 != propValue) {
+                result = true;
+            }
+        }
+        mNeedDumpEs = result;
+    }
     return true;
 }
 
-bool ScreenControlDebug::canDebug() {
-    return mCanDebug;
+bool ScreenControlDebug::isNeedMoreInfo() {
+    return mPrintMoreInfo;
 }
+bool ScreenControlDebug::isNeedDumpYuv() {
+    return mNeedDumpYuv;
+}
+bool ScreenControlDebug::isNeedDumpEs() {
+    return mNeedDumpEs;
+}
+
 
 }
 

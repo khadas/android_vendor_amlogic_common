@@ -25,12 +25,22 @@ public:
     ~ScreenControlDebug();
 
     static bool initDebug();
-    static bool canDebug();
-
+    static bool isNeedMoreInfo();
+    static bool isNeedDumpYuv();
+    static bool isNeedDumpEs();
 private:
-    static bool mIsInit;
-    static bool mCanDebug;
+    static bool mPrintMoreInfo;
+    static bool mNeedDumpYuv;
+    static bool mNeedDumpEs;
+
 };
+
+#define VDLog(f, s...) \
+do { \
+    if (ScreenControlDebug::isNeedMoreInfo()) {\
+            ALOGD(f, ##s);\
+    }\
+} while(0)
 
 }
 

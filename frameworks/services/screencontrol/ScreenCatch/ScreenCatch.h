@@ -1,86 +1,57 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+**
+** Copyright 2008, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
 
-#ifndef ANDROID_GUI_SCREENCATCH_H
-#define ANDROID_GUI_SCREENCATCH_H
-
-#include <media/stagefright/MediaSource.h>
-#include <media/stagefright/MediaBuffer.h>
-
-#include <utils/List.h>
-#include <utils/RefBase.h>
-#include <utils/threads.h>
-
-
-#include <ui/GraphicBufferMapper.h>
-#include <binder/MemoryDealer.h>
-
+#ifndef ANDROID_SCREENCONTROL_SCREENCATCH_H
+#define ANDROID_SCREENCONTROL_SCREENCATCH_H
 #include "../ScreenManager.h"
-#include "DisplayAdapter.h"
 
-#define PROP_POSTPROCESSOR "vendor.hw.postprocessor"
-#define PROP_KEYSTONE "persist.vendor.hwc.keystone"
 
 namespace android {
-// ----------------------------------------------------------------------------
 
-class ScreenCatch {
-public:
-    ScreenCatch(uint32_t bufferWidth, uint32_t bufferHeight, uint32_t type);
-
-    virtual ~ScreenCatch();
-
-    // For the MediaSource interface for use by StageFrightRecorder:
-    virtual status_t start(MetaDataBase *params);
-    virtual status_t stop();
-    virtual status_t read(MediaBuffer **buffer);
-
-    void setVideoRotation(int degree);
-
-    void setVideoCrop(int x, int y, int width, int height);
-
-private:
-    int mStart;
-    int mClientId;
-    Mutex mLock;
-    struct ScreenCatchClient;
-    static void *ThreadWrapper(void *me);
-    int threadFunc();
-    int threadFuncForScreenManager();
-    int threadFuncForDispAdapter();
-    pthread_t mThread;
-
-    ScreenManager* mScreenManager;
-
-    // The permanent width and height of SMS buffers
-    int mWidth;
-    int mHeight;
-    int mType;
-    int mColorFormat;
-
-    int32_t mCorpX;
-    int32_t mCorpY;
-    int32_t mCorpWidth;
-    int32_t mCorpHeight;
-    bool mUseKeystone;
-    List<MediaBuffer*> mRawBufferQueue;
-    Condition mThreadOutCondition;
+struct OutputInfo {
+    OutputInfo(uint8_t* a,int32_t i): raw(a),index(i){};
+    OutputInfo(OutputInfo&&) = default;
+    ~OutputInfo() = default;
+    uint8_t* raw;
+    int32_t index;
 };
 
-// ----------------------------------------------------------------------------
-}; // namespace android
+class ScreenCatch : public ScreenManager::ScreenMangerCallback {
+public:
+    ScreenCatch();
+    virtual ~ScreenCatch();
+    bool start(std::unique_ptr<InputParmeter>& input);
+    bool stop();
+    void setVideoRotation(int degree);
+    void PictureReady(const OutputRecord &output);
+    bool readBuffer(uint8_t* buffer, int32_t* size);
 
-#endif // ANDROID_GUI_SURFACEMEDIASOURCE_H
+private:
+    bool captureforKeystone();
+    std::mutex mLock;
+    ScreenManager* mScreenManager;
+    bool mStart;
+    std::list<std::unique_ptr<OutputInfo>> mOutputQueue;
+    int32_t mRawBufferSize;
+    int32_t mClientId;
+
+
+};
+
+};
+
+#endif // ANDROID_SCREENCONTROL_SCREENCATCH_H

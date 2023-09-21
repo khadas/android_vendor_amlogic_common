@@ -15,221 +15,129 @@
 ** limitations under the License.
 */
 
-#ifndef ANDROID_SCREENCONTROLCLIENT_H
-#define ANDROID_SCREENCONTROLCLIENT_H
-
-#include <utils/Errors.h>
-#include <string>
-#include <vector>
-#include <utils/RefBase.h>
-#include <binder/MemoryDealer.h>
-#include <cutils/compiler.h>
-#include <stdint.h>
-#include <binder/Binder.h>
-#include <sys/types.h>
-#include <utils/String16.h>
-
-#include <media/stagefright/MediaSource.h>
-#include <media/stagefright/MediaBuffer.h>
-
-#include <utils/Errors.h>  // for status_t
-#include <utils/KeyedVector.h>
-#include <utils/String8.h>
-
-#include <binder/BinderService.h>
-
-#include <hardware/hardware.h>
+#ifndef ANDROID_SCREENCONTROL_SCREENMANAGER_H
+#define ANDROID_SCREENCONTROL_SCREENMANAGER_H
+#include "area.h"
+#include "size.h"
+#include "ulit.h"
+#include <mutex>
+#include <list>
+#include<map>
 #include "../../../../../hardware/amlogic/screen_source/aml_screen.h"
-#include <utils/List.h>
-#include <utils/threads.h>
-
-
-
+#include <hardware/hardware.h>
+#include "ScreenControlDebug.h"
 namespace android {
 
-#define SCREENCONTROL_GRALLOC_USAGE  ( GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_SW_READ_RARELY | GRALLOC_USAGE_SW_WRITE_NEVER )
-#define kMetadataBufferTypeCanvasSource 3
-#define MODE_LEN 8
 
-#define NB_BUFFER 6
+typedef enum{
+    SCREENCONTROL_PIX_FMT_NV21,
+    SCREENCONTROL_PIX_FMT_NV12,
+    SCREENCONTROL_PIX_FMT_RGBA888,
+    SCREENCONTROL_PIX_FMT_RGB565,
+    SCREENCONTROL_PIX_FMT_UNKNOWN,
+}aml_screencontrol_format;
 
-#define SCREENCONTROL_SCREEN_CATCH                                      0x01
-#define SCREENCONTROL_SCREEN_RECORD_SOFTWARE_ENCODER                    0x02
-#define SCREENCONTROL_SCREEN_RECORD_HARDWARE_ENCODER                    0x04
-
-enum SCREENCONTROLDATATYPE{
-    SCREENCONTROL_CANVAS_TYPE,
-    SCREENCONTROL_HANDLE_TYPE,
-    SCREENCONTROL_RAWDATA_TYPE,
-    SCREENCONTROL_RGBA888_TYPE,
-    SCREENCONTROL_MICRODIM_TYPE,
-};
-
-enum aml_capture_source_type {
+typedef enum {
     AML_CAPTURE_VIDEO = 0,
     AML_CAPTURE_OSD_VIDEO,
     AML_CAPTURE_OSD_ONLY,
+    SCAML_CAPTURE_UNKNOWN
+}aml_source_type;
+
+
+struct InputParmeter {
+    InputParmeter(): source_type(SCAML_CAPTURE_UNKNOWN),
+                    frame_rate(0),format(SCREENCONTROL_PIX_FMT_UNKNOWN){};
+    InputParmeter(InputParmeter&&) = default;
+    ~InputParmeter() = default;
+    std::unique_ptr<Size> size;
+    std::unique_ptr<Area> area;
+    int32_t source_type;
+    int32_t frame_rate;
+    aml_screencontrol_format format;
 };
-void yuv_to_rgb32(unsigned char y,unsigned char u,unsigned char v,unsigned char *rgb);
-
-void nv21_to_rgb32_(unsigned char *buf, unsigned char *rgb, int width, int height);
 
 
-class ScreenManager  : virtual public RefBase {
+// Record for output buffers.
+struct OutputRecord {
+    OutputRecord(): index(0), tv_usec(0), raw_buffer(nullptr),  canvas_buffer(nullptr){};
+    OutputRecord(int32_t _index, int32_t _raw_buffer_size, uint64_t _tv_usec,uint8_t* _raw_buffer,void* _canvas_buffer,aml_screencontrol_format _format) :
+                index(_index), raw_buffer_size(_raw_buffer_size), tv_usec(_tv_usec), raw_buffer(_raw_buffer),  canvas_buffer(_canvas_buffer),format(_format) {}
+    OutputRecord(OutputRecord&&) = default;
+    ~OutputRecord() = default;
+
+    int32_t index;
+    int32_t raw_buffer_size;
+    int64_t tv_usec;
+    uint8_t*   raw_buffer;
+    void*   canvas_buffer;
+    aml_screencontrol_format format;
+};
+
+class ScreenManager {
 public:
-    ScreenManager();
-    virtual ~ScreenManager();
+    class ScreenMangerCallback {
+    public:
+        ScreenMangerCallback() = default;
+        virtual ~ScreenMangerCallback() = default;
+        virtual void PictureReady(const OutputRecord &output) = 0;
 
-    virtual status_t init(int32_t width,
-                          int32_t height,
-			  int32_t source_type,
-                          int32_t framerate,
-                          SCREENCONTROLDATATYPE data_type,
-                          int32_t* client_id);
+    };
+    /* if other client want to use the screen manger at the same time,
+       the info of client will be save to it.
+    */
+    struct MultiClientInfo {
+        MultiClientInfo(aml_screencontrol_format f,ScreenMangerCallback *c): format(f),
+                        cb(c){};
+        MultiClientInfo(MultiClientInfo&&) = default;
+        ~MultiClientInfo() = default;
+        std::unique_ptr<Size> size;
+        aml_screencontrol_format format;
+        ScreenMangerCallback *cb;
+    };
+    static ScreenManager* getInstance() {
+        static ScreenManager value;
+        return &value;
+    }
+    bool start(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client,int32_t *id,bool multi_acquire = true);
+    void stop(int32_t client_id);
+    bool realseBuffer(int32_t client_id,int32_t index);
+    // the callback from screen source
+    int32_t dataCallBack(aml_screen_buffer_info_t *buffer);
 
-    virtual status_t uninit(int32_t client_id);
-
-    // For the MediaSource interface for use by StageFrightRecorder:
-    virtual status_t start(int32_t client_id, int  flag);
-    virtual status_t stop(int32_t client_id);
-    virtual status_t readBuffer(int32_t client_id, sp<IMemory> buffer, int *index);
-    virtual status_t freeBuffer(int32_t client_id, sp<IMemory> buffer);
-
-    static ScreenManager* instantiate();
-
-    // Get / Set the frame rate used for encoding. Default fps = 30
-    virtual int32_t getFrameRate( );
-
-    // The call for the StageFrightRecorder to tell us that
-    // it is done using the MediaBuffer data so that its state
-    // can be set to FREE for dequeuing
-
-    // end of MediaSource interface
-
-    // getTimestamp retrieves the timestamp associated with the image
-    // set by the most recent call to read()
-    //
-    // The timestamp is in nanoseconds, and is monotonically increasing. Its
-    // other semantics (zero point, etc) are source-dependent and should be
-    // documented by the source.
-    virtual int64_t getTimestamp();
-
-    // isMetaDataStoredInVideoBuffers tells the encoder whether we will
-    // pass metadata through the buffers. Currently, it is force set to true
-    virtual bool isMetaDataStoredInVideoBuffers() const;
-
-    // To be called before start()
-    virtual status_t setMaxAcquiredBufferCount(size_t count);
-
-    // To be called before start()
-    virtual status_t setUseAbsoluteTimestamps();
-
-    virtual int dataCallBack(aml_screen_buffer_info_t *buffer);
-
-    virtual status_t setVideoRotation(int degree);
-    virtual status_t setVideoCrop(const int32_t x, const int32_t y, const int32_t width, const int32_t height);
-
-    virtual bool isHaveOutputData();
-    virtual void setPauseMode(bool isPause);
-    virtual status_t checkConvertDone();
-    virtual status_t readRawData(int32_t client_id, void **buffer);
-    virtual status_t getBufferByID(int32_t index,long **buffer);
-    virtual void setMicroSize(int32_t width, int32_t height);
 
 
 private:
-    typedef struct ScreenClient_S{
-        int32_t width;
-        int32_t height;
-        int32_t framerate;
-        bool isPrimateClient;
-        SCREENCONTROLDATATYPE data_type;
-        int32_t mClient_id;
-    }ScreenClient;
-
-    typedef struct FrameBufferInfo_s{
-        long* buf_ptr;
-        unsigned canvas;
-        int64_t timestampUs;
-    }FrameBufferInfo;
-
-
-    // The permanent width and height of SMS buffers
-    int mWidth;
-    int mHeight;
-    int mSourceType;
-
-    // mCurrentTimestamp is the timestamp for the current texture. It
-    // gets set to mLastQueuedTimestamp each time updateTexImage is called.
-    int64_t mCurrentTimestamp;
-
-    // mMutex is the mutex used to prevent concurrent access to the member
-    // variables of ScreenSource objects. It must be locked whenever the
-    // member variables are accessed.
-    Mutex mLock;
-
-    ////////////////////////// For MediaSource
-    // Set to a default of 30 fps if not specified by the client side
-    int32_t mFrameRate;
-
-    // mStarted is a flag to check if the recording is going on
-    bool mStarted;
-
-    // mStarted is a flag to check if the recording is going on
-    bool mError;
-
-    // mNumFramesReceived indicates the number of frames received  from
-    // the client side
-    int mNumFramesReceived;
-    // mNumFramesEncoded indicates the number of frames passed on to the
-    // encoder
-    int mNumFramesEncoded;
-
-    // mFirstFrameTimestamp is the timestamp of the first received frame.
-    // It is used to offset the output timestamps so recording starts at time 0.
-    int64_t mFirstFrameTimestamp;
-    // mStartTimeNs is the start time passed into the source at start, used to
-    // offset timestamps.
-
-    int64_t mStartTimeOffsetUs;
-
-    size_t mMaxAcquiredBufferCount;
-
-    bool mUseAbsoluteTimestamps;
-
-    int64_t bufferTimeUs;
-    Condition mFrameAvailableCondition;
-    List<FrameBufferInfo*> mCanvasFramesReceived;
-    List<int> mRawBufferQueue;
-    List<uint8_t*> mMicroBufferQueue;
-
-    int64_t mTimeBetweenFrameCaptureUs;
-
-
-    KeyedVector<int, ScreenClient* > mClientList;
-    bool mCanvasClientExist;
-//    sp<MemoryDealer> mScreenManagerDealer;
-    sp<IMemory> mBufferGet;
-    //sp<ANativeWindow> mANativeWindow;
-
-    int32_t mCorpX;
-    int32_t mCorpY;
-    int32_t mCorpWidth;
-    int32_t mCorpHeight;
-
-    int mOutFrameCounter;
-    bool mNeedPause;
-    bool mIsScreenRecord;
-
+    ScreenManager();
+    ScreenManager(const ScreenManager& other) = delete;
+    ScreenManager& operator = (const ScreenManager&) = delete;
+    virtual ~ScreenManager();
+    bool startMoreClient(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client,int32_t *id);
+    bool setFormat2Device();
+    // get the new buffer by changing format.
+    bool getBufferWithFormat(uint8_t *src ,int32_t src_size, uint8_t *dst,std::unique_ptr<InputParmeter>& src_parmeter,
+                                                                        std::unique_ptr<MultiClientInfo>& dst_parmeter );
+    int32_t getBufferSize(std::unique_ptr<Size>& size,aml_screencontrol_format format);
+    bool isSupportFormat();
+    bool setVideoRotation(int32_t degree);
+    ScreenMangerCallback* mScreenMangerCallback;
+    std::unique_ptr<InputParmeter> mInputParmeter;
     aml_screen_module_t* mScreenModule;
     aml_screen_device_t* mScreenDev;
-    long *mTempBuffer;
-    bool mMeanWhileFlag;
-    long* mScreenBuffers[NB_BUFFER];
-    int32_t mMicroWidth;
-    int32_t mMicroHeight;
+    std::mutex mLock;
+    std::list<std::unique_ptr<OutputRecord>> mOutputRecordQueue;
+    std::map<int32_t,std::unique_ptr<MultiClientInfo>> mMultiClientMap;
+    int32_t mBufferSize;
+    int32_t mFormat;
+    int32_t mPortType;
+    int32_t mClientNum;
+    //This is true if the client wants to fetch the data more than once, and false otherwise
+    bool mIsMultiAcquire;
+    bool mStart;
 };
 
-}; // namespace android
 
-#endif // ANDROID_SCREENCONTROLCLIENT_H
+
+};// namespace android
+
+#endif // ANDROID_SCREENCONTROL_SCREENMANAGER_H
