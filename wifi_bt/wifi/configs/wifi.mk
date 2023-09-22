@@ -288,13 +288,9 @@ endif
 
 ifneq ($(filter w1,$(WIFI_MODULES)),)
 ifeq (,$(wildcard vendor/wifi_driver/amlogic/w1/wifi/project_w1/vmac))
-PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/w1/aml_wifi_rf.txt:$(TARGET_COPY_OUT_VENDOR)/lib/firmware/w1/aml_wifi_rf.txt
-PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/w1/aml_wifi_rf_iton.txt:$(TARGET_COPY_OUT_VENDOR)/lib/firmware/w1/aml_wifi_rf_iton.txt
-PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/w1/aml_wifi_rf_ampak.txt:$(TARGET_COPY_OUT_VENDOR)/lib/firmware/w1/aml_wifi_rf_ampak.txt
-PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/w1/aml_wifi_rf_fn_link.txt:$(TARGET_COPY_OUT_VENDOR)/lib/firmware/w1/aml_wifi_rf_fn_link.txt
+PRODUCT_COPY_FILES += $(call find-copy-subdir-files,*.txt,vendor/amlogic/common/wifi_bt/wifi/w1,$(TARGET_COPY_OUT_VENDOR)/lib/firmware/w1/)
 else
 PRODUCT_COPY_FILES += $(call find-copy-subdir-files,*.txt,vendor/wifi_driver/amlogic/w1/wifi/project_w1/vmac,$(TARGET_COPY_OUT_VENDOR)/lib/firmware/w1/)
-#PRODUCT_COPY_FILES += vendor/wifi_driver/amlogic/w1/wifi/project_w1/vmac/wifi_fw_w1.bin:$(TARGET_COPY_OUT_VENDOR)/lib/firmware/wifi_fw_w1.bin
 endif
 WIFI_HIDL_FEATURE_DUAL_INTERFACE := true
 endif
