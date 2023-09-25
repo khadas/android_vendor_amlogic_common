@@ -1357,7 +1357,7 @@ public class AudioSystemCmdService extends Service {
             if (DroidLogicUtils.getAudioDebugEnable()) {
                 Log.d(TAG, "getOutputDevice device mask: 0x" + Integer.toHexString(devicesMask));
             }
-            if ((devicesMask & AudioSystem.DEVICE_OUT_EARPIECE) != 0) {
+            if ((devicesMask & AudioSystem.DEVICE_OUT_FM) != 0) {
                 devicesMask = Settings.Global.getInt(mContext.getContentResolver(), DB_ID_AUDIO_OUTPUT_DEVICES, AudioSystem.DEVICE_OUT_SPEAKER);
                 Log.i(TAG, "getOutputDevices current no output devices. Return user setting. devicesMask:" + Integer.toHexString(devicesMask));
             }
