@@ -810,7 +810,13 @@ interface ISystemControl {
 
   setHdrStrategy(string value);
 
+  getHdrStrategy()
+      generates (Result result, string hdr_strategy);
+
   setHdrPriority(string value);
+
+  getHdrPriority()
+      generates (Result result, int32_t value);
 
 //FBC
   StartUpgradeFBC(string fileName, int32_t mode, int32_t upgrade_blk_size)

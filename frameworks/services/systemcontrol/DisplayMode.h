@@ -620,10 +620,11 @@ public:
     void getBootanimStatus(int *status);
     bool getModeSupportDeepColorAttr(const char* outputmode,const char * color);
     bool getPrefHdmiDispMode(char* mode);
+    void getCurrentHdrStrategy(char* value);
     void getHdrStrategy(char* value);
     void setHdrStrategy(const char* type);
-    int getCurrentHdrPriority(void);
-    int getHdrPriority(void);
+    int32_t getCurrentHdrPriority(void);
+    int32_t getHdrPriority(void);
     void setHdrPriority(const char* type);
     void gethdrforcemode(char* value);
     bool memcContrl(bool on);

@@ -549,10 +549,29 @@ Return<void> SystemControlHal::setHdrStrategy(const hidl_string &value) {
     return Void();
 }
 
+Return<void> SystemControlHal::getHdrStrategy(getHdrStrategy_cb _hidl_cb) {
+    std::string hdr_strategy;
+    mSysControl->getHdrStrategy(&hdr_strategy);
+
+    if (ENABLE_LOG_PRINT)
+        ALOGI("getHdrStrategy hdr_strategy :%s", hdr_strategy.c_str());
+    _hidl_cb(Result::OK, hdr_strategy);
+    return Void();
+}
+
 Return<void> SystemControlHal::setHdrPriority(const hidl_string &value) {
     mSysControl->setHdrPriority(value);
     if (ENABLE_LOG_PRINT)
         ALOGI("setHdrPriority value:%s",value.c_str());
+    return Void();
+}
+
+Return<void> SystemControlHal::getHdrPriority(getDolbyVisionType_cb _hidl_cb) {
+    int32_t value = mSysControl->getHdrPriority();
+
+    if (ENABLE_LOG_PRINT)
+        ALOGI("getHdrPriority value:0x%x", value);
+    _hidl_cb(Result::OK, value);
     return Void();
 }
 

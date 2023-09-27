@@ -2710,7 +2710,16 @@ void DisplayMode::getHdrStrategy(char* value) {
     }  else if (strstr(hdr_policy, HDR_POLICY_FORCE)) {
         strcpy(value, HDR_POLICY_FORCE);
     }
-    SYS_LOGI("getHdrStrategy is [%s]", value);
+    SYS_LOGI("%s is [%s]", __FUNCTION__, value);
+}
+
+void DisplayMode::getCurrentHdrStrategy(char* value) {
+    std::string cur_hdr_policy;
+    DisplayModeMgr::getInstance().getDisplayAttribute(DISPLAY_HDR_POLICY, cur_hdr_policy);
+
+    strcpy(value, cur_hdr_policy.c_str());
+
+    SYS_LOGI("%s is [%s]", __FUNCTION__, value);
 }
 
 void DisplayMode::setHdrStrategy(const char* type) {
@@ -2737,41 +2746,105 @@ void DisplayMode::setHdrStrategy(const char* type) {
     setSourceOutputMode(cur_displaymode);
 }
 
-int DisplayMode::getCurrentHdrPriority(void) {
+int32_t DisplayMode::getCurrentHdrPriority(void) {
     hdr_priority_e value = DOLBY_VISION_PRIORITY;
 
     std::string cur_hdr_priority;
     DisplayModeMgr::getInstance().getDisplayAttribute(DISPLAY_HDR_PRIORITY, cur_hdr_priority);
 
-    if (strstr(cur_hdr_priority.c_str(), "2")) {
-        value = SDR_PRIORITY;
-    } else if (strstr(cur_hdr_priority.c_str(), "1")) {
-        value = HDR10_PRIORITY;
-    } else {
-        value = DOLBY_VISION_PRIORITY;
+    uint32_t temp = 0;
+    temp = atoi(cur_hdr_priority.c_str());
+    switch (temp) {
+        case DOLBY_VISION_PRIORITY:
+            value = DOLBY_VISION_PRIORITY;
+            break;
+        case HDR10_PRIORITY:
+            value = HDR10_PRIORITY;
+            break;
+        case SDR_PRIORITY:
+            value = SDR_PRIORITY;
+            break;
+        case MESON_G_DV_HDR10_HLG:
+            value = MESON_G_DV_HDR10_HLG;
+            break;
+        case MESON_G_DV_HDR10:
+            value = MESON_G_DV_HDR10;
+            break;
+        case MESON_G_DV_HLG:
+            value = MESON_G_DV_HLG;
+            break;
+        case MESON_G_HDR10_HLG:
+            value = MESON_G_HDR10_HLG;
+            break;
+        case MESON_G_DV:
+            value = MESON_G_DV;
+            break;
+        case MESON_G_HDR10:
+            value = MESON_G_HDR10;
+            break;
+        case MESON_G_HLG:
+            value = MESON_G_HLG;
+            break;
+        case MESON_G_SDR:
+            value = MESON_G_SDR;
+            break;
+        default :
+            break;
     }
 
-    SYS_LOGI("getCurrentHdrPriority is [%d]", value);
-    return (int)value;
+    SYS_LOGI("%s is [0x%x]", __FUNCTION__, value);
+    return (int32_t)value;
 }
 
-int DisplayMode::getHdrPriority(void) {
+int32_t DisplayMode::getHdrPriority(void) {
     char hdr_priority[MODE_LEN] = {0};
     hdr_priority_e value = DOLBY_VISION_PRIORITY;
 
     memset(hdr_priority, 0, MODE_LEN);
     getBootEnv(UBOOTENV_HDR_PRIORITY, hdr_priority);
 
-    if (strstr(hdr_priority, "2")) {
-        value = SDR_PRIORITY;
-    } else if (strstr(hdr_priority, "1")) {
-        value = HDR10_PRIORITY;
-    } else {
-        value = DOLBY_VISION_PRIORITY;
+    uint32_t temp = 0;
+    temp = atoi(hdr_priority);
+    switch (temp) {
+        case DOLBY_VISION_PRIORITY:
+            value = DOLBY_VISION_PRIORITY;
+            break;
+        case HDR10_PRIORITY:
+            value = HDR10_PRIORITY;
+            break;
+        case SDR_PRIORITY:
+            value = SDR_PRIORITY;
+            break;
+        case MESON_G_DV_HDR10_HLG:
+            value = MESON_G_DV_HDR10_HLG;
+            break;
+        case MESON_G_DV_HDR10:
+            value = MESON_G_DV_HDR10;
+            break;
+        case MESON_G_DV_HLG:
+            value = MESON_G_DV_HLG;
+            break;
+        case MESON_G_HDR10_HLG:
+            value = MESON_G_HDR10_HLG;
+            break;
+        case MESON_G_DV:
+            value = MESON_G_DV;
+            break;
+        case MESON_G_HDR10:
+            value = MESON_G_HDR10;
+            break;
+        case MESON_G_HLG:
+            value = MESON_G_HLG;
+            break;
+        case MESON_G_SDR:
+            value = MESON_G_SDR;
+            break;
+        default :
+            break;
     }
 
-    SYS_LOGI("getHdrPriority is [%d]", value);
-    return (int)value;
+    SYS_LOGI("%s is [0x%x]", __FUNCTION__, value);
+    return (int32_t)value;
 }
 
 void DisplayMode::setHdrPriority(const char* type) {

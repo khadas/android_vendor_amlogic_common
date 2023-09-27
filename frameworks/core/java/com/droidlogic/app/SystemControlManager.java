@@ -642,6 +642,30 @@ public class SystemControlManager {
         }
             return false;
     }
+
+    /*
+     * get user prefer hdr policy
+     * "0": always hdr(output signal base TV)
+     * "1": adaptive hdr(output signal base tv and play content)
+     * "2": force hdr(output signal base hdr_force_mode)
+     */
+    public String getHdrStrategy() {
+        synchronized (mLock) {
+            Mutable<String> resultVal = new Mutable<>();
+            try {
+                mProxy.getHdrStrategy((int ret, String v) -> {
+                                if (Result.OK == ret) {
+                                    resultVal.value = v;
+                                }
+                            });
+                return resultVal.value;
+            } catch (RemoteException e) {
+                Log.e(TAG, "getHdrStrategy:" + e);
+            }
+        }
+        return "0";
+    }
+
     public boolean setHdrPriority(String type) {
         synchronized (mLock) {
            try {
@@ -652,6 +676,38 @@ public class SystemControlManager {
         }
             return false;
     }
+
+     /*
+      * bit0-bit3 for hdr strategy1
+      * 0 → original cap
+      * 1 → disable dolby vision cap
+      * 2 → disable dolby vision  and hdr cap
+      * bit4-bit7 for hdr strategy2
+      * bit4: 1 → disable dv, 0 → enable dv
+      * bit5: 1 → disable hdr10/hdr10+, 0 → enable hdr10/hdr10+
+      * bit6: 1→ disable hlg,  0 → enable hlg
+      * bit7-bit27:reverse
+      * bit28-bit31 choose strategy
+      * 0：strategy1
+      * 1：strategy2
+     */
+     public int getHdrPriority() {
+         synchronized (mLock) {
+             Mutable<Integer> resultVal = new Mutable<>();
+             try {
+                 mProxy.getHdrPriority((int ret, int v) -> {
+                     if (Result.OK == ret) {
+                         resultVal.value = v;
+                     }
+                 });
+                 return resultVal.value;
+             } catch (RemoteException e) {
+                 Log.e(TAG, "getHdrPriority:" + e);
+             }
+         }
+
+         return 0;
+     }
 
      /**
       * clearUserDisplayConfig(...)

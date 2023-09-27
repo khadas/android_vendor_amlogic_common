@@ -81,10 +81,32 @@
 
 #define DEFAULT_HDMI_MODE               "720p60hz"
 
-typedef enum {
+/*
+ * bit0-bit3 for hdr strategy1
+ * 0 → original cap
+ * 1 → disable dolby vision cap
+ * 2 → disable dolby vision  and hdr cap
+ * bit4-bit7 for hdr strategy2
+ * bit4: 1 → disable dv, 0 → enable dv
+ * bit5: 1 → disable hdr10/hdr10+, 0 → enable hdr10/hdr10+
+ * bit6: 1→ disable hlg,  0 → enable hlg
+ * bit7-bit27:reverse
+ * bit28-bit31 choose strategy
+ * 0：strategy1
+ * 1：strategy2
+*/
+typedef enum hdr_priority {
     DOLBY_VISION_PRIORITY = 0,
     HDR10_PRIORITY        = 1,
     SDR_PRIORITY          = 2,
+    MESON_G_DV_HDR10_HLG        = 0x10000000,
+    MESON_G_DV_HDR10            = 0x10000040,
+    MESON_G_DV_HLG              = 0x10000020,
+    MESON_G_HDR10_HLG           = 0x10000010,
+    MESON_G_DV                  = 0x10000060,
+    MESON_G_HDR10               = 0x10000050,
+    MESON_G_HLG                 = 0x10000030,
+    MESON_G_SDR                 = 0x10000070,
 }hdr_priority_e;
 
 typedef enum {

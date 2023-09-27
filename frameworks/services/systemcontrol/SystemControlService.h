@@ -306,7 +306,9 @@ public:
     bool frameRateDisplay(bool on);
 
     void setHdrStrategy(const std::string& value);
+    bool getHdrStrategy(std::string *hdr_strategy);
     void setHdrPriority(const std::string& value);
+    int32_t getHdrPriority();
     void clearUserDisplayConfig();
     void clearBootDisplayConfig(const std::string& value);
     void setBootDisplayConfig(const std::string& savemode);

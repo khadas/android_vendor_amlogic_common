@@ -455,12 +455,23 @@ void SystemControlService::setHdrStrategy(const std::string& value) {
     pDisplayMode->setHdrStrategy(value.c_str());
 }
 
+bool SystemControlService::getHdrStrategy(std::string *hdr_strategy) {
+    char value[MODE_LEN] = {0};
+    pDisplayMode->getCurrentHdrStrategy(value);
+    *hdr_strategy = value;
+    return true;
+}
+
 void SystemControlService::setHdrPriority(const std::string& value) {
     bool ret;
     if (mLogLevel > LOG_LEVEL_1) {
         ALOGI("setHdrPriority :%s",value.c_str());
     }
     pDisplayMode->setHdrPriority(value.c_str());
+}
+
+int32_t SystemControlService::getHdrPriority() {
+    return pDisplayMode->getCurrentHdrPriority();
 }
 
 void SystemControlService::clearUserDisplayConfig() {

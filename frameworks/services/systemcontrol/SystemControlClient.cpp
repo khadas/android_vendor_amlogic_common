@@ -345,8 +345,34 @@ void SystemControlClient::setHdrStrategy(const std::string& value) {
     mSysCtrl->setHdrStrategy(value);
 }
 
+bool SystemControlClient::getHdrStrategy(std::string& hdr_strategy) {
+    mSysCtrl->getHdrStrategy([&hdr_strategy](const Result &ret, const hidl_string& v) {
+        if (Result::OK == ret)
+            hdr_strategy = v;
+        else
+            hdr_strategy.clear();
+    });
+
+    if (hdr_strategy.empty()) {
+        LOG(ERROR) << "system control client getHdrStrategy FAIL.";
+        return false;
+    }
+
+    return true;
+}
+
 void SystemControlClient::setHdrPriority(const std::string& value) {
     mSysCtrl->setHdrPriority(value);
+}
+
+int32_t SystemControlClient::getHdrPriority() {
+    int32_t result;
+    mSysCtrl->getHdrPriority([&result](const Result &ret, const int32_t& v) {
+        if (Result::OK == ret) {
+            result = v;
+        }
+    });
+    return result;
 }
 
 void SystemControlClient::clearUserDisplayConfig() {

@@ -252,9 +252,17 @@ public class OutputModeManager {
     private static final String HDR_POLICY_SOURCE           = "1";
     private static final String HDR_POLICY_SINK             = "0";
 
-    private static final int DV_PRIORITY        =  0;
-    private static final int HDR_PRIORITY       =  1;
-    private static final int SDR_PRIORITY       =  2;
+    private static final int DV_PRIORITY             =  0;
+    private static final int HDR_PRIORITY            =  1;
+    private static final int SDR_PRIORITY            =  2;
+    private static final int MESON_G_DV_HDR10_HLG    = 0x10000000;
+    private static final int MESON_G_DV_HDR10        = 0x10000040;
+    private static final int MESON_G_DV_HLG          = 0x10000020;
+    private static final int MESON_G_HDR10_HLG       = 0x10000010;
+    private static final int MESON_G_DV              = 0x10000060;
+    private static final int MESON_G_HDR10           = 0x10000050;
+    private static final int MESON_G_HLG             = 0x10000030;
+    private static final int MESON_G_SDR             = 0x10000070;
 
     private static final String HDMI_OFFSET_ENABLE           = "1";
     private static final String HDMI_OFFSET_DISABLE          = "0";
@@ -499,9 +507,15 @@ public class OutputModeManager {
     }
 
     public boolean isDolbyVisionPreference() {
+        int hdr_priority = getHdrPriority();
+
         return mDolbyVisionSettingManager.isDolbyVisionEnable()
                && isTvSupportDolbyVision()
-               && (getHdrPriority() == DV_PRIORITY);
+               && (hdr_priority == DV_PRIORITY
+               || hdr_priority == MESON_G_DV_HDR10_HLG
+               || hdr_priority == MESON_G_DV_HDR10
+               || hdr_priority == MESON_G_DV_HLG
+               || hdr_priority == MESON_G_DV);
     }
 
     public String getCVBSModeExtern() {
@@ -601,9 +615,7 @@ public class OutputModeManager {
     }
 
     public int getHdrPriority() {
-        String curType = getBootenv(ENV_HDR_PRIORITY, "0");
-        Log.d(TAG, "getHdrPriority curType: " + curType);
-        return Integer.parseInt(curType);
+        return mSystemControl.getHdrPriority();
     }
 
     public void setHdrPriority(int type) {
@@ -945,9 +957,8 @@ public class OutputModeManager {
           mSystemControl.setHdrStrategy(HdrStrategy);
     }
 
-    public String getHdrStrategy(){
-        String dolbyvisionType = getBootenv(ENV_HDR_POLICY, HDR_POLICY_SOURCE);
-        return dolbyvisionType;
+    public String getHdrStrategy() {
+        return mSystemControl.getHdrStrategy();
     }
     public boolean isDeepColor() {
         return getPropertyBoolean(PROP_DEEPCOLOR, false);
