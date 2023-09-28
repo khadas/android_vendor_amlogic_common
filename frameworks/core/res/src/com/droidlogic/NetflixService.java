@@ -260,6 +260,10 @@ public class NetflixService extends Service {
             Log.e(TAG, "could not get IActivityManager");
         }
         setNfrDisable();
+        if (SystemProperties.get("sys.vendor.ethernet.wol", "enable").equals("enable")) {
+            if (mSCM != null)
+                mSCM.writeSysFs("/sys/class/ethernet/wol" , "1");
+        }
     }
 
     @Override
