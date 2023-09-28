@@ -7959,11 +7959,11 @@ void CPQControl::setHdrInfoListener(const sp<PqNotify>& listener) {
 void CPQControl::GetChipVersionInfo(char* chip_version) {
     database_attribute_t dbAttribute;
     mPQdb->PQ_GetDataBaseAttribute(&dbAttribute);
-    if ((dbAttribute.ChipVersion.string() == NULL) || (dbAttribute.ChipVersion.length() == 0)) {
+    if ((dbAttribute.ChipVersion.c_str() == NULL) || (dbAttribute.ChipVersion.length() == 0)) {
         SYS_LOGI("%s: ChipVersion is null\n", __FUNCTION__);
         std::strcpy(chip_version, " ");
     } else {
-        std::string TempString = std::string(dbAttribute.ChipVersion.string());
+        std::string TempString = std::string(dbAttribute.ChipVersion.c_str());
         char* tempstr = new char[TempString.length() + 1];
         std::strcpy(tempstr, TempString.c_str());
         chip_version = strtok(tempstr, "_");
@@ -7991,14 +7991,14 @@ tvpq_databaseinfo_t CPQControl::GetDBVersionInfo(db_name_t name) {
     }
 
     if (val) {
-        if (strlen(tmpToolVersion.string()) < sizeof(pqdatabaseinfo_t.ToolVersion)/sizeof(char)) {
-            strcpy(pqdatabaseinfo_t.ToolVersion, tmpToolVersion.string());
+        if (strlen(tmpToolVersion.c_str()) < sizeof(pqdatabaseinfo_t.ToolVersion)/sizeof(char)) {
+            strcpy(pqdatabaseinfo_t.ToolVersion, tmpToolVersion.c_str());
         }
-        if (strlen(tmpProjectVersion.string()) < sizeof(pqdatabaseinfo_t.ProjectVersion)/sizeof(char)) {
-            strcpy(pqdatabaseinfo_t.ProjectVersion, tmpProjectVersion.string());
+        if (strlen(tmpProjectVersion.c_str()) < sizeof(pqdatabaseinfo_t.ProjectVersion)/sizeof(char)) {
+            strcpy(pqdatabaseinfo_t.ProjectVersion, tmpProjectVersion.c_str());
         }
-        if (strlen(tmpGenerateTime.string()) < sizeof(pqdatabaseinfo_t.GenerateTime)/sizeof(char)) {
-            strcpy(pqdatabaseinfo_t.GenerateTime, tmpGenerateTime.string());
+        if (strlen(tmpGenerateTime.c_str()) < sizeof(pqdatabaseinfo_t.GenerateTime)/sizeof(char)) {
+            strcpy(pqdatabaseinfo_t.GenerateTime, tmpGenerateTime.c_str());
         }
     }
 
@@ -9265,11 +9265,11 @@ bool CPQControl::isPqDatabaseMachChip()
     meson_cpu_ver_e chipVersion = MESON_CPU_VERSION_NULL;
     database_attribute_t dbAttribute;
     mPQdb->PQ_GetDataBaseAttribute(&dbAttribute);
-    if ((dbAttribute.ChipVersion.string() == NULL) || (dbAttribute.ChipVersion.length() == 0)) {
+    if ((dbAttribute.ChipVersion.c_str() == NULL) || (dbAttribute.ChipVersion.length() == 0)) {
         SYS_LOGI("%s: ChipVersion is null!\n", __FUNCTION__);
         chipVersion = MESON_CPU_VERSION_NULL;
     } else {
-        std::string TempStr = std::string(dbAttribute.ChipVersion.string());
+        std::string TempStr = std::string(dbAttribute.ChipVersion.c_str());
         int flagPosition = TempStr.find("_");
         std::string versionStr = TempStr.substr(flagPosition+1, 1);
         SYS_LOGI("%s: versionStr is %s!\n", __FUNCTION__, versionStr.c_str());

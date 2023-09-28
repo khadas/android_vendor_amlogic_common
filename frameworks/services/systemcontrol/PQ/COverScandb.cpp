@@ -47,7 +47,7 @@ int COverScandb::openOverScanDB(const char *db_path)
         } else {
             val = "Get OverScan_DB Version failure!!!";
         }
-        SYS_LOGI("%s = %s\n", "OverScan.db.version", val.string());
+        SYS_LOGI("%s = %s\n", "OverScan.db.version", val.c_str());
     }
 
     return rval;

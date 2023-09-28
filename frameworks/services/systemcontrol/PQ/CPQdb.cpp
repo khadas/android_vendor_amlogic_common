@@ -76,7 +76,7 @@ int CPQdb::openPqDB(const char *db_path)
         } else {
             attributeVal = "Get PQ_DB Version failure!!!";
         }
-        SYS_LOGD("%s = %s\n", "PQ.db.version", attributeVal.string());
+        SYS_LOGD("%s = %s\n", "PQ.db.version", attributeVal.c_str());
     }
 
     return rval;
@@ -291,8 +291,8 @@ int CPQdb::PQ_GetBlackExtensionParams(source_input_param_t source_input_param, a
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralBlackBlueTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getRegValues(TableName.string(), regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getRegValues(TableName.c_str(), regs);
     } else {
         SYS_LOGE("GeneralBlackBlueTable don't have table!!\n");
     }
@@ -308,8 +308,8 @@ int CPQdb::PQ_GetBlackStretchParams(int level, source_input_param_t source_input
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralBlackTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getRegValuesByValue(TableName.string(), LEVEL_NAME, "", level, 0, regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getRegValuesByValue(TableName.c_str(), LEVEL_NAME, "", level, 0, regs);
     } else {
         SYS_LOGE("GeneralBlackTable don't have table!!\n");
     }
@@ -325,8 +325,8 @@ int CPQdb::PQ_GetBlueStretchParams(int level, source_input_param_t source_input_
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralBlueTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getRegValuesByValue(TableName.string(), LEVEL_NAME, "", level, 0, regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getRegValuesByValue(TableName.c_str(), LEVEL_NAME, "", level, 0, regs);
     } else {
         SYS_LOGE("GeneralBlueTable don't have table!!\n");
     }
@@ -342,8 +342,8 @@ int CPQdb::PQ_GetChromaCoringParams(int level, source_input_param_t source_input
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralChromaTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getRegValuesByValue(TableName.string(), LEVEL_NAME, "", level, 0, regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getRegValuesByValue(TableName.c_str(), LEVEL_NAME, "", level, 0, regs);
     } else {
         SYS_LOGE("GeneralChromaTable don't have table!!\n");
     }
@@ -359,8 +359,8 @@ int CPQdb::PQ_GetSharpness0FixedParams(source_input_param_t source_input_param, 
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralSharpness0FixedTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getRegValues(TableName.string(), regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getRegValues(TableName.c_str(), regs);
     } else {
         SYS_LOGE("GeneralSharpness0FixedTable don't have table!!\n");
     }
@@ -375,8 +375,8 @@ int CPQdb::PQ_SetSharpness0VariableParams(source_input_param_t source_input_para
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralSharpness0VariableTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = loadSharpnessData(TableName.string(), 0);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = loadSharpnessData(TableName.c_str(), 0);
     } else {
         SYS_LOGE("%s: GeneralSharpness0VariableTable don't have this table!\n", __FUNCTION__);
     }
@@ -392,8 +392,8 @@ int CPQdb::PQ_GetSharpness1FixedParams(source_input_param_t source_input_param, 
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralSharpness1FixedTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getRegValues(TableName.string(), regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getRegValues(TableName.c_str(), regs);
     } else {
         SYS_LOGE("GeneralSharpness1FixedTable don't have table!!\n");
     }
@@ -408,8 +408,8 @@ int CPQdb::PQ_SetSharpness1VariableParams(source_input_param_t source_input_para
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralSharpness1VariableTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = loadSharpnessData(TableName.string(), 1);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = loadSharpnessData(TableName.c_str(), 1);
     } else {
         SYS_LOGE("%s: GeneralSharpness1VariableTable don't have this table!\n", __FUNCTION__);
     }
@@ -425,8 +425,8 @@ int CPQdb::PQ_GetSharpnessPiFixedParams(source_input_param_t source_input_param,
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralSharpnessPIFixedTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getRegValues(TableName.string(), regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getRegValues(TableName.c_str(), regs);
     } else {
         SYS_LOGE("GeneralSharpnessPIFixedTable don't have table!!\n");
     }
@@ -441,8 +441,8 @@ int CPQdb::PQ_SetSharpnessPiVariableParams(source_input_param_t source_input_par
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralSharpnessPIVariableTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = loadSharpnessData(TableName.string(), 2);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = loadSharpnessData(TableName.c_str(), 2);
     } else {
         SYS_LOGE("%s: GeneralSharpnessPIVariableTable don't have this table!\n", __FUNCTION__);
     }
@@ -458,8 +458,8 @@ int CPQdb::PQ_GetCM2Params(vpp_color_management2_t basemode, source_input_param_
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralCM2Table", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getRegValuesByValue(TableName.string(), CM_LEVEL_NAME, "", (int) basemode, 0, regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getRegValuesByValue(TableName.c_str(), CM_LEVEL_NAME, "", (int) basemode, 0, regs);
     } else {
         SYS_LOGE("GeneralCM2Table select error!!\n");
     }
@@ -472,8 +472,8 @@ int CPQdb::PQ_GetXVYCCParams(vpp_xvycc_mode_t xvycc_mode, source_input_param_t s
 {
     int rval = -1;
     String8 TableName = GetTableName("GeneralXVYCCTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getRegValuesByValue_long(TableName.string(), LEVEL_NAME, "", (int) xvycc_mode, 0, regs, regs_1);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getRegValuesByValue_long(TableName.c_str(), LEVEL_NAME, "", (int) xvycc_mode, 0, regs, regs_1);
     } else {
         SYS_LOGE("GeneralXVYCCTable select error!!\n");
     }
@@ -485,8 +485,8 @@ int CPQdb::PQ_GetDIParams(source_input_param_t source_input_param, am_regs_t *re
 {
     int rval = -1;
     String8 TableName = GetTableName("GeneralDITable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getDIRegValuesByValue(TableName.string(), "", "", 0, 0, regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getDIRegValuesByValue(TableName.c_str(), "", "", 0, 0, regs);
     } else {
         SYS_LOGE("GeneralDITable select error!!\n");
     }
@@ -498,8 +498,8 @@ int CPQdb::PQ_GetMCDIParams(vpp_mcdi_mode_t mcdi_mode, source_input_param_t sour
 {
     int rval = -1;
     String8 TableName = GetTableName("GeneralMCDITable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getDIRegValuesByValue(TableName.string(), LEVEL_NAME, "", (int) mcdi_mode, 0, regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getDIRegValuesByValue(TableName.c_str(), LEVEL_NAME, "", (int) mcdi_mode, 0, regs);
     } else {
         SYS_LOGE("GeneralMCDITable select error!!\n");
     }
@@ -511,8 +511,8 @@ int CPQdb::PQ_GetDeblockParams(di_deblock_mode_t deb_mode, source_input_param_t 
 {
     int rval = -1;
     String8 TableName = GetTableName("GeneralDeblockTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getDIRegValuesByValue(TableName.string(), LEVEL_NAME, "", (int) deb_mode, 0, regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getDIRegValuesByValue(TableName.c_str(), LEVEL_NAME, "", (int) deb_mode, 0, regs);
     } else {
         SYS_LOGE("GeneralDeblockTable select error!!\n");
     }
@@ -524,8 +524,8 @@ int CPQdb::PQ_GetNR2Params(vpp_noise_reduction_mode_t nr_mode, source_input_para
 {
     int rval = -1;
     String8 TableName = GetTableName("GeneralNR2Table", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getDIRegValuesByValue(TableName.string(), LEVEL_NAME, "", (int) nr_mode, 0, regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getDIRegValuesByValue(TableName.c_str(), LEVEL_NAME, "", (int) nr_mode, 0, regs);
     } else {
         SYS_LOGE("GeneralNR2Table select error!!\n");
     }
@@ -537,8 +537,8 @@ int CPQdb::PQ_GetSmoothPlusParams(vpp_smooth_plus_mode_t smoothplus_mode, source
 {
     int rval = -1;
     String8 TableName = GetTableName("GeneralSmoothPlusTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getDIRegValuesByValue(TableName.string(), LEVEL_NAME, "", (int)smoothplus_mode, 0, regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getDIRegValuesByValue(TableName.c_str(), LEVEL_NAME, "", (int)smoothplus_mode, 0, regs);
     } else {
         SYS_LOGE("GeneralSmoothPlusTable select error!!\n");
     }
@@ -550,8 +550,8 @@ int CPQdb::PQ_GetDemoSquitoParams(di_demosquito_mode_e demosquito, source_input_
 {
     int rval = -1;
     String8 TableName = GetTableName("GeneralDemosquitoTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        rval = getDIRegValuesByValue(TableName.string(), LEVEL_NAME, "", (int) demosquito, 0, regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getDIRegValuesByValue(TableName.c_str(), LEVEL_NAME, "", (int) demosquito, 0, regs);
     } else {
         SYS_LOGE("GeneralDemosquitoTable select error!!\n");
     }
@@ -633,12 +633,12 @@ int CPQdb::PQ_GetColorTemperatureParams(vpp_color_temperature_mode_t Tempmode, s
     params->b_post_offset = 0;
 
     String8 TableName = GetTableName("GeneralWhiteBalanceTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         getSqlParams(
             __FUNCTION__,
             sqlmaster,
             "select Enable, R_Pre_Offset, G_Pre_Offset, B_Pre_Offset, R_Gain, G_Gain, B_Gain, R_Post_Offset, G_Post_Offset, B_Post_Offset  from %s where "
-            "Level = %d and def = 0;", TableName.string(), (int) Tempmode);
+            "Level = %d and def = 0;", TableName.c_str(), (int) Tempmode);
 
         rval = this->select(sqlmaster, c);
 
@@ -670,14 +670,14 @@ int CPQdb::PQ_SetColorTemperatureParams(vpp_color_temperature_mode_t Tempmode,so
 
     int rval = -1;
     String8 TableName = GetTableName("GeneralWhiteBalanceTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         getSqlParams(
             __FUNCTION__,
             sql,
             "update %s set Enable = %d, "
             "R_Pre_Offset = %d, G_Pre_Offset = %d, B_Pre_Offset = %d, R_Gain = %d, G_Gain = %d, B_Gain = %d, "
             "R_Post_Offset = %d, G_Post_Offset = %d, B_Post_Offset = %d  where Level = %d and def = 0;",
-            TableName.string(), params.en, params.r_pre_offset,
+            TableName.c_str(), params.en, params.r_pre_offset,
             params.g_pre_offset, params.b_pre_offset, params.r_gain, params.g_gain,
             params.b_gain, params.r_post_offset, params.g_post_offset, params.b_post_offset,
             Tempmode);
@@ -717,8 +717,8 @@ int CPQdb::PQ_ResetAllColorTemperatureParams(void)
                 "delete from %s where def = 0;"
                 "insert into %s( Level , Enable , R_Pre_Offset, G_Pre_Offset, B_Pre_Offset, R_Gain, G_Gain, B_Gain, R_Post_Offset, G_Post_Offset, B_Post_Offset, def ) "
                 "select Level, Enable, R_Pre_Offset, G_Pre_Offset, B_Pre_Offset, R_Gain, G_Gain, B_Gain, R_Post_Offset, G_Post_Offset, B_Post_Offset, 0 from %s where def = 1;",
-                c.getString(index_TableName).string(), c.getString(index_TableName).string(),
-                c.getString(index_TableName).string());
+                c.getString(index_TableName).c_str(), c.getString(index_TableName).c_str(),
+                c.getString(index_TableName).c_str());
             if (this->exeSql(sqlmaster)) {
                 rval = 0;
             } else {
@@ -749,7 +749,7 @@ int CPQdb::PQ_GetHDRTMOParams(source_input_param_t source_input_param, hdr_tmo_t
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralHDRNodeTable", source_input_param);
-    if ((TableName.string() == NULL) || (TableName.length() == 0) ) {
+    if ((TableName.c_str() == NULL) || (TableName.length() == 0) ) {
         SYS_LOGD("%s, GeneralHDRNodeTable don't have this table!\n", __FUNCTION__);
         return -1;
     }
@@ -758,7 +758,7 @@ int CPQdb::PQ_GetHDRTMOParams(source_input_param_t source_input_param, hdr_tmo_t
 
     {// for param
         getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where regnum < %d and level = %d",
-                    TableName.string(), HDR_oo_init_lut,mode);
+                    TableName.c_str(), HDR_oo_init_lut,mode);
 
         rval = this->select(sqlmaster, c);
 
@@ -827,7 +827,7 @@ int CPQdb::PQ_GetHDRTMOParams(source_input_param_t source_input_param, hdr_tmo_t
         aa = NULL;
         getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                     "regnum = %d and level = %d",
-                    TableName.string(), HDR_oo_init_lut, mode);
+                    TableName.c_str(), HDR_oo_init_lut, mode);
 
         rval = this->select(sqlmaster, c);
         memset(buf, 0, sizeof(buf));
@@ -896,10 +896,10 @@ int CPQdb::PQ_GetAADParams(source_input_param_t source_input_param, aad_param_t 
 
         rval = this->select(sqlmaster, c);
         memset(buf, 0, sizeof(buf));
-        if (strlen(c.getString(index).string()) < sizeof(buf)) {
-            strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+        if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+            strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
         } else {
-            strncpy(buf, c.getString(index).string(), sizeof(buf));
+            strncpy(buf, c.getString(index).c_str(), sizeof(buf));
         }
         SYS_LOGD ("%s - sensor_input is %s\n", __FUNCTION__, buf);
         buffer = buf;
@@ -924,10 +924,10 @@ int CPQdb::PQ_GetAADParams(source_input_param_t source_input_param, aad_param_t 
 
         rval = this->select(sqlmaster, c);
         memset(buf, 0, sizeof(buf));
-        if (strlen(c.getString(index).string()) < sizeof(buf)) {
-            strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+        if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+            strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
         } else {
-            strncpy(buf, c.getString(index).string(), sizeof(buf));
+            strncpy(buf, c.getString(index).c_str(), sizeof(buf));
         }
         SYS_LOGD ("%s - LUT_Y_gain is %s\n", __FUNCTION__, buf);
         buffer = buf;
@@ -952,10 +952,10 @@ int CPQdb::PQ_GetAADParams(source_input_param_t source_input_param, aad_param_t 
 
         rval = this->select(sqlmaster, c);
         memset(buf, 0, sizeof(buf));
-        if (strlen(c.getString(index).string()) < sizeof(buf)) {
-            strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+        if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+            strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
         } else {
-            strncpy(buf, c.getString(index).string(), sizeof(buf));
+            strncpy(buf, c.getString(index).c_str(), sizeof(buf));
         }
         SYS_LOGD ("%s - LUT_RG_gain is %s\n", __FUNCTION__, buf);
         buffer = buf;
@@ -980,10 +980,10 @@ int CPQdb::PQ_GetAADParams(source_input_param_t source_input_param, aad_param_t 
 
         rval = this->select(sqlmaster, c);
         memset(buf, 0, sizeof(buf));
-        if (strlen(c.getString(index).string()) < sizeof(buf)) {
-            strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+        if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+            strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
         } else {
-            strncpy(buf, c.getString(index).string(), sizeof(buf));
+            strncpy(buf, c.getString(index).c_str(), sizeof(buf));
         }
         SYS_LOGD ("%s - LUT_BG_gain is %s\n", __FUNCTION__, buf);
         buffer = buf;
@@ -1008,10 +1008,10 @@ int CPQdb::PQ_GetAADParams(source_input_param_t source_input_param, aad_param_t 
 
         rval = this->select(sqlmaster, c);
         memset(buf, 0, sizeof(buf));
-        if (strlen(c.getString(index).string()) < sizeof(buf)) {
-            strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+        if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+            strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
         } else {
-            strncpy(buf, c.getString(index).string(), sizeof(buf));
+            strncpy(buf, c.getString(index).c_str(), sizeof(buf));
         }
         SYS_LOGD ("%s - gain_lut is %s\n", __FUNCTION__, buf);
         buffer = buf;
@@ -1036,10 +1036,10 @@ int CPQdb::PQ_GetAADParams(source_input_param_t source_input_param, aad_param_t 
 
         rval = this->select(sqlmaster, c);
         memset(buf, 0, sizeof(buf));
-        if (strlen(c.getString(index).string()) < sizeof(buf)) {
-            strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+        if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+            strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
         } else {
-            strncpy(buf, c.getString(index).string(), sizeof(buf));
+            strncpy(buf, c.getString(index).c_str(), sizeof(buf));
         }
         SYS_LOGD ("%s - xy_lut is %s\n", __FUNCTION__, buf);
         buffer = buf;
@@ -1121,10 +1121,10 @@ int CPQdb::PQ_GetCABCParams(source_input_param_t source_input_param, cabc_param_
 
         rval = this->select(sqlmaster, c);
         memset(buf, 0, sizeof(buf));
-        if (strlen(c.getString(index).string()) < sizeof(buf)) {
-            strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+        if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+            strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
         } else {
-            strncpy(buf, c.getString(index).string(), sizeof(buf));
+            strncpy(buf, c.getString(index).c_str(), sizeof(buf));
         }
         SYS_LOGD ("%s - db_o_bl_cv is %s\n", __FUNCTION__, buf);
         buffer = buf;
@@ -1148,10 +1148,10 @@ int CPQdb::PQ_GetCABCParams(source_input_param_t source_input_param, cabc_param_
 
         rval = this->select(sqlmaster, c);
         memset(buf, 0, sizeof(buf));
-        if (strlen(c.getString(index).string()) < sizeof(buf)) {
-            strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+        if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+            strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
         } else {
-            strncpy(buf, c.getString(index).string(), sizeof(buf));
+            strncpy(buf, c.getString(index).c_str(), sizeof(buf));
         }
         SYS_LOGD ("%s - db_o_bl_cv is %s\n", __FUNCTION__, buf);
         buffer = buf;
@@ -1188,13 +1188,13 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralDNLPTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         { // for param
             index = 0;
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum < 1000 and "
                         "level = %d;",
-                        TableName.string(), mode);
+                        TableName.c_str(), mode);
 
             rval = this->select(sqlmaster, c1);
             if (c1.moveToFirst()) {
@@ -1214,14 +1214,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level =  %d;",
-                        TableName.string(), scurv_low, mode);
+                        TableName.c_str(), scurv_low, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_dnlp_scurv_low is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1240,14 +1240,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), scurv_mid1, mode);
+                        TableName.c_str(), scurv_mid1, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_dnlp_scurv_mid1 is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1266,14 +1266,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), scurv_mid2, mode);
+                        TableName.c_str(), scurv_mid2, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_dnlp_scurv_mid2 is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1292,14 +1292,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), scurv_hgh1, mode);
+                        TableName.c_str(), scurv_hgh1, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_dnlp_scurv_hgh1 is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1318,14 +1318,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), scurv_hgh2, mode);
+                        TableName.c_str(), scurv_hgh2, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_dnlp_scurv_hgh2 is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1344,14 +1344,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), curv_var_lut49, mode);
+                        TableName.c_str(), curv_var_lut49, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_gain_var_lut49 is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1370,14 +1370,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), curv_wext_gain, mode);
+                        TableName.c_str(), curv_wext_gain, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_wext_gain is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1396,14 +1396,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), adp_thrd, mode);
+                        TableName.c_str(), adp_thrd, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_adp_thrd is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1422,14 +1422,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), reg_blk_boost_12, mode);
+                        TableName.c_str(), reg_blk_boost_12, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_reg_blk_boost_12 is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1448,14 +1448,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), reg_adp_ofset_20, mode);
+                        TableName.c_str(), reg_adp_ofset_20, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_reg_adp_ofset_20 is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1474,14 +1474,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), reg_mono_protect, mode);
+                        TableName.c_str(), reg_mono_protect, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_reg_mono_protect is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1500,14 +1500,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), reg_trend_wht_expand_lut8, mode);
+                        TableName.c_str(), reg_trend_wht_expand_lut8, mode);
 
             rval = this->select(sqlmaster, c1);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+            if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
             } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s - ve_reg_trend_wht_expand_lut8 is %s+++++++++++++++++", __FUNCTION__, buf);
             buffer = buf;
@@ -1526,14 +1526,14 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
            getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                        "regnum = %d and "
                        "level = %d;",
-                       TableName.string(), c_hist_gain, mode);
+                       TableName.c_str(), c_hist_gain, mode);
 
            rval = this->select(sqlmaster, c1);
            memset(buf, 0, sizeof(buf));
-           if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+           if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
            } else {
-                strncpy(buf, c1.getString(index).string(), sizeof(buf));
+                strncpy(buf, c1.getString(index).c_str(), sizeof(buf));
            }
            //SYS_LOGD ("%s - c_hist_gain is %s+++++++++++++++++", __FUNCTION__, buf);
            buffer = buf;
@@ -1552,12 +1552,12 @@ int CPQdb::PQ_GetDNLPParams(source_input_param_t source_input_param, Dynamic_con
            getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                        "regnum = %d and "
                        "level = %d;",
-                       TableName.string(), s_hist_gain, mode);
+                       TableName.c_str(), s_hist_gain, mode);
 
            rval = this->select(sqlmaster, c1);
            memset(buf, 0, sizeof(buf));
-           if (strlen(c1.getString(index).string()) < sizeof(buf)) {
-               strncpy(buf, c1.getString(index).string(), strlen(c1.getString(index).string()));
+           if (strlen(c1.getString(index).c_str()) < sizeof(buf)) {
+               strncpy(buf, c1.getString(index).c_str(), strlen(c1.getString(index).c_str()));
            }
            //SYS_LOGD ("%s - s_hist_gain is %s+++++++++++++++++", __FUNCTION__, buf);
            buffer = buf;
@@ -1592,13 +1592,13 @@ int CPQdb::PQ_GetLocalContrastNodeParams(source_input_param_t source_input_param
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralLocalContrastNodeTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         { //for param
             index = 0;
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum > 256 and "
                         "level = %d;",
-                        TableName.string(), mode);
+                        TableName.c_str(), mode);
 
             rval = this->select(sqlmaster, c);
             if (c.moveToFirst()) {
@@ -1618,14 +1618,14 @@ int CPQdb::PQ_GetLocalContrastNodeParams(source_input_param_t source_input_param
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level =  %d;",
-                        TableName.string(), LC_SATURATION_NUM, mode);
+                        TableName.c_str(), LC_SATURATION_NUM, mode);
 
             rval = this->select(sqlmaster, c);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+            if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
             } else {
-                strncpy(buf, c.getString(index).string(), sizeof(buf));
+                strncpy(buf, c.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD("%s: ve_lc_saturation is %s\n", __FUNCTION__, buf);
             buffer = buf;
@@ -1644,14 +1644,14 @@ int CPQdb::PQ_GetLocalContrastNodeParams(source_input_param_t source_input_param
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), LC_YMINVAL_LMT_NUM, mode);
+                        TableName.c_str(), LC_YMINVAL_LMT_NUM, mode);
 
             rval = this->select(sqlmaster, c);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+            if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
             } else {
-                strncpy(buf, c.getString(index).string(), sizeof(buf));
+                strncpy(buf, c.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s: ve_lc_yminval_lmt is %s\n", __FUNCTION__, buf);
             buffer = buf;
@@ -1670,14 +1670,14 @@ int CPQdb::PQ_GetLocalContrastNodeParams(source_input_param_t source_input_param
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), LC_YPKBV_YMAXVAL_LMT_NUM, mode);
+                        TableName.c_str(), LC_YPKBV_YMAXVAL_LMT_NUM, mode);
 
             rval = this->select(sqlmaster, c);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+            if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
             } else {
-                strncpy(buf, c.getString(index).string(), sizeof(buf));
+                strncpy(buf, c.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s: ve_lc_ypkbv_ymaxval_lmt is %s\n", __FUNCTION__, buf);
             buffer = buf;
@@ -1696,14 +1696,14 @@ int CPQdb::PQ_GetLocalContrastNodeParams(source_input_param_t source_input_param
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), LC_YPKBV_RATIO_NUM, mode);
+                        TableName.c_str(), LC_YPKBV_RATIO_NUM, mode);
 
             rval = this->select(sqlmaster, c);
             memset(buf, 0, sizeof(buf));
-            if (strlen(c.getString(index).string()) < sizeof(buf)) {
-                strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+            if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+                strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
             } else {
-                strncpy(buf, c.getString(index).string(), sizeof(buf));
+                strncpy(buf, c.getString(index).c_str(), sizeof(buf));
             }
             //SYS_LOGD ("%s: ve_lc_ypkbv_ratio is %s\n", __FUNCTION__, buf);
             buffer = buf;
@@ -1722,7 +1722,7 @@ int CPQdb::PQ_GetLocalContrastNodeParams(source_input_param_t source_input_param
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), LC_YMAXVAL_LMT_NUM, mode);
+                        TableName.c_str(), LC_YMAXVAL_LMT_NUM, mode);
 
             rval = this->select(sqlmaster, c);
             if (rval < 0) {
@@ -1730,10 +1730,10 @@ int CPQdb::PQ_GetLocalContrastNodeParams(source_input_param_t source_input_param
                 rval = 0;
             } else {
                 memset(buf, 0, sizeof(buf));
-                if (strlen(c.getString(index).string()) < sizeof(buf)) {
-                    strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+                if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+                    strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
                 } else {
-                    strncpy(buf, c.getString(index).string(), sizeof(buf));
+                    strncpy(buf, c.getString(index).c_str(), sizeof(buf));
                 }
                 //SYS_LOGD ("%s: ve_lc_ymaxval_lmt is %s\n", __FUNCTION__, buf);
                 buffer = buf;
@@ -1753,7 +1753,7 @@ int CPQdb::PQ_GetLocalContrastNodeParams(source_input_param_t source_input_param
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and "
                         "level = %d;",
-                        TableName.string(), LC_YPKBV_LMT_NUM, mode);
+                        TableName.c_str(), LC_YPKBV_LMT_NUM, mode);
 
             rval = this->select(sqlmaster, c);
             if (rval < 0) {
@@ -1761,8 +1761,8 @@ int CPQdb::PQ_GetLocalContrastNodeParams(source_input_param_t source_input_param
                 rval = 0;
             } else {
                 memset(buf, 0, sizeof(buf));
-                if (strlen(c.getString(index).string()) < sizeof(buf)) {
-                    strncpy(buf, c.getString(index).string(), strlen(c.getString(index).string()));
+                if (strlen(c.getString(index).c_str()) < sizeof(buf)) {
+                    strncpy(buf, c.getString(index).c_str(), strlen(c.getString(index).c_str()));
                 }
                 //SYS_LOGD ("%s: ve_lc_ypkbv_lmt is %s\n", __FUNCTION__, buf);
                 buffer = buf;
@@ -1791,8 +1791,8 @@ int CPQdb::PQ_GetLocalContrastRegParams(source_input_param_t source_input_param,
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
     String8 TableName = GetTableName("GeneralLocalContrastRegTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        ret = getRegValuesByValue(TableName.string(), LEVEL_NAME, "", (int) mode, 0, regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        ret = getRegValuesByValue(TableName.c_str(), LEVEL_NAME, "", (int) mode, 0, regs);
     } else {
         SYS_LOGE("GeneralLocalContrastRegTable select error!!\n");
     }
@@ -1807,11 +1807,11 @@ int CPQdb::PQ_SetDNLPGains(source_input_param_t source_input_param, Dynamic_cont
     int rval = -1;
 
     String8 TableName = GetTableName("GeneralDNLPTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         getSqlParams(__FUNCTION__, sqlmaster, "update  %s set value = %d where "
                       "regnum = %d and "
                       "level = %d;",
-                      TableName.string(), final_gain, final_gain_reg_num, level);
+                      TableName.c_str(), final_gain, final_gain_reg_num, level);
         rval = this->exeSql(sqlmaster);
     } else {
         SYS_LOGE("%s: GeneralDNLPTable don't have this table!\n", __FUNCTION__);
@@ -1828,11 +1828,11 @@ int CPQdb::PQ_GetDNLPGains(source_input_param_t source_input_param, Dynamic_cont
     int final_gain_reg_num = 46;
 
     String8 TableName = GetTableName("GeneralDNLPTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                       "regnum = %d and "
                       "level = %d;",
-                      TableName.string(), final_gain_reg_num, level);
+                      TableName.c_str(), final_gain_reg_num, level);
         this->select(sqlmaster, c);
 
         if (c.moveToFirst()) {
@@ -1851,8 +1851,8 @@ int CPQdb::PQ_GetBEParams(source_input_param_t source_input_param, int addr, am_
      int rval = -1;
 
      String8 TableName = GetTableName("GeneralBlackBlueTable", source_input_param);
-     if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-         rval = getRegValuesByValue(TableName.string(), "RegAddr", "", addr, 0, regs);
+     if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+         rval = getRegValuesByValue(TableName.c_str(), "RegAddr", "", addr, 0, regs);
      } else {
          SYS_LOGE("%s: GeneralBlackBlueTable don't have this table!\n", __FUNCTION__);
      }
@@ -1865,11 +1865,11 @@ int CPQdb::PQ_SetBEParams(source_input_param_t source_input_param, int addr, uns
      int rval = -1;
 
      String8 TableName = GetTableName("GeneralBlackBlueTable", source_input_param);
-     if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-         String8 cmd = String8("update ") + String8::format("%s", TableName.string()) +
+     if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+         String8 cmd = String8("update ") + String8::format("%s", TableName.c_str()) +
                        String8(" set RegValue = ") + String8::format("%d", reg_val) +
                        String8(" where RegAddr = ") + String8::format("%d", addr);
-         rval = this->exeSql(cmd.string());
+         rval = this->exeSql(cmd.c_str());
      } else {
          SYS_LOGE("%s: GeneralBlackBlueTable don't have this table!\n", __FUNCTION__);
      }
@@ -1901,7 +1901,7 @@ int CPQdb::PQ_SetRGBCMYFcolor(source_input_param_t source_input_param, int data_
 
     getSqlParams(__FUNCTION__,sql,
                 "update %s set Value = %d where Rank = %d;",
-                tableName.string(), val, data_Rank);
+                tableName.c_str(), val, data_Rank);
 
     if (this->exeSql(sql)) {
         rval = 0;
@@ -1938,7 +1938,7 @@ int CPQdb::PQ_GetRGBCMYFcolor(source_input_param_t source_input_param, int data_
 
     getSqlParams(__FUNCTION__, sqlmaster,
                  "select Value from %s where "
-                 "Rank = %d ", tableName.string(), data_Rank);
+                 "Rank = %d ", tableName.c_str(), data_Rank);
 
     rval = this->select(sqlmaster, c);
 
@@ -2179,18 +2179,18 @@ int CPQdb::PQ_GetAIParams(source_input_param_t source_input_param, ai_pic_table_
     }
 
     String8 TableName = GetTableName("GeneralAITable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         char sqlmaster[256] = {0};
         getSqlParams(
             __FUNCTION__,
             sqlmaster,
-            "select Width, Height, Array from %s;", TableName.string());
+            "select Width, Height, Array from %s;", TableName.c_str());
         this->select(sqlmaster, c);
         if (c.moveToFirst()) {
             aiRegs->width = c.getInt(0);
             aiRegs->height = c.getInt(1);
-            if (strlen(c.getString(2).string()) < sizeof(buf)/sizeof(char)) {
-                strncpy(buf, c.getString(2).string(), strlen(c.getString(2).string()));
+            if (strlen(c.getString(2).c_str()) < sizeof(buf)/sizeof(char)) {
+                strncpy(buf, c.getString(2).c_str(), strlen(c.getString(2).c_str()));
             }
             aiRegs->table_ptr = buf;
             ret = 0;
@@ -2258,8 +2258,8 @@ int CPQdb::PQ_GetNoiseReductionParams(vpp_noise_reduction_mode_t nr_mode, source
     int reg_val = -1;
 
     String8 TableName = GetTableName("GeneralNR2Table", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-		getSqlParams(__FUNCTION__, sqlmaster, "select RegValue from %s where RegAddr = %d and Level = %d;", TableName.string(), reg_addr, nr_mode);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+		getSqlParams(__FUNCTION__, sqlmaster, "select RegValue from %s where RegAddr = %d and Level = %d;", TableName.c_str(), reg_addr, nr_mode);
 
         this->select(sqlmaster, c);
         if (c.moveToFirst()) {
@@ -2279,11 +2279,11 @@ int CPQdb::PQ_SetNoiseReductionParams(vpp_noise_reduction_mode_t nr_mode, source
     int err = -1;
 
     String8 TableName = GetTableName("GeneralNR2Table", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         getSqlParams(__FUNCTION__, sqlmaster, "update %s set RegValue = %d where "
                  "RegAddr = %u and "
                  "Level = %d;",
-                 TableName.string(), value, reg_addr, nr_mode);
+                 TableName.c_str(), value, reg_addr, nr_mode);
         err = this->exeSql(sqlmaster);
     } else {
         SYS_LOGE("%s: GeneralNR2Table don't have this table!\n", __FUNCTION__);
@@ -2303,11 +2303,11 @@ int CPQdb::PQ_GetCVD2Param(source_input_param_t source_input_param, int reg_addr
         source_input_param.sig_fmt = TVIN_SIG_FMT_CVBS_NTSC_M;
 
     String8 TableName = GetTableName("GeneralCVD2Table", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         getSqlParams(__FUNCTION__, sqlmaster, "select RegValue from %s where "
                      "RegAddr = %u and "
                      "RegMask = %u;",
-                     TableName.string(), reg_addr, reg_mask);
+                     TableName.c_str(), reg_addr, reg_mask);
 
         rval = this->select(sqlmaster, c);
         if (rval < 0) {
@@ -2339,11 +2339,11 @@ int CPQdb::PQ_SetCVD2Param(source_input_param_t source_input_param, int reg_addr
               __FUNCTION__, param_type, source_input_param.sig_fmt, source_input_param.source_input, reg_addr, reg_mask);
 
     String8 TableName = GetTableName("GeneralCVD2Table", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         getSqlParams(__FUNCTION__, sqlmaster, "update %s set RegValue = %d where "
                      "RegAddr = %u and "
                      "RegMask = %u;",
-                     TableName.string(), value, reg_addr, reg_mask);
+                     TableName.c_str(), value, reg_addr, reg_mask);
         rval = this->exeSql(sqlmaster);
     } else {
         SYS_LOGE("%s: GeneralCVD2Table don't have this table!\n", __FUNCTION__);
@@ -2357,8 +2357,8 @@ int CPQdb::PQ_GetCVD2Params(source_input_param_t source_input_param, am_regs_t *
 {
     int ret = -1;
     String8 TableName = GetTableName("GeneralCVD2Table", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
-        ret = getRegValues(TableName.string(), regs);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        ret = getRegValues(TableName.c_str(), regs);
         if (regs->am_reg[0].val == 0 && regs->am_reg[1].val == 0 && regs->am_reg[2].val == 0
                 && regs->am_reg[3].val == 0) {
             SYS_LOGE("%s: db's value is all zeros, that's not OK!!!\n", __FUNCTION__);
@@ -2413,24 +2413,24 @@ int CPQdb::PQ_GetSharpnessCTIParams(source_input_param_t source_input_param, int
 
     if (c.moveToFirst()) {
         do {
-            SYS_LOGD("%s: get table is %s\n", __FUNCTION__, c.getString(0).string());
+            SYS_LOGD("%s: get table is %s\n", __FUNCTION__, c.getString(0).c_str());
             SYS_LOGD("%s, addr is %d, reg mask is: %u\n", __FUNCTION__, reg_addr, reg_mask);
             getSqlParams(__FUNCTION__, sqlmaster,
                          "select RegValue from %s where NodeNumber = %d and RegAddr = %d and RegMask = %u;",
-                         c.getString(0).string(), 1, reg_addr, reg_mask);
+                         c.getString(0).c_str(), 1, reg_addr, reg_mask);
             err = this->select(sqlmaster, c1);
 
             if (c1.moveToFirst()) {
                 do {
                     if (param_type >= SR0_CTI_GAIN0 && param_type <= SR0_CTI_GAIN3
-                        && !strncmp("Sharpness_0", c.getString(0).string(), 11)) {//SR0
+                        && !strncmp("Sharpness_0", c.getString(0).c_str(), 11)) {//SR0
 
                         sr0_reg_val = c1.getUInt(0);
                         SYS_LOGD("%s, addr is %d, reg_get sr0_reg_val: %u, %u\n", __FUNCTION__,
                                                          reg_addr, c1.getUInt(0), sr0_reg_val);
                         return sr0_reg_val;
                     } else if (param_type >= SR1_CTI_GAIN0 && param_type <= SR1_CTI_GAIN3
-                        && !strncmp("Sharpness_1", c.getString(0).string(), 11)) {//SR1
+                        && !strncmp("Sharpness_1", c.getString(0).c_str(), 11)) {//SR1
 
                         sr1_reg_val = c1.getUInt(0);
                         SYS_LOGD("%s, addr is %d, get reg_val: %u, %u\n", __FUNCTION__,
@@ -2485,32 +2485,32 @@ int CPQdb::PQ_SetSharpnessCTIParams(source_input_param_t source_input_param, int
 
     if (c.moveToFirst()) {
         do {
-            SYS_LOGD("%s: get table is %s\n", __FUNCTION__, c.getString(0).string());
+            SYS_LOGD("%s: get table is %s\n", __FUNCTION__, c.getString(0).c_str());
             getSqlParams(__FUNCTION__, sqlmaster,
                          "select RegValue from %s where NodeNumber = %d and RegAddr = %d;",
-                         c.getString(0).string(), 1, reg_addr);
+                         c.getString(0).c_str(), 1, reg_addr);
             err = this->select(sqlmaster, c1);
 
             if (c1.moveToFirst()) {
                 do {
                     if (param_type >= SR0_CTI_GAIN0 && param_type <= SR0_CTI_GAIN3
-                        && !strncmp("Sharpness_0", c.getString(0).string(), 11)) {//SR0
+                        && !strncmp("Sharpness_0", c.getString(0).c_str(), 11)) {//SR0
                         SYS_LOGD("%s, addr is %d, last sr0_reg_val: %u, try to set %u\n",
                                      __FUNCTION__, reg_addr, c1.getUInt(0), value);
                         getSqlParams(__FUNCTION__, sqlmaster,
                                  "update %s set RegValue = %u where NodeNumber = %d and RegAddr = %d "
                                  "and RegMask = %u;",
-                                 c.getString(0).string(), value, 1, reg_addr, reg_mask);
+                                 c.getString(0).c_str(), value, 1, reg_addr, reg_mask);
                         err |= this->exeSql(sqlmaster);
                         return err;
                     } else if (param_type >= SR1_CTI_GAIN0 && param_type <= SR1_CTI_GAIN3
-                        && !strncmp("Sharpness_1", c.getString(0).string(), 11)) {//SR1
+                        && !strncmp("Sharpness_1", c.getString(0).c_str(), 11)) {//SR1
                         SYS_LOGD("%s, addr is %d, last sr1_reg_val: %u, try to set %u\n",
                                      __FUNCTION__, reg_addr, c1.getUInt(0), value);
                         getSqlParams(__FUNCTION__, sqlmaster,
                                  "update %s set RegValue = %u where NodeNumber = %d and RegAddr = %d "
                                  "and RegMask = %u;",
-                                 c.getString(0).string(), value, 1, reg_addr, reg_mask);
+                                 c.getString(0).c_str(), value, 1, reg_addr, reg_mask);
                         err |= this->exeSql(sqlmaster);
                         return err;
                     }
@@ -2623,17 +2623,17 @@ int CPQdb::getSharpnessRegValues(const char *table_name, source_input_param_t so
         do {
             getSqlParams(__FUNCTION__, sqlmaster,
                        "select RegType, RegAddr, RegMask, RegValue from %s;",
-                       c_tablelist.getString(0).string());
+                       c_tablelist.getString(0).c_str());
             this->select(sqlmaster, c_reg_list);
             SYS_LOGD("%s, addr id 0x%x, [%d]table name is %s-----\n",
-                    __FUNCTION__, reg_addr, index_am_reg, c_tablelist.getString(0).string());
+                    __FUNCTION__, reg_addr, index_am_reg, c_tablelist.getString(0).c_str());
             if (c_reg_list.moveToFirst()) { //reg list for each table
                 int index_type = 0;
                 int index_addr = 1;
                 int index_mask = 2;
                 int index_val = 3;
                 do {
-                    if ((strcmp(c_tablelist.getString(0).string(), getSharpnessTableName(source_input_param, isHd)) == 0)
+                    if ((strcmp(c_tablelist.getString(0).c_str(), getSharpnessTableName(source_input_param, isHd)) == 0)
                         && reg_addr == c_reg_list.getInt(index_addr)) {
                         regs->am_reg[index_am_reg].type = c_reg_list.getUInt(index_type);
                         regs->am_reg[index_am_reg].addr = c_reg_list.getUInt(index_addr);
@@ -2690,23 +2690,23 @@ int CPQdb::PQ_SetSharpnessAdvancedParams(source_input_param_t source_input_param
       do {
           getSqlParams(__FUNCTION__, sqlmaster,
                        "select RegType, RegAddr, RegMask, RegValue from %s;",
-                       c_tablelist.getString(0).string());
+                       c_tablelist.getString(0).c_str());
           err = this->select(sqlmaster, c_reg_list);
           SYS_LOGD("%s, addr id 0x%x, [%d]table name is %s-----\n",
-                    __FUNCTION__, reg_addr, index_am_reg, c_tablelist.getString(0).string());
+                    __FUNCTION__, reg_addr, index_am_reg, c_tablelist.getString(0).c_str());
           if (c_reg_list.moveToFirst()) { //reg list for each table
               int index_type = 0;
               int index_addr = 1;
               int index_mask = 2;
               int index_val = 3;
               do {
-                  if ((strcmp(c_tablelist.getString(0).string(), getSharpnessTableName(source_input_param, isHd)) == 0)
+                  if ((strcmp(c_tablelist.getString(0).c_str(), getSharpnessTableName(source_input_param, isHd)) == 0)
                       && reg_addr == c_reg_list.getInt(index_addr)) {
                       SYS_LOGD("PQ_SetSharpnessAdvancedParams, addr is 0x%x, [%d]last reg value is %u, try to set %u\n",
                                  reg_addr, index_am_reg, c_reg_list.getUInt(index_val), value);
                       getSqlParams(__FUNCTION__,sqlmaster,
                                    "update %s set RegValue = %d where RegAddr = %u;",
-                                   c_tablelist.getString(0).string(), value, reg_addr);
+                                   c_tablelist.getString(0).c_str(), value, reg_addr);
                       err = this->exeSql(sqlmaster);
                       return err;
                   }
@@ -2795,11 +2795,11 @@ bool CPQdb::PQ_GetDataBaseAttribute(database_attribute_t *DbAttribute)
                 DbAttribute->GenerateTime = c.getString(3);
             }
 
-            SYS_LOGD("%s DbAttribute->ToolVersion %s\n", __FUNCTION__, DbAttribute->ToolVersion.string());
-            SYS_LOGD("%s DbAttribute->ProjectVersion %s\n", __FUNCTION__, DbAttribute->ProjectVersion.string());
-            SYS_LOGD("%s DbAttribute->dbversion %s\n", __FUNCTION__, DbAttribute->dbversion.string());
-            SYS_LOGD("%s DbAttribute->ChipVersion %s\n", __FUNCTION__, DbAttribute->ChipVersion.string());
-            SYS_LOGD("%s DbAttribute->GenerateTime %s\n", __FUNCTION__, DbAttribute->GenerateTime.string());
+            SYS_LOGD("%s DbAttribute->ToolVersion %s\n", __FUNCTION__, DbAttribute->ToolVersion.c_str());
+            SYS_LOGD("%s DbAttribute->ProjectVersion %s\n", __FUNCTION__, DbAttribute->ProjectVersion.c_str());
+            SYS_LOGD("%s DbAttribute->dbversion %s\n", __FUNCTION__, DbAttribute->dbversion.c_str());
+            SYS_LOGD("%s DbAttribute->ChipVersion %s\n", __FUNCTION__, DbAttribute->ChipVersion.c_str());
+            SYS_LOGD("%s DbAttribute->GenerateTime %s\n", __FUNCTION__, DbAttribute->GenerateTime.c_str());
 
             ret = true;
         } else {
@@ -2837,7 +2837,7 @@ void CPQdb::PQ_GetPqDbMatchType(database_attribute_t *DbAttribute) {
     }
 
     //new project logic, judge by ChipVersion
-    std::string chipVer = std::string(DbAttribute->ChipVersion.string());
+    std::string chipVer = std::string(DbAttribute->ChipVersion.c_str());
     SYS_LOGD("%s chipVer %s\n", __FUNCTION__, chipVer.c_str());
 
     if (chipVer == "s928x") {
@@ -3133,7 +3133,7 @@ int CPQdb::PQ_GetGammaTable(int panel_id, source_input_param_t source_input_para
     if (c.moveToFirst()) {
         int index_TableName = 0;
         getSqlParams(__FUNCTION__, sqlmaster, "select %s from %s;", f_name,
-                     c.getString(index_TableName).string());
+                     c.getString(index_TableName).c_str());
 
         rval = this->select(sqlmaster, c);
         if (c.moveToFirst()) {
@@ -3312,7 +3312,7 @@ String8 CPQdb::GetTableName(const char *GeneralTableName, source_input_param_t s
         ret = this->select(sqlmaster, c);
         if (ret == 0) {
             if (c.moveToFirst()) {
-                SYS_LOGD("%s table name is %s!\n", __FUNCTION__, c.getString(0).string());
+                SYS_LOGD("%s table name is %s!\n", __FUNCTION__, c.getString(0).c_str());
                 return c.getString(0);
             } else {
                 SYS_LOGE("%s %s don't have this table!\n", __FUNCTION__, GeneralTableName);
@@ -3340,7 +3340,7 @@ String8 CPQdb::GetPqOsdTableName(const char *GeneralTableName, pq_src_param_t so
     ret = this->select(sqlmaster, c);
     if (ret == 0) {
         if (c.moveToFirst()) {
-            SYS_LOGD("table name is %s!\n", c.getString(0).string());
+            SYS_LOGD("table name is %s!\n", c.getString(0).c_str());
             return c.getString(0);
         } else {
             SYS_LOGE("%s don't have this table!\n", GeneralTableName);
@@ -3746,13 +3746,13 @@ int CPQdb::LoadVppBasicParam(tvpq_data_type_t data_type, source_input_param_t so
     if (CheckHdrStatus(tableName[data_type]))
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
 
-    String8 TableName = GetTableName(tableName[data_type].string(), source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    String8 TableName = GetTableName(tableName[data_type].c_str(), source_input_param);
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         getSqlParams(
             __FUNCTION__,
             sqlmaster,
             "select TotalNode, NodeNumber, IndexValue, RegValue, StepUp from %s order by NodeNumber asc;",
-            TableName.string());
+            TableName.c_str());
 
         rval = this->select(sqlmaster, c);
         if (c.moveToFirst()) {
@@ -3770,7 +3770,7 @@ int CPQdb::LoadVppBasicParam(tvpq_data_type_t data_type, source_input_param_t so
             SYS_LOGE("%s: select value error!\n", __FUNCTION__);
         }
     } else {
-        SYS_LOGE("%s: %s don't have this table!\n", __FUNCTION__, tableName[data_type].string());
+        SYS_LOGE("%s: %s don't have this table!\n", __FUNCTION__, tableName[data_type].c_str());
     }
     return rval;
 }
@@ -3891,12 +3891,12 @@ int CPQdb::PQ_GetLocalDimmingParams(int level, source_input_param_t source_input
     memset(newParams, 0, sizeof(aml_ldim_pq_s));
 
     String8 TableName = GetTableName("GeneralLocalDimmingTable", source_input_param);
-    if ((TableName.string() != NULL) && (TableName.length() != 0) ) {
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         {// for param
             index = 0;
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum < %d and Level = %d",
-                        TableName.string(), LD_bl_remap_curve, level);
+                        TableName.c_str(), LD_bl_remap_curve, level);
             rval = this->select(sqlmaster, c);
 
             if (c.moveToFirst()) {
@@ -3951,7 +3951,7 @@ int CPQdb::PQ_GetLocalDimmingParams(int level, source_input_param_t source_input
             aa = NULL;
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and level = %d",
-                        TableName.string(), LD_bl_remap_curve, level);
+                        TableName.c_str(), LD_bl_remap_curve, level);
 
             rval |= this->select(sqlmaster, c);
             memset(buf, 0, sizeof(buf));
@@ -3980,7 +3980,7 @@ int CPQdb::PQ_GetLocalDimmingParams(int level, source_input_param_t source_input
                 lut_id = LD_remap_LUT_0 + i;
                 getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                             "regnum = %d and level = %d",
-                            TableName.string(), lut_id, level);
+                            TableName.c_str(), lut_id, level);
 
                 rval |= this->select(sqlmaster, c);
                 memset(buf, 0, sizeof(buf));
@@ -4008,7 +4008,7 @@ int CPQdb::PQ_GetLocalDimmingParams(int level, source_input_param_t source_input
             aa = NULL;
             getSqlParams(__FUNCTION__, sqlmaster, "select value from %s where "
                         "regnum = %d and level = %d",
-                        TableName.string(), LD_min_gain_lut, level);
+                        TableName.c_str(), LD_min_gain_lut, level);
 
             rval |= this->select(sqlmaster, c);
             memset(buf, 0, sizeof(buf));
@@ -4036,7 +4036,7 @@ int CPQdb::PQ_GetLocalDimmingParams(int level, source_input_param_t source_input
             char bufext[1024];
             getSqlParams(__FUNCTION__, sqlmasterext, "select value from %s where "
                         "regnum = %d and level = %d",
-                        TableName.string(), LD_dither_lut, level);
+                        TableName.c_str(), LD_dither_lut, level);
 
             rval |= this->select(sqlmasterext, c);
             memset(bufext, 0, sizeof(bufext));

@@ -200,7 +200,7 @@ bool UEventObserver::isMatch(const char* buffer, size_t length, uevent_data_t* u
 #else
     AutoMutex _l(gMatchesMutex);
     for (size_t i = 0; i < gMatches.size(); i++) {
-        const char *matchStr = gMatches.itemAt(i).string();
+        const char *matchStr = gMatches.itemAt(i).c_str();
         matched = isMatch(buffer, length, ueventData, matchStr);
         if (matched)
             break;

@@ -345,7 +345,7 @@ int32_t Dimension::set3DMode(const char* mode3d) {
     char is3DSupport[8] = {0}; //"1" means tv support 3d
 
     if (mLogLevel > LOG_LEVEL_1) {
-        ALOGI("set 3d mode :%s", String8(mode3d).string());
+        ALOGI("set 3d mode :%s", String8(mode3d).c_str());
     }
 
     pSysWrite->readSysfs(AV_HDMI_3D_SUPPORT, is3DSupport);
