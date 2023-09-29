@@ -89,6 +89,7 @@
         <service android:exported="true" android:name="com.droidlogic.ShutdownService" android:singleUser="true" />
         <service android:exported="true" android:name="com.droidlogic.NtpService" android:singleUser="true" />
         <service android:exported="true" android:name="com.droidlogic.NetflixService" android:singleUser="true" />
+        <service android:exported="true" android:name="com.droidlogic.hdmi.HdmiCecService" android:singleUser="true" />
         <service android:exported="true" android:name="com.droidlogic.EsmService" android:singleUser="true" />
         <service android:exported="true" android:name="com.droidlogic.DDRBandwidthService" android:singleUser="true" />
         <service android:exported="true" android:name="com.droidlogic.NetworkSwitchService" android:singleUser="true" />

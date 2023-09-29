@@ -37,6 +37,8 @@ import com.droidlogic.app.DroidLogicUtils;
 import com.droidlogic.app.PlayBackManager;
 import com.droidlogic.app.SystemControlManager;
 import com.droidlogic.app.UsbCameraManager;
+import com.droidlogic.hdmi.HdmiCecService;
+
 
 public class BootComplete extends BroadcastReceiver {
     private static final String TAG             = "BootComplete";
@@ -76,8 +78,9 @@ public class BootComplete extends BroadcastReceiver {
         if (context.getPackageManager().hasSystemFeature(NetflixService.FEATURE_SOFTWARE_NETFLIX)) {
             context.startService(new Intent(context, NetflixService.class));
         }
-
-
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_HDMI_CEC)) {
+            context.startService(new Intent(context, HdmiCecService.class));
+        }
         if (SystemProperties.get("sys.vendor.usb_otg.control").equals("enable")) {
             context.startService(new Intent(context, DeviceControlService.class));
         }

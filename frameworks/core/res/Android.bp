@@ -48,6 +48,7 @@ android_library {
         "vendor.amlogic.hardware.droidvold-V1.0-java",
         "vendor.amlogic.hardware.systemcontrol-V1.0-java",
         "vendor.amlogic.hardware.systemcontrol-V1.1-java",
+        "android.hardware.tv.hdmi.cec-V1-java",
     ],
 
 }
