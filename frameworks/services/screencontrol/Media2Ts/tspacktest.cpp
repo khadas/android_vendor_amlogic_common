@@ -22,16 +22,17 @@
 
 using namespace android;
 
-static const char *opt_str = "hf:b:t:s:";
+static const char *opt_str = "hc:f:b:t:s:";
 const char *filename = "/data/temp/video.ts";
 static void help(char *appName)
 {
     printf(
         "Usage:\n"
-        "  %s [-h] [-f <framerate>] [-b <bitrate>] [-t <type>] [-s <second>] [<left>  <top>  <right>  <bottom> <width> <height>]\n"
+        "  %s [-h] [-c <counter>] [-f <framerate>] [-b <bitrate>] [-t <type>] [-s <second>] [<left>  <top>  <right>  <bottom> <width> <height>]\n"
         "\n"
         "Parameters:\n"
         "  -h            : show this help\n"
+        "  -c <counter> : continually save file with counter, default as 1\n"
         "  -f <framerate>: frame per second, unit bps, default as 30\n"
         "  -b <bitrate>  : bits per second, unit bit, default as 4000000\n"
         "  -t <type>     : select video-only(%d) or video+osd(%d), default as video+osd\n"
@@ -57,10 +58,13 @@ int main(int argc, char **argv) {
     int outWidth=1280, outHeight=720;
     int tmpArgIdx = 0;
     int64_t mFirstPts = 0;
-
+    int counter = 1;
+    int framecount = 0;
+    char dump_path[128];
     while ((ch = getopt(argc, argv, opt_str)) != -1) {
         switch (ch) {
         case 'h': help(argv[0]); exit(0);
+        case 'c': counter = atoi(optarg); break;
         case 'f': framerate = atoi(optarg); break;
         case 'b': bitrate = atoi(optarg); break;
         case 't': type = atoi(optarg); break;
@@ -96,50 +100,59 @@ int main(int argc, char **argv) {
            "bitrate  =%d\n"
            "type     =%s\n"
            "time     =%ds\n"
-           "save as [%s]\n",
+           "counter     =%d\n",
            outWidth, outHeight,left, top,right,bottom, framerate, bitrate,
            type==AML_CAPTURE_OSD_VIDEO?"video+osd":type==AML_CAPTURE_VIDEO?"video only":"unknown",
-           timeSecond, filename);
+           timeSecond, counter);
+    for (int i = 0; i < counter; i++) {
+        framecount++;
+        mFirstPts = 0;
+        std::unique_ptr<TSPacker> tspacker = std::make_unique<TSPacker>();
+        auto parmeter = std::make_unique<ESConvertorParmeter>();
+        parmeter->size = std::make_unique<Size>(outWidth,outHeight);
+        parmeter->area = std::make_unique<Area>(left,top,right,bottom);
+        parmeter->source_type = type;
+        parmeter->frame_rate = framerate;
+        parmeter->bit_rate_ = bitrate;
 
-    std::unique_ptr<TSPacker> tspacker = std::make_unique<TSPacker>();
-    auto parmeter = std::make_unique<ESConvertorParmeter>();
-    parmeter->size = std::make_unique<Size>(outWidth,outHeight);
-    parmeter->area = std::make_unique<Area>(left,top,right,bottom);
-    parmeter->source_type = type;
-    parmeter->frame_rate = framerate;
-    parmeter->bit_rate_ = bitrate;
-
-    if (!tspacker->start(parmeter)) {
-        printf("the tspacker start fail!!\n");
-        return 0;
-    }
-    int32_t fd = open(filename, O_CREAT | O_RDWR, 0666);
-    if (fd <= 0 )
-        return 0;
-
-    while (1) {
-        uint8_t * buffer = nullptr;
-        int32_t size = 0;
-        int64_t pts = 0;
-        bool ret = tspacker->readBuffer(&buffer,&size,&pts);
-        if (!ret || !buffer || size <= 0 || pts <= 0) {
-            usleep(5 * 1000);//5ms
-            continue;
+        if (!tspacker->start(parmeter)) {
+            printf("the tspacker start fail!!\n");
+            return 0;
         }
-        if (mFirstPts == 0)
-            mFirstPts = pts;
-        int64_t diff = timeSecond * 1000 * 1000;
-        int64_t diffPts = pts - mFirstPts;
-        write(fd, buffer, size);
-        delete []buffer;
-        printf("[%s %d] video dump_size = %d,pts = %ld,diffPts=%ld\n", __FUNCTION__, __LINE__,size,pts,diffPts);
-        if (diffPts >= diff)
-            break;
+        memset (dump_path, 0, 128);
+        snprintf(dump_path, 128, "/data/temp/%dx%d-%d.ts",outWidth, outHeight, framecount);
+        printf("Try save:%s\n", dump_path);
+        int32_t fd = open(dump_path, O_CREAT | O_RDWR, 0666);
+        if (fd <= 0 )
+            return 0;
 
+        while (1) {
+            uint8_t * buffer = nullptr;
+            int32_t size = 0;
+            int64_t pts = 0;
+            bool ret = tspacker->readBuffer(&buffer,&size,&pts);
+            if (!ret || !buffer || size <= 0 || pts <= 0) {
+                usleep(5 * 1000);//5ms
+                continue;
+            }
+            if (mFirstPts == 0)
+                mFirstPts = pts;
+            int64_t diff = timeSecond * 1000 * 1000;
+            int64_t diffPts = pts - mFirstPts;
+            write(fd, buffer, size);
+            delete []buffer;
+            printf("[%s %d] video dump_size = %d,pts = %lld,diffPts=%lld\n", __FUNCTION__, __LINE__,size,pts,diffPts);
+            if (diffPts >= diff)
+                break;
+
+        }
+        tspacker->stop();
+        close(fd);
+        fd = -1;
+        printf("TSPackerTest stop count =%d \n",framecount);
     }
-    tspacker->stop();
-    close(fd);
-    fd = -1;
-    printf("TSPackerTest stop\n");
+
+
+    printf("TSPackerTest finish\n");
     return 0;
 }

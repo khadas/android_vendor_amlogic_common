@@ -159,7 +159,7 @@ int32_t ScreenControlService::startScreenCapBuffer(int32_t left, int32_t top, in
         gettimeofday(&timeNow, NULL);
         int64_t nowUs = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
         if ((nowUs - firsetNowUs) >= TIMEOUT_VAL) {
-            ALOGE("[%s %d] no data !!!! break,firsetNowUs=%ld,nowUs=%ld", __FUNCTION__, __LINE__,firsetNowUs,nowUs);
+            ALOGE("[%s %d] no data !!!! break,firsetNowUs=%lld,nowUs=%lld", __FUNCTION__, __LINE__,firsetNowUs,nowUs);
             return screen_catch->stop()?OK:!OK;
         }
         usleep(5 *1000);
@@ -217,7 +217,7 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
         write(fd, buffer, size);
         delete []buffer;
         video_dump_size += size;
-        ALOGI("[%s %d] video dump_size = %d,pts = %ld,diffPts=%ld\n", __FUNCTION__, __LINE__,size,pts,diffPts);
+        ALOGI("[%s %d] video dump_size = %d,pts = %lld,diffPts=%lld\n", __FUNCTION__, __LINE__,size,pts,diffPts);
         if (diffPts >= limitTimeSec * 1000 * 1000)
             break;
 

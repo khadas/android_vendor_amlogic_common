@@ -365,7 +365,7 @@ bool ScreenManager::realseBuffer(int32_t client_id, int32_t index) {
         ALOGE("realseBuffer failed: index %d", index);
         return false;
     }
-    ALOGI("[%s %d] client_id:%d,index:%d,pts:%ld", __FUNCTION__, __LINE__, client_id,index,(*outinfo)->tv_usec);
+    ALOGI("[%s %d] client_id:%d,index:%d,pts:%lld", __FUNCTION__, __LINE__, client_id,index,(*outinfo)->tv_usec);
     free((*outinfo)->canvas_buffer);
     mScreenDev->ops.release_buffer(mScreenDev, (long *)(*outinfo)->raw_buffer);
     mOutputRecordQueue.erase(outinfo);
@@ -387,7 +387,7 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
     gettimeofday(&timeNow, NULL);
     tv_usec = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
     output->tv_usec = tv_usec;
-    ALOGI("[%s %d] index:%d pts=%ld", __FUNCTION__, __LINE__,buffer->index,output->tv_usec);
+    ALOGI("[%s %d] index:%d pts=%lld", __FUNCTION__, __LINE__,buffer->index,output->tv_usec);
     output->raw_buffer = (uint8_t *)buffer->buffer_mem;
     long buff_info[3] = {0,0,0};
     buff_info[0] = kMetadataBufferTypeCanvasSource;

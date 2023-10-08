@@ -16,7 +16,9 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "TSPacker"
 #include <utils/Log.h>
+#include "./ScreenControlH264.h"
 #include "tspack.h"
+
 
 namespace android {
 
@@ -27,7 +29,9 @@ TSPacker::TSPacker() :
         mPATContinuityCounter(0),
         mPMTContinuityCounter(0),
         mVideoContinuityCounter(0),
-        mPrevTimeUs(-1){
+        mPrevTimeUs(-1),
+        mCSDbufferSize(0),
+        mCSDbuffer(nullptr){
     ALOGI("TSPacker construct\n");
     mVideoDescriptor = new uint8_t[6];
     mVideoDescriptor[0] = 40;  // descriptor_tag
@@ -54,6 +58,8 @@ TSPacker::~TSPacker() {
         delete []mVideoDescriptor;
     if (mHdrDescriptor)
         delete []mHdrDescriptor;
+    if (mCSDbuffer)
+        delete []mCSDbuffer;
 }
 
 bool TSPacker::start(std::unique_ptr<ESConvertorParmeter>& input) {
@@ -379,11 +385,30 @@ int32_t TSPacker::incrementContinuityCounter() {
 void TSPacker::onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts) {
     if (!data || size <= 0 || pts < 0 || frame_type < 0)
         return;
-    ALOGI("[%s %d] size=%d,frame_type=%d,pts=%ld", __FUNCTION__, __LINE__,size,frame_type,pts);
-
-    uint8_t *buffer = nullptr;
-    int32_t buffer_size = 0;
+    uint8_t *es_buffer = (uint8_t *)data;
+    uint8_t *ts_buffer = nullptr;
+    int32_t es_size = size;
+    int32_t ts_size = 0;
+    bool isIDR = false;
     struct timeval timeNow;
+    ALOGI("[%s %d] size=%d,frame_type=%d,pts=%lld", __FUNCTION__, __LINE__,size,frame_type,pts);
+    if (frame_type == AVC_TYPE_FRAME_TYPE_SPS) {
+        if (mCSDbuffer)
+                delete []mCSDbuffer;
+        mCSDbuffer = new uint8_t[size];
+        mCSDbufferSize = size;
+        memcpy(mCSDbuffer, data, size);
+        return;
+    }
+    if (frame_type == AVC_TYPE_FRAME_TYPE_IDR && mCSDbuffer && mCSDbufferSize > 0) {
+        VDLog("[%s %d] the csd buffer len = %d ", __FUNCTION__, __LINE__,mCSDbufferSize);
+        es_size = size + mCSDbufferSize;
+        es_buffer = new uint8_t[es_size];
+        memcpy(es_buffer,mCSDbuffer,mCSDbufferSize);
+        memcpy(es_buffer + mCSDbufferSize,data,size);
+        isIDR = true;
+    }
+
     gettimeofday(&timeNow, NULL);
     int64_t timeNow64 = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
     int32_t flags = 0;
@@ -393,10 +418,13 @@ void TSPacker::onEsBufferAvailable(void* const data, int32_t size, int32_t frame
         mPrevTimeUs = timeNow64;
         mFirstVideoFrame = false;
     }
-    packetize((const uint8_t *)data,size,&buffer,&buffer_size,pts,flags);
-    if (!buffer || buffer_size <= 0)
+    packetize(es_buffer,es_size,&ts_buffer,&ts_size,pts,flags);
+    if (isIDR)
+        delete []es_buffer;
+    es_buffer = nullptr;
+    if (!ts_buffer || ts_size <= 0)
         return;
-    std::unique_ptr<TSBufferInfo> output = std::make_unique<TSBufferInfo>(buffer,buffer_size,pts);
+    std::unique_ptr<TSBufferInfo> output = std::make_unique<TSBufferInfo>(ts_buffer,ts_size,pts);
     mOutputQueue.push_back(std::move(output));
 }
 

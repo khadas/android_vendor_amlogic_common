@@ -71,7 +71,7 @@ private:
     std::list<std::unique_ptr<InputData>> mPendingInputdQueue;
     std::list<std::unique_ptr<InputData>> mWorkingInputQueue;
     int32_t mWorkingFrameNum;
-    uint8_t* mCSDbuffer;
+    int32_t mCSDbufferSize;
     VideoEncoderWrapperCallback* mVideoEncoderWrapperCallback;
     AMediaFormat* mOutputFormat;
     std::condition_variable mCondition;

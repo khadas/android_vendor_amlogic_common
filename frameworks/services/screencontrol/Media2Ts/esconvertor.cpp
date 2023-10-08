@@ -84,11 +84,11 @@ bool ESConvertor::stop() {
         return false;
     }
     mStart = false;
-    mScreenManager->stop(mClientId);
     if (!mEncoder->stop()) {
         ALOGE("[%s %d] the mEncoder stop fail!", __FUNCTION__, __LINE__);
         return false;
     }
+    mScreenManager->stop(mClientId);
     mWorkingInfoQueue.clear();
     mESConvertorCallback = nullptr;
      ALOGI("[%s %d] stop done", __FUNCTION__, __LINE__);
@@ -114,7 +114,7 @@ void ESConvertor::PictureReady(const OutputRecord &output) {
 void ESConvertor::onInputBufferAvailable(int64_t pts) {
     if (pts <= 0 || !mStart)
         return;
-    ALOGI("onInputBufferAvailable pts =%ld",pts);
+    ALOGI("onInputBufferAvailable pts =%lld",pts);
     auto outinfo = std::find_if(mWorkingInfoQueue.begin(), mWorkingInfoQueue.end(),
                     [=](std::unique_ptr<BufferPtsInfo>& info) {
                         return info->pts == pts;
@@ -126,10 +126,10 @@ void ESConvertor::onInputBufferAvailable(int64_t pts) {
     mScreenManager->realseBuffer(mClientId,(*outinfo)->index);
 }
 void ESConvertor::onOutputBufferAvailable(void* const buffer, int32_t size, int32_t frame_type, int64_t pts) {
-    ALOGI("onOutputBufferAvailable frame_type=%d,pts =%ld,size=%d",frame_type,pts,size);
+    ALOGI("onOutputBufferAvailable frame_type=%d,pts =%lld,size=%d",frame_type,pts,size);
     if (mDumper)
         mDumper->dump((uint8_t*) buffer,size);
-    if (mESConvertorCallback && mStart)
+    if (mESConvertorCallback)
         mESConvertorCallback->onEsBufferAvailable(buffer, size, frame_type, pts);
 }
 
