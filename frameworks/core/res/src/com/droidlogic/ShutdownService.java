@@ -56,10 +56,11 @@ public class ShutdownService extends Service {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         mActivityManager = (ActivityManager) mContext.getSystemService (Context.ACTIVITY_SERVICE);
-        if (SystemProperties.get(BT_NAME_QCA, "null").indexOf("qca") != -1)
+        if (SystemProperties.get(BT_NAME_QCA, "null").indexOf("aml") != -1 ||
+            SystemProperties.get(BT_NAME_QCA, "null").indexOf("qca") != -1)
             qcabt = true;
 
-        Log.e(TAG, " Larson: QCA module = " + qcabt);
+        Log.e(TAG, " Larson: bt module = " + qcabt);
         if (qcabt) {
             IntentFilter shutdownFilter = new IntentFilter();
             shutdownFilter.addAction(Intent.ACTION_SHUTDOWN);
