@@ -13,10 +13,11 @@ Description:
 #define DTB_IMG        "dt.img"
 #define BOOT_IMG        "boot.img"
 #define RECOVERY_IMG    "recovery.img"
+#define VENDOR_BOOT_IMG "vendor_boot.img"
 #define BOOTLOADER_IMG  "bootloader.img"
 #define ARRAY_SIZE(x)   (int)(sizeof(x)/sizeof(x[0]))
 
-#define ANDROID_VERSION_T "33"
+#define ANDROID_VERSION_U "34"
 
 #define NORMALBOOT_NAME_SIZE   16
 #define NORMALBOOT_ARGS_SIZE   512

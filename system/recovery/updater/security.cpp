@@ -644,13 +644,13 @@ int RecoveryPreUpdate(const ZipArchiveHandle zipArchive){
 
     char *CurrentIndex = get_bootloader_env("forUpgrade_bootloaderIndex");
     if ((!CurrentIndex) || (!strcmp(CurrentIndex, "0"))) {
-        sprintf(bootdevice, "%s", "/dev/block/mmcblk0boot0");
+        sprintf(bootdevice, "%s", "/dev/block/by-name/mmcblk0boot0");
         sprintf(expectindex, "%s", "1");
     } else if (!strcmp(CurrentIndex, "1")) {
-        sprintf(bootdevice, "%s", "/dev/block/mmcblk0boot1");
+        sprintf(bootdevice, "%s", "/dev/block/by-name/mmcblk0boot1");
         sprintf(expectindex, "%s", "2");
     } else {
-        sprintf(bootdevice, "%s", "/dev/block/bootloader");
+        sprintf(bootdevice, "%s", "/dev/block/by-name/bootloader");
         sprintf(expectindex, "%s", "0");
     }
 
@@ -675,14 +675,56 @@ int RecoveryPreUpdate(const ZipArchiveHandle zipArchive){
         ImageWrite("/cache/recovery/recovery.img",  s_pImageBuffer, imageSize, 0);
     }
 
+    //update vendor_boot.img to cache
+    char *VendorbootFlag = get_bootloader_env("vendor_boot_mode");
+    ret = GetZipArchiveImage(zipArchive, VENDOR_BOOT_IMG, &imageSize);
+    if (ret > 0) {
+        printf("Find vendor_boot.img, start to update /cache/recovery/vendor_boot.img\n");
+        ImageWrite("/cache/recovery/vendor_boot.img",  s_pImageBuffer, imageSize, 0);
+        if ((!VendorbootFlag) || (strcmp(VendorbootFlag, "true") != 0))
+            set_bootloader_env("reboot_vendor_boot", "true");
+    }
+
     set_bootloader_env("reboot_status", "reboot_next");
     set_bootloader_env("expect_index", expectindex);
+    set_bootloader_env("upgrade_step", "3");
     sleep(2);
 
     if (android::base::GetBoolProperty("ro.boot.quiescent", false))
         property_set(ANDROID_RB_PROPERTY, "reboot,quiescent");
     else
         property_set(ANDROID_RB_PROPERTY, "reboot");
+
+    sleep(5);
+    return 0;
+}
+
+int BootloaderUpdate(const ZipArchiveHandle zipArchive) {
+    int ret = 0;
+    int imageSize = 0;
+
+    //update expect bootloader block device
+    ret = GetZipArchiveImage(zipArchive, BOOTLOADER_IMG, &imageSize);
+    if (ret > 0) {
+        printf("Find bootloader.img, start to update bootloader\n");
+        ImageWrite("/dev/block/bootloader", s_pImageBuffer, imageSize, 512);
+    }
+
+    //update recovery.img to cache
+    ret = GetZipArchiveImage(zipArchive, RECOVERY_IMG, &imageSize);
+    if (ret > 0) {
+        printf("Find recovery.img, start to update /cache/recovery/recovery.img\n");
+        ImageWrite("/cache/recovery/recovery.img",  s_pImageBuffer, imageSize, 0);
+    }
+
+    set_bootloader_env("upgrade_step", "3");
+    set_bootloader_env("recovery_from_flash", "defenv_reserv;saveenv;reset");
+    sleep(2);
+
+    if (android::base::GetBoolProperty("ro.boot.quiescent", false))
+        property_set(ANDROID_RB_PROPERTY, "reboot,recovery,quiescent");
+    else
+        property_set(ANDROID_RB_PROPERTY, "reboot,recovery");
 
     sleep(5);
     return 0;
@@ -717,9 +759,9 @@ int RecoverySecureCheck(const ZipArchiveHandle zipArchive)
 
     //if not android 9, need upgrade for two step
     std::string android_version = android::base::GetProperty("ro.build.version.sdk", "");
-    if (strcmp(ANDROID_VERSION_T, android_version.c_str())) {
+    if (strcmp(ANDROID_VERSION_U, android_version.c_str())) {
         printf("now upgrade from android %s to T\n", android_version.c_str());
-        flag_old_new = 1;
+        //flag_old_new = 1;
     }
 
     platformEncryptStatus = IsPlatformEncrypted();

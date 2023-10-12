@@ -21,6 +21,8 @@ typedef struct Dtb_Partition_s
 {
     char partition_name[16];
     unsigned int  partition_size;
+    unsigned int mask;
+    int offset_size;
 }Dtb_Partition_S;
 
 

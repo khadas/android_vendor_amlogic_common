@@ -72,9 +72,9 @@ Description:
 #define UNCRYPT_FILE "/cache/recovery/uncrypt_file"
 #define RECOVERY_BACKUP "/cache/recovery/recovery.img"
 #define UPDATE_TMP_FILE "/cache/update_tmp.zip"
-#define DEV_DATA                "/dev/block/data"
-#define DEV_EMMC                "/dev/block/mmcblk0"
-#define DEV_SUPER               "/dev/block/super"
+#define DEV_DATA                "/dev/block/by-name/data"
+#define DEV_EMMC                "/dev/block/by-name/mmcblk0"
+#define DEV_SUPER               "/dev/block/by-name/super"
 
 #define PATH_KEY_CDEV		  "/dev/unifykeys"
 #define PARAM_FIRMWARE         "/param/firmware.le"
@@ -253,7 +253,7 @@ int do_cache_sync(void) {
         fprintf(stderr, "umount cache failed\n");
     }
 
-    fd = open("/dev/block/cache", O_RDWR);
+    fd = open("/dev/block/by-name/cache", O_RDWR);
     if (fd < 0) {
         fprintf(stderr, "open /dev/block/cache failed \n");
         return -1;
@@ -270,7 +270,7 @@ int do_cache_sync(void) {
     fsync(fd);
     fclose(fp);
 
-    ret = mount("/dev/block/cache", "/cache", "ext4",\
+    ret = mount("/dev/block/by-name/cache", "/cache", "ext4",\
         MS_NOATIME | MS_NODEV | MS_NODIRATIME,"discard");
     if (ret < 0 ) {
         fprintf(stderr, "mount cache failed (%s)\n", strerror(errno));
@@ -303,7 +303,7 @@ static int backup_partition_data(const char *name,const char *dir, long offset) 
     if (!strcmp(name, "dtb")) {//dtb is char device
         sprintf(devpath, "/dev/%s", name);
     } else {
-        sprintf(devpath, "/dev/block/%s", name);
+        sprintf(devpath, "/dev/block/by-name/%s", name);
     }
 
     sprintf(dstpath, "%s%s.img", dir, name);
@@ -458,11 +458,11 @@ int block_write_data( const std::string& args, off_t offset) {
     if (fd < 0) {
         memset(devname, 0, sizeof(devname));
         // emmc user, boot0, boot1 partition
-        sprintf(devname, "/dev/block/%s", sEmmcPartitionName[sEmmcPartitionIndex]);
+        sprintf(devname, "/dev/block/by-name/%s", sEmmcPartitionName[sEmmcPartitionIndex]);
         fd = open(devname, O_RDWR);
         if (fd < 0) {
             memset(devname, 0, sizeof(devname));
-            sprintf(devname, "/dev/block/%s", tmp_name); //spi partition
+            sprintf(devname, "/dev/block/by-name/%s", tmp_name); //spi partition
             fd = open(devname, O_RDWR);
             if (fd < 0) {
                 printf("failed to open %s\n", devname);
@@ -549,7 +549,7 @@ Value* WriteBootloaderImageFn(const char* name, State* state, const std::vector<
     char emmcPartitionPath[128];
     for (i = BLK0BOOT0; i < ARRAY_SIZE(sEmmcPartitionName); i ++) {
         memset(emmcPartitionPath, 0, sizeof(emmcPartitionPath));
-        sprintf(emmcPartitionPath, "/dev/block/%s", sEmmcPartitionName[i]);
+        sprintf(emmcPartitionPath, "/dev/block/by-name/%s", sEmmcPartitionName[i]);
         if (!access(emmcPartitionPath, F_OK)) {
             sEmmcPartitionIndex = i;
             iRet = block_write_data(args[0]->data, _mmcblOffBytes);
@@ -672,6 +672,37 @@ void set_stage() {
     }
 }
 
+void backup_misc_command() {
+    struct bootloader_message boot {};
+    std::string err;
+
+    read_bootloader_message(&boot,  &err);
+
+    printf("boot.command: %s\n", boot.command);
+    printf("boot.recovery: %s\n", boot.recovery);
+
+    if (strstr(boot.recovery, "--update_package=")) {
+        char recovery_cmd[1024] = {0};
+        char *str = NULL;
+
+        strcpy(recovery_cmd, boot.recovery);
+        set_bootloader_env("boot_command", boot.command);
+        set_bootloader_env("boot_recovery", boot.recovery);
+
+        str = strtok(recovery_cmd, "\n");
+        for (; str != NULL; str = strtok(NULL, "\n")) {
+            if (strstr(str, "--update_package=")) {
+                std::string content = str;
+                printf("write to %s %s\n", COMMAND_FILE, content.c_str());
+                if (!android::base::WriteStringToFile(content, COMMAND_FILE)) {
+                    printf("failed to write %s\n", COMMAND_FILE);
+                }
+                break;
+            }
+        }
+    }
+}
+
 Value* OtaZipCheck(const char* name, State* state,
                            const std::vector<std::unique_ptr<Expr>>&argv) {
 
@@ -682,6 +713,8 @@ Value* OtaZipCheck(const char* name, State* state,
     int check_secure = 0;
     int check_dtb = 0;
     ZipArchiveHandle za = state->updater->GetPackageHandle();
+
+    backup_misc_command();
 
     printf("\n-- Secure Check...\n");
     char *check_result = get_bootloader_env("check_result");
@@ -882,6 +915,61 @@ Value* GetUpdateStage(const char* name, State* state, const std::vector<std::uni
     return StringValue(buff);
 }
 
+Value* SetUpdateState(const char* name, State* state, const std::vector<std::unique_ptr<Expr>>& argv) {
+
+    if (argv.size() != 2) {
+        return ErrorAbort(state, kArgsParsingFailure, "%s() expects 1 args, got %zu", name, argv.size());
+    }
+
+    std::vector<std::string> args;
+    if (!ReadArgs(state, argv, &args)) {
+        return ErrorAbort(state, kArgsParsingFailure, "%s() Failed to parse the argument(s)", name);
+    }
+
+    const std::string& file_path = args[0];
+
+    const std::string& value = args[1];
+
+    FILE *pf = fopen(file_path.c_str(), "w+");
+    if (pf == NULL) {
+        return ErrorAbort(state, kArgsParsingFailure, "fopen stage failed!\n");
+    }
+
+    int len = fwrite(value.c_str(), 1, strlen(value.c_str()), pf);
+    printf("%s write len:%d, %s\n", file_path.c_str(), len, value.c_str());
+    fflush(pf);
+    fclose(pf);
+
+    return StringValue("done");
+}
+
+Value* GetUpdateState(const char* name, State* state, const std::vector<std::unique_ptr<Expr>>& argv) {
+
+    if (argv.size() != 1) {
+        return ErrorAbort(state, kArgsParsingFailure, "%s() expects 0 args, got %zu", name, argv.size());
+    }
+
+    std::vector<std::string> args;
+    if (!ReadArgs(state, argv, &args)) {
+        return ErrorAbort(state, kArgsParsingFailure, "%s() Failed to parse the argument(s)", name);
+    }
+
+    char buff[128] = {0};
+
+    const std::string& file_path = args[0];
+
+    FILE *pf = fopen(file_path.c_str(), "r");
+    if (pf == NULL) {
+        return StringValue("0");
+    }
+
+    int len = fread(buff, 1, 128, pf);
+    printf("%s fread len:%d, %s\n", file_path.c_str(), len, buff);
+    fclose(pf);
+
+    return StringValue(buff);
+}
+
 Value* BackupEnvPartition(const char* name, State* state,
                            const std::vector<std::unique_ptr<Expr>>&argv) {
 
@@ -901,8 +989,8 @@ Value* BackupEnvPartition(const char* name, State* state,
     offset = offset/(1024*1024);
 
     sprintf(tmpbuf, "%s%d", "seek=", offset);
-    char *args2[7] = {(char *)"/sbin/busybox", (char *)"dd", (char *)"if=/dev/block/env",
-                                  (char *)"of=/dev/block/mmcblk0", (char *)"bs=1M"};
+    char *args2[7] = {(char *)"/sbin/busybox", (char *)"dd", (char *)"if=/dev/block/by-name/env",
+                                  (char *)"of=/dev/block/by-name/mmcblk0", (char *)"bs=1M"};
     args2[5] = &tmpbuf[0];
     args2[6] = nullptr;
     pid_t child = fork();
@@ -926,7 +1014,7 @@ Value* BackupEnvPartition(const char* name, State* state,
 }
 
 #define RESIZE2FS_INFO  "/cache/recovery/datainfo"
-#define  DATA_DEVICE      "/dev/block/data"
+#define  DATA_DEVICE      "/dev/block/by-name/data"
 #define  COPY_SIZE           (10*1024*1024)
 #define  RESERVED_SIZE           (50*1024*1024)
 
@@ -1157,7 +1245,7 @@ static int check_partition_data_resize(unsigned long long data_size,
     unsigned long long check_size) {
 
 
-    char *args2[4] = {(char *)"/sbin/resize2fs", (char *)"-P", (char *)"/dev/block/data"};
+    char *args2[4] = {(char *)"/sbin/resize2fs", (char *)"-P", (char *)"/dev/block/by-name/data"};
     args2[3] = nullptr;
     pid_t child = fork();
     if (child == 0) {
@@ -1440,7 +1528,7 @@ Value* BackupDataPartition(const char* name, State* state,
         return ErrorAbort(state, kArgsParsingFailure, "%s() expects 0 args, got %zu", name, argv.size());
     }
 
-    char *args2[4] = {(char *)"/sbin/resize2fs", (char *)"-fMp", (char *)"/dev/block/data"};
+    char *args2[4] = {(char *)"/sbin/resize2fs", (char *)"-fMp", (char *)"/dev/block/by-name/data"};
     args2[3] = nullptr;
     pid_t child = fork();
     if (child == 0) {
@@ -1484,7 +1572,7 @@ Value* RecoveryDataPartition(const char* name, State* state,
         ErrorAbort(state,kArgsParsingFailure, "recovery data partition failed!\n");
     }
 
-    char *args2[4] = {(char *)"/sbin/resize2fs", (char *)"-f", (char *)"/dev/block/data"};
+    char *args2[4] = {(char *)"/sbin/resize2fs", (char *)"-f", (char *)"/dev/block/by-name/data"};
     args2[3] = nullptr;
     pid_t child = fork();
     if (child == 0) {
@@ -1703,6 +1791,14 @@ Value* DeleteFileByName(const char* name, State* state, const std::vector<std::u
     }
 
     const std::string& file = args[0];
+
+    if (strcmp(file.c_str(), "/cache/recovery/vendor_boot.img") == 0) {
+        struct stat st2;
+        if (stat("/dev/block/vendor_boot", &st2) != 0) {
+            printf("/dev/block/vendor_boot not exist, return!\n");
+            return StringValue("done");
+        }
+    }
 
     struct stat st;
     if (stat(file.c_str(), &st) == 0) {
@@ -2098,7 +2194,7 @@ Value* WriteSuperEmpty(const char* name, State* state, const std::vector<std::un
         return nullptr;
     }
 
-    int fd = open("/dev/block/super", O_RDWR);
+    int fd = open("/dev/block/by-name/super", O_RDWR);
     if (fd < 0) {
         ErrorAbort(state, kFileOpenFailure, "open super partition failed\n");
         return nullptr;
@@ -2146,6 +2242,8 @@ void Register_libinstall_amlogic() {
     RegisterFunction("set_bootloader_env", SetBootloaderEnvFn);
     RegisterFunction("get_update_stage", GetUpdateStage);
     RegisterFunction("set_update_stage", SetUpdateStage);
+    RegisterFunction("get_update_state", GetUpdateState);
+    RegisterFunction("set_update_state", SetUpdateState);
     RegisterFunction("reboot", Reboot);
     RegisterFunction("reboot_recovery", RebootRecovery);
 

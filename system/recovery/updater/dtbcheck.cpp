@@ -28,21 +28,21 @@ extern "C" {
 
 
 #define MAX_DTB_SIZE   (512*1024)
-#define MAX_LEVEL	32		/* how deeply nested we will go */
+#define MAX_LEVEL   32      /* how deeply nested we will go */
 #define CONFIG_CMD_FDT_MAX_DUMP 64
 #define AML_DT_BUF_SIZE 64
 
-#define GZIP_DT_HEADER_MAGIC_HOST    0x00088b1f	       /*gzip header of dtb file*/
-#define GZIP_DT_HEADER_MAGIC_LINUX   0x08088b1f	/*gzip header of dtb file*/
-#define DT_HEADER_MAGIC		0xedfe0dd0	/*header of dtb file*/
-#define AML_DT_HEADER_MAGIC	0x5f4c4d41	/*"AML_", multi dtbs supported*/
+#define GZIP_DT_HEADER_MAGIC_HOST    0x00088b1f        /*gzip header of dtb file*/
+#define GZIP_DT_HEADER_MAGIC_LINUX   0x08088b1f /*gzip header of dtb file*/
+#define DT_HEADER_MAGIC     0xedfe0dd0  /*header of dtb file*/
+#define AML_DT_HEADER_MAGIC 0x5f4c4d41  /*"AML_", multi dtbs supported*/
 
-#define AML_DT_ID_VARI_TOTAL		3
-#define AML_DT_VERSION_OFFSET		4
-#define AML_DT_TOTAL_DTB_OFFSET		8
-#define AML_DT_FIRST_DTB_OFFSET		12
+#define AML_DT_ID_VARI_TOTAL        3
+#define AML_DT_VERSION_OFFSET       4
+#define AML_DT_TOTAL_DTB_OFFSET     8
+#define AML_DT_FIRST_DTB_OFFSET     12
 
-#define AML_DT_DTB_DT_INFO_OFFSET	0
+#define AML_DT_DTB_DT_INFO_OFFSET   0
 
 #define ENV_DTB            "aml_dt"
 #define CMDLINE            "/proc/cmdline"
@@ -53,6 +53,7 @@ extern "C" {
 
 extern int IsPlatformEncrypted(void);
 extern int IsPlatformEncryptedByIoctl(void);
+extern int BootloaderUpdate(const ZipArchiveHandle zipArchive);
 
 extern int DtbImgDecrypt(
         const char *imageName,
@@ -67,7 +68,7 @@ static Dtb_Partition_S dtb_zip[24];
 static Dtb_Partition_S dtb_dev[24];
 
 static int isEncrypted = 0;
-
+static int part_flag = 0;
 /****************************************************************************/
 
 
@@ -122,39 +123,39 @@ signed int GetDtbId (char *pdt) {
 
 static int
 is_printable_string(const void *data, int len){
-	const char *s = (char *)data;
+    const char *s = (char *)data;
 
-	/* zero length is not */
-	if (len == 0)
-		return 0;
+    /* zero length is not */
+    if (len == 0)
+        return 0;
 
-	/* must terminate with zero or '\n' */
-	if (s[len - 1] != '\0' && s[len - 1] != '\n')
-		return 0;
+    /* must terminate with zero or '\n' */
+    if (s[len - 1] != '\0' && s[len - 1] != '\n')
+        return 0;
 
-	/* printable or a null byte (concatenated strings) */
-	while (((*s == '\0') || isprint(*s) || isspace(*s)) && (len > 0)) {
-		/*
-		 * If we see a null, there are three possibilities:
-		 * 1) If len == 1, it is the end of the string, printable
-		 * 2) Next character also a null, not printable.
-		 * 3) Next character not a null, continue to check.
-		 */
-		if (s[0] == '\0') {
-			if (len == 1)
-				return 1;
-			if (s[1] == '\0')
-				return 0;
-		}
-		s++;
-		len--;
-	}
+    /* printable or a null byte (concatenated strings) */
+    while (((*s == '\0') || isprint(*s) || isspace(*s)) && (len > 0)) {
+        /*
+         * If we see a null, there are three possibilities:
+         * 1) If len == 1, it is the end of the string, printable
+         * 2) Next character also a null, not printable.
+         * 3) Next character not a null, continue to check.
+         */
+        if (s[0] == '\0') {
+            if (len == 1)
+                return 1;
+            if (s[1] == '\0')
+                return 0;
+        }
+        s++;
+        len--;
+    }
 
-	/* Not the null termination, or not done yet: not printable */
-	if (*s != '\0' || (len != 0))
-		return 0;
+    /* Not the null termination, or not done yet: not printable */
+    if (*s != '\0' || (len != 0))
+        return 0;
 
-	return 1;
+    return 1;
 }
 
 
@@ -166,136 +167,141 @@ is_printable_string(const void *data, int len){
  */
 static void print_data(const void *data, int len, int *index, int flag)
 {
-	int j;
+    int j;
 
-      char *pd = (char *)data;
+    char *pd = (char *)data;
 
-	/* no data, don't print */
-	if (len == 0)
-		return;
+    /* no data, don't print */
+    if (len == 0)
+        return;
+    /*
+     * It is a string, but it may have multiple strings (embedded '\0's).
+     */
+    if (is_printable_string(pd, len)) {
+        j = 0;
+        while (j < len) {
+            int len = strlen(pd) > 15 ? 15: strlen(pd);
+            if (flag == 0) {
+                strncpy(dtb_zip[*index].partition_name,  pd, len);
+            } else {
+                strncpy(dtb_dev[*index].partition_name,  pd, len);
+            }
+            part_flag = 1;
+            j += strlen(pd) + 1;
+            pd += strlen(pd) + 1;
+        }
+        return;
+    }
 
-	/*
-	 * It is a string, but it may have multiple strings (embedded '\0's).
-	 */
-	if (is_printable_string(pd, len)) {
-		j = 0;
-		while (j < len) {
-			int len = strlen(pd) > 15 ? 15: strlen(pd);
-			if (flag == 0) {
-				strncpy(dtb_zip[*index].partition_name,  pd, len);
-			} else {
-				strncpy(dtb_dev[*index].partition_name,  pd, len);
-			}
-			j += strlen(pd) + 1;
-			pd += strlen(pd) + 1;
-		}
-		return;
-	}
-
-	if ((len %4) == 0) {
-		if (len > CONFIG_CMD_FDT_MAX_DUMP)
-			;
-		else if (len == 8){
-			const __be32 *p;
-                    p = (__be32 *)pd;
-                    if (flag == 0)
-                    {
-                        dtb_zip[*index].partition_size = fdt32_to_cpu(p[1]) - fdt32_to_cpu(p[0]);
-                    }
-                    else
-                    {
-                        dtb_dev[*index].partition_size = fdt32_to_cpu(p[1]) - fdt32_to_cpu(p[0]);
-                    }
-                   (*index)++;
-		}
-	}
+    if ((len %4) == 0) {
+        if (len > CONFIG_CMD_FDT_MAX_DUMP)
+            ;
+        else if (len == 8){
+            const __be32 *p;
+            p = (__be32 *)pd;
+            if (flag == 0)
+                dtb_zip[*index].partition_size = fdt32_to_cpu(p[1]) - fdt32_to_cpu(p[0]);
+            else
+                dtb_dev[*index].partition_size = fdt32_to_cpu(p[1]) - fdt32_to_cpu(p[0]);
+        }
+        else if (len == 4 && part_flag == 1){
+            const __be32 *p;
+            p = (__be32 *)pd;
+            if (flag == 0)
+                dtb_zip[*index].mask = fdt32_to_cpu(p[0]);
+            else
+                dtb_dev[*index].mask = fdt32_to_cpu(p[0]);
+            (*index)++;
+            part_flag = 0;
+        }
+    }
 }
 
 
 int
 GetPartitionFromDtb(const char *pathp,  int depth, int *partition_num, int flag){
-	static char tabs[MAX_LEVEL+1] =
-		"\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"
-		"\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
-	const void *nodep;	/* property node pointer */
-	int  nodeoffset;	/* node offset from libfdt */
+    static char tabs[MAX_LEVEL+1] =
+        "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"
+        "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
+    const void *nodep;  /* property node pointer */
+    int  nodeoffset;    /* node offset from libfdt */
        int  index = 0;
-	int  nextoffset;	/* next node offset from libfdt */
-	uint32_t tag;		/* tag */
-	int  len;		/* length of the property */
-	int  level = 0;		/* keep track of nesting level */
-	const struct fdt_property *fdt_prop;
+    int  nextoffset;    /* next node offset from libfdt */
+    uint32_t tag;       /* tag */
+    int  len;       /* length of the property */
+    int  level = 0;     /* keep track of nesting level */
+    const struct fdt_property *fdt_prop;
 
-	nodeoffset = fdt_path_offset (working_fdt, pathp);
-	if (nodeoffset < 0) {
-		/*
-		 * Not found or something else bad happened.
-		 */
-		printf ("libfdt fdt_path_offset() returned %s\n",
-			fdt_strerror(nodeoffset));
-		return 1;
-	}
+    nodeoffset = fdt_path_offset (working_fdt, pathp);
+    if (nodeoffset < 0) {
+        /*
+         * Not found or something else bad happened.
+         */
+        printf ("libfdt fdt_path_offset() returned %s\n",
+            fdt_strerror(nodeoffset));
+        return 1;
+    }
 
 
-	/*
-	 * The user passed in a node path and no property,
-	 * print the node and all subnodes.
-	 */
-	while (level >= 0) {
-		tag = fdt_next_tag(working_fdt, nodeoffset, &nextoffset);
-		switch (tag) {
-		case FDT_BEGIN_NODE:
-			fdt_get_name(working_fdt, nodeoffset, NULL);
-			level++;
-			if (level >= MAX_LEVEL) {
-				printf("Nested too deep, aborting.\n");
-				return 1;
-			}
-			break;
-		case FDT_END_NODE:
-			level--;
-			if (level <= depth)
-				;
-			if (level == 0) {
-				level = -1;		/* exit the loop */
-			}
-			break;
-		case FDT_PROP:
-			fdt_prop = (struct fdt_property *)fdt_offset_ptr(working_fdt, nodeoffset,
-					sizeof(*fdt_prop));
-			fdt_string(working_fdt,
-					fdt32_to_cpu(fdt_prop->nameoff));
-			len      = fdt32_to_cpu(fdt_prop->len);
-			nodep    = fdt_prop->data;
-			if (len < 0) {
-				printf ("libfdt fdt_getprop(): %s\n",
-					fdt_strerror(len));
-				return 1;
-			} else if (len == 0) {
-				/* the property has no value */
-				if (level <= depth)
-					;
-			} else {
-				if (level <= depth) {
-					print_data (nodep, len, &index, flag);
-				}
-			}
-			break;
-		case FDT_NOP:
-			printf("%s/* NOP */\n", &tabs[MAX_LEVEL - level]);
-			break;
-		case FDT_END:
-			return 1;
-		default:
-			if (level <= depth)
-				printf("Unknown tag 0x%08X\n", tag);
-			return 1;
-		}
-		nodeoffset = nextoffset;
-	}
+    /*
+     * The user passed in a node path and no property,
+     * print the node and all subnodes.
+     */
+    while (level >= 0) {
+        tag = fdt_next_tag(working_fdt, nodeoffset, &nextoffset);
+        switch (tag) {
+        case FDT_BEGIN_NODE:
+            fdt_get_name(working_fdt, nodeoffset, NULL);
+            level++;
+            if (level >= MAX_LEVEL) {
+                printf("Nested too deep, aborting.\n");
+                return 1;
+            }
+            break;
+        case FDT_END_NODE:
+            level--;
+            if (level <= depth)
+                ;
+            if (level == 0) {
+                level = -1;     /* exit the loop */
+            }
+            break;
+        case FDT_PROP:
+            fdt_prop = (struct fdt_property *)fdt_offset_ptr(working_fdt, nodeoffset,
+                    sizeof(*fdt_prop));
+            fdt_string(working_fdt,
+                    fdt32_to_cpu(fdt_prop->nameoff));
+            len      = fdt32_to_cpu(fdt_prop->len);
+            nodep    = fdt_prop->data;
+            if (len < 0) {
+                printf ("libfdt fdt_getprop(): %s\n",
+                    fdt_strerror(len));
+                return 1;
+            } else if (len == 0) {
+                /* the property has no value */
+                if (level <= depth)
+                    ;
+            } else {
+                if (level <= depth) {
+                    print_data (nodep, len, &index, flag);
+                }
+            }
+            break;
+        case FDT_NOP:
+            printf("%s/* NOP */\n", &tabs[MAX_LEVEL - level]);
+            break;
+        case FDT_END:
+            return 1;
+        default:
+            if (level <= depth)
+                printf("Unknown tag 0x%08X\n", tag);
+            return 1;
+        }
+        nodeoffset = nextoffset;
+    }
 
       *partition_num = index;
-	return 0;
+    return 0;
 }
 
 int DecompressGzipDtb(const unsigned char *src, const int srcLen, unsigned char *dst, int dstLen){
@@ -386,6 +392,11 @@ GetMultiDtbEntry(unsigned char *fdt_addr, unsigned char *dtbTmpBuffer, int *plen
         }
 
         printf("  aml_dt soc: %s platform: %s variant: %s\n", tokens[0], tokens[1], tokens[2]);
+        if (!tokens[0] || !tokens[1] || !tokens[2]) {
+            printf("update from single dtb to multi dtb\n");
+            *plen = -1;
+            return fdt_addr;
+        }
 
         /*match and print result*/
         char **dt_info;
@@ -456,7 +467,7 @@ GetMultiDtbEntry(unsigned char *fdt_addr, unsigned char *dtbTmpBuffer, int *plen
             *plen = STRTOU32(fdt_addr + AML_DT_FIRST_DTB_OFFSET + \
                 dtb_match_num * aml_dtb_header_size + aml_dtb_offset_offset+4);
             return fdt_addr + STRTOU32(fdt_addr + AML_DT_FIRST_DTB_OFFSET + \
-			dtb_match_num * aml_dtb_header_size + aml_dtb_offset_offset);
+            dtb_match_num * aml_dtb_header_size + aml_dtb_offset_offset);
         } else {
             printf("      Not match any dtb.\n");
             return NULL;
@@ -541,6 +552,9 @@ GetZipDtbImage(const ZipArchiveHandle za, const char *imageName, int *imageSize)
         free(buffer);
         free(dtbTmpBuffer);
         return -1;
+    }
+    if (len == -1) {
+        BootloaderUpdate(za);
     }
 
     if (s_pDtbBuffer != NULL) {
@@ -697,7 +711,7 @@ END:
 
 int
 RecoveryDtbCheck(const ZipArchiveHandle za){
-    int i = 0, ret = -1;
+    int i = 0, j = 0, ret = -1;
     int partition_num_zip = 0;
     int partition_num_dev = 0;
     int imageSize = 0;
@@ -706,13 +720,19 @@ RecoveryDtbCheck(const ZipArchiveHandle za){
     int tee_dev = 0, tee_zip = 0;
     int recovery_offset_dev = 0, recovery_offset_zip = 0;
     int tee_offset_dev = 0, tee_offset_zip = 0;
+    int oem_offset_dev = 0, oem_offset_zip = 0;
+    int oem_dev = 0, oem_zip = 0;
     int data_offset_dev = 0, data_offset_zip = 0;
     int partition_num;
     int cache_offset_dev = 0, cache_offset_zip = 0;
     int recovery_size_dev = 0, recovery_size_zip = 0;
     int cache_size_dev = 0, cache_size_zip = 0;
     int tee_size_dev = 0, tee_size_zip = 0;
+    int oem_size_dev = 0, oem_size_zip = 0;
     bool dynamic_flag = false;
+    int metadata_dev = 0, metadata_zip = 0;
+    int metadata_offset_dev = 0, metadata_offset_zip = 0;
+    int metadata_size_dev = 0, metadata_size_zip = 0;
 
     //if not android R, need upgrade for two step
     std::string android_version = android::base::GetProperty("ro.build.version.sdk", "");
@@ -763,9 +783,9 @@ RecoveryDtbCheck(const ZipArchiveHandle za){
         goto END;
     }
 
-    if (strcmp(ANDROID_VERSION_T, android_version.c_str())) {
+    if (strcmp(ANDROID_VERSION_U, android_version.c_str())) {
         printf("now upgrade from android %s to T\n", android_version.c_str());
-        ret = DTB_TWO_STEP;
+        //ret = DTB_TWO_STEP;
     }
 
     partition_num = partition_num_zip > partition_num_dev ? partition_num_zip : partition_num_dev;
@@ -819,6 +839,24 @@ RecoveryDtbCheck(const ZipArchiveHandle za){
             tee_size_zip = dtb_zip[i].partition_size;
         }
 
+        if (!strcmp("oem", dtb_dev[i].partition_name)) {
+            oem_dev = i;
+            oem_size_dev = dtb_dev[i].partition_size;
+        }
+        if (!strcmp("oem", dtb_zip[i].partition_name)) {
+            oem_zip = i;
+            oem_size_zip = dtb_zip[i].partition_size;
+        }
+
+        if (!strcmp("metadata", dtb_dev[i].partition_name)) {
+            metadata_dev = i;
+            metadata_size_dev = dtb_dev[i].partition_size;
+        }
+        if (!strcmp("metadata", dtb_zip[i].partition_name)) {
+            metadata_zip = i;
+            metadata_size_zip = dtb_zip[i].partition_size;
+        }
+
         if (!strcmp("cache", dtb_dev[i].partition_name)) {
             cache_size_dev = dtb_dev[i].partition_size;
         }
@@ -842,19 +880,54 @@ RecoveryDtbCheck(const ZipArchiveHandle za){
     }
     for (i=0;i<data_dev;i++) {
         data_offset_dev += dtb_dev[i].partition_size;
-        data_offset_dev += 8388608;
+        if ((dtb_dev[i].mask & 0x100) != 0)
+            data_offset_dev += 1048576;
+        else
+            data_offset_dev += 8388608;
     }
     for (i=0;i<data_zip;i++) {
         data_offset_zip += dtb_zip[i].partition_size;
-        data_offset_zip += 8388608;
+        if ((dtb_zip[i].mask & 0x100) != 0)
+            data_offset_zip += 1048576;
+        else
+            data_offset_zip += 8388608;
+    }
+    for (i=0;i<oem_dev;i++) {
+        oem_offset_dev += dtb_dev[i].partition_size;
+        if ((dtb_dev[i].mask & 0x100) != 0)
+            oem_offset_dev += 1048576;
+        else
+            oem_offset_dev += 8388608;
+    }
+    for (i=0;i<oem_zip;i++) {
+        oem_offset_zip += dtb_zip[i].partition_size;
+        if ((dtb_zip[i].mask & 0x100) != 0)
+            oem_offset_zip += 1048576;
+        else
+            oem_offset_zip += 8388608;
     }
     for (i=0;i<tee_dev;i++) {
         tee_offset_dev += dtb_dev[i].partition_size;
-        tee_offset_dev += 8388608;
+        if ((dtb_dev[i].mask & 0x100) != 0)
+            tee_offset_dev += 1048576;
+        else
+            tee_offset_dev += 8388608;
     }
     for (i=0;i<tee_zip;i++) {
         tee_offset_zip += dtb_zip[i].partition_size;
-        tee_offset_zip += 8388608;
+        if ((dtb_zip[i].mask & 0x100) != 0)
+            tee_offset_zip += 1048576;
+        else
+            tee_offset_zip += 8388608;
+    }
+
+    for (i=0;i<metadata_dev;i++) {
+        metadata_offset_dev += dtb_dev[i].partition_size;
+        metadata_offset_dev += 8388608;
+    }
+    for (i=0;i<metadata_zip;i++) {
+        metadata_offset_zip += dtb_zip[i].partition_size;
+        metadata_offset_zip += 8388608;
     }
 
     for (i=0;i<2;i++) {
@@ -866,8 +939,12 @@ RecoveryDtbCheck(const ZipArchiveHandle za){
     printf("recovery_zip: %d  recovery_offset_zip :0x%08x\n", recovery_zip, recovery_offset_zip);
     printf("data_dev: %d  data_offset_dev :0x%08x\n", data_dev, data_offset_dev);
     printf("data_zip: %d  data_offset_zip :0x%08x\n", data_zip, data_offset_zip);
+    printf("oem_dev: %d  oem_offset_dev :0x%08x\n", oem_dev, oem_offset_dev);
+    printf("oem_zip: %d  oem_offset_zip :0x%08x\n", oem_zip, oem_offset_zip);
     printf("tee_offset_dev: %d  tee_size_dev :0x%08x\n", tee_offset_dev, tee_size_dev);
     printf("tee_offset_zip: %d  tee_size_zip :0x%08x\n", tee_offset_zip, tee_size_zip);
+    printf("metadata_offset_dev: %d  metadata_size_dev :0x%08x\n", metadata_offset_dev, metadata_size_dev);
+    printf("metadata_offset_zip: %d  metadata_size_zip :0x%08x\n", metadata_offset_zip, metadata_size_zip);
     printf("cache_offset_dev :0x%08x, cache_size_dev: %d\n", cache_offset_dev, cache_size_dev);
     printf("cache_offset_zip :0x%08x, cache_size_zip: %d\n", cache_offset_zip, cache_size_zip);
 
@@ -879,6 +956,23 @@ RecoveryDtbCheck(const ZipArchiveHandle za){
     if ((tee_offset_dev != tee_offset_zip) || (tee_size_dev != tee_size_zip)) {
         printf("tee changed, can not upgrade!\n ");
         ret = DTB_ERROR;
+    }
+
+    if ((oem_offset_dev != oem_offset_zip) || (oem_size_dev != oem_size_zip)) {
+        printf("oem changed, can not upgrade!\n ");
+        ret = DTB_ERROR;
+    }
+
+    if ((metadata_offset_dev != metadata_offset_zip) || (metadata_size_dev != metadata_size_zip)) {
+        printf("metadata changed, need erase it!\n ");
+        FILE *pf = fopen("/cache/recovery/state", "w+");
+        if (pf != NULL) {
+            printf("write /cache/recovery/state \n\n");
+            int len = fwrite("3", 1, strlen("3"), pf);
+            printf("stage write len:%d, 3\n", len);
+            fflush(pf);
+            fclose(pf);
+        }
     }
 
     if ((recovery_offset_dev != recovery_offset_zip) || (recovery_size_dev != recovery_size_zip)) {
