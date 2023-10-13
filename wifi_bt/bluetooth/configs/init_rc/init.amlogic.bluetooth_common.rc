@@ -11,8 +11,6 @@ on property:vendor.sys.amlbtsdiodriver=true
 on property:vendor.sys.amlbtsdiodriver=false
     start unloadamlbtsdio
 
-on boot
-    insmod /vendor/lib/modules/wifi_comm.ko
 
 on property:persist.vendor.bt_module=rtk_btusb
     insmod /vendor/lib/modules/rtk_btusb.ko
