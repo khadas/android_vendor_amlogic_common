@@ -15,6 +15,11 @@ apex_key {
     private_key: "com.amlogic.mediaextractor.pem",
 }
 
+android_app_certificate {
+    name: "com.amlogic.mediaextractor.certificate",
+    certificate: "com.amlogic.mediaextractor",
+}
+
 prebuilt_etc {
     name: "com.amlogic.mediaextractor-ld.config.txt",
     src: "ld.config.txt",
@@ -30,21 +35,18 @@ linker_config {
 
 apex {
     name: "com.amlogic.mediaextractor",
-    manifest: "apex_manifest.json",
+    manifest: "manifest.json",
     compile_multilib: "both",
     prebuilts: [
         "com.amlogic.mediaextractor-ld.config.txt",
         "mediaextractor-linker-config",
     ],
     key: "com.amlogic.mediaextractor.key",
-    //file_contexts: "com.amlogic.mediaextractor-file_contexts",
-    //use_vndk_as_stable: true,
+    certificate: ":com.amlogic.mediaextractor.certificate",
     native_shared_libs: [
         "libamextractor",
         "libamffmpegadapter",
         "libamffmpeg",
-        //"libamstagefright_foundation",
     ],
-    //vendor: true,
     updatable: false,
 }
