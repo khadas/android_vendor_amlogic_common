@@ -19,6 +19,10 @@
 /provision
 /hdcp
 /broadcom
+/ASPlayer
+/adla_lib
+/prebuilt/libmedia
+/wifi_bt/bluetooth/amlogic
 /external/DTVKit/android-inputsource
 /external/DTVKit/cas_hal
 /external/DTVKit/releaseDTVKit
