@@ -3145,7 +3145,7 @@ int CPQControl::DBGammaBlend(tcon_gamma_table_t *wb_gamma, GAMMA_TABLE *index_ga
             SYS_LOGD("%s, blend_bet = %d\n", __FUNCTION__, blend_bet);
             continue;
         }
-        final_value = wb_gamma->data[blend_alp] + (wb_gamma->data[blend_alp + 1] - wb_gamma->data[blend_alp]) * (blend_bet / 1000);
+        final_value = wb_gamma->data[blend_alp] + (wb_gamma->data[blend_alp + 1] - wb_gamma->data[blend_alp]) * blend_bet / 1000;
         target_gamma->data[i] = (unsigned short)final_value;
         //SYS_LOGD("%s, target_gamma->data[%d] = %d\n", __FUNCTION__, i, target_gamma->data[i]);
     }
