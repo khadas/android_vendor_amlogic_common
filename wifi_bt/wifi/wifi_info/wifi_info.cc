@@ -28,7 +28,7 @@ char mtk7663u_base[] = "/vendor/lib/modules/wlan_mt7663_usb_prealloc.ko#";
 char mtk760_base[] = "/vendor/lib/modules/mtprealloc.ko#";
 char ssv6051_base[] = "/vendor/lib/modules/ssv6051.ko#stacfgpath=/vendor/etc/wifi/ssv6051/ssv6051-wifi.cfg#/vendor/lib/modules/ssv6x5x.ko#tu_stacfgpath=/vendor/etc/wifi/ssv6x5x/ssv6x5x-wifi.cfg#";
 char qca6391_base[] = "/vendor/lib/modules/wlan_cnss_core_pcie_6391.ko# #/vendor/lib/modules/wlan_resident_6391.ko#";
-char rtl8852be_base[] = "/vendor/lib/modules/rtl8852be_rtkm.ko#";
+char rtl8852be_base[] = "/vendor/lib/modules/rtkm.ko#";
 char aml_w1_base[] = "/vendor/lib/modules/aml_sdio.ko#";
 char aml_w1u_base[] = "/vendor/lib/modules/aml_com.ko#hif_type=USB#";
 char aml_w1u_s_base[] = "/vendor/lib/modules/aml_com.ko#hif_type=SDIO#";
