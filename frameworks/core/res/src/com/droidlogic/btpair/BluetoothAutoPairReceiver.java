@@ -108,7 +108,8 @@ public class BluetoothAutoPairReceiver extends BroadcastReceiver {
 
         for (final BluetoothDevice device : bondedDevices) {
             final String deviceAddress = device.getAddress();
-            Log.i(TAG, "device: "+ device.getName());
+            String deviceName = device.getName() != null ?  device.getName().replaceAll("[ *@#$%^&-]", "") : "null";
+            Log.i(TAG, "device: "+ deviceName);
             if (TextUtils.isEmpty(deviceAddress)) {
                 Log.w(TAG, "Skipping mysteriously empty bluetooth device");
                 continue;
@@ -116,7 +117,7 @@ public class BluetoothAutoPairReceiver extends BroadcastReceiver {
 
             //No need to show bt pairing screen if there is default bt remote paired.
             BluetoothClass btClass = device.getBluetoothClass();
-            if ( remote_type.contains(device.getName()) &&
+            if ( remote_type.contains(deviceName) &&
                         btClass != null &&
                         btClass.getMajorDeviceClass() == BluetoothClass.Device.Major.PERIPHERAL)
                 return false;

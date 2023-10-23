@@ -790,7 +790,8 @@ public class DialogBluetoothService extends Service {
         Log.w(TAG, "remote_type:" + remote_type);
         for (final BluetoothDevice device : bondedDevices) {
             final String deviceAddress = device.getAddress();
-            Log.i(TAG, "device: "+ device.getName());
+            String deviceName = device.getName() != null ?  device.getName().replaceAll("[ *@#$%^&-]", "") : "null";
+            Log.i(TAG, "device: "+ deviceName);
             if (TextUtils.isEmpty(deviceAddress)) {
                 Log.w(TAG, "Skipping mysteriously empty bluetooth device");
                 continue;
@@ -800,7 +801,7 @@ public class DialogBluetoothService extends Service {
             // boolean connected = device.isConnected();
             BluetoothClass btClass = device.getBluetoothClass();
             if (btClass != null && btClass.getMajorDeviceClass() == BluetoothClass.Device.Major.PERIPHERAL
-                                && remote_type.contains(device.getName()))
+                                && remote_type.contains(deviceName))
                 return true;
         }
         return false;
@@ -809,9 +810,10 @@ public class DialogBluetoothService extends Service {
     private int getBtUnpairBehavior(String device_name) {
         /*Once the default remote support BT, we we need to show pairint instrument
         once there isn't any default bt paired.*/
+        String deviceName = device_name != null ?  device_name.replaceAll("[ *@#$%^&-]", "") : "null";
         String remote_type = SystemProperties.get("sys.vendor.remote.type", DEFAULT_REMOTE_TYPE);
         if (remote_type.contains("BT")) {
-            if (remote_type.contains(device_name))
+            if (remote_type.contains(deviceName))
                 return UNPAIR_SHOW_INSTRUMENT;
             }
             return UNPAIR_RESET_BUTTON_TRIGGER;
