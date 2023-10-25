@@ -2,7 +2,7 @@ define to-root-path
 $(strip $(patsubst %/,%,$(shell echo\
  $(shell bash -c "\
  cd $(1);\
- while [[ ( ! ( -d device/amlogic/common ) ) && ( \`pwd\` != "/" ) ]]; do\
+ while [[ ( ! ( -f build/core/envsetup.mk ) ) && ( \`pwd\` != "/" ) ]]; do\
   cd ..;\
   echo \"../\";\
  done;"\
@@ -11,7 +11,7 @@ $(strip $(patsubst %/,%,$(shell echo\
 endef
 
 ####################################################################################
-DRIVER_DIR ?= common14-5.15/driver_modules/wifi_bt/wifi
+DRIVER_DIR ?= common/driver_modules/wifi_bt/wifi
 ANDROID_ROOT_DIR     ?= $(shell cd $(call to-root-path,.) && pwd)
 KERNEL_TO_ROOT_PATH  ?= $(call to-root-path,$(KERNEL_SRC))
 WIFI_SUPPORT_DRIVERS ?= $(EXTRA_WIFI_SUPPORT_DRIVERS)

@@ -2,7 +2,7 @@ define to-root-path
 $(strip $(patsubst %/,%,$(shell echo\
  $(shell bash -c "\
  cd $(1);\
- while [[ ( ! ( -d device/amlogic/common ) ) && ( \`pwd\` != "/" ) ]]; do\
+ while [[ ( ! ( -f build/core/envsetup.mk) ) && ( \`pwd\` != "/" ) ]]; do\
   cd ..;\
   echo \"../\";\
  done;"\
@@ -11,7 +11,7 @@ $(strip $(patsubst %/,%,$(shell echo\
 endef
 
 ####################################################################################
-DRIVER_DIR ?= vendor/wifi_driver
+DRIVER_DIR ?= common/driver_modules/wifi_bt/wifi
 ANDROID_ROOT_DIR     ?= $(shell cd $(call to-root-path,.) && pwd)
 KERNEL_TO_ROOT_PATH  ?= $(call to-root-path,$(KERNEL_SRC))
 WIFI_SUPPORT_DRIVERS ?= $(EXTRA_WIFI_SUPPORT_DRIVERS)
@@ -20,10 +20,10 @@ WIFI_SUPPORT_DRIVERS ?= $(EXTRA_WIFI_SUPPORT_DRIVERS)
 WIFI_SUPPORT_DRIVERS += dhd_sdio
 dhd_sdio_build ?= true
 dhd_sdio_modules ?= ap6181 ap6335 ap6234 ap6255 ap6256 ap6271 ap6212 ap6354 ap6356 ap6398s ap6275s bcm43751_s bcm43458_s bcm4358_s
-dhd_sdio_src_path ?= $(DRIVER_DIR)/broadcom/ap6xxx/bcmdhd.101.10.361.x
+dhd_sdio_src_path ?= $(DRIVER_DIR)/broadcom/ap6xxx/bcmdhd.101.10.591.x
 dhd_sdio_copy_path ?= $(OUT_DIR)/$(KERNEL_TO_ROOT_PATH)/$(strip $(dhd_sdio_src_path))/dhd_sdio
 dhd_sdio_build_path ?=
-dhd_sdio_args ?= CONFIG_BCMDHD_SDIO=y
+dhd_sdio_args ?= CONFIG_BCMDHD_SDIO=y CONFIG_ANDROID_14=y
 ifeq ($(dhd_sdio_build),true)
 WIFI_BUILT_MODULES += $(dhd_sdio_modules)
 endif
@@ -31,10 +31,10 @@ endif
 WIFI_SUPPORT_DRIVERS += dhd_usb
 dhd_usb_build ?= true
 dhd_usb_modules ?= ap6269 ap62x8
-dhd_usb_src_path ?= $(DRIVER_DIR)/broadcom/ap6xxx/bcmdhd.101.10.361.x
+dhd_usb_src_path ?= $(DRIVER_DIR)/broadcom/ap6xxx/bcmdhd.101.10.591.x
 dhd_usb_copy_path ?= $(OUT_DIR)/$(KERNEL_TO_ROOT_PATH)/$(strip $(dhd_usb_src_path))/dhd_usb
 dhd_usb_build_path ?=
-dhd_usb_args ?= CONFIG_BCMDHD_USB=y
+dhd_usb_args ?= CONFIG_BCMDHD_USB=y CONFIG_ANDROID_14=y
 ifeq ($(dhd_usb_build),true)
 WIFI_BUILT_MODULES += $(dhd_usb_modules)
 endif
@@ -42,10 +42,10 @@ endif
 WIFI_SUPPORT_DRIVERS += dhd_pcie
 dhd_pcie_build ?= true
 dhd_pcie_modules ?= ap6275p ap6275hh3
-dhd_pcie_src_path ?= $(DRIVER_DIR)/broadcom/ap6xxx/bcmdhd.101.10.361.x
+dhd_pcie_src_path ?= $(DRIVER_DIR)/broadcom/ap6xxx/bcmdhd.101.10.591.x
 dhd_pcie_copy_path ?= $(OUT_DIR)/$(KERNEL_TO_ROOT_PATH)/$(strip $(dhd_pcie_src_path))/dhd_pcie
 dhd_pcie_build_path ?=
-dhd_pcie_args ?= CONFIG_BCMDHD_PCIE=y
+dhd_pcie_args ?= CONFIG_BCMDHD_PCIE=y CONFIG_ANDROID_14=y
 ifeq ($(dhd_pcie_build),true)
 WIFI_BUILT_MODULES += $(dhd_pcie_modules)
 endif
