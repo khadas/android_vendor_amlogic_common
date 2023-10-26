@@ -28,7 +28,7 @@
 
 using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControl;
 using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControlCallback;
-using ::vendor::amlogic::hardware::screencontrol::V1_0::Result;
+
 using ::android::hardware::Return;
 using ::android::hardware::hidl_memory;
 

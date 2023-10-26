@@ -19,6 +19,7 @@
 
 #include <OMX_Video.h>
 #include <media/stagefright/MediaCodecConstants.h>
+#include <media/NdkMediaFormat.h>
 #include "ScreenControlH264.h"
 #include "ulit.h"
 #include "VideoEncoderWrapper.h"
@@ -166,6 +167,7 @@ bool VideoEncoderWrapper::EnqueueInput(std::unique_ptr<InputData>& input) {
     return true;
 }
 bool VideoEncoderWrapper::stop() {
+    ALOGI("[%s %d] begin ", __FUNCTION__, __LINE__);
     std::unique_lock<std::mutex> lock(mLock);
     if (!mStart) {
         ALOGE("[%s %d] the ScreenCatch has been started !", __FUNCTION__, __LINE__);
@@ -194,26 +196,27 @@ bool VideoEncoderWrapper::stop() {
 }
 void VideoEncoderWrapper::threadVideoFunc() {
     while (1) {
-        std::lock_guard<std::mutex> lock(mLock);
-        if (!mStart) {
-            mCondition.notify_one();
-            break;
-        }
-        onDequeueInputWork();
-        if (!mPendingInputdQueue.empty() && !mInputBufferIds.empty()) {
-            auto input = mPendingInputdQueue.begin();
-            if (EnqueueInput(*input)) {
-                mPendingInputdQueue.pop_front();
+        {
+            std::lock_guard<std::mutex> lock(mLock);
+            if (!mStart) {
+                mCondition.notify_one();
+                break;
             }
+            onDequeueInputWork();
+            if (!mPendingInputdQueue.empty() && !mInputBufferIds.empty()) {
+                auto input = mPendingInputdQueue.begin();
+                if (EnqueueInput(*input)) {
+                    mPendingInputdQueue.pop_front();
+                }
 
+            }
+            // the first output buffer is CSD buffer,
+            // and it get the output buffer from encoder when
+            // the encoder has input buffer
+            if (mCSDbufferSize <= 0 || mWorkingFrameNum > 0) {
+                onDequeueOutputWork();
+            }
         }
-        // the first output buffer is CSD buffer,
-        // and it get the output buffer from encoder when
-        // the encoder has input buffer
-        if (mCSDbufferSize <= 0 || mWorkingFrameNum > 0) {
-            onDequeueOutputWork();
-        }
-
         usleep(5*1000);//5ms
     }
     ALOGI("[%s %d]  video thread out", __FUNCTION__, __LINE__);
@@ -274,8 +277,30 @@ void VideoEncoderWrapper::onDequeueOutputWork() {
                 __FUNCTION__, __LINE__,index,outInfo.size,outInfo.presentationTimeUs,outInfo.flags);
         if (outInfo.flags & AMEDIACODEC_BUFFER_FLAG_CODEC_CONFIG) {
             mCSDbufferSize = outInfo.size;
-        }else
-            mWorkingFrameNum --;
+            AMediaFormat* format_temp = AMediaCodec_getOutputFormat(mEncoder);
+            const char* string_temp = AMediaFormat_toString(format_temp);
+            ALOGD("get output format string_temp = %s",string_temp);
+            void * sps = nullptr;
+            void * pps = nullptr;
+            size_t data_size = 0;
+            if (AMediaFormat_getBuffer(format_temp,"csd-0",&sps,&data_size) && sps && data_size > 0) {
+                ALOGD("test get SPS data data_size = %d",data_size);
+                if (mVideoEncoderWrapperCallback)
+                    mVideoEncoderWrapperCallback->onOutputBufferAvailable(sps, data_size,
+                                        AVC_TYPE_FRAME_TYPE_SPS, outInfo.presentationTimeUs);
+            }
+            data_size = 0;
+            if (AMediaFormat_getBuffer(format_temp,"csd-1",&pps,&data_size) && pps && data_size > 0) {
+                ALOGD("get PPS data data_size = %d",data_size);
+                if (mVideoEncoderWrapperCallback)
+                    mVideoEncoderWrapperCallback->onOutputBufferAvailable(pps, data_size,
+                                        AVC_TYPE_FRAME_TYPE_PPS, outInfo.presentationTimeUs);
+            }
+            AMediaCodec_releaseOutputBuffer(mEncoder, index, false);
+            return;
+
+        }
+        mWorkingFrameNum --;
         // the first output buffer from encoder is CSD data,so the CSD data in IDR buffer is not useful.
         if ((outInfo.flags & AMEDIACODEC_BUFFER_FLAG_KEY_FRAME) &&
                 get_frame_type(output, outInfo.size) == AVC_TYPE_FRAME_TYPE_SPS &&

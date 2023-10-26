@@ -88,6 +88,48 @@ public class ScreenControlManager {
     public void setAvcCallbackListener(AvcCallbackListener l) {
         mAvcCbl = l;
     }
+    public final class AvcFrameType {
+
+        private AvcFrameType() {}
+
+        public static final int AVC_TYPE_FRAME_TYPE_SLICE_A         = 0;
+
+        public static final int AVC_TYPE_FRAME_TYPE_SLICE_B         = 1;
+
+        public static final int AVC_TYPE_FRAME_TYPE_SLICE_C         = 2;
+
+        public static final int AVC_TYPE_FRAME_TYPE_IDR             = 3;
+
+        public static final int AVC_TYPE_FRAME_TYPE_SEI             = 4;
+
+        public static final int AVC_TYPE_FRAME_TYPE_SPS             = 5;
+
+        public static final int AVC_TYPE_FRAME_TYPE_PPS             = 6;
+
+        public static final int AVC_TYPE_FRAME_TYPE_DELIMITER       = 7;
+
+        public static final int AVC_TYPE_FRAME_TYPE_SEQUENCE_END    = 8;
+
+        public static final int AVC_TYPE_FRAME_TYPE_STEAM_END       = 9;
+
+        public static final int AVC_TYPE_FRAME_TYPE_FRAME_I         = 10;
+
+        public static final int AVC_TYPE_FRAME_TYPE_FRAME_B         = 11;
+
+        public static final int AVC_TYPE_FRAME_TYPE_FRAME_P         = 12;
+
+        public static final int AVC_TYPE_FRAME_TYPE_UNKNOWN         = 1;
+    }
+
+    public final class VideoSourceType {
+        private VideoSourceType() {}
+        public static final int VIDEO_VPP0_ONLY = 0;
+
+        public static final int VIDEO_VPP0_OSD = 1;
+
+        public static final int OSD_VPP0_ONLY = 2;
+
+    }
 
 
     public static ScreenControlManager getInstance() {

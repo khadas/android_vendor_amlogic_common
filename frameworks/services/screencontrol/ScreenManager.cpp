@@ -230,8 +230,8 @@ bool ScreenManager::startMoreClient(std::unique_ptr<InputParmeter>& input, Scree
 }
 
 void ScreenManager::stop(int32_t client_id) {
-    std::lock_guard<std::mutex> lock(mLock);
     ALOGI("[%s %d] client_id = %d", __FUNCTION__, __LINE__,client_id);
+    std::lock_guard<std::mutex> lock(mLock);
     if (client_id > 0) {
         auto it = mMultiClientMap.find(client_id);
         if (it != mMultiClientMap.end()) {

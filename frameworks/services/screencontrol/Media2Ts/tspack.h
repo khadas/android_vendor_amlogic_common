@@ -60,9 +60,11 @@ private:
     int32_t mPATContinuityCounter;
     int32_t mPMTContinuityCounter;
     int32_t mVideoContinuityCounter;
+    int32_t mSPSBufferSize;
+    int32_t mPPSBufferSize;
     int64_t mPrevTimeUs;
-    int32_t mCSDbufferSize;
-    uint8_t* mCSDbuffer;
+    uint8_t* mSPSBuffer;
+    uint8_t* mPPSBuffer;
     uint8_t* mVideoDescriptor;
     uint8_t* mHdrDescriptor;
     std::list<std::unique_ptr<TSBufferInfo>> mOutputQueue;

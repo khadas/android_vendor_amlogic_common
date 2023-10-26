@@ -23,7 +23,6 @@
 
 using namespace android;
 
-static char dump_dir[64] = "/data/temp";
 
 #define MAX_FILE_PATH_SIZE 128
 
@@ -37,7 +36,7 @@ static const char* FILE_TYPE_STR_ARR[] = {
     "BMP", "BINARY"
 };
 
-static const char *opt_str = "hmbc:t:";
+static const char *opt_str = "hmbc:t:p:";
 static void help(char *appName)
 {
     printf(
@@ -52,6 +51,7 @@ static void help(char *appName)
         "  -t <type> : set capture type:\n"
         "             0 -- video only \n"
         "             1 -- video+osd (default) \n"
+        "  -p <dir> : the dir to save the file, default as /data/temp\n"
         "  left  top  right  bottom : capture area, default as 720P (0,0,1280,720) \n"
         "  outWidth  outHeight : output size, default as 720P (1280,720) \n"
         "\n"
@@ -87,6 +87,9 @@ int main(int argc, char **argv)
     int tmpArgIdx = 0;
     int counter = 1;
     char dump_path[128];
+    char dump_dir[64] = "/data/temp";
+
+
 
 
     while ((ch = getopt(argc, argv, opt_str)) != -1) {
@@ -96,6 +99,8 @@ int main(int argc, char **argv)
         case 'b': saveFileType = SAVE_FILE_BIN; break;
         case 'c': counter = atoi(optarg); break;
         case 't': type = atoi(optarg); break;
+        case 'p': memset(dump_dir, 0, 64);
+                memcpy(dump_dir,optarg,strlen(optarg));break;
         default: break;
         }
     }

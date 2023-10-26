@@ -37,6 +37,7 @@ using ::android::hidl::memory::V1_0::IMemory;
 using ::android::hardware::hidl_memory;
 using ::android::hardware::mapMemory;
 using ::android::hardware::Void;
+using ::vendor::amlogic::hardware::screencontrol::V1_0::Result;
 
 namespace android {
 

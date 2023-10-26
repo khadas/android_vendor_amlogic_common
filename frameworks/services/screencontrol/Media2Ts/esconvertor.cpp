@@ -78,6 +78,7 @@ bool ESConvertor::start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertor
 }
 
 bool ESConvertor::stop() {
+    ALOGI("[%s %d] begin", __FUNCTION__, __LINE__);
     std::lock_guard<std::mutex> lock(mLock);
     if (!mStart) {
         ALOGE("[%s %d] the ESConvertor has been started !", __FUNCTION__, __LINE__);
@@ -91,7 +92,7 @@ bool ESConvertor::stop() {
     mScreenManager->stop(mClientId);
     mWorkingInfoQueue.clear();
     mESConvertorCallback = nullptr;
-     ALOGI("[%s %d] stop done", __FUNCTION__, __LINE__);
+    ALOGI("[%s %d] stop done", __FUNCTION__, __LINE__);
     return true;
 }
 void ESConvertor::PictureReady(const OutputRecord &output) {

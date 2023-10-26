@@ -29,9 +29,11 @@ TSPacker::TSPacker() :
         mPATContinuityCounter(0),
         mPMTContinuityCounter(0),
         mVideoContinuityCounter(0),
+        mSPSBufferSize(0),
+        mPPSBufferSize(0),
         mPrevTimeUs(-1),
-        mCSDbufferSize(0),
-        mCSDbuffer(nullptr){
+        mSPSBuffer(nullptr),
+        mPPSBuffer(nullptr){
     ALOGI("TSPacker construct\n");
     mVideoDescriptor = new uint8_t[6];
     mVideoDescriptor[0] = 40;  // descriptor_tag
@@ -58,8 +60,10 @@ TSPacker::~TSPacker() {
         delete []mVideoDescriptor;
     if (mHdrDescriptor)
         delete []mHdrDescriptor;
-    if (mCSDbuffer)
-        delete []mCSDbuffer;
+    if (mSPSBuffer)
+        delete []mSPSBuffer;
+    if (mPPSBuffer)
+        delete []mPPSBuffer;
 }
 
 bool TSPacker::start(std::unique_ptr<ESConvertorParmeter>& input) {
@@ -76,6 +80,7 @@ bool TSPacker::start(std::unique_ptr<ESConvertorParmeter>& input) {
 }
 
 bool TSPacker::stop() {
+    ALOGI("[%s %d] begin ", __FUNCTION__, __LINE__);
     std::lock_guard<std::mutex> lock(mLock);
     if (!mStart) {
         ALOGE("[%s %d] the tspacker has been not started", __FUNCTION__, __LINE__);
@@ -97,6 +102,7 @@ bool TSPacker::stop() {
     mPMTContinuityCounter = 0;
     mVideoContinuityCounter = 0;
     mPrevTimeUs = -1;
+    ALOGI("[%s %d] done ", __FUNCTION__, __LINE__);
     return true;
 }
 
@@ -106,7 +112,7 @@ bool TSPacker::readBuffer(uint8_t** buffer, int32_t* size, int64_t* pts) {
         return false;
     }
     auto output = mOutputQueue.begin();
-    if (!(*output)->mTsbuffer || (*output)->mSize <=0 || (*output)->mPts <= 0) {
+    if (!(*output) || !(*output)->mTsbuffer || (*output)->mSize <=0 || (*output)->mPts <= 0) {
         ALOGE("[%s %d] the info of output is not legal ! ", __FUNCTION__, __LINE__);
         return false;
     }
@@ -383,7 +389,9 @@ int32_t TSPacker::incrementContinuityCounter() {
 }
 
 void TSPacker::onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts) {
-    if (!data || size <= 0 || pts < 0 || frame_type < 0)
+    std::lock_guard<std::mutex> lock(mLock);
+    ALOGI("[%s %d] size=%d,frame_type=%d,pts=%lld", __FUNCTION__, __LINE__,size,frame_type,pts);
+    if (!data || size <= 0 || pts < 0 || frame_type < 0 || !mStart)
         return;
     uint8_t *es_buffer = (uint8_t *)data;
     uint8_t *ts_buffer = nullptr;
@@ -391,21 +399,36 @@ void TSPacker::onEsBufferAvailable(void* const data, int32_t size, int32_t frame
     int32_t ts_size = 0;
     bool isIDR = false;
     struct timeval timeNow;
-    ALOGI("[%s %d] size=%d,frame_type=%d,pts=%lld", __FUNCTION__, __LINE__,size,frame_type,pts);
+
+
     if (frame_type == AVC_TYPE_FRAME_TYPE_SPS) {
-        if (mCSDbuffer)
-                delete []mCSDbuffer;
-        mCSDbuffer = new uint8_t[size];
-        mCSDbufferSize = size;
-        memcpy(mCSDbuffer, data, size);
+        if (mSPSBuffer)
+                delete []mSPSBuffer;
+        mSPSBuffer = new uint8_t[size];
+        mSPSBufferSize = size;
+        memcpy(mSPSBuffer, data, size);
+        return;
+    }else if (frame_type == AVC_TYPE_FRAME_TYPE_PPS) {
+        if (mPPSBuffer)
+                delete []mPPSBuffer;
+        mPPSBuffer = new uint8_t[size];
+        mPPSBufferSize = size;
+        memcpy(mPPSBuffer, data, size);
         return;
     }
-    if (frame_type == AVC_TYPE_FRAME_TYPE_IDR && mCSDbuffer && mCSDbufferSize > 0) {
-        VDLog("[%s %d] the csd buffer len = %d ", __FUNCTION__, __LINE__,mCSDbufferSize);
-        es_size = size + mCSDbufferSize;
+    if (frame_type == AVC_TYPE_FRAME_TYPE_IDR &&
+                mSPSBuffer && mSPSBufferSize > 0 &&
+                    mPPSBuffer && mPPSBufferSize > 0) {
+        VDLog("[%s %d] the psp buffer len = %d and the pps buffer len = %d",
+                    __FUNCTION__, __LINE__,mSPSBufferSize,mPPSBufferSize);
+        es_size = size + mSPSBufferSize + mPPSBufferSize;
         es_buffer = new uint8_t[es_size];
-        memcpy(es_buffer,mCSDbuffer,mCSDbufferSize);
-        memcpy(es_buffer + mCSDbufferSize,data,size);
+        uint8_t *temp = es_buffer;
+        memcpy(temp,mSPSBuffer,mSPSBufferSize);
+        temp = temp + mSPSBufferSize;
+        memcpy(temp,mPPSBuffer,mPPSBufferSize);
+        temp = temp + mPPSBufferSize;
+        memcpy(temp,data,size);
         isIDR = true;
     }
 

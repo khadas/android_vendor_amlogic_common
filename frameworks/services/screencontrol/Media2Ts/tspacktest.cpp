@@ -22,7 +22,7 @@
 
 using namespace android;
 
-static const char *opt_str = "hc:f:b:t:s:";
+static const char *opt_str = "hc:f:b:t:s:p:";
 const char *filename = "/data/temp/video.ts";
 static void help(char *appName)
 {
@@ -37,6 +37,7 @@ static void help(char *appName)
         "  -b <bitrate>  : bits per second, unit bit, default as 4000000\n"
         "  -t <type>     : select video-only(%d) or video+osd(%d), default as video+osd\n"
         "  -s <second>   : record times, unit second(s), default as 30\n"
+        "  -p <dir> : the dir to save the file, default as /data/temp\n"
         "  left  top  right  bottom : capture area, default as 720P (0,0,1280,720) \n"
         "  width height  : output size, default as 720P (1280X720)\n"
         "\n"
@@ -61,6 +62,7 @@ int main(int argc, char **argv) {
     int counter = 1;
     int framecount = 0;
     char dump_path[128];
+    char dump_dir[64] = "/data/temp";
     while ((ch = getopt(argc, argv, opt_str)) != -1) {
         switch (ch) {
         case 'h': help(argv[0]); exit(0);
@@ -69,6 +71,8 @@ int main(int argc, char **argv) {
         case 'b': bitrate = atoi(optarg); break;
         case 't': type = atoi(optarg); break;
         case 's': timeSecond = atoi(optarg); break;
+        case 'p': memset(dump_dir, 0, 64);
+                memcpy(dump_dir,optarg,strlen(optarg));break;
         default: break;
         }
     }
@@ -120,7 +124,7 @@ int main(int argc, char **argv) {
             return 0;
         }
         memset (dump_path, 0, 128);
-        snprintf(dump_path, 128, "/data/temp/%dx%d-%d.ts",outWidth, outHeight, framecount);
+        snprintf(dump_path, 128, "%s/%dx%d-%d.ts",dump_dir,outWidth, outHeight, framecount);
         printf("Try save:%s\n", dump_path);
         int32_t fd = open(dump_path, O_CREAT | O_RDWR, 0666);
         if (fd <= 0 )
