@@ -1362,6 +1362,17 @@ public class AudioSystemCmdService extends Service {
                 Log.i(TAG, "getOutputDevices current no output devices. Return user setting. devicesMask:" + Integer.toHexString(devicesMask));
             }
             int i = 0;
+
+            // earc uses a two-bit mask bit.
+            if ((devicesMask & AudioSystem.DEVICE_OUT_HDMI_EARC) == AudioSystem.DEVICE_OUT_HDMI_EARC) {
+                devicesMask &= ~AudioSystem.DEVICE_OUT_HDMI_EARC;
+                // EARC and ARC are both shown as ARC on the APK.
+                tempDevices.add(new Byte((byte)AudioDeviceInfo.convertInternalDeviceToDeviceType(AudioSystem.DEVICE_OUT_HDMI_ARC)));
+                if (DroidLogicUtils.getAudioDebugEnable()) {
+                    Log.d(TAG, "getOutputDevice device: " + AudioSystem.getOutputDeviceName(AudioSystem.DEVICE_OUT_HDMI_EARC)
+                        + "(0x" + Integer.toHexString(AudioSystem.DEVICE_OUT_HDMI_EARC) + ")");
+                }
+            }
             while ((device = 1 << i) != AudioSystem.DEVICE_OUT_DEFAULT) {
                 if ((devicesMask & device) != 0) {
                     tempDevices.add(new Byte((byte)AudioDeviceInfo.convertInternalDeviceToDeviceType(device)));
