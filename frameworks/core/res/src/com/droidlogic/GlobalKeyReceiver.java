@@ -44,8 +44,8 @@ public class GlobalKeyReceiver extends BroadcastReceiver {
 
     private static final String PACKAGE_NAME_LIVETV = "com.droidlogic.android.tv";
     private static final String ACTIVITY_NAME_LIVETV = "com.android.tv.MainActivity";
-    private static final String PACKAGE_NAME_DROIDTVSETTINGS = "com.droidlogic.tv.settings";
-    private static final String ACTIVITY_NAME_TVSOURCE = "com.droidlogic.tv.settings.TvSourceActivity";
+    private static final String PACKAGE_NAME_DROIDTVSETTINGS = "com.droidlogic.tv.extras";
+    private static final String ACTIVITY_NAME_TVSOURCE = "com.droidlogic.tv.extras.tvsource.TvSourceActivity";
     private static final String PACKAGE_NAME_NETFLIX = "com.netflix.ninja";
     private static final String PACKAGE_NAME_YOUTUBE = "com.google.android.youtube.tv";
     private static final String ACTIVITY_NAME_YOUTUBE = "com.google.android.apps.youtube.tv.activity.MainActivity";
