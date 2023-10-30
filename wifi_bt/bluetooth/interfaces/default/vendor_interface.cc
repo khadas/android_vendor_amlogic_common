@@ -36,8 +36,9 @@ static const char* VENDOR_LIBRARY_SYMBOL_NAME =
 static uint16_t PreOpcode=0x0;
 static uint8_t gVscWakeEnabled=0;
 
-#define BT_PWR_EVT "/sys/module/amlogic_wireless/parameters/btpower_evt"
-#define BT_WAKE_EVT       "/sys/module/amlogic_wireless/parameters/btwake_evt"
+#define BT_WAKE_EVT_1    "/sys/module/amlogic_wireless/parameters/btwake_evt"  // kernel 5.15 btwake_evt path
+#define BT_WAKE_EVT_2    "/sys/module/bt_device/parameters/btwake_evt"  // below kernel 5.15 btwake_evt path
+
 static const int INVALID_FD = -1;
 namespace {
 
@@ -359,18 +360,23 @@ size_t VendorInterface::Send(uint8_t type, const uint8_t* data, size_t length) {
   recent_activity_flag = true;
   uint16_t opcode = data[0] | (data[1] << 8);
 
-  int fd,sz;
-  char buf[2];
+  int fd;
+  int sz = -1;
+  char buf[2] = {'\0'};
   char shutdown_val[PROPERTY_VALUE_MAX];
 
-  fd = open(BT_WAKE_EVT,O_RDONLY);
-  if (fd < 0) {
-    ALOGE("open(%s) failed: %s (%d)\n", \
-		BT_WAKE_EVT, strerror(errno), errno);
+  if (access(BT_WAKE_EVT_1, F_OK) == 0) {
+     fd = open(BT_WAKE_EVT_1, O_RDONLY);
+  } else {
+     fd = open(BT_WAKE_EVT_2, O_RDONLY);
   }
-  sz = read (fd, &buf,sizeof(buf));
 
-  close(fd);
+  if (fd < 0) {
+    ALOGE("%s: open btwake_evt failed: %s (%d)\n", __func__, strerror(errno), errno);
+  } else {
+    sz = read(fd, buf, sizeof(buf));
+    close(fd);
+  }
 
   if (lpm_wake_deasserted == true) {
     // Restart the timer.

@@ -72,7 +72,10 @@ extern "C" int delete_module(const char *, unsigned int);
 #define MTK_VENDOR_LIB "libbt-vendor_mtkMulti.so"
 #define AML_VENDOR_LIB "libbt-vendor_amlMulti.so"
 #define NODE_PATH "/data/misc/bluetooth/bt_module"
-#define BT_POWER_TYPE "/sys/module/amlogic_wireless/parameters/btpower_evt"
+
+#define BT_POWER_EVT_1 "/sys/module/amlogic_wireless/parameters/btpower_evt"  // kernel 5.15 btpower_evt path
+#define BT_POWER_EVT_2 "/sys/module/bt_device/parameters/btpower_evt"  // below kernel 5.15 btpower_evt path
+
 #define CONFIG_PATH "vendor/etc/bluetooth/"
 #define CONFIG_NAME "bt_hal.conf"
 

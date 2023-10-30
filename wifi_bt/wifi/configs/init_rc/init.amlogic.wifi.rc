@@ -3,8 +3,14 @@ on fs
 chown bluetooth bluetooth /sys/module/amlogic_wireless/parameters/btpower_evt
 chmod 0666 /sys/module/amlogic_wireless/parameters/btpower_evt
 
+chown bluetooth bluetooth /sys/module/bt_device/parameters/btpower_evt
+chmod 0666 /sys/module/bt_device/parameters/btpower_evt
+
 chown bluetooth bluetooth /sys/module/amlogic_wireless/parameters/btwake_evt
 chmod 0666 /sys/module/amlogic_wireless/parameters/btwake_evt
+
+chown bluetooth bluetooth /sys/module/bt_device/parameters/btwake_evt
+chmod 0666 /sys/module/bt_device/parameters/btwake_evt
 
 service wpa_supplicant /vendor/bin/hw/wpa_supplicant \
     -O/data/vendor/wifi/wpa/sockets -dd \

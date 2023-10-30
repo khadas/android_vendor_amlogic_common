@@ -350,20 +350,22 @@ static int matching_specify_device_manually(void)
 
 static void write_power_type(char * str)
 {
-	int ret;
 	int fd;
-	fd = open(BT_POWER_TYPE, O_WRONLY);
-	if (fd < 0)
-	{
-		ALOGE("open(%s) failed: %s (%d)\n", \
-			BT_POWER_TYPE, strerror(errno), errno);
+
+	if (access(BT_POWER_EVT_1, F_OK) == 0) {
+		fd = open(BT_POWER_EVT_1, O_WRONLY);
+	} else {
+		fd = open(BT_POWER_EVT_2, O_WRONLY);
 	}
 
-	ret = write(fd, str, 1);
-	if (ret < 0) {
-		ALOGE( "Failed to write bt power evt");
+	if (fd < 0) {
+		ALOGE("%s: open btpower_evt failed: %s (%d)\n", __func__, strerror(errno), errno);
+	} else {
+		if (write(fd, str, 1) < 0) {
+			ALOGE( "%s: write btpower_evt failed: %s (%d)\n", __func__, strerror(errno), errno);
+		}
+		close(fd);
 	}
-	close(fd);
 }
 
 static char* get_power_type(void)
