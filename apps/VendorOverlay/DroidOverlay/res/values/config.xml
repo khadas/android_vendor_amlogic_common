@@ -110,6 +110,9 @@
     <bool name="config_cecQuerySadMaxEnabled_default">false</bool>
     <bool name="config_cecQuerySadMaxDisabled_default">true</bool>
 
+    <!-- Using fade effect to avoid splash when rebooting -->
+    <bool name="config_animateScreenLights">true</bool>
+
     <!-- List of regexpressions describing the interface (if any) that represent tetherable
          Wifi interfaces.  If the device doesn't want to support tethering over Wifi this
          should be empty.  An example would be "softap.*" -->
