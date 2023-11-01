@@ -2157,15 +2157,35 @@ void DisplayMode::getPosition(const char* curMode, int *position) {
         defaultHeight = FULL_HEIGHT_1080;
     }
 
+
+
     pthread_mutex_lock(&mEnvLock);
-    sprintf(ubootvar, "ubootenv.var.%s_x", keyValue);
-    position[0] = getBootenvInt(ubootvar, 0);
-    sprintf(ubootvar, "ubootenv.var.%s_y", keyValue);
-    position[1] = getBootenvInt(ubootvar, 0);
-    sprintf(ubootvar, "ubootenv.var.%s_w", keyValue);
-    position[2] = getBootenvInt(ubootvar, defaultWidth);
-    sprintf(ubootvar, "ubootenv.var.%s_h", keyValue);
-    position[3] = getBootenvInt(ubootvar, defaultHeight);
+
+    if (isHWCProcess()) {
+        sprintf(ubootvar, "ubootenv.var.%s_x", keyValue);
+        std::string value;
+        DisplayModeMgr::getInstance().getDisplayAttribute(ubootvar, value);
+        position[0] = atoi(value.c_str());
+        sprintf(ubootvar, "ubootenv.var.%s_y", keyValue);
+        DisplayModeMgr::getInstance().getDisplayAttribute(ubootvar, value);
+        position[1] = atoi(value.c_str());
+        sprintf(ubootvar, "ubootenv.var.%s_w", keyValue);
+        DisplayModeMgr::getInstance().getDisplayAttribute(ubootvar, value);
+        position[2] = atoi(value.c_str());
+        sprintf(ubootvar, "ubootenv.var.%s_h", keyValue);
+        DisplayModeMgr::getInstance().getDisplayAttribute(ubootvar, value);
+        position[3] = atoi(value.c_str());
+    } else {
+        sprintf(ubootvar, "ubootenv.var.%s_x", keyValue);
+        position[0] = getBootenvInt(ubootvar, 0);
+        sprintf(ubootvar, "ubootenv.var.%s_y", keyValue);
+        position[1] = getBootenvInt(ubootvar, 0);
+        sprintf(ubootvar, "ubootenv.var.%s_w", keyValue);
+        position[2] = getBootenvInt(ubootvar, defaultWidth);
+        sprintf(ubootvar, "ubootenv.var.%s_h", keyValue);
+        position[3] = getBootenvInt(ubootvar, defaultHeight);
+    }
+
 
     SYS_LOGI("%s curMode:%s position[0]:%d position[1]:%d position[2]:%d position[3]:%d\n", __FUNCTION__, curMode, position[0], position[1], position[2], position[3]);
 
@@ -2231,14 +2251,25 @@ void DisplayMode::setPosition(const char* curMode, int left, int top, int width,
 
     pthread_mutex_lock(&mEnvLock);
     if (mHdmidata.reason != OUTPUT_CHANGE_BY_HWC) {
-        sprintf(ubootvar, "ubootenv.var.%s_x", keyValue);
-        setBootEnv(ubootvar, x);
-        sprintf(ubootvar, "ubootenv.var.%s_y", keyValue);
-        setBootEnv(ubootvar, y);
-        sprintf(ubootvar, "ubootenv.var.%s_w", keyValue);
-        setBootEnv(ubootvar, w);
-        sprintf(ubootvar, "ubootenv.var.%s_h", keyValue);
-        setBootEnv(ubootvar, h);
+        if (isHWCProcess()) {
+            sprintf(ubootvar, "ubootenv.var.%s_x", keyValue);
+            DisplayModeMgr::getInstance().setUbootenv(ubootvar, x);
+            sprintf(ubootvar, "ubootenv.var.%s_y", keyValue);
+            DisplayModeMgr::getInstance().setUbootenv(ubootvar, y);
+            sprintf(ubootvar, "ubootenv.var.%s_w", keyValue);
+            DisplayModeMgr::getInstance().setUbootenv(ubootvar, w);
+            sprintf(ubootvar, "ubootenv.var.%s_h", keyValue);
+            DisplayModeMgr::getInstance().setUbootenv(ubootvar, h);
+        } else {
+            sprintf(ubootvar, "ubootenv.var.%s_x", keyValue);
+            setBootEnv(ubootvar, x);
+            sprintf(ubootvar, "ubootenv.var.%s_y", keyValue);
+            setBootEnv(ubootvar, y);
+            sprintf(ubootvar, "ubootenv.var.%s_w", keyValue);
+            setBootEnv(ubootvar, w);
+            sprintf(ubootvar, "ubootenv.var.%s_h", keyValue);
+            setBootEnv(ubootvar, h);
+        }
     }
     pthread_mutex_unlock(&mEnvLock);
     DisplayModeMgr::getInstance().setDisplayRect({left, top, width , height});

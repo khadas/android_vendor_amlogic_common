@@ -40,6 +40,9 @@ public:
     DisplayModeMgr();
     ~DisplayModeMgr();
 
+    bool setUbootenv(std::string key, std::string value);
+    bool getUbootenv(std::string key, std::string& value);
+
     bool getDisplayMode(char *mode, int len);
     bool getDisplayMode(std::string& mode);
     bool getDisplayMode(std::string& mode, ConnectorType display);
