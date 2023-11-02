@@ -274,6 +274,10 @@ SceneProcess::SceneProcess()
     mScene_output_info.dv_type = DOLBY_VISION_DISABLE;
     strcpy(mScene_output_info.final_displaymode, DEFAULT_HDMI_MODE);
     strcpy(mScene_output_info.final_deepcolor, DEFAULT_COLOR_FORMAT);
+    /*
+     * hdr_force_mode not in use, no initialization required.
+     */
+    /* coverity[uninit_member:SUPPRESS] */
 }
 
 SceneProcess::~SceneProcess() {

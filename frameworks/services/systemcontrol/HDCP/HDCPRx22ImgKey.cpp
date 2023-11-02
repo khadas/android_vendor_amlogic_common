@@ -446,7 +446,7 @@ int storage_extract_one_item_to_buf(const char* itemName,
 
     writeSys("/sys/class/unifykeys/attach", "1");
     writeSys("/sys/class/unifykeys/name", "hdcp22_rx_fw");
-    if (readSys("/sys/class/unifykeys/read", keyBuf, KEY_SIZE) < 0) {
+    if (readSys("/sys/class/unifykeys/read", keyBuf, KEY_SIZE * sizeof(char)) < 0) {
         SYS_LOGE("read /sys/class/unifykeys/read error:%s\n", strerror(errno));
         goto _exit3;
     }
@@ -605,7 +605,7 @@ static int write_hdcp_key(const char *data, const char *key_name, const int size
         return -1;
     }
 
-    readSys(UNIFYKEY_EXIST, (char*)existKey, 10);
+    readSys(UNIFYKEY_EXIST, (char*)existKey, sizeof(existKey));
     if (0 == strncmp(existKey, "0", 10)) {
         errorP("get status: not burned!\n");
         return -1;
@@ -739,7 +739,7 @@ int setImgPath(const char *path)
                 return -1;
             }
 
-            memset(tmpbuffer, 0, pItemHead->dataSz + 4);
+            memset(tmpbuffer, 0, sizeof(tmpbuffer));
             memset(writebuffer, 0, pItemHead->dataSz + 4);
             if (fseek(fdImg, pItemHead->dataOffset, SEEK_SET) != 0) {
                 errorP("fseek Fail.\n");

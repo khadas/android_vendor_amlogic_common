@@ -173,7 +173,7 @@ int res_img_unpack(const char* const path_src, const char* const unPackDirPath, 
         memset(itemReadBuf, 0, ITEM_READ_BUF_SZ * 2);
         pImgHead = (AmlResImgHeadLogo_t*)(itemReadBuf + ITEM_READ_BUF_SZ);
 
-        ImgFileSz = read(fdResImg, pImgHead, ITEM_READ_BUF_SZ);
+        ImgFileSz = read(fdResImg, pImgHead, ITEM_READ_BUF_SZ * sizeof(AmlResImgHeadLogo_t));
         if (ImgFileSz <= IMG_HEAD_SZ) {
                 SYS_LOGE("file size 0x%zx too small\n", ImgFileSz);
                 if (itemReadBuf) delete[] itemReadBuf, itemReadBuf = NULL;
