@@ -981,22 +981,29 @@ public class AudioSystemCmdService extends Service {
     private boolean updateAudioSinkLocked() {
         List<AudioDevicePort> previousSink = mAudioSink;
         mAudioSink = new ArrayList<>();
-        findAudioSinkFromAudioPolicy(mAudioSink);
-
-        // Returns true if mAudioSink and previousSink differs.
-        Log.i(TAG, "mAudioSink:" + mAudioSink + ", previousSink:" + previousSink);
-        if (mAudioSink.size() != previousSink.size()) {
-            return true;
-        } else {
-            for (int i = 0; i < mAudioSink.size(); i++) {
-                AudioDevicePort prev_audioport = previousSink.get(i);
-                AudioDevicePort current_audioport = mAudioSink.get(i);
-                if (prev_audioport.type() != current_audioport.type()) {
-                    return true;
+        try {
+            findAudioSinkFromAudioPolicy(mAudioSink);
+            // Returns true if mAudioSink and previousSink differs.
+            Log.i(TAG, "mAudioSink:" + mAudioSink + ", previousSink:" + previousSink);
+            if (mAudioSink.size() != previousSink.size()) {
+                return true;
+            } else {
+                for (int i = 0; i < mAudioSink.size(); i++) {
+                    AudioDevicePort prev_audioport;
+                    AudioDevicePort current_audioport = mAudioSink.get(i);
+                    if (previousSink.size() >= (i - 1)) {
+                        prev_audioport = previousSink.get(i);
+                        if (prev_audioport.type() != current_audioport.type()) {
+                            return true;
+                        }
+                    }
                 }
             }
+            previousSink.removeAll(mAudioSink);
+        } catch (Exception exception) {
+
+            Log.w(TAG, "updateAudioSinkLocked failed : %s", exception);
         }
-        previousSink.removeAll(mAudioSink);
         return !previousSink.isEmpty();
     }
 
