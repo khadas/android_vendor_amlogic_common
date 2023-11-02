@@ -107,18 +107,18 @@ bool VideoEncoderWrapper::init(int32_t width, int32_t height, int32_t bit_rate, 
         // Encoder supported prepending SPS/PPS, we don't need to emulate
         // it.
     } else {
-        ALOGE("We going to manually prepend SPS and PPS to IDR frames.");
+        ALOGE("[%s %d] encoder config fail , err:%d", __FUNCTION__, __LINE__, err);
+        return false;
     }
 
     err = AMediaCodec_start(mEncoder);
     if (err != AMEDIA_OK) {
-        ALOGE("[%s %d] err:%d", __FUNCTION__, __LINE__, err);
+        ALOGE("[%s %d]  encoder start fail err:%d", __FUNCTION__, __LINE__, err);
         return false;
     }
-    ALOGE("[%s %d]", __FUNCTION__, __LINE__);
-
     mStart = true;
     ts.push_back(std::thread(&VideoEncoderWrapper::threadVideoFunc,this));
+    ALOGD("[%s %d] finish", __FUNCTION__, __LINE__);
     return true;
 }
 
@@ -225,7 +225,7 @@ void VideoEncoderWrapper::threadVideoFunc() {
 void VideoEncoderWrapper::onDequeueInputWork() {
     int index = AMediaCodec_dequeueInputBuffer(mEncoder, 0ll);
     if (index <= AMEDIACODEC_INFO_TRY_AGAIN_LATER) {
-        // ALOGE("[%s %d] don't get the usable input buffer", __FUNCTION__, __LINE__);
+        VDLog("[%s %d] don't get the usable input buffer index = %d", __FUNCTION__, __LINE__,index);
         return;
     }
     VDLog("[%s %d] dequeue input buffer from encoder index =%d", __FUNCTION__, __LINE__,index);
@@ -263,20 +263,13 @@ void VideoEncoderWrapper::onDequeueOutputWork() {
     outInfo.size = 0;
     outInfo.presentationTimeUs = 0;
     size_t index = AMediaCodec_dequeueOutputBuffer(mEncoder, &outInfo,0ll);
-    if (index < 0) {
-        // ALOGE("[%s %d] don't get the usable out buffer", __FUNCTION__, __LINE__);
+    VDLog("[%s %d] AMediaCodec_dequeueOutputBuffer index = %d ,outInfo.flags = %d,outInfo.size =%d,outInfo.presentationTimeUs=%d",
+                                    __FUNCTION__, __LINE__,index,outInfo.flags,outInfo.size,outInfo.presentationTimeUs);
+    if (index == AMEDIACODEC_INFO_TRY_AGAIN_LATER ||
+        index == AMEDIACODEC_INFO_OUTPUT_BUFFERS_CHANGED) {
+        VDLog("[%s %d] don't get the usable out buffer index = %d", __FUNCTION__, __LINE__,index);
         return;
-    }
-    if (outInfo.flags & AMEDIACODEC_BUFFER_FLAG_END_OF_STREAM) {
-        // ALOGE("[%s %d] get the EOS buffer", __FUNCTION__, __LINE__);
-        return;
-    }
-    uint8_t* output = AMediaCodec_getOutputBuffer(mEncoder, index, &bufSize);
-    if (output && outInfo.size > 0) {
-        ALOGI("[%s %d] get output buffer from encoder index = %d,size =%d,pts = %lld,flag = %d",
-                __FUNCTION__, __LINE__,index,outInfo.size,outInfo.presentationTimeUs,outInfo.flags);
-        if (outInfo.flags & AMEDIACODEC_BUFFER_FLAG_CODEC_CONFIG) {
-            mCSDbufferSize = outInfo.size;
+    } else if (index == AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED){
             AMediaFormat* format_temp = AMediaCodec_getOutputFormat(mEncoder);
             const char* string_temp = AMediaFormat_toString(format_temp);
             ALOGD("get output format string_temp = %s",string_temp);
@@ -296,23 +289,28 @@ void VideoEncoderWrapper::onDequeueOutputWork() {
                     mVideoEncoderWrapperCallback->onOutputBufferAvailable(pps, data_size,
                                         AVC_TYPE_FRAME_TYPE_PPS, outInfo.presentationTimeUs);
             }
-            AMediaCodec_releaseOutputBuffer(mEncoder, index, false);
             return;
-
+    }
+    uint8_t* output = AMediaCodec_getOutputBuffer(mEncoder, index, &bufSize);
+    if (output && outInfo.size > 0) {
+        ALOGI("[%s %d] get output buffer from encoder index = %d,size =%d,pts = %lld,flag = %d",
+                __FUNCTION__, __LINE__,index,outInfo.size,outInfo.presentationTimeUs,outInfo.flags);
+        if (outInfo.flags & AMEDIACODEC_BUFFER_FLAG_CODEC_CONFIG) {
+            mCSDbufferSize = outInfo.size;
+        }else {
+            mWorkingFrameNum --;
+            // the first output buffer from encoder is CSD data,so the CSD data in IDR buffer is not useful.
+            if ((outInfo.flags & AMEDIACODEC_BUFFER_FLAG_KEY_FRAME) &&
+                    get_frame_type(output, outInfo.size) == AVC_TYPE_FRAME_TYPE_SPS &&
+                    mCSDbufferSize > 0) {
+                ALOGD("[%s %d] the IDR frame have CSD data , so need to remove it!", __FUNCTION__, __LINE__);
+                output = output + mCSDbufferSize;
+                outInfo.size = outInfo.size - mCSDbufferSize;
+            }
+            if (mVideoEncoderWrapperCallback)
+                mVideoEncoderWrapperCallback->onOutputBufferAvailable(output, outInfo.size,
+                                get_frame_type(output, outInfo.size), outInfo.presentationTimeUs);
         }
-        mWorkingFrameNum --;
-        // the first output buffer from encoder is CSD data,so the CSD data in IDR buffer is not useful.
-        if ((outInfo.flags & AMEDIACODEC_BUFFER_FLAG_KEY_FRAME) &&
-                get_frame_type(output, outInfo.size) == AVC_TYPE_FRAME_TYPE_SPS &&
-                mCSDbufferSize > 0) {
-            ALOGD("[%s %d] the IDR frame have CSD data , so need to remove it!", __FUNCTION__, __LINE__);
-            output = output + mCSDbufferSize;
-            outInfo.size = outInfo.size - mCSDbufferSize;
-        }
-        if (mVideoEncoderWrapperCallback)
-            mVideoEncoderWrapperCallback->onOutputBufferAvailable(output, outInfo.size,
-                            get_frame_type(output, outInfo.size), outInfo.presentationTimeUs);
-
     }
     AMediaCodec_releaseOutputBuffer(mEncoder, index, false);
     return;

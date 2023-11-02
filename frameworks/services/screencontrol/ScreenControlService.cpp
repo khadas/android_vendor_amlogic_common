@@ -141,7 +141,6 @@ int32_t ScreenControlService::startScreenCapBuffer(int32_t left, int32_t top, in
                                                 int32_t height, int32_t sourceType, void *dstBuffer, int32_t *dstBufferSize) {
     ALOGI("[%s] left:%d, top:%d, right:%d, bottom:%d, width:%d, height:%d, sourceType:%d\n",
                 __func__, left, top, right, bottom, width, height, sourceType);
-    struct timeval timeNow;
     std::unique_ptr<ScreenCatch> screen_catch = std::make_unique<ScreenCatch>();
     auto size = std::make_unique<Size>(width,height);
     auto area = std::make_unique<Area>(left,top,right,bottom);
@@ -153,11 +152,9 @@ int32_t ScreenControlService::startScreenCapBuffer(int32_t left, int32_t top, in
         ALOGE("[%s %d] ScreenCatch start fail !! dstBuffer=%p", __FUNCTION__, __LINE__,dstBuffer);
         return !OK;
     }
-    gettimeofday(&timeNow, NULL);
-    int64_t firsetNowUs = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
+    int64_t firsetNowUs = getNowTimesUs();;
     while (!screen_catch->readBuffer((uint8_t*)dstBuffer,dstBufferSize)) {
-        gettimeofday(&timeNow, NULL);
-        int64_t nowUs = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
+        int64_t nowUs = getNowTimesUs();;
         if ((nowUs - firsetNowUs) >= TIMEOUT_VAL) {
             ALOGE("[%s %d] no data !!!! break,firsetNowUs=%lld,nowUs=%lld", __FUNCTION__, __LINE__,firsetNowUs,nowUs);
             return screen_catch->stop()?OK:!OK;
@@ -173,7 +170,6 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
     ALOGI("[%s] left:%d, top:%d, right:%d, bottom:%d, width:%d, height:%d, sourceType:%d,frameRate=%d,bitRate=%d,limitTimeSec=%d",
                 __func__, left, top, right, bottom, width, height, sourceType,frameRate,bitRate,limitTimeSec);
     Mutex::Autolock autoLock(mLock);
-    struct timeval timeNow;
     int32_t video_dump_size = 0;
     int64_t mFirstPts = 0;
     std::unique_ptr<TSPacker> tspacker = std::make_unique<TSPacker>();
@@ -192,15 +188,14 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
     if (fd <= 0 )
         return !OK;
     mStart = true;
-    gettimeofday(&timeNow, NULL);
-    int64_t firsetNowUs = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
+    int64_t firsetNowUs = getNowTimesUs();;
     while (mStart) {
         uint8_t * buffer = nullptr;
         int32_t size = 0;
         int64_t pts = 0;
         bool ret = tspacker->readBuffer(&buffer,&size,&pts);
         if (!ret || !buffer || size <= 0 || pts <= 0) {
-            int64_t nowUs = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
+            int64_t nowUs = getNowTimesUs();;
             int64_t diff = nowUs -firsetNowUs;
             int64_t limitTimeUs = (int64_t)limitTimeSec *1000 *1000;
             if (video_dump_size == 0 && (diff >= limitTimeUs)) {

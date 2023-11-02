@@ -32,6 +32,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Environment;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.nio.ByteBuffer;
@@ -204,7 +205,7 @@ class AudioSource {
                                 e.printStackTrace();
                                 break;
                             }
-                            long timeUs = System.currentTimeMillis() * 1000;
+                            long timeUs = SystemClock.elapsedRealtimeNanos() / 1000;
                             Log.d(TAG,"queueInputBuffer timeUs = " + timeUs+ ",index="+index);
                             mCodec.queueInputBuffer(index, 0, size, timeUs, 0);
 
@@ -502,7 +503,8 @@ public class ScreenRecorder {
                     mFirstVideoTimeUs = pts;
                 mLastVideoTimeUs = pts;
                 bufferInfo.set(0,buffSize,pts,flag);
-                mMuxer.writeSampleData(mVideoTrack,metaData,bufferInfo);
+                if (mVideoTrack >=0 && mMuxerStrated)
+                    mMuxer.writeSampleData(mVideoTrack,metaData,bufferInfo);
 
         }
     }

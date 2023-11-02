@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include<time.h>
 namespace android {
 
 class DataDumper {
@@ -30,6 +31,12 @@ public:
 private:
     int fd = 0;
 };
+inline int64_t getNowTimesUs() {
+    struct timespec now;
+    clock_gettime(CLOCK_BOOTTIME, &now);
+    int64_t now_time = now.tv_sec * 1000 * 1000 + now.tv_nsec / 1000;
+    return now_time;
+}
 
 
 };

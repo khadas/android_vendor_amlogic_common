@@ -261,10 +261,7 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
         packetDataStart += 188;
     }
     if (flags & EMIT_PCR) {
-        int64_t timeNow64;
-        struct timeval timeNow;
-        gettimeofday(&timeNow, NULL);
-        int64_t nowUs = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
+        int64_t nowUs = getNowTimesUs();;
 
 
         uint64_t PCR = nowUs * 27;	// PCR based on a 27MHz clock
@@ -398,9 +395,6 @@ void TSPacker::onEsBufferAvailable(void* const data, int32_t size, int32_t frame
     int32_t es_size = size;
     int32_t ts_size = 0;
     bool isIDR = false;
-    struct timeval timeNow;
-
-
     if (frame_type == AVC_TYPE_FRAME_TYPE_SPS) {
         if (mSPSBuffer)
                 delete []mSPSBuffer;
@@ -432,8 +426,7 @@ void TSPacker::onEsBufferAvailable(void* const data, int32_t size, int32_t frame
         isIDR = true;
     }
 
-    gettimeofday(&timeNow, NULL);
-    int64_t timeNow64 = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
+    int64_t timeNow64 = getNowTimesUs();
     int32_t flags = 0;
     if (mPrevTimeUs < 0ll || mPrevTimeUs + 100000ll <= timeNow64 || mFirstVideoFrame) {
         flags |= EMIT_PCR;

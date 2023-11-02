@@ -383,10 +383,7 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
     }
     auto output = std::make_unique<OutputRecord>();
     output->index = buffer->index;
-    struct timeval timeNow;
-    gettimeofday(&timeNow, NULL);
-    tv_usec = (int64_t)timeNow.tv_sec*1000*1000 + (int64_t)timeNow.tv_usec;
-    output->tv_usec = tv_usec;
+    output->tv_usec = getNowTimesUs();
     ALOGI("[%s %d] index:%d pts=%lld", __FUNCTION__, __LINE__,buffer->index,output->tv_usec);
     output->raw_buffer = (uint8_t *)buffer->buffer_mem;
     long buff_info[3] = {0,0,0};
