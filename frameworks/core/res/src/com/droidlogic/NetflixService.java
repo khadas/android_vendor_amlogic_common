@@ -13,6 +13,9 @@ package com.droidlogic;
 import android.app.ActivityManager;
 import android.app.IActivityManager;
 import android.app.IProcessObserver;
+import android.app.TaskStackListener;
+import android.app.ActivityTaskManager.RootTaskInfo;
+
 import android.app.Service;
 import android.hardware.hdmi.HdmiControlManager;
 import android.content.pm.PackageManager;
@@ -27,6 +30,10 @@ import android.media.AudioFormat;
 import android.net.Uri;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.os.Handler;
+import android.os.Message;
+
+
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
@@ -48,6 +55,8 @@ import java.util.List;
 import java.util.Scanner;
 import android.os.SystemProperties;
 import android.os.HandlerExecutor;
+
+
 
 import com.droidlogic.app.DroidLogicUtils;
 import com.droidlogic.app.SystemControlManager;
@@ -84,6 +93,7 @@ public class NetflixService extends Service {
     private static final String STR_ALWAYS = "0";
     private static final String STR_ADAPTIVE = "1";
     private static final int WAKEUP_REASON_CUSTOM = 9;
+    private static final int MSG_UPDATA = 1;
     private static final int UI_AUDIO_DELAY_OFFSET_TV_NON_DOLBY = 60;
     private static final int UI_AUDIO_DELAY_OFFSET_TV_MS12 = 110;
     private static final int UI_AUDIO_DELAY_OFFSET_OTT_DOLBY = 70;
@@ -107,6 +117,7 @@ public class NetflixService extends Service {
     private IActivityManager mIActivityManager;
     private ProcessObserver mProcessObserver;
     private DeviceConfigListener mDeviceConfigListener = null;
+    private  Handler mMsgHandler;
 
     private class SettingsObserver extends ContentObserver {
         public SettingsObserver(Handler handler) {
@@ -256,6 +267,7 @@ public class NetflixService extends Service {
         mIActivityManager = ActivityManager.getService();
         try {
             mIActivityManager.registerProcessObserver(mProcessObserver);
+            mIActivityManager.registerTaskStackListener(mTaskStackListener);
         } catch (RemoteException e) {
             Log.e(TAG, "could not get IActivityManager");
         }
@@ -264,6 +276,19 @@ public class NetflixService extends Service {
             if (mSCM != null)
                 mSCM.writeSysFs("/sys/class/ethernet/wol" , "1");
         }
+        mMsgHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what) {
+                    case MSG_UPDATA:
+                        Log.d(TAG, "handleMessage");
+                        netflixFGStateUpdate();
+                        break;
+                    default:
+                        Log.d(TAG, "No handler case available for message: " + msg.what);
+                }
+            }
+        };
     }
 
     @Override
@@ -445,6 +470,32 @@ public class NetflixService extends Service {
         }
     }
 
+    private boolean isTopTask(String pkgName){
+        try {
+             // return if the activity monitor is no longer used
+            if (mIActivityManager == null) {
+                 return false;
+            }
+            List<RootTaskInfo> infos = mIActivityManager.getAllRootTaskInfos();
+            for (RootTaskInfo info : infos) {
+                if (!info.visible) {
+                    continue;
+                }
+                ComponentName componentInfo = info.topActivity;
+                if (componentInfo.getPackageName().equals(pkgName)) {
+                    Log.d(TAG,pkgName + " is top activity!");
+                    return true;
+                }else{
+                    Log.d(TAG,pkgName + " is not top activity.");
+                    return false;
+                }
+            }
+        }catch (RemoteException e) {
+            Log.e(TAG, "Cannot getTasks", e);
+        }
+        return false;
+    }
+
     private void refreshAudioCapabilities(boolean isHdmiPlugged) {
         boolean isTv = DroidLogicUtils.isTv();
         int surround = mOutputModeManager.getDigitalAudioFormatOut();
@@ -603,68 +654,65 @@ public class NetflixService extends Service {
         setUiAudioBufferDelayOffset(hasMS12 ? UI_AUDIO_DELAY_OFFSET_TV_MS12 : UI_AUDIO_DELAY_OFFSET_TV_NON_DOLBY);
     }
 
-    private class ProcessObserver extends IProcessObserver.Stub {
-        @Override
-        public void onForegroundActivitiesChanged(int pid, int uid, boolean foregroundActivities) {
-            Log.d(TAG, "onForegroundActivitiesChanged pid:" + pid + ",uid:" + uid + ",fg:" + foregroundActivities);
-            new Thread(new Runnable(){
-                @Override
-                public void run() {
-                    try{
-                        //wait 700ms, for android update process stack
-                        //when netflix is changing to background
-                        Thread.sleep(700);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    netflixFGStateUpdate();
-                }
-            }).start();
+    private void setAlwayHDR(boolean NetflixIsForeground) {
+        //when netflix is fg, enable alway HDR whatever.
+        if (tempHDR) {
+           Log.i(TAG, "setHdrStrategy adaptive default");
+           mSCM.setHdrStrategy(STR_ADAPTIVE);
+           tempHDR = false;
         }
-
-        private void setAlwayHDR(boolean NetflixIsForeground) {
-            //when netflix is fg, enable alway HDR whatever.
-            if (tempHDR) {
-               Log.i(TAG, "setHdrStrategy adaptive default");
-               mSCM.setHdrStrategy(STR_ADAPTIVE);
-               tempHDR = false;
-            }
-            if (NetflixIsForeground && mOutputModeManager.getHdrStrategy().startsWith(STR_ADAPTIVE) &&
+        if (NetflixIsForeground && mOutputModeManager.getHdrStrategy().startsWith(STR_ADAPTIVE) &&
                                 mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).isHdr()) {
-               Log.i(TAG, "setHdrStrategy  always");
-               mSCM.setHdrStrategy(STR_ALWAYS);
-               tempHDR = true;
-            }
+            Log.i(TAG, "setHdrStrategy  always");
+            mSCM.setHdrStrategy(STR_ALWAYS);
+            tempHDR = true;
+        }
             /*if (NetflixIsForeground && (mOutputModeManager.getHdrStrategy().startsWith(STR_ADAPTIVE) == false ||
                                 mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).isHdr()==false)){
                 Log.d(TAG,"something error!");
              }*/
-             Log.d(TAG,"NetflixIsForeground,startsWith,isHdr: "+NetflixIsForeground
+         Log.d(TAG,"NetflixIsForeground,startsWith,isHdr: "+NetflixIsForeground
                 +mOutputModeManager.getHdrStrategy().startsWith(STR_ADAPTIVE)+mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).isHdr());
-        }
+    }
 
-        private void netflixFGStateUpdate() {
-            synchronized (mLock) {
-                boolean fg = isVisibleApp(NETFLIX_PKG_NAME);
-                Log.i(TAG,"fg: "+fg + "  mIsNetflixFg: "+ mIsNetflixFg);
-                if (fg ^ mIsNetflixFg) {
-                    Log.i(TAG, "Netflix status changed from " + (mIsNetflixFg ? "fg" : "bg") + " -> " + (fg ? "fg" : "bg"));
-                    mIsNetflixFg = fg;
+    private void netflixFGStateUpdate() {
+        synchronized (mLock) {
+            boolean fg = isTopTask(NETFLIX_PKG_NAME);
+            Log.i(TAG,"fg: "+fg + "  mIsNetflixFg: "+ mIsNetflixFg);
+            if (fg ^ mIsNetflixFg) {
+                Log.i(TAG, "Netflix status changed from " + (mIsNetflixFg ? "fg" : "bg") + " -> " + (fg ? "fg" : "bg"));
+                mIsNetflixFg = fg;
 
-                    mAudioManager.setParameters("continuous_audio_mode=" + (fg ? "1" : "0"));
-                    mSCM.setProperty("vendor.netflix.state", fg ? "fg" : "bg");
-                    mHdmiControlManager.setPowerStateChangeOnActiveSourceLost(fg ? LOST_NONE : LOST_STANDBY_NOW);
-
-                }
-
-                boolean fgYoutube = isVisibleApp(YOUTUBE_PKG_NAME);
-                if (fgYoutube ^ mIsYoutubeFg) {
-                    Log.i(TAG, "Youtube status changed from " + (mIsYoutubeFg ? "fg" : "bg") + " -> " + (fgYoutube ? "fg" : "bg"));
-                    mIsYoutubeFg = fgYoutube;
-                    mAudioManager.setParameters("compensate_video_enable=" + (fgYoutube ? "1" : "0"));
-                }
+                mAudioManager.setParameters("continuous_audio_mode=" + (fg ? "1" : "0"));
+                mSCM.setProperty("vendor.netflix.state", fg ? "fg" : "bg");
+                mHdmiControlManager.setPowerStateChangeOnActiveSourceLost(fg ? LOST_NONE : LOST_STANDBY_NOW);
 
             }
+
+            boolean fgYoutube = isTopTask(YOUTUBE_PKG_NAME);
+            if (fgYoutube ^ mIsYoutubeFg) {
+                Log.i(TAG, "Youtube status changed from " + (mIsYoutubeFg ? "fg" : "bg") + " -> " + (fgYoutube ? "fg" : "bg"));
+                mIsYoutubeFg = fgYoutube;
+                mAudioManager.setParameters("compensate_video_enable=" + (fgYoutube ? "1" : "0"));
+            }
+
+        }
+    }
+
+    private final TaskStackListener mTaskStackListener = new TaskStackListener() {
+        @Override
+        public void onTaskStackChanged() {
+            Log.i(TAG, "onTaskStackChanged");
+            mMsgHandler.sendEmptyMessageDelayed(MSG_UPDATA,700);
+        }
+    };
+
+
+    private class ProcessObserver extends IProcessObserver.Stub {
+        @Override
+        public void onForegroundActivitiesChanged(int pid, int uid, boolean foregroundActivities) {
+            Log.d(TAG, "onForegroundActivitiesChanged pid:" + pid + ",uid:" + uid + ",fg:" + foregroundActivities);
+            mMsgHandler.sendEmptyMessageDelayed(MSG_UPDATA,700);
         }
 
         @Override
@@ -676,5 +724,6 @@ public class NetflixService extends Service {
         public void onProcessDied(int pid, int uid) {
         }
     }
+
 }
 
