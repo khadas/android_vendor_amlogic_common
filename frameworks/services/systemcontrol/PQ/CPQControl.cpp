@@ -7780,8 +7780,9 @@ source_input_param_t CPQControl::GetCurrentSourceInputInfo()
 }
 
 int CPQControl::GetRGBPattern() {
-    char value[32] = {0};
-    pqReadSys(VIDEO_RGB_SCREEN, value, sizeof(value));
+    char value[33] = {0};
+    pqReadSys(VIDEO_RGB_SCREEN, value, (sizeof(value)-1));
+    value[32] = '\0';
     return strtol(value, NULL, 10);
 }
 
@@ -7895,9 +7896,10 @@ int CPQControl::SetGrayPattern(int value) {
 
 int CPQControl::GetGrayPattern() {
     int value = 0;
-    char temp[8];
+    char temp[9];
     memset(temp, 0, sizeof(temp));
-    int ret = pqReadSys(VIDEO_TEST_SCREEN, temp, sizeof(temp));
+    int ret = pqReadSys(VIDEO_TEST_SCREEN, temp, (sizeof(temp)-1));
+    temp[8] = '\0';
     value = strtol(temp, NULL, 16);
 
     if (value < 0) {
