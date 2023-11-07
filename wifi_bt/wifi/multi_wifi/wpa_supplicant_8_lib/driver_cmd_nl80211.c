@@ -491,6 +491,35 @@ int wpa_driver_nl80211_driver_cmd(void *priv, char *cmd, char *buf,
 		}
 	} while(0);
 
+	if (os_strncasecmp(cmd, "COUNTRY", 7) == 0) {
+		char alpha2[3];
+		struct nl_msg *msg;
+		msg = nlmsg_alloc();
+		if (!msg)
+			return -ENOMEM;
+
+	memcpy(alpha2, cmd + strlen("COUNTRY") + 1, strlen(cmd) - strlen("COUNTRY") - 1);
+	alpha2[2] = '\0';
+	if (!nl80211_cmd(drv, msg, 0, NL80211_CMD_RELOAD_REGDB))
+	{
+		wpa_printf(MSG_ERROR, "debug for fw reload\n");
+		nlmsg_free(msg);
+		return -EINVAL;
+	}
+	if (send_and_recv_msgs(drv, msg, NULL, NULL, NULL, NULL))
+		return -EINVAL;
+	msg = nlmsg_alloc();
+	if (!msg)
+		return -ENOMEM;
+	if (!nl80211_cmd(drv, msg, 0, NL80211_CMD_REQ_SET_REG) ||
+	nla_put_string(msg, NL80211_ATTR_REG_ALPHA2, alpha2)) {
+		nlmsg_free(msg);
+		return -EINVAL;
+	}
+	if (send_and_recv_msgs(drv, msg, NULL, NULL, NULL, NULL))
+		return -EINVAL;
+	}
+
 	if (os_strncasecmp(cmd, "BTCOEXMODE", 10) == 0 || os_strncasecmp(cmd, "MIRACAST", 8) == 0 ||
 		os_strncasecmp(cmd, "WLS_BATCHING", 12) == 0 || os_strcasecmp(cmd, "BTCOEXSCAN-STOP") == 0 ||
 		os_strncasecmp(cmd, "RXFILTER", 8) == 0 || os_strncasecmp(cmd, "SETSUSPENDMODE", 14) == 0 ||
