@@ -25,7 +25,7 @@
 
 #include "ScreenControlHal.h"
 
-#define TIMEOUT_VAL  2 * 1000 * 1000 //1s
+#define TIMEOUT_VAL  2 * 1000 * 1000 //2s
 
 
 
@@ -207,21 +207,21 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
         }
         if (mFirstPts == 0)
             mFirstPts = pts;
-        // int64_t diff = timeSecond * 1000 * 1000;
         int64_t diffPts = pts - mFirstPts;
         write(fd, buffer, size);
         delete []buffer;
         video_dump_size += size;
-        ALOGI("[%s %d] video dump_size = %d,pts = %lld,diffPts=%lld\n", __FUNCTION__, __LINE__,size,pts,diffPts);
-        if (diffPts >= limitTimeSec * 1000 * 1000)
+       ALOGI("[%s %d] video dump_size = %d,pts = %lld,diffPts=%lld", __FUNCTION__, __LINE__,size,pts,diffPts);
+        if (diffPts >= (int64_t)limitTimeSec * 1000 * 1000)
             break;
 
     }
+    ALOGD("[%s %d] tspacker stop", __FUNCTION__, __LINE__);
     tspacker->stop();
     close(fd);
     fd = -1;
     mStart = false;
-    ALOGI("TSPackerTest stop\n");
+    ALOGD("[%s %d] record finish", __FUNCTION__, __LINE__);
     return OK;
 
 }
