@@ -471,6 +471,22 @@ public class NetflixService extends Service {
         }
     }
 
+    private boolean isTvTs_CTS() {
+        ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> infos = am.getRunningAppProcesses();
+
+        for (int i = 0; i < infos.size(); i++) {
+            ActivityManager.RunningAppProcessInfo info = infos.get(i);
+            if (info.processName.contains("tvts") || info.processName.contains("leanbackjank") ||
+                    info.processName.contains("cts")) {
+                Log.d(TAG, "processName:" + info.processName);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private boolean isTopTask(String pkgName){
         try {
              // return if the activity monitor is no longer used
@@ -679,6 +695,19 @@ public class NetflixService extends Service {
     private void netflixFGStateUpdate() {
         synchronized (mLock) {
             boolean fg = isTopTask(NETFLIX_PKG_NAME);
+            boolean netflix = isVisibleApp(NETFLIX_PKG_NAME);
+            if (netflix  && !isTvTs_CTS()) {
+                ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+                final List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
+                for (ActivityManager.RunningAppProcessInfo info: procs) {
+                    if (info.importance
+                            == ActivityManager.RunningAppProcessInfo.IMPORTANCE_CACHED
+                            && !TextUtils.equals(NETFLIX_PKG_NAME, info.processName)
+                            && !TextUtils.equals(YOUTUBE_PKG_NAME, info.processName)) {
+                        am.killBackgroundProcesses(info.pkgList[0]);
+                    }
+                }
+            }
             Log.i(TAG,"fg: "+fg + "  mIsNetflixFg: "+ mIsNetflixFg);
             if (fg ^ mIsNetflixFg) {
                 Log.i(TAG, "Netflix status changed from " + (mIsNetflixFg ? "fg" : "bg") + " -> " + (fg ? "fg" : "bg"));
