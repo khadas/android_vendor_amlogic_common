@@ -196,7 +196,7 @@ void ScreenControlHal::handleServiceDeath(uint32_t cookie) {
     ALOGE("screencontrolservice handleServiceDeath cookie:%d",(int)cookie);
     mCallBack = nullptr;
 }
-ScreenControlHal::DeathRecipient::DeathRecipient(sp<ScreenControlHal> sch):mScreenControlHal(sch) {}
+ScreenControlHal::DeathRecipient::DeathRecipient(sp<ScreenControlHal> sch):mScreenControlHal(std::move(sch)) {}
 
 void ScreenControlHal::DeathRecipient::serviceDied(uint64_t cookie,
                 const ::android::wp<::android::hidl::base::V1_0::IBase>& ) {

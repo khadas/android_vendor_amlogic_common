@@ -22,9 +22,10 @@
 namespace android {
 
 ESConvertor::ESConvertor() :
-            mClientId(-1),
+            mESConvertorCallback(nullptr),
+            mScreenManager(nullptr),
             mStart(false),
-            mScreenManager(nullptr) {
+            mClientId(-1) {
     ALOGI("ESConvertor construct");
     ScreenControlDebug::initDebug();
     if (ScreenControlDebug::isNeedDumpEs())
@@ -33,6 +34,8 @@ ESConvertor::ESConvertor() :
 }
 
 ESConvertor::~ESConvertor() {
+    if (mStart)
+        stop();
     ALOGI("~ESConvertor");
 }
 
@@ -90,7 +93,12 @@ bool ESConvertor::stop() {
         return false;
     }
     mScreenManager->stop(mClientId);
-    mWorkingInfoQueue.clear();
+    while (!mWorkingInfoQueue.empty()) {
+        auto input = mWorkingInfoQueue.begin();
+        if (mClientId > 0 && (*input)->buffer)
+            delete [](*input)->buffer;
+        mWorkingInfoQueue.pop_front();
+    }
     mESConvertorCallback = nullptr;
     ALOGI("[%s %d] stop done", __FUNCTION__, __LINE__);
     return true;
@@ -101,14 +109,23 @@ void ESConvertor::PictureReady(const OutputRecord &output) {
         ALOGE("[%s %d] the buffer is wrong or has been stoped mStart=%s", __FUNCTION__, __LINE__,mStart?"true":"false");
         return;
     }
-    if (mEncoder->isSoftwareEncoder()) {
-        mEncoder->encodec(output.raw_buffer, output.raw_buffer_size,output.tv_usec);
-    }else {
-        mEncoder->encodec(output.canvas_buffer, 3 * sizeof(long),output.tv_usec);
-    }
     auto info = std::make_unique<BufferPtsInfo>();
     info->index = output.index;
     info->pts = output.tv_usec;
+    info->buffer = nullptr;
+
+    if (mEncoder->isSoftwareEncoder()) {
+        if (!mEncoder->encodec(output.raw_buffer, output.raw_buffer_size,output.tv_usec))
+            return;
+        // When mClientId is greater then 0 ,it means that there are multiple users at the same time,
+        // and it have to destroy the raw buffer , then you have to record it.
+        if (mClientId > 0 && output.raw_buffer)
+            info->buffer = output.raw_buffer;
+    }else {
+        if (!mEncoder->encodec(output.canvas_buffer, 3 * sizeof(long),output.tv_usec))
+            return;
+    }
+
     mWorkingInfoQueue.push_back(std::move(info));
 
 }
@@ -124,7 +141,14 @@ void ESConvertor::onInputBufferAvailable(int64_t pts) {
         ALOGE("can't find this buffer pts: %lld", pts);
         return;
     }
-    mScreenManager->realseBuffer(mClientId,(*outinfo)->index);
+    if (mClientId > 0 ) {
+        if ((*outinfo)->buffer)
+            delete [](*outinfo)->buffer;
+    } else if (mClientId  == 0 ) {
+        mScreenManager->realseBuffer(mClientId,(*outinfo)->index);
+    }
+    mWorkingInfoQueue.erase(outinfo);
+
 }
 void ESConvertor::onOutputBufferAvailable(void* const buffer, int32_t size, int32_t frame_type, int64_t pts) {
     ALOGI("onOutputBufferAvailable frame_type=%d,pts =%lld,size=%d",frame_type,pts,size);

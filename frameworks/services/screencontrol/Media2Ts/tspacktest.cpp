@@ -72,7 +72,9 @@ int main(int argc, char **argv) {
         case 't': type = atoi(optarg); break;
         case 's': timeSecond = atoi(optarg); break;
         case 'p': memset(dump_dir, 0, 64);
-                memcpy(dump_dir,optarg,strlen(optarg));break;
+                  if (strlen(optarg) <= 64)
+                    memcpy(dump_dir,optarg,strlen(optarg));
+                  break;
         default: break;
         }
     }
@@ -126,8 +128,9 @@ int main(int argc, char **argv) {
         memset (dump_path, 0, 128);
         snprintf(dump_path, 128, "%s/%dx%d-%d.ts",dump_dir,outWidth, outHeight, framecount);
         printf("Try save:%s\n", dump_path);
+        /* coverity[path_manipulation_sink:SUPPRESS] */
         int32_t fd = open(dump_path, O_CREAT | O_RDWR, 0666);
-        if (fd <= 0 )
+        if (fd < 0 )
             return 0;
 
         while (1) {
@@ -152,7 +155,6 @@ int main(int argc, char **argv) {
         }
         tspacker->stop();
         close(fd);
-        fd = -1;
         printf("TSPackerTest stop count =%d \n",framecount);
     }
 

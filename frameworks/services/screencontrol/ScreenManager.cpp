@@ -218,7 +218,7 @@ bool ScreenManager::start(std::unique_ptr<InputParmeter>& input, ScreenMangerCal
 }
 
 bool ScreenManager::startMoreClient(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client, int32_t *id) {
-    if (!client || input->format < 0)
+    if (!client || input->format >= SCREENCONTROL_PIX_FMT_UNKNOWN)
         return false;
     auto info = std::make_unique<MultiClientInfo>(input->format,client);
     info->size = std::move(input->size);
@@ -413,6 +413,7 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
             if (getBufferWithFormat((uint8_t*)buffer->buffer_mem,mBufferSize,dst,mInputParmeter,it->second) && dst && size > 0) {
                 const OutputRecord record(buffer->index, size,tv_usec, dst, canvas_buffer,it->second->format);
                 it->second->cb->PictureReady(record);
+                /* coverity[leaked_storage] */
             }else
                 delete []dst;
         }

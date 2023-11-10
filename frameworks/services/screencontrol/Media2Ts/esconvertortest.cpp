@@ -95,7 +95,7 @@ public:
 
     }
     void onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts) {
-        printf("onEsBufferAvailable frame_type=%d,mFirstPts = %ld,pts =%ld,diff =%ld\n",frame_type,mFirstPts,pts,(pts-mFirstPts));
+        printf("onEsBufferAvailable frame_type=%d,mFirstPts = %lld,pts =%lld,diff =%lld\n",frame_type,mFirstPts,pts,(pts-mFirstPts));
         if (mFirstPts == 0)
             mFirstPts = pts;
         if (fd > 0) {
@@ -179,14 +179,14 @@ int main(int argc, char **argv) {
         printf("EsConvertorTest start fail\n");
         return 0;
     }
-    int64_t diff = timeSecond * 1000 * 1000;
-    printf("EsConvertorTest diff=%ld\n",diff);
+    int64_t diff = (int64_t)timeSecond * 1000 * 1000;
+    printf("EsConvertorTest diff=%lld\n",diff);
     while (1) {
         int64_t diffpts = test->getDiffPts();
         int64_t firstPts = test->getFirstPts();
         int64_t lastPts = test->getLastPts();
         if (diffpts >= diff ) {
-            printf("EsConvertorTest firstPts =%ld,lastPts=%ld,diffpts=%ld\n",firstPts,lastPts,diffpts);
+            printf("EsConvertorTest firstPts =%lld,lastPts=%lld,diffpts=%lld\n",firstPts,lastPts,diffpts);
             break;
         }
         usleep(5*1000);//5ms

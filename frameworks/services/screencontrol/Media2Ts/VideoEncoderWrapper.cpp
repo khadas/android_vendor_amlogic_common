@@ -39,23 +39,11 @@ VideoEncoderWrapper::VideoEncoderWrapper(VideoEncoderWrapperCallback * client):
         mWorkingFrameNum(0),
         mCSDbufferSize(0),
         mVideoEncoderWrapperCallback(client) {
-        int fd1 = open("/dev/amvenc_avc", O_RDWR);
-        int fd2 = open("/dev/amvenc_multi", O_RDWR);
-        int fd3 = open("/dev/vc8000", O_RDWR);
-        if (fd1 < 0 && fd2 < 0 && fd3 < 0) {
-            mIsSoftwareEncoder = true;
-            ALOGW("%s Open /dev/amvenc_avc failed, use software encoder instead!", __FUNCTION__);
-        }
-        fd1 >= 0?close(fd1):fd2 >= 0?close(fd2):fd3 >= 0?close(fd3):1;
-        if (fd1 >= 0 ) {
-            close(fd1);
-        }
-        if (fd2 >= 0 ) {
-            close(fd2);
-        }
-        if (fd3 >= 0 ) {
-            close(fd3);
-        }
+        int fd;
+        (fd = open("/dev/amvenc_avc", O_RDWR)) >= 0?close(fd):
+        (fd = open("/dev/amvenc_multi", O_RDWR))>= 0?close(fd):
+        (fd = open("/dev/vc8000", O_RDWR)) >= 0?close(fd):
+        mIsSoftwareEncoder = true;
         ALOGI("VideoEncoderWrapper");
 }
 
@@ -68,58 +56,59 @@ VideoEncoderWrapper::~VideoEncoderWrapper() {
 bool VideoEncoderWrapper::init(int32_t width, int32_t height, int32_t bit_rate, int32_t frame_rate, int32_t i_frame_interval/*default as 0*/) {
     std::lock_guard<std::mutex> lock(mLock);
     media_status_t err = AMEDIA_OK;
-     ALOGI("[%s %d] width:%d,height=%d,bit_rate=%d,frame_rate=%d,i_frame_interval=%d", __FUNCTION__, __LINE__,
-                    width,height,bit_rate,frame_rate,i_frame_interval);
+    bool ret = false;
+    ALOGI("[%s %d] width:%d,height=%d,bit_rate=%d,frame_rate=%d,i_frame_interval=%d", __FUNCTION__, __LINE__,
+                width,height,bit_rate,frame_rate,i_frame_interval);
 
     const char *outputMIME = NULL;
     mEncoder = AMediaCodec_createEncoderByType("video/avc");
     if (mEncoder == NULL) {
         ALOGE("[%s %d] create fail !!", __FUNCTION__, __LINE__);
-        return false;
+        return ret;
     }
-    mOutputFormat = AMediaFormat_new();
-    AMediaFormat_setInt32(mOutputFormat, AMEDIAFORMAT_KEY_WIDTH, width);
-    AMediaFormat_setInt32(mOutputFormat, AMEDIAFORMAT_KEY_HEIGHT, height);
-    AMediaFormat_setString(mOutputFormat, AMEDIAFORMAT_KEY_MIME, "video/avc");
+    AMediaFormat* outputFormat = AMediaFormat_new();
+    AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_WIDTH, width);
+    AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_HEIGHT, height);
+    AMediaFormat_setString(outputFormat, AMEDIAFORMAT_KEY_MIME, "video/avc");
 
-    AMediaFormat_setInt32(mOutputFormat, AMEDIAFORMAT_KEY_BIT_RATE, bit_rate);
-    AMediaFormat_setInt32(mOutputFormat, AMEDIAFORMAT_KEY_BITRATE_MODE, OMX_Video_ControlRateConstant);
-    AMediaFormat_setInt32(mOutputFormat, AMEDIAFORMAT_KEY_FRAME_RATE, frame_rate);
+    AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_BIT_RATE, bit_rate);
+    AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_BITRATE_MODE, OMX_Video_ControlRateConstant);
+    AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_FRAME_RATE, frame_rate);
 
     if (mIsSoftwareEncoder) {
-        AMediaFormat_setInt32(mOutputFormat, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 5);
-        AMediaFormat_setInt32(mOutputFormat, AMEDIAFORMAT_KEY_COLOR_FORMAT, COLOR_FormatYUV420SemiPlanar);
-        AMediaFormat_setInt32(mOutputFormat, "store-metadata-in-buffers", false);
-        AMediaFormat_setInt32(mOutputFormat, "prepend-sps-pps-to-idr-frames", 0);
+        AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 5);
+        AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_COLOR_FORMAT, COLOR_FormatYUV420SemiPlanar);
+        AMediaFormat_setInt32(outputFormat, "store-metadata-in-buffers", false);
+        AMediaFormat_setInt32(outputFormat, "prepend-sps-pps-to-idr-frames", 0);
     } else {
-        AMediaFormat_setInt32(mOutputFormat, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 15);  // Iframes every 15 secs
-        AMediaFormat_setInt32(mOutputFormat, AMEDIAFORMAT_KEY_COLOR_FORMAT, OMX_COLOR_FormatAndroidOpaque);
-        AMediaFormat_setInt32(mOutputFormat, "store-metadata-in-buffers", true);
-        AMediaFormat_setInt32(mOutputFormat, "prepend-sps-pps-to-idr-frames", 1);
-        AMediaFormat_setInt32(mOutputFormat, "vendor.venc.canvasmode.value", 1);
+        AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 15);  // Iframes every 15 secs
+        AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_COLOR_FORMAT, OMX_COLOR_FormatAndroidOpaque);
+        AMediaFormat_setInt32(outputFormat, "store-metadata-in-buffers", true);
+        AMediaFormat_setInt32(outputFormat, "prepend-sps-pps-to-idr-frames", 1);
+        AMediaFormat_setInt32(outputFormat, "vendor.venc.canvasmode.value", 1);
     }
     err = AMediaCodec_configure(mEncoder,
-              mOutputFormat,
+              outputFormat,
               nullptr,
               nullptr,
               AMEDIACODEC_CONFIGURE_FLAG_ENCODE);
-    if (err == AMEDIA_OK) {
-        // Encoder supported prepending SPS/PPS, we don't need to emulate
-        // it.
-    } else {
+    if (err != AMEDIA_OK) {
         ALOGE("[%s %d] encoder config fail , err:%d", __FUNCTION__, __LINE__, err);
-        return false;
+        goto out;
     }
 
     err = AMediaCodec_start(mEncoder);
     if (err != AMEDIA_OK) {
         ALOGE("[%s %d]  encoder start fail err:%d", __FUNCTION__, __LINE__, err);
-        return false;
+        goto out;
     }
     mStart = true;
     ts.push_back(std::thread(&VideoEncoderWrapper::threadVideoFunc,this));
     ALOGD("[%s %d] finish", __FUNCTION__, __LINE__);
-    return true;
+    ret = true;
+out:
+    AMediaFormat_delete(outputFormat);
+    return ret;
 }
 
 bool VideoEncoderWrapper::encodec(void* data,const int32_t size,const int64_t pts) {
@@ -130,7 +119,7 @@ bool VideoEncoderWrapper::encodec(void* data,const int32_t size,const int64_t pt
     ALOGI("[%s %d] pts=%lld", __FUNCTION__, __LINE__,pts);
     auto input = std::make_unique<InputData>(data,size,pts);
     mPendingInputdQueue.push_back(std::move(input));
-    return false;
+    return true;
 }
 
 bool VideoEncoderWrapper::EnqueueInput(std::unique_ptr<InputData>& input) {
@@ -188,7 +177,6 @@ bool VideoEncoderWrapper::stop() {
     mInputBufferIds.clear();
     mPendingInputdQueue.clear();
     mWorkingInputQueue.clear();
-    AMediaFormat_delete(mOutputFormat);
     AMediaCodec_stop(mEncoder);
     mVideoEncoderWrapperCallback = nullptr;
     ALOGI("[%s %d] stop done", __FUNCTION__, __LINE__);

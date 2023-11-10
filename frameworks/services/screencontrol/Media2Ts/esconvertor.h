@@ -26,6 +26,7 @@ namespace android {
 struct BufferPtsInfo {
     int32_t index;
     int64_t pts;
+    uint8_t* buffer;
 };
 
 struct ESConvertorParmeter : public InputParmeter {

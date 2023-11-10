@@ -144,7 +144,7 @@ bool ScreenCatch::stop() {
             mOutputQueue.erase(output);
             continue;
         }
-        if (mClientId > 0) {
+        if (mClientId > 0 && (*output)->raw) {
             delete [](*output)->raw;
         }
         mOutputQueue.erase(output);
@@ -171,7 +171,8 @@ bool ScreenCatch::readBuffer(uint8_t* buffer, int32_t* size) {
     memcpy(buffer,(*output)->raw,mRawBufferSize);
     *size = mRawBufferSize;
     if (mClientId > 0) {
-        delete [](*output)->raw;
+        if ((*output)->raw)
+            delete [](*output)->raw;
     }else
         mScreenManager->realseBuffer(mClientId,(*output)->index);
     mOutputQueue.erase(mOutputQueue.begin());

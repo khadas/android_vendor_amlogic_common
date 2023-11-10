@@ -52,7 +52,7 @@ ScreenControlClient::ScreenControlClient()
          ALOGE("tryGet screen control daemon Service");
     };
 
-    mScreenCtrl = ctrl;
+    mScreenCtrl = std::move(ctrl);
 }
 
 ScreenControlClient::~ScreenControlClient()

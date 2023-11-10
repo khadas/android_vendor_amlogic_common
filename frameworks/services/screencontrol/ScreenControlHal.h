@@ -73,16 +73,7 @@ private:
     void handleServiceDeath(uint32_t cookie);
     ScreenControlService* mScreenControl;
     sp<IScreenControlCallback> mCallBack;
-    int32_t mYuvRecordWidth;
-    int32_t mYuvRecordHeight;
     mutable android::Mutex  mLock;
-    int32_t mAvcRecordWidth;
-    int32_t mAvcRecordHeight;
-    int32_t mAvcRecordFramerate;
-    int32_t mAvcRecordBitrate;
-    int32_t mAvcRecordSourceType;
-    int32_t mMicroWidth;
-    int32_t mMicroHeight;
 
     class  DeathRecipient : public android::hardware::hidl_death_recipient  {
         public:

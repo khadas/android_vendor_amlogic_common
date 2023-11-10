@@ -100,7 +100,9 @@ int main(int argc, char **argv)
         case 'c': counter = atoi(optarg); break;
         case 't': type = atoi(optarg); break;
         case 'p': memset(dump_dir, 0, 64);
-                memcpy(dump_dir,optarg,strlen(optarg));break;
+                  if (strlen(optarg) <= 64)
+                        memcpy(dump_dir,optarg,strlen(optarg));
+                  break;
         default: break;
         }
     }
@@ -145,13 +147,26 @@ int main(int argc, char **argv)
                     outWidth, outHeight, framecount);
         }
         printf("Try save:%s\n", dump_path);
+        /* coverity[path_manipulation_sink:SUPPRESS] */
         int32_t dump_fd = open(dump_path, O_CREAT | O_RDWR | O_TRUNC, 0644);
-        if (dump_fd <= 0) {
+        if (dump_fd < 0) {
             printf("the path open %s fail,maybe don't have the dir !!!\n",dump_path);
             capture->stop();
             return 0;
         }
+        if (outWidth <= 0 || outHeight <= 0 ) {
+            printf("the outWidth or  outHeight is not legal !!\n");
+            capture->stop();
+            close(dump_fd);
+            return 0;
+        }
         uint8_t* buffer = new uint8_t[outWidth * outHeight * 4];
+        if (!buffer) {
+            printf("new buffer fail !!\n");
+            capture->stop();
+            close(dump_fd);
+            return 0;
+        }
         int32_t buffer_size = 0;
         while (1) {
             bool ret = capture->readBuffer(buffer,&buffer_size);
@@ -160,9 +175,11 @@ int main(int argc, char **argv)
             usleep(5 * 1000);//5ms
         }
         printf("read buffer from screencatch buffer_size=%d\n",buffer_size);
-        if ( !buffer || buffer_size <= 0 ) {
+        if ( buffer_size <= 0 ) {
             printf("the buffer is not legal !!\n");
+            delete []buffer;
             capture->stop();
+            close(dump_fd);
             return 0;
         }
         if (saveFileType == SAVE_FILE_BMP) {
@@ -182,10 +199,8 @@ int main(int argc, char **argv)
             write(dump_fd, buffer, buffer_size);
         }
         delete []buffer;
-        buffer = nullptr;
         capture->stop();
         close(dump_fd);
-        dump_fd = -1;
     }
     ALOGI("[%s %d] screencap finish", __FUNCTION__, __LINE__);
     return 1;

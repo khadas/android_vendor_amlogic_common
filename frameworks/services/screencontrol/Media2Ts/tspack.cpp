@@ -92,9 +92,9 @@ bool TSPacker::stop() {
     }
     while (!mOutputQueue.empty()) {
         auto output = mOutputQueue.begin();
-        uint8_t* buffer = (*output)->mTsbuffer;
+        if ((*output)->mTsbuffer)
+            delete [](*output)->mTsbuffer;
         mOutputQueue.erase(output);
-        delete []buffer;
     }
     mStart = false;
     mFirstVideoFrame = false;
@@ -334,6 +334,7 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
     ptr += copy;
     if (ptr != packetDataStart + 188) {
         ALOGE("check the ptr fail!");
+        delete []buffer;
         return false;
     }
     packetDataStart += 188;
@@ -369,7 +370,7 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
         }
 
         memcpy(ptr, es_buffer + offset, copy);
-        ptr += copy;
+        //ptr += copy;
         offset += copy;
         packetDataStart += 188;
     }
@@ -437,9 +438,11 @@ void TSPacker::onEsBufferAvailable(void* const data, int32_t size, int32_t frame
     packetize(es_buffer,es_size,&ts_buffer,&ts_size,pts,flags);
     if (isIDR)
         delete []es_buffer;
-    es_buffer = nullptr;
-    if (!ts_buffer || ts_size <= 0)
+    if (!ts_buffer || ts_size <= 0) {
+        /* coverity[leaked_storage] */
         return;
+    }
+
     std::unique_ptr<TSBufferInfo> output = std::make_unique<TSBufferInfo>(ts_buffer,ts_size,pts);
     mOutputQueue.push_back(std::move(output));
 }

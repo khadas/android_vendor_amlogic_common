@@ -73,7 +73,8 @@ static void microdimming(uint8_t *s, uint8_t *dest,int32_t W,int32_t H, int32_t 
                                     pixcount++;
                             }
                     }
-                    sum=sum / pixcount;
+                    if (pixcount > 0)
+                        sum=sum / pixcount;
                     *(d++) = (uint8_t)sum;
                     //memset(d++, (unsigned char)sum, sizeof(unsigned char) );
             }
@@ -185,7 +186,7 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
         return !OK;
     }
     int32_t fd = open(filename, O_CREAT | O_RDWR, 0666);
-    if (fd <= 0 )
+    if (fd < 0 )
         return !OK;
     mStart = true;
     int64_t firsetNowUs = getNowTimesUs();;
@@ -219,7 +220,6 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
     ALOGD("[%s %d] tspacker stop", __FUNCTION__, __LINE__);
     tspacker->stop();
     close(fd);
-    fd = -1;
     mStart = false;
     ALOGD("[%s %d] record finish", __FUNCTION__, __LINE__);
     return OK;

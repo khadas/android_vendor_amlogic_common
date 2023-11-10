@@ -73,7 +73,6 @@ private:
     int32_t mWorkingFrameNum;
     int32_t mCSDbufferSize;
     VideoEncoderWrapperCallback* mVideoEncoderWrapperCallback;
-    AMediaFormat* mOutputFormat;
     std::condition_variable mCondition;
 
 };
