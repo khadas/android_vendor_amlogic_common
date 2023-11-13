@@ -159,8 +159,8 @@ public class DataProvider extends ContentProvider {
             Log.d(TAG, "insert db null");
         }
         long rowId = db.insert(table, null, values);
-        Uri newUri = ContentUris.withAppendedId(uri, rowId);
-        getContext().getContentResolver().notifyChange(newUri, null);
+        Uri newUri = uri.buildUpon().fragment(values.toString()).build();
+        getContext().getContentResolver().notifyChange(newUri, null, 1 << 15/*ContentResolver.NOTIFY_NO_DELAY*/);
         return newUri;
     }
 
@@ -175,7 +175,8 @@ public class DataProvider extends ContentProvider {
         }
         int row = db.update(table, values, selection, selectionArgs);
         if (row > 0) {
-            getContext().getContentResolver().notifyChange(uri, null);
+            Uri newUri = uri.buildUpon().fragment(values.toString()).build();
+            getContext().getContentResolver().notifyChange(newUri, null, 1 << 15/*ContentResolver.NOTIFY_NO_DELAY*/);
         }
         return row;
     }
