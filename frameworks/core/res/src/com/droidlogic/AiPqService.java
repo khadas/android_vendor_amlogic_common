@@ -138,9 +138,9 @@ public class AiPqService extends Service {
         }
         @Override
         public void onChange(boolean selfChange) {
-            Log.d(TAG,"[SettingsValueChangeContentObserver] onchange = " + Settings.System.getInt(getContentResolver(), SAVE_AIPQ, 0));
+            Log.d(TAG,"[SettingsValueChangeContentObserver] onchange = " + Settings.Global.getInt(getContentResolver(), SAVE_AIPQ, 0));
             super.onChange(selfChange);
-            switch (Settings.System.getInt(getContentResolver(), SAVE_AIPQ, 0)) {
+            switch (Settings.Global.getInt(getContentResolver(), SAVE_AIPQ, 0)) {
                 case AIPQ_ENABLE:
                     enableAipq();
                     break;
@@ -222,15 +222,15 @@ public class AiPqService extends Service {
         Log.i(TAG, "[AIPQservice]  onCreate");
 
         mContentOb = new SettingsValueChangeContentObserver();
-        getContentResolver().registerContentObserver(Settings.System.getUriFor(SAVE_AIPQ),false, mContentOb);
-        int sys_value = Settings.System.getInt(getContentResolver(), SAVE_AIPQ, 0);
+        getContentResolver().registerContentObserver(Settings.Global.getUriFor(SAVE_AIPQ),false, mContentOb);
+        int sys_value = Settings.Global.getInt(getContentResolver(), SAVE_AIPQ, 0);
         Log.d(TAG, "[AIPQservice] onCreate sys_value= " + sys_value);
         if ((mSystemControlManager.getPropertyBoolean(PROP_AIPQ_ENABLE, false) == true) && (sys_value == 2)) {
-            Settings.System.putInt(getContentResolver(), SAVE_AIPQ, AIPQ_ENABLE);
+            Settings.Global.putInt(getContentResolver(), SAVE_AIPQ, AIPQ_ENABLE);
             Log.d(TAG, "[AIPQservice] onCreate sys_value set1 ");
         }
         if ((mSystemControlManager.getPropertyBoolean(PROP_AIPQ_ENABLE, false) == false) && (sys_value == 1)) {
-            Settings.System.putInt(getContentResolver(), SAVE_AIPQ, AIPQ_DISABLE);
+            Settings.Global.putInt(getContentResolver(), SAVE_AIPQ, AIPQ_DISABLE);
             Log.d(TAG, "[AIPQservice] onCreate sys_value set2 ");
         }
     }
