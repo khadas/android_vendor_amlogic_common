@@ -25,7 +25,6 @@ cc_binary {
   ],
   include_dirs: [
       "hardware/amlogic/audio/utils/include",
-      "hardware/amlogic/audio/audio_hal",
   ],
 
   cflags: [
