@@ -27,11 +27,11 @@ endif
 ifdef PRODUCT_DIRNAME
 -include $(PRODUCT_DIRNAME)/wifibt.build.config.trunk.mk
 else
--include device/amlogic/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
+-include common/project/amlogic/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
 endif
 
 ifeq ($(PRODUCT_DIR),mercury)
--include  device/amlogic_car/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
+-include  common/project/amlogic/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
 endif
 
 WIFI_MODULES := $(CONFIG_WIFI_MODULES)
