@@ -118,6 +118,7 @@ public class NetflixService extends Service {
     private ProcessObserver mProcessObserver;
     private DeviceConfigListener mDeviceConfigListener = null;
     private  Handler mMsgHandler;
+    private String mOriginalPowerStateChangeValue;
 
     private class SettingsObserver extends ContentObserver {
         public SettingsObserver(Handler handler) {
@@ -685,8 +686,13 @@ public class NetflixService extends Service {
 
                 mAudioManager.setParameters("continuous_audio_mode=" + (fg ? "1" : "0"));
                 mSCM.setProperty("vendor.netflix.state", fg ? "fg" : "bg");
-                mHdmiControlManager.setPowerStateChangeOnActiveSourceLost(fg ? LOST_NONE : LOST_STANDBY_NOW);
 
+                if (fg) {
+                    mOriginalPowerStateChangeValue = mHdmiControlManager.getPowerStateChangeOnActiveSourceLost();
+                    mHdmiControlManager.setPowerStateChangeOnActiveSourceLost(LOST_NONE);
+                } else {
+                    mHdmiControlManager.setPowerStateChangeOnActiveSourceLost(mOriginalPowerStateChangeValue);
+                }
             }
 
             boolean fgYoutube = isTopTask(YOUTUBE_PKG_NAME);
