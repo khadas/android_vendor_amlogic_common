@@ -99,7 +99,6 @@
         <service android:exported="true" android:name="com.droidlogic.DroidLogicPowerService" android:singleUser="true" />
         <service android:exported="true" android:name="com.droidlogic.SubtitleDisplayer" android:enabled="true" android:singleUser="true" />
         <service android:exported="true" android:name="com.droidlogic.DroidLogicBenchService" android:singleUser="true" />
-        <service android:exported="true" android:name="com.droidlogic.DroidLogicCpuService" android:singleUser="true" />
         <service android:name="com.droidlogic.PrebuiltChannelsService"
              android:singleUser="true"
              android:enabled="true"
