@@ -139,6 +139,7 @@ typedef struct vpp_pq_para_s {
 } vpp_pq_para_t;
 
 typedef struct vpp_pictur_mode_para_s {
+    //PM5 XML has config
     int Brightness;
     int Contrast;
     int Saturation;
@@ -156,6 +157,10 @@ typedef struct vpp_pictur_mode_para_s {
     int ChromaCoring;
     int DvMode;
     int DvDarkDetail;
+
+    //PM5 XML not has config
+    int Deblock;
+    int Demosquito;
 } vpp_pictur_mode_para_t;
 
 typedef struct pqosd_picture_mode_para_s {

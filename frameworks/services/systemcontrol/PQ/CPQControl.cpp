@@ -4577,7 +4577,15 @@ int CPQControl::GetDeblockMode(void)
     int ret = -1;
     int mode = DI_DEBLOCK_MODE_OFF;
 
-    ret = mSSMAction->SSMReadDeblockMode(mCurrentSourceInputInfo.source_input, &mode);
+    if (mbCpqCfg_new_picture_mode_enable) {
+        vpp_picture_mode_t pq_mode = (vpp_picture_mode_t)GetPQMode();
+        vpp_pictur_mode_para_t para;
+        if (GetPictureModeData(mCurrentPqSource, pq_mode, &para) == 0) {
+            mode = para.Deblock;
+        }
+    } else {
+        ret = mSSMAction->SSMReadDeblockMode(mCurrentSourceInputInfo.source_input, &mode);
+    }
 
     if (0 == ret) {
         SYS_LOGD("%s: mode is %d\n", __FUNCTION__, mode);
@@ -4593,7 +4601,16 @@ int CPQControl::SaveDeblockMode(di_deblock_mode_t mode)
     int ret = -1;
     SYS_LOGD("%s: mode = %d\n", __FUNCTION__, mode);
 
-    ret = mSSMAction->SSMSaveDeblockMode(mCurrentSourceInputInfo.source_input, mode);
+    if (mbCpqCfg_new_picture_mode_enable) {
+        vpp_pictur_mode_para_t para;
+        vpp_picture_mode_t pq_mode = (vpp_picture_mode_t)GetPQMode();
+        if (GetPictureModeData(mCurrentPqSource, pq_mode, &para) == 0) {
+            para.Deblock = (int)mode;
+            ret = SetPictureModeData(mCurrentPqSource, pq_mode, &para);
+        }
+    } else {
+        ret = mSSMAction->SSMSaveDeblockMode(mCurrentSourceInputInfo.source_input, mode);
+    }
 
     if (ret < 0) {
         SYS_LOGE("%s failed\n", __FUNCTION__);
@@ -4665,8 +4682,19 @@ int CPQControl::SetDemoSquitoMode(di_demosquito_mode_t mode, int is_save)
 
 int CPQControl::GetDemoSquitoMode(void)
 {
+    int ret = -1;
     int mode = DI_DEMOSQUITO_MODE_OFF;
-    int ret = mSSMAction->SSMReadDemoSquitoMode(mCurrentSourceInputInfo.source_input, &mode);
+
+    if (mbCpqCfg_new_picture_mode_enable) {
+        vpp_picture_mode_t pq_mode = (vpp_picture_mode_t)GetPQMode();
+        vpp_pictur_mode_para_t para;
+        if (GetPictureModeData(mCurrentPqSource, pq_mode, &para) == 0) {
+            mode = para.Demosquito;
+        }
+    } else {
+        ret = mSSMAction->SSMReadDemoSquitoMode(mCurrentSourceInputInfo.source_input, &mode);
+    }
+
     if (0 == ret) {
         SYS_LOGD("%s: mode is %d\n", __FUNCTION__, mode);
     } else {
@@ -4681,7 +4709,17 @@ int CPQControl::SaveDemoSquitoMode(di_demosquito_mode_t mode)
     int ret = -1;
     SYS_LOGD("%s: mode = %d\n", __FUNCTION__, mode);
 
-    ret = mSSMAction->SSMSaveDemoSquitoMode(mCurrentSourceInputInfo.source_input, mode);
+    if (mbCpqCfg_new_picture_mode_enable) {
+        vpp_pictur_mode_para_t para;
+        vpp_picture_mode_t pq_mode = (vpp_picture_mode_t)GetPQMode();
+        if (GetPictureModeData(mCurrentPqSource, pq_mode, &para) == 0) {
+            para.Demosquito = (int)mode;
+            ret = SetPictureModeData(mCurrentPqSource, pq_mode, &para);
+        }
+    } else {
+        ret = mSSMAction->SSMSaveDemoSquitoMode(mCurrentSourceInputInfo.source_input, mode);
+    }
+
     if (ret < 0) {
         SYS_LOGE("%s failed\n", __FUNCTION__);
     } else {
@@ -9385,6 +9423,11 @@ void CPQControl::resetPQUiSetting(void)
             //picture mode params
             for (k = VPP_PICTURE_MODE_STANDARD; k < VPP_PICTURE_MODE_MAX; k++) {
                 if (mPQdb->PQ_GetPictureModeParams(src, vpp_picture_mode_t(k), &picture) == 0) {
+                    //patch start: for PM5 MpegNr level manage deblock&demosquito two ui default value
+                    picture.Deblock = picture.MpegNr;
+                    picture.Demosquito = picture.MpegNr;
+                    //patch end
+
                     ret = SetPictureModeData(src, vpp_picture_mode_t(k), &picture);
                 } else {
                     ret = RsetPictureModeData(src, vpp_picture_mode_t(k));
