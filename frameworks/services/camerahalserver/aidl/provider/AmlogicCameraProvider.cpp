@@ -37,7 +37,7 @@ namespace implementation {
 using ::aidl::android::hardware::camera::common::Status;
 using ::android::hardware::camera::device::implementation::AmlogicCameraDevice;
 using ::android::hardware::camera::device::implementation::fromStatus;
-using ::android::hardware::camera::external::common::ExternalCameraConfig;
+//using ::android::hardware::camera::external::common::ExternalCameraConfig;
 
 namespace {
 // "device@<version>/external/<id>"

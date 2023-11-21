@@ -53,7 +53,7 @@ using ::aidl::android::hardware::camera::provider::CameraIdAndStreamCombination;
 using ::aidl::android::hardware::camera::provider::ConcurrentCameraIdCombination;
 using ::aidl::android::hardware::camera::provider::ICameraProviderCallback;
 using ::android::hardware::camera::common::helper::SimpleThread;
-using ::android::hardware::camera::external::common::ExternalCameraConfig;
+//using ::android::hardware::camera::external::common::ExternalCameraConfig;
 using ::android::hardware::camera::common::helper::CameraModule;
 using ::android::sp;
 

@@ -61,8 +61,8 @@ using ::aidl::android::hardware::common::fmq::SynchronizedReadWrite;
 using ::android::AidlMessageQueue;
 using ::android::base::unique_fd;
 using ::android::hardware::camera::common::helper::SimpleThread;
-using ::android::hardware::camera::external::common::ExternalCameraConfig;
-using ::android::hardware::camera::external::common::SizeHasher;
+//using ::android::hardware::camera::external::common::ExternalCameraConfig;
+//using ::android::hardware::camera::external::common::SizeHasher;
 using ::ndk::ScopedAStatus;
 
 struct Camera3Stream;

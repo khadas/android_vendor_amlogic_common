@@ -18,7 +18,6 @@
 #define HARDWARE_INTERFACES_CAMERA_DEVICE_DEFAULT_AMLOGICCAMERADEVICE_H_
 
 #include <AmlogicCameraDeviceSession.h>
-#include <ExternalCameraUtils.h>
 #include <aidl/android/hardware/camera/device/BnCameraDevice.h>
 #include "CameraModule.h"
 #include <utils/Mutex.h>
@@ -36,7 +35,6 @@ using ::aidl::android::hardware::camera::device::ICameraDeviceCallback;
 using ::aidl::android::hardware::camera::device::ICameraDeviceSession;
 using ::aidl::android::hardware::camera::device::ICameraInjectionSession;
 using ::aidl::android::hardware::camera::device::StreamConfiguration;
-using ::android::hardware::camera::external::common::ExternalCameraConfig;
 using ::android::hardware::camera::common::helper::CameraModule;
 using ::android::Mutex;
 
