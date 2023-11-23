@@ -36,6 +36,13 @@ ESConvertor::ESConvertor() :
 ESConvertor::~ESConvertor() {
     if (mStart)
         stop();
+    while (!mWorkingInfoQueue.empty()) {
+        auto input = mWorkingInfoQueue.begin();
+        if (mClientId > 0 && (*input)->buffer)
+            delete [](*input)->buffer;
+        ALOGI("[%s %d] stop clear mWorkingInfoQueue pts = %lld", __FUNCTION__, __LINE__,(*input)->pts);
+        mWorkingInfoQueue.pop_front();
+    }
     ALOGI("~ESConvertor");
 }
 
@@ -152,6 +159,10 @@ void ESConvertor::onInputBufferAvailable(int64_t pts) {
 }
 void ESConvertor::onOutputBufferAvailable(void* const buffer, int32_t size, int32_t frame_type, int64_t pts) {
     ALOGI("onOutputBufferAvailable frame_type=%d,pts =%lld,size=%d",frame_type,pts,size);
+    if (!mStart) {
+        ALOGE("[%s %d] the ESConvertor has been stopped!", __FUNCTION__, __LINE__);
+        return;
+    }
     if (mDumper)
         mDumper->dump((uint8_t*) buffer,size);
     if (mESConvertorCallback)

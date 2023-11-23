@@ -36,16 +36,17 @@ static const char* FILE_TYPE_STR_ARR[] = {
     "BMP", "BINARY"
 };
 
-static const char *opt_str = "hmbc:t:p:";
+static const char *opt_str = "hnmbc:t:p:";
 static void help(char *appName)
 {
     printf(
         "Usage:\n"
-        "  %s [-h] [-m/-b] [-c <counter>] [-t <type>] [left  top  right  bottom  outWidth  outHeight] \n"
+        "  %s [-h] [-m/-b/-n] [-c <counter>] [-t <type>] [left  top  right  bottom  outWidth  outHeight] \n"
         "\n"
         "Parameters:\n"
         "  -h  :  show this help \n"
         "  -m  :  save as bmp file (default) \n"
+        "  -n  :  no save as file \n"
         "  -b  :  save as binary file \n"
         "  -c <counter> : continually save file with counter, default as 1\n"
         "  -t <type> : set capture type:\n"
@@ -88,6 +89,7 @@ int main(int argc, char **argv)
     int counter = 1;
     char dump_path[128];
     char dump_dir[64] = "/data/temp";
+    bool isSaveFile = true;
 
 
 
@@ -96,6 +98,7 @@ int main(int argc, char **argv)
         switch (ch) {
         case 'h': help(argv[0]); exit(0);
         case 'm': saveFileType = SAVE_FILE_BMP; break;
+        case 'n': isSaveFile = false;break;
         case 'b': saveFileType = SAVE_FILE_BIN; break;
         case 'c': counter = atoi(optarg); break;
         case 't': type = atoi(optarg); break;
@@ -119,10 +122,11 @@ int main(int argc, char **argv)
     printf("type=%d(%s), file type:%s\n"
            "(left,top,right,bottom)=(%d,%d,%d,%d)\n"
            "out(width,height)=(%d,%d)\n"
+           "isSaveFile     =%d\n"
            "counter=%d\n",
         type, type==0?"video only":"video+osd",
         FILE_TYPE_STR_ARR[saveFileType],
-        left, top, right, bottom, outWidth, outHeight, counter);
+        left, top, right, bottom, outWidth, outHeight,isSaveFile,counter);
 
 
     for (int i = 0; i < counter; i++) {
@@ -175,12 +179,11 @@ int main(int argc, char **argv)
             usleep(5 * 1000);//5ms
         }
         printf("read buffer from screencatch buffer_size=%d\n",buffer_size);
-        if ( buffer_size <= 0 ) {
-            printf("the buffer is not legal !!\n");
+        if ( buffer_size <= 0  || !isSaveFile) {
             delete []buffer;
             capture->stop();
             close(dump_fd);
-            return 0;
+            continue;
         }
         if (saveFileType == SAVE_FILE_BMP) {
             uint8_t* rgb = new uint8_t[buffer_size];

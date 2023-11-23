@@ -366,7 +366,6 @@ bool ScreenManager::realseBuffer(int32_t client_id, int32_t index) {
         return false;
     }
     ALOGI("[%s %d] client_id:%d,index:%d,pts:%lld", __FUNCTION__, __LINE__, client_id,index,(*outinfo)->tv_usec);
-    free((*outinfo)->canvas_buffer);
     mScreenDev->ops.release_buffer(mScreenDev, (long *)(*outinfo)->raw_buffer);
     mOutputRecordQueue.erase(outinfo);
     return true;
@@ -376,7 +375,7 @@ bool ScreenManager::realseBuffer(int32_t client_id, int32_t index) {
 int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
     std::unique_lock<std::mutex> lg(mLock);
     int64_t tv_usec = 0;
-    uint8_t* canvas_buffer = nullptr;
+    long* canvas_buffer = nullptr;
     if (!mStart) {
         ALOGE("the modules has been not started");
         return 0;
@@ -386,14 +385,11 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
     output->tv_usec = getNowTimesUs();
     ALOGI("[%s %d] index:%d pts=%lld", __FUNCTION__, __LINE__,buffer->index,output->tv_usec);
     output->raw_buffer = (uint8_t *)buffer->buffer_mem;
-    long buff_info[3] = {0,0,0};
+    long* buff_info = output->canvas_buffer;
     buff_info[0] = kMetadataBufferTypeCanvasSource;
     buff_info[1] = (long)buffer->buffer_mem;
     buff_info[2] = buffer->buffer_canvas;
-    output->canvas_buffer = malloc(3 *sizeof(long));
-    memset(output->canvas_buffer, 0, 3 *sizeof(long));
-    memcpy((long *)output->canvas_buffer, &buff_info[0],sizeof(buff_info));
-    canvas_buffer = (uint8_t*)output->canvas_buffer;
+    canvas_buffer = (long*)output->canvas_buffer;
 
     const OutputRecord picture(output->index, mBufferSize,output->tv_usec, output->raw_buffer, output->canvas_buffer,mInputParmeter->format);
     mOutputRecordQueue.push_back(std::move(output));

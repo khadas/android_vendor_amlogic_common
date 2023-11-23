@@ -29,7 +29,7 @@ using namespace android;
 
 const char *filename = "/data/temp/video.es";
 
-static const char *opt_str = "hf:b:t:s:";
+static const char *opt_str = "hf:c:b:t:s:p:";
 static void help(char *appName)
 {
     printf(
@@ -71,6 +71,9 @@ public:
 
 
     bool start(int left, int top,int right,int bottom,int width,int height,int source_type,int32_t frame_rate,int32_t bit_rate) {
+        fd = open(filename, O_CREAT | O_RDWR, 0666);
+        if (fd <= 0 )
+            return false;
         convertor = std::make_unique<ESConvertor>();
         auto parmeter = std::make_unique<ESConvertorParmeter>();
         parmeter->size = std::make_unique<Size>(width,height);
@@ -78,10 +81,6 @@ public:
         parmeter->source_type = source_type;
         parmeter->frame_rate = frame_rate;
         parmeter->bit_rate_ = bit_rate;
-        fd = open(filename, O_CREAT | O_RDWR, 0666);
-        if (fd <= 0 )
-            return false;
-
         return convertor->start(parmeter,this);
 
 
@@ -95,7 +94,7 @@ public:
 
     }
     void onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts) {
-        printf("onEsBufferAvailable frame_type=%d,mFirstPts = %lld,pts =%lld,diff =%lld\n",frame_type,mFirstPts,pts,(pts-mFirstPts));
+        printf("onEsBufferAvailable frame_type=%d,mFirstPts = %lld,pts =%lld,diff =%lld \n",frame_type,mFirstPts,pts,(pts-mFirstPts));
         if (mFirstPts == 0)
             mFirstPts = pts;
         if (fd > 0) {
@@ -126,14 +125,23 @@ int main(int argc, char **argv) {
     int outWidth=1280, outHeight=720;
     int tmpArgIdx = 0;
     int needDumpFrame = 0;
+    int counter = 1;
+    int framecount = 0;
+    char dump_path[128];
+    char dump_dir[64] = "/data/temp";
 
     while ((ch = getopt(argc, argv, opt_str)) != -1) {
         switch (ch) {
         case 'h': help(argv[0]); exit(0);
         case 'f': framerate = atoi(optarg); break;
+        case 'c': counter = atoi(optarg); break;
         case 'b': bitrate = atoi(optarg); break;
         case 't': type = atoi(optarg); break;
         case 's': timeSecond = atoi(optarg); break;
+        case 'p': memset(dump_dir, 0, 64);
+                  if (strlen(optarg) <= 64)
+                    memcpy(dump_dir,optarg,strlen(optarg));
+                  break;
         default: break;
         }
     }
@@ -169,29 +177,34 @@ int main(int argc, char **argv) {
            "bitrate  =%d\n"
            "type     =%s\n"
            "time     =%ds\n"
-           "save as [%s]\n",
+           "counter     =%d\n",
            outWidth, outHeight, framerate, left,top,right,bottom,bitrate,
            type==AML_CAPTURE_OSD_VIDEO?"video+osd":(type==AML_CAPTURE_VIDEO?"video only":"unknown"),
-           timeSecond, filename);
-
-    auto test = std::make_unique<EsConvertorTest>();
-    if (!test->start(left,top,right,bottom,outWidth, outHeight,type,framerate,bitrate)) {
-        printf("EsConvertorTest start fail\n");
-        return 0;
-    }
-    int64_t diff = (int64_t)timeSecond * 1000 * 1000;
-    printf("EsConvertorTest diff=%lld\n",diff);
-    while (1) {
-        int64_t diffpts = test->getDiffPts();
-        int64_t firstPts = test->getFirstPts();
-        int64_t lastPts = test->getLastPts();
-        if (diffpts >= diff ) {
-            printf("EsConvertorTest firstPts =%lld,lastPts=%lld,diffpts=%lld\n",firstPts,lastPts,diffpts);
-            break;
+           timeSecond, counter);
+    for (int i = 0; i < counter; i++) {
+        framecount++;
+        memset (dump_path, 0, 128);
+        snprintf(dump_path, 128, "%s/%dx%d-%d.ts",dump_dir,outWidth, outHeight, framecount);
+        printf("Try save:%s\n", dump_path);
+        auto test = std::make_unique<EsConvertorTest>();
+        if (!test->start(left,top,right,bottom,outWidth, outHeight,type,framerate,bitrate)) {
+            printf("EsConvertorTest start fail\n");
+            return 0;
         }
-        usleep(5*1000);//5ms
+        int64_t diff = (int64_t)timeSecond * 1000 * 1000;
+        printf("EsConvertorTest diff=%lld\n",diff);
+        while (1) {
+            int64_t diffpts = test->getDiffPts();
+            int64_t firstPts = test->getFirstPts();
+            int64_t lastPts = test->getLastPts();
+            if (diffpts >= diff ) {
+                printf("EsConvertorTest firstPts =%lld,lastPts=%lld,diffpts=%lld\n",firstPts,lastPts,diffpts);
+                break;
+            }
+            usleep(5*1000);//5ms
+        }
+        test->stop();
+        printf("mH264Convertor stop\n");
     }
-    test->stop();
-    printf("mH264Convertor stop\n");
     return 0;
 }

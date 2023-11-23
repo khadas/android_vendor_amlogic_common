@@ -173,6 +173,11 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
     Mutex::Autolock autoLock(mLock);
     int32_t video_dump_size = 0;
     int64_t mFirstPts = 0;
+    int32_t fd = open(filename, O_CREAT | O_RDWR, 0666);
+    if (fd < 0 ) {
+        ALOGE("[%s %d] the file : %s can't open  reason:%s", __FUNCTION__, __LINE__,filename,strerror(errno));
+        return !OK;
+    }
     std::unique_ptr<TSPacker> tspacker = std::make_unique<TSPacker>();
     auto parmeter = std::make_unique<ESConvertorParmeter>();
     parmeter->size = std::make_unique<Size>(width,height);
@@ -180,14 +185,11 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
     parmeter->source_type = sourceType;
     parmeter->frame_rate = frameRate;
     parmeter->bit_rate_ = bitRate;
-
     if (!tspacker->start(parmeter)) {
         ALOGE("[%s %d] TSPacker start fail !!", __FUNCTION__, __LINE__);
+        close(fd);
         return !OK;
     }
-    int32_t fd = open(filename, O_CREAT | O_RDWR, 0666);
-    if (fd < 0 )
-        return !OK;
     mStart = true;
     int64_t firsetNowUs = getNowTimesUs();;
     while (mStart) {
@@ -196,7 +198,7 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
         int64_t pts = 0;
         bool ret = tspacker->readBuffer(&buffer,&size,&pts);
         if (!ret || !buffer || size <= 0 || pts <= 0) {
-            int64_t nowUs = getNowTimesUs();;
+            int64_t nowUs = getNowTimesUs();
             int64_t diff = nowUs -firsetNowUs;
             int64_t limitTimeUs = (int64_t)limitTimeSec *1000 *1000;
             if (video_dump_size == 0 && (diff >= limitTimeUs)) {

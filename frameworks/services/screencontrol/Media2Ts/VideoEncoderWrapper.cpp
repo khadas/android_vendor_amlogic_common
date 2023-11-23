@@ -51,6 +51,12 @@ VideoEncoderWrapper::VideoEncoderWrapper(VideoEncoderWrapperCallback * client):
 
 VideoEncoderWrapper::~VideoEncoderWrapper() {
     ALOGI("~VideoEncoderWrapper");
+    while (!mPendingInputQueue.empty()) {
+        auto input = mPendingInputQueue.begin();
+        if (!mIsSoftwareEncoder && (*input)->data_ )
+            free((*input)->data_);
+        mPendingInputQueue.pop_front();
+    }
 }
 
 bool VideoEncoderWrapper::init(int32_t width, int32_t height, int32_t bit_rate, int32_t frame_rate, int32_t i_frame_interval/*default as 0*/) {
@@ -59,8 +65,6 @@ bool VideoEncoderWrapper::init(int32_t width, int32_t height, int32_t bit_rate, 
     bool ret = false;
     ALOGI("[%s %d] width:%d,height=%d,bit_rate=%d,frame_rate=%d,i_frame_interval=%d", __FUNCTION__, __LINE__,
                 width,height,bit_rate,frame_rate,i_frame_interval);
-
-    const char *outputMIME = NULL;
     mEncoder = AMediaCodec_createEncoderByType("video/avc");
     if (mEncoder == NULL) {
         ALOGE("[%s %d] create fail !!", __FUNCTION__, __LINE__);
@@ -117,8 +121,16 @@ bool VideoEncoderWrapper::encodec(void* data,const int32_t size,const int64_t pt
         return false;
     }
     ALOGI("[%s %d] pts=%lld", __FUNCTION__, __LINE__,pts);
-    auto input = std::make_unique<InputData>(data,size,pts);
-    mPendingInputdQueue.push_back(std::move(input));
+    void* encodec_data = data;
+    if (!mIsSoftwareEncoder) {
+        encodec_data = malloc(size);
+        if (!encodec_data)
+            return false;
+        memset(encodec_data,0,size);
+        memcpy(encodec_data,data,size);
+    }
+    auto input = std::make_unique<InputData>(encodec_data,size,pts);
+    mPendingInputQueue.push_back(std::move(input));
     return true;
 }
 
@@ -149,6 +161,9 @@ bool VideoEncoderWrapper::EnqueueInput(std::unique_ptr<InputData>& input) {
     }
     VDLog("[%s %d] queue input buffer to encoder index =%d,pts = %lld", __FUNCTION__, __LINE__,index,input->pts_);
     if (!mIsSoftwareEncoder) {
+        if (input->data_)
+            free(input->data_);
+        input->data_ = nullptr;
         input->encoder_index_ = index;
         mWorkingInputQueue.push_back(std::move(input));
     }
@@ -172,12 +187,19 @@ bool VideoEncoderWrapper::stop() {
     }
     VDLog("[%s %d] thread join out ", __FUNCTION__, __LINE__);
     ts.clear();
+    while (!mPendingInputQueue.empty()) {
+        auto input = mPendingInputQueue.begin();
+        if (!mIsSoftwareEncoder && (*input)->data_ )
+            free((*input)->data_);
+        mPendingInputQueue.pop_front();
+    }
     mWorkingFrameNum = 0;
     mCSDbufferSize = 0;
     mInputBufferIds.clear();
-    mPendingInputdQueue.clear();
     mWorkingInputQueue.clear();
     AMediaCodec_stop(mEncoder);
+    AMediaCodec_delete(mEncoder);
+    mEncoder = nullptr;
     mVideoEncoderWrapperCallback = nullptr;
     ALOGI("[%s %d] stop done", __FUNCTION__, __LINE__);
     return true;
@@ -191,10 +213,10 @@ void VideoEncoderWrapper::threadVideoFunc() {
                 break;
             }
             onDequeueInputWork();
-            if (!mPendingInputdQueue.empty() && !mInputBufferIds.empty()) {
-                auto input = mPendingInputdQueue.begin();
+            if (!mPendingInputQueue.empty() && !mInputBufferIds.empty()) {
+                auto input = mPendingInputQueue.begin();
                 if (EnqueueInput(*input)) {
-                    mPendingInputdQueue.pop_front();
+                    mPendingInputQueue.pop_front();
                 }
 
             }
@@ -233,11 +255,11 @@ void VideoEncoderWrapper::onDequeueInputWork() {
 
     }
     mInputBufferIds.push_back(index);
-    if (!mPendingInputdQueue.empty()) {
-        auto input = mPendingInputdQueue.begin();
+    if (!mPendingInputQueue.empty()) {
+        auto input = mPendingInputQueue.begin();
         VDLog("[%s %d] EnqueueInput", __FUNCTION__, __LINE__);
         if (EnqueueInput(*input)) {
-            mPendingInputdQueue.pop_front();
+            mPendingInputQueue.pop_front();
         }
     }
     return;

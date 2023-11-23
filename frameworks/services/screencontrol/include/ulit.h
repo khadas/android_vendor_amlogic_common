@@ -34,7 +34,7 @@ private:
 inline int64_t getNowTimesUs() {
     struct timespec now;
     clock_gettime(CLOCK_BOOTTIME, &now);
-    int64_t now_time = now.tv_sec * 1000 * 1000 + now.tv_nsec / 1000;
+    int64_t now_time = (int64_t)now.tv_sec * 1000 * 1000 + (int64_t)now.tv_nsec / 1000;
     return now_time;
 }
 

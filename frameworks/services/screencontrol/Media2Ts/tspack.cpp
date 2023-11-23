@@ -64,6 +64,14 @@ TSPacker::~TSPacker() {
         delete []mSPSBuffer;
     if (mPPSBuffer)
         delete []mPPSBuffer;
+    while (!mOutputQueue.empty()) {
+        auto output = mOutputQueue.begin();
+        if ((*output)->mTsbuffer) {
+            delete [](*output)->mTsbuffer;
+        }
+
+        mOutputQueue.erase(output);
+    }
 }
 
 bool TSPacker::start(std::unique_ptr<ESConvertorParmeter>& input) {

@@ -22,16 +22,17 @@
 
 using namespace android;
 
-static const char *opt_str = "hc:f:b:t:s:p:";
+static const char *opt_str = "hnc:f:b:t:s:p:";
 const char *filename = "/data/temp/video.ts";
 static void help(char *appName)
 {
     printf(
         "Usage:\n"
-        "  %s [-h] [-c <counter>] [-f <framerate>] [-b <bitrate>] [-t <type>] [-s <second>] [<left>  <top>  <right>  <bottom> <width> <height>]\n"
+        "  %s [-h/-n] [-c <counter>] [-f <framerate>] [-b <bitrate>] [-t <type>] [-s <second>] [<left>  <top>  <right>  <bottom> <width> <height>]\n"
         "\n"
         "Parameters:\n"
         "  -h            : show this help\n"
+        "  -n            :  no save as file \n"
         "  -c <counter> : continually save file with counter, default as 1\n"
         "  -f <framerate>: frame per second, unit bps, default as 30\n"
         "  -b <bitrate>  : bits per second, unit bit, default as 4000000\n"
@@ -63,9 +64,11 @@ int main(int argc, char **argv) {
     int framecount = 0;
     char dump_path[128];
     char dump_dir[64] = "/data/temp";
+    bool isSaveFile = true;
     while ((ch = getopt(argc, argv, opt_str)) != -1) {
         switch (ch) {
         case 'h': help(argv[0]); exit(0);
+        case 'n': isSaveFile = false;break;
         case 'c': counter = atoi(optarg); break;
         case 'f': framerate = atoi(optarg); break;
         case 'b': bitrate = atoi(optarg); break;
@@ -106,10 +109,11 @@ int main(int argc, char **argv) {
            "bitrate  =%d\n"
            "type     =%s\n"
            "time     =%ds\n"
+           "isSaveFile     =%d\n"
            "counter     =%d\n",
            outWidth, outHeight,left, top,right,bottom, framerate, bitrate,
            type==AML_CAPTURE_OSD_VIDEO?"video+osd":type==AML_CAPTURE_VIDEO?"video only":"unknown",
-           timeSecond, counter);
+           timeSecond, isSaveFile,counter);
     for (int i = 0; i < counter; i++) {
         framecount++;
         mFirstPts = 0;
@@ -144,12 +148,13 @@ int main(int argc, char **argv) {
             }
             if (mFirstPts == 0)
                 mFirstPts = pts;
-            int64_t diff = timeSecond * 1000 * 1000;
             int64_t diffPts = pts - mFirstPts;
-            write(fd, buffer, size);
+            if (isSaveFile) {
+                write(fd, buffer, size);
+            }
             delete []buffer;
             printf("[%s %d] video dump_size = %d,pts = %lld,diffPts=%lld\n", __FUNCTION__, __LINE__,size,pts,diffPts);
-            if (diffPts >= diff)
+            if (diffPts >= (int64_t)timeSecond * 1000 * 1000)
                 break;
 
         }

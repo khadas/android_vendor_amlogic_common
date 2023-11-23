@@ -60,17 +60,26 @@ struct InputParmeter {
 
 // Record for output buffers.
 struct OutputRecord {
-    OutputRecord(): index(0), raw_buffer_size(0), tv_usec(0), raw_buffer(nullptr),  canvas_buffer(nullptr),format(SCREENCONTROL_PIX_FMT_UNKNOWN){};
-    OutputRecord(int32_t _index, int32_t _raw_buffer_size, uint64_t _tv_usec,uint8_t* _raw_buffer,void* _canvas_buffer,aml_screencontrol_format _format) :
-                index(_index), raw_buffer_size(_raw_buffer_size), tv_usec(_tv_usec), raw_buffer(_raw_buffer),  canvas_buffer(_canvas_buffer),format(_format) {}
+    OutputRecord(): index(0), raw_buffer_size(0), tv_usec(0), raw_buffer(nullptr),format(SCREENCONTROL_PIX_FMT_UNKNOWN){
+        canvas_buffer = (long*)malloc(3 *sizeof(long));
+    };
+    OutputRecord(int32_t _index, int32_t _raw_buffer_size, uint64_t _tv_usec,uint8_t* _raw_buffer,long* _canvas_buffer,aml_screencontrol_format _format) :
+                index(_index), raw_buffer_size(_raw_buffer_size), tv_usec(_tv_usec), raw_buffer(_raw_buffer),format(_format) {
+        canvas_buffer = (long*)malloc(3 *sizeof(long));
+        if(canvas_buffer)
+            memcpy(canvas_buffer,_canvas_buffer,3 *sizeof(long));
+    }
     OutputRecord(OutputRecord&&) = default;
-    ~OutputRecord() = default;
+    ~OutputRecord() {
+        if (canvas_buffer)
+            free(canvas_buffer);
+    };
 
     int32_t index;
     int32_t raw_buffer_size;
     int64_t tv_usec;
     uint8_t*   raw_buffer;
-    void*   canvas_buffer;
+    long*   canvas_buffer;
     aml_screencontrol_format format;
 };
 

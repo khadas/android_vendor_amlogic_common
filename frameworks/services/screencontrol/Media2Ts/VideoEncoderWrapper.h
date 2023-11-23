@@ -68,7 +68,7 @@ private:
     std::mutex mLock;
     bool mStart;
     std::list<size_t> mInputBufferIds;
-    std::list<std::unique_ptr<InputData>> mPendingInputdQueue;
+    std::list<std::unique_ptr<InputData>> mPendingInputQueue;
     std::list<std::unique_ptr<InputData>> mWorkingInputQueue;
     int32_t mWorkingFrameNum;
     int32_t mCSDbufferSize;
