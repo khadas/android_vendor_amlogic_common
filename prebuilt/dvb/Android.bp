@@ -19,7 +19,7 @@ package {
     default_applicable_licenses: ["vendor_amlogic_common_license"],
 }
 
-/*
+
 bootstrap_go_package {
     name: "soong-droidlogic_dvb",
     pkgPath: "android/soong/vendor/amlogic/common/prebuilt/dvb",
@@ -44,6 +44,7 @@ droidlogic_dvb_go_defaults {
 
 cc_library_headers {
     name: "libam_adp_headers",
+    defaults: ["droidlogic_dvb_go_defaults"],
     vendor_available: true,
     export_include_dirs: [
         "include",
@@ -55,6 +56,7 @@ cc_library_headers {
 
 cc_library_headers {
     name: "libam_dvb_headers",
+    defaults: ["droidlogic_dvb_go_defaults"],
     export_include_dirs: [
         "include/am_adp",
         "include/am_mw",
@@ -261,4 +263,3 @@ cc_prebuilt_library_static {
     proprietary: true,
 
 }
-*/
