@@ -35,7 +35,6 @@ public class DroidLogicBenchService extends Service {
 
     private void initPoorApp() {
         benchApps = new ArrayList();
-        benchApps.add("com.android.bluetooth");
         benchApps.add("com.google.android.inputmethod.latin");
         benchApps.add("com.google.android.katniss");
         benchApps.add("com.android.vending");
@@ -71,7 +70,7 @@ public class DroidLogicBenchService extends Service {
                 packageManager.getPackageInfo(app, PackageManager.GET_ACTIVITIES);
                 packageManager.setApplicationEnabledSetting(app, BENCH_TEST_APP_DISABLE, BENCH_TEST_APP_FLAG);
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.w(TAG, app + " is not found");
             }
 
         }
@@ -84,7 +83,7 @@ public class DroidLogicBenchService extends Service {
                 packageManager.getPackageInfo(app, PackageManager.GET_ACTIVITIES);
                 packageManager.setApplicationEnabledSetting(app, BENCH_TEST_APP_ENABLE, BENCH_TEST_APP_FLAG);
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.w(TAG, app + " is not found");
             }
         }
     }
