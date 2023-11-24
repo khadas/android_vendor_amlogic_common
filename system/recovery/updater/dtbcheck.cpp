@@ -923,11 +923,17 @@ RecoveryDtbCheck(const ZipArchiveHandle za){
 
     for (i=0;i<metadata_dev;i++) {
         metadata_offset_dev += dtb_dev[i].partition_size;
-        metadata_offset_dev += 8388608;
+        if ((dtb_dev[i].mask & 0x100) != 0)
+            metadata_offset_dev += 1048576;
+        else
+            metadata_offset_dev += 8388608;
     }
     for (i=0;i<metadata_zip;i++) {
         metadata_offset_zip += dtb_zip[i].partition_size;
-        metadata_offset_zip += 8388608;
+        if ((dtb_zip[i].mask & 0x100) != 0)
+            metadata_offset_zip += 1048576;
+        else
+            metadata_offset_zip += 8388608;
     }
 
     for (i=0;i<2;i++) {
