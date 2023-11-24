@@ -31,7 +31,7 @@ else
 endif
 
 ifeq ($(PRODUCT_DIR),mercury)
--include  common/project/amlogic/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
+-include  common/project/amlogic_car/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
 endif
 
 WIFI_MODULES := $(CONFIG_WIFI_MODULES)
