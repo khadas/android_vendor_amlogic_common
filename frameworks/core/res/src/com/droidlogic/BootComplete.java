@@ -87,8 +87,8 @@ public class BootComplete extends BroadcastReceiver {
 
         context.startService(new Intent(context,NtpService.class));
         context.startService(new Intent(context,ShutdownService.class));
-        boolean mNeedPromoteBench = DroidLogicUtils.isNeedBenchPromote();
-        if (mNeedPromoteBench) {
+
+        if (getBooleanProperty("ro.vendor.platform.need.bench.promote", false)) {
             context.startService(new Intent(context, DroidLogicBenchService.class));
         }
 
