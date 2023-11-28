@@ -32,7 +32,7 @@ public class DataProvider extends ContentProvider {
     private DbOpenHelper mDbOpenHelper = null;
 
     public static final String DB_NAME = "database.db";
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 4;
     public static final String TABLE_SCAN_NAME = "tv_control_scan";
     public static final String TABLE_SOUND_NAME = "tv_control_sound";
     public static final String TABLE_PPPOE_NAME = "tv_control_pppoe";
@@ -92,13 +92,16 @@ public class DataProvider extends ContentProvider {
         private final String SQL_CREATE_TABLE_RRT5 =
             "create table if not exists " + TABLE_RRT_NAME +
                 "(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "major_number INTEGER," +
                 "original_network_id INTEGER," +
+                "region_id INTEGER," +
                 "version_num INTEGER," +
                 "dimension_num INTEGER," +
                 "region5_name TEXT," +
                 "dimension_name TEXT NOT NULL," +
                 "values_defined INTEGER," +
-                "level_rating_text TEXT);";
+                "level_rating_text TEXT," +
+                "rating_desc TEXT);";
 
         public DbOpenHelper(final Context context) {
             super(context, DB_NAME, null, DB_VERSION);
@@ -119,9 +122,12 @@ public class DataProvider extends ContentProvider {
 
         @Override
         public void onUpgrade(final SQLiteDatabase db, final int oldVersion, final int newVersion) {
-            if (oldVersion == 1 && newVersion == 2) {
+            if (oldVersion == 1) {
                 db.execSQL(SQL_CREATE_TABLE_RRT5);
                 db.execSQL(SQL_CREATE_TABLE_CHANNEL);
+            } else if (oldVersion > 1 && oldVersion < 4) {
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_RRT_NAME);
+                db.execSQL(SQL_CREATE_TABLE_RRT5);
             }
         }
 
