@@ -130,6 +130,8 @@ PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/multi_wifi/config/wpa_s
 
 PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/multi_wifi/config/p2p_supplicant.conf:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/p2p_supplicant.conf
 
+PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/w2/aml_comm_diag:$(TARGET_COPY_OUT_VENDOR)/xbin/aml_comm_diag
+
 ifneq ($(filter ap6181,$(WIFI_MODULES)),)
 PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/AP6181/Wi-Fi/fw_bcm40181a2.bin:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/40181/fw_bcm40181a2.bin
 PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/AP6181/Wi-Fi/fw_bcm40181a2_apsta.bin:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/40181/fw_bcm40181a2_apsta.bin
@@ -295,6 +297,8 @@ endif
 WIFI_HIDL_FEATURE_DUAL_INTERFACE := true
 endif
 
+PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/w1/iwpriv:$(TARGET_COPY_OUT_VENDOR)/xbin/iwpriv
+
 ifneq ($(filter w2,$(WIFI_MODULES)),)
 ifeq (,$(wildcard common/driver_modules/wifi_bt/wifi/amlogic/w2/common))
 PRODUCT_COPY_FILES += $(call find-copy-subdir-files,*.txt,vendor/amlogic/common/wifi_bt/wifi/w2,$(TARGET_COPY_OUT_VENDOR)/lib/firmware/)
@@ -306,7 +310,9 @@ PRODUCT_COPY_FILES += $(call find-copy-subdir-files,*.txt,common/driver_modules/
 PRODUCT_COPY_FILES += $(call find-copy-subdir-files,*.bin,common/driver_modules/wifi_bt/wifi/amlogic/w2/common,$(TARGET_COPY_OUT_VENDOR)/lib/firmware/)
 PRODUCT_COPY_FILES += $(call find-copy-subdir-files,*.ini,common/driver_modules/wifi_bt/wifi/amlogic/w2/common,$(TARGET_COPY_OUT_VENDOR)/lib/firmware/)
 PRODUCT_COPY_FILES += $(call find-copy-subdir-files,*.asm,common/driver_modules/wifi_bt/wifi/amlogic/w2/common,$(TARGET_COPY_OUT_VENDOR)/lib/firmware/)
+PRODUCT_COPY_FILES += $(call find-copy-subdir-files,aml_comm_diag,common/driver_modules/wifi_bt/wifi/amlogic/w2/common,$(TARGET_COPY_OUT_VENDOR)/xbin/)
 endif
+PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/w2/lspci:$(TARGET_COPY_OUT_VENDOR)/xbin/lspci2
 endif
 
 ifneq ($(filter sd8987,$(WIFI_MODULES)),)
