@@ -898,6 +898,24 @@ public class SystemControlManager {
         }
     }
 
+    public String getColorSpaceList() {
+        synchronized (mLock) {
+            Mutable<String> resultVal = new Mutable<>();
+            try {
+                mProxy.getColorSpaceList((int ret, String v) -> {
+                                if (Result.OK == ret) {
+                                    resultVal.value = v;
+                                }
+                            });
+                return resultVal.value;
+            } catch (RemoteException e) {
+                Log.e(TAG, "getColorSpaceList:" + e);
+            }
+        }
+
+        return "";
+    }
+
     public void setDigitalMode(String mode) {
         synchronized (mLock) {
             try {

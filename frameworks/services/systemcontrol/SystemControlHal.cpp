@@ -219,6 +219,14 @@ Return<Result> SystemControlHal::setColorSpace(const hidl_string &colorspace) {
         return Result::FAIL;
 }
 
+Return<void> SystemControlHal::getColorSpaceList(getColorSpaceList_cb _hidl_cb) {
+    std::string value;
+    mSysControl->getColorSpaceList(value);
+
+    _hidl_cb(Result::OK, value);
+    return Void();
+}
+
 Return<Result> SystemControlHal::setPerferredMode(const hidl_string &activeDispMode) {
     std::string mode = activeDispMode;
 

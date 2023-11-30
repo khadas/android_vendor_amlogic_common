@@ -81,7 +81,6 @@ public class OutputModeManager {
 
     public static final String HDMI_STATE                   = "/sys/class/amhdmitx/amhdmitx0/hpd_state";
     public static final String HDMI_SUPPORT_LIST            = "/sys/class/amhdmitx/amhdmitx0/disp_cap";
-    public static final String HDMI_COLOR_SUPPORT_LIST      = "/sys/class/amhdmitx/amhdmitx0/dc_cap";
 
     public static final String COLOR_ATTRIBUTE              = "/sys/class/amhdmitx/amhdmitx0/attr";
     public static final String DISPLAY_HDMI_VALID_MODE      = "/sys/class/amhdmitx/amhdmitx0/valid_mode";//test if tv support this mode
@@ -561,13 +560,7 @@ public class OutputModeManager {
 
     public String getHdmiColorSupportList() {
         String colorlist = "";
-        String list = readSupportList(HDMI_COLOR_SUPPORT_LIST);
-        String [] arr = list.split("#");
-        for (String attr: arr) {
-            if (isModeSupportColor(getCurrentOutputMode(), attr)) {
-                colorlist += attr;
-            }
-        }
+        colorlist = mSystemControl.getColorSpaceList();
 
         if (isLogPrint(3))
             Log.d(TAG, "getHdmiColorSupportList: " + colorlist);

@@ -2309,6 +2309,15 @@ bool DisplayMode::setColorSpace(const char* colorspace) {
     return true;
 }
 
+bool DisplayMode::getColorSpaceList(std::string& list) {
+    bool ret = false;
+
+    ret = DisplayModeMgr::getInstance().getColorSpaceList(list);
+    SYS_LOGD("%s list:%s\n", __FUNCTION__, list.c_str());
+
+    return ret;
+}
+
 bool DisplayMode::getDisplayMode(char* mode) {
     bool ret = false;
 

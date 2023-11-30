@@ -108,6 +108,17 @@ interface ISystemControl {
       generates (Result result);
 
  /**
+  * get current mode support color space list
+  * @param list current mode support color space list
+  *
+  * @return result OK if get data
+  *                FAIL if do not get data
+  *
+  */
+  getColorSpaceList()
+      generates (Result result, string list);
+
+ /**
   * notify hdmi plugin
   *
   */

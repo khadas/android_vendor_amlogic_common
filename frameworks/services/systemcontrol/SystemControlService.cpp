@@ -184,6 +184,14 @@ bool SystemControlService::setColorSpace(std::string& colorspace) {
     return ret;
 }
 
+bool SystemControlService::getColorSpaceList(std::string& list) {
+    std::string colorspace;
+
+    bool ret = pDisplayMode->getColorSpaceList(colorspace);
+    list = colorspace;
+    return ret;
+}
+
 bool SystemControlService::setPerferredMode(std::string& activeDispMode) {
     if (mLogLevel > LOG_LEVEL_1) {
         ALOGI("set perferred mode:%s", activeDispMode.c_str());

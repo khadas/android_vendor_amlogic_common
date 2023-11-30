@@ -67,6 +67,9 @@ public:
     bool setColorSpace(std::string colorspace);
     bool setColorSpace(std::string colorspace, ConnectorType display);
 
+    bool getColorSpaceList(std::string& colorspace);
+    bool getColorSpaceList(std::string& colorspace, ConnectorType display);
+
     bool clearUserDisplayConfig();
     bool clearUserDisplayConfig(ConnectorType display);
 

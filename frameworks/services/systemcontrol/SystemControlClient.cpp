@@ -601,6 +601,22 @@ bool SystemControlClient::setColorSpace(std::string& colorspace) {
     return false;
 }
 
+bool SystemControlClient::getColorSpaceList(std::string& colorspacelist) {
+    mSysCtrl->getColorSpaceList([&colorspacelist](const Result &ret, const hidl_string& list) {
+        if (Result::OK == ret)
+            colorspacelist = list.c_str();
+        else
+            colorspacelist.clear();
+    });
+
+    if (colorspacelist.empty()) {
+        LOG(ERROR) << "system control client getColorSpaceList FAIL.";
+        return false;
+    }
+
+    return true;
+}
+
 bool SystemControlClient::setPerferredMode(std::string& activeDispMode) {
     Result rtn = mSysCtrl->setPerferredMode(activeDispMode);
     if (rtn == Result::OK) {

@@ -133,6 +133,7 @@ public:
     bool getActiveDispMode(std::string& activeDispMode);
     bool setActiveDispMode(std::string& activeDispMode);
     bool setColorSpace(std::string& colorspace);
+    bool getColorSpaceList(std::string& colorspacelist);
     void notifyPlugin(void);
 
     void isHDCPTxAuthSuccess(int &status);

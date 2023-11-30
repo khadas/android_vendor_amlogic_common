@@ -184,6 +184,15 @@ bool DisplayModeMgr::setColorSpace(std::string colorspace, ConnectorType display
     return mDisplayAdapter->setColorSpace(colorspace, display);
 }
 
+bool DisplayModeMgr::getColorSpaceList(std::string& colorspace) {
+    return getColorSpaceList(colorspace, mConnType);
+}
+
+bool DisplayModeMgr::getColorSpaceList(std::string& colorspace, ConnectorType display) {
+    CHECK_DISPLAY_SERVICE();
+    return mDisplayAdapter->getCurrentSupportDeepColor(colorspace, display);
+}
+
 bool DisplayModeMgr::clearUserDisplayConfig() {
     return clearUserDisplayConfig(mConnType);
 }

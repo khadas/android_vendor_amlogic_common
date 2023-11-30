@@ -62,6 +62,7 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     Return<void> getActiveDispMode(getActiveDispMode_cb _hidl_cb) override;
     Return<Result> setActiveDispMode(const hidl_string &activeDispMode) override;
     Return<Result> setColorSpace(const hidl_string &colorspace) override;
+    Return<void> getColorSpaceList(getColorSpaceList_cb _hidl_cb) override;
     Return<Result> notifyPlugin() override;
     Return<Result> isHDCPTxAuthSuccess() override;
     Return<void> getProperty(const hidl_string &key, getProperty_cb _hidl_cb) override;

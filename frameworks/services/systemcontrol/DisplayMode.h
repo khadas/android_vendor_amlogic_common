@@ -561,6 +561,7 @@ public:
     void getGraphicsPriority(char* mode);
     bool isTvSupportHDR();
     bool setColorSpace(const char* colorspace);
+    bool getColorSpaceList(std::string& list);
     void getDeepColorAttr(const char* mode, char *value);
     void saveDeepColorAttr(const char* mode, const char* dcValue);
     int64_t resolveResolutionValue(const char *mode);
