@@ -9413,7 +9413,7 @@ void CPQControl::resetPQUiSetting(void)
 
             //picture
             if (j == PQ_FMT_DOLBY) {
-                config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_DV_PICTUREMODE_DEF, VPP_PICTURE_MODE_DV_BRIGHT);
+                config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_DV_PICTUREMODE_DEF, VPP_PICTURE_MODE_AMDV_BRIGHT);
             } else {
                 config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_PICTUREMODE_DEF, VPP_PICTURE_MODE_STANDARD);
             }
