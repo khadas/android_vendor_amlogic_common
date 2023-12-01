@@ -59,7 +59,9 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     wificond \
     wifilogd \
-    libwifi-hal-common-ext
+    libwifi-hal-common-ext \
+    libwifi-hal-mdnsoffload \
+    wifimdnsoffload
 
 MULTI_WIFI_SUPPORT := true
 WIFI_DRIVER_MODULE_PATH := "/vendor/lib/modules/"

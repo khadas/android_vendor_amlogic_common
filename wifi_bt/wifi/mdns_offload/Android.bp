@@ -1,0 +1,80 @@
+// Copyright (C) 2022 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package {
+    // See: http://go/android-license-faq
+    default_applicable_licenses: [
+        "Android-Apache-2.0",
+    ],
+}
+
+cc_library_headers {
+    name: "libwifi-hal-mdnsoffload_headers",
+    vendor_available: true,
+    export_include_dirs: [
+        ".",
+    ],
+}
+
+cc_library_shared {
+    name: "libwifi-hal-mdnsoffload",
+    system_ext_specific: true,
+    compile_multilib: "first",
+    shared_libs: [
+        "libbase",
+        "libcutils",
+        "liblog",
+        "libnl",
+        "libutils",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wno-format",
+        "-Wno-reorder",
+        "-Wno-unused-function",
+        "-Wno-unused-parameter",
+        "-Wno-unused-private-field",
+        "-Wno-unused-variable",
+    ],
+    srcs: [
+        "wifi_mdns_offload.c",
+    ],
+	local_include_dirs: ["."],
+	export_include_dirs: ["."],
+    sanitize: {
+        cfi: true,
+        integer_overflow: true,
+    },
+}
+
+cc_binary {
+    name: "wifimdnsoffload",
+    system_ext_specific: true,
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wno-format",
+        "-Wno-reorder",
+        "-Wno-unused-function",
+        "-Wno-unused-parameter",
+        "-Wno-unused-private-field",
+        "-Wno-unused-variable",
+    ],
+    shared_libs: [
+        "libwifi-hal-mdnsoffload",
+    ],
+    srcs: ["wifi_mdns_offload_main.c"],
+	local_include_dirs: ["."],
+}
