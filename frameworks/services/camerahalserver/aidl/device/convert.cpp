@@ -65,14 +65,14 @@ bool convertFromAidl(const CameraMetadata& src, const camera_metadata_t** dst) {
 }
 
 
-void convertToAidl(const Camera3Stream* src, HalStream* dst) {
+void convertToAidl(const AmlCameraStream* src, HalStream* dst) {
     dst->id = src->mId;
     dst->overrideFormat = (PixelFormat) src->format;
     dst->maxBuffers = src->max_buffers;
-    if (src->stream_type == CAMERA3_STREAM_OUTPUT) {
+    if (src->stream_type == AML_CAMERA_STREAM_OUTPUT) {
         dst->consumerUsage = (BufferUsage)0;
         dst->producerUsage = (BufferUsage)src->usage;
-    } else if (src->stream_type == CAMERA3_STREAM_INPUT) {
+    } else if (src->stream_type == AML_CAMERA_STREAM_INPUT) {
         dst->producerUsage = (BufferUsage)0;
         dst->consumerUsage = (BufferUsage)src->usage;
     } else {
@@ -83,17 +83,17 @@ void convertToAidl(const Camera3Stream* src, HalStream* dst) {
     }
 }
 
-void convertToAidl(const camera3_stream_configuration_t& src, StreamConfiguration* dst) {
+void convertToAidl(const aml_camera_stream_configuration_t& src, StreamConfiguration* dst) {
     dst->streams.resize(src.num_streams);
     for (uint32_t i = 0; i < src.num_streams; i++) {
-        //convertToAidl(static_cast<Camera3Stream*>(src.streams[i]), &dst->streams[i]);
+        //convertToAidl(static_cast<AmlCameraStream*>(src.streams[i]), &dst->streams[i]);
     }
     return;
 }
 
 void convertFromAidl(
-        buffer_handle_t* bufPtr, BufferStatus status, camera3_stream_t* stream, int acquireFence,
-        camera3_stream_buffer_t* dst) {
+        buffer_handle_t* bufPtr, BufferStatus status, aml_camera_stream_t* stream, int acquireFence,
+        aml_camera_stream_buffer_t* dst) {
     dst->stream = stream;
     dst->buffer = bufPtr;
     dst->status = (int) status;
@@ -101,7 +101,7 @@ void convertFromAidl(
     dst->release_fence = -1; // meant for HAL to fill in
 }
 
-void convertFromAidl(const Stream &src, Camera3Stream* dst) {
+void convertFromAidl(const Stream &src, AmlCameraStream* dst) {
     dst->mId = src.id;
     dst->stream_type = (int) src.streamType;
     dst->width = src.width;
@@ -118,27 +118,28 @@ void convertFromAidl(const Stream &src, Camera3Stream* dst) {
     return;
 }
 
-void convertToAidl(const camera3_notify_msg* src, NotifyMsg* dst) {
+void convertToAidl(const aml_notify_message_t* src, NotifyMsg* dst) {
     switch (src->type) {
-        case CAMERA3_MSG_ERROR:
+        case AML_CAMERA_MSG_ERROR:
             {
-                // The camera3_stream_t* must be the same as what wrapper HAL passed to conventional
+                // The aml_camera_stream_t* must be the same as what wrapper HAL passed to conventional
                 // HAL, or the ID lookup will return garbage. Caller should validate the ID here is
                 // indeed one of active stream IDs
-                Camera3Stream* stream = static_cast<Camera3Stream*>(
-                        src->message.error.error_stream);
+                //AmlCameraStream* stream = static_cast<AmlCameraStream*>(
+                 //       src->error.error_stream);
                 ErrorMsg errorMsg = {
-                    .frameNumber = static_cast<int32_t>(src->message.error.frame_number),
-                    .errorStreamId = (stream != nullptr) ? stream->mId : -1,
-                    .errorCode = (ErrorCode) src->message.error.error_code};
+                    .frameNumber = static_cast<int32_t>(src->error.frame_number),
+                    .errorStreamId = src->error.error_stream_id,
+                    .errorCode = (ErrorCode) src->error.error_code};
                 dst->set<NotifyMsg::Tag::error>(errorMsg);
             }
             break;
-        case CAMERA3_MSG_SHUTTER:
+        case AML_CAMERA_MSG_SHUTTER:
             {
                 aidl::android::hardware::camera::device::ShutterMsg shutterMsg = {
-                        .frameNumber = static_cast<int32_t>(src->message.shutter.frame_number),
-                        .timestamp = static_cast<int64_t>(src->message.shutter.timestamp)};
+                        .frameNumber = static_cast<int32_t>(src->shutter.frame_number),
+                        .timestamp = static_cast<int64_t>(src->shutter.timestamp),
+                        .readoutTimestamp = static_cast<int64_t>(src->shutter.readout_timestamp)};
                 dst->set<NotifyMsg::Tag::shutter>(shutterMsg);
             }
             break;

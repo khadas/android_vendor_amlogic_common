@@ -212,7 +212,7 @@ ndk::ScopedAStatus AmlogicCameraDevice::open(
     }
 
     status_t res;
-    camera3_device_t *device;
+    aml_camera_device_t *device;
 
     res = mModule->open(mCameraId.c_str(),
                 reinterpret_cast<hw_device_t**>(&device));

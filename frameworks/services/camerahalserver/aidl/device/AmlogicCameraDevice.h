@@ -88,7 +88,7 @@ protected:
     const SortedVector<std::pair<std::string, std::string>>& mCameraDeviceNames;
     Status initStatus() const;
     static Status getAidlStatus(int status);
-    std::shared_ptr<AmlogicCameraDeviceSession> createSession(camera3_device_t* device,
+    std::shared_ptr<AmlogicCameraDeviceSession> createSession(aml_camera_device_t* device,
         const camera_metadata_t* deviceInfo,
         const std::shared_ptr<ICameraDeviceCallback>& callback) {
             return ndk::SharedRefBase::make<AmlogicCameraDeviceSession>(device, deviceInfo, callback);

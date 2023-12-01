@@ -121,10 +121,10 @@ using ::android::hardware::camera::common::V1_0::helper::ExifUtils;
 HandleImporter AmlogicCameraDeviceSession::sHandleImporter;
 
 AmlogicCameraDeviceSession::AmlogicCameraDeviceSession(
-    camera3_device_t* device,
+    aml_camera_device_t* device,
     const camera_metadata_t* deviceInfo,
     const std::shared_ptr<ICameraDeviceCallback>& callback) :
-        camera3_callback_ops({&sProcessCaptureResult, &sNotify, nullptr, nullptr}),
+        aml_camera_callback_ops({&sProcessCaptureResult, &sNotify, nullptr, nullptr}),
         mDevice(device),
         mDeviceVersion(device->common.version),
         mFreeBufEarly(shouldFreeBufEarly()),
@@ -159,7 +159,7 @@ AmlogicCameraDeviceSession::AmlogicCameraDeviceSession(
 }
 
 bool AmlogicCameraDeviceSession::initialize() {
-    ATRACE_BEGIN("camera3->initialize");
+    ATRACE_BEGIN("aml_camera->initialize");
     status_t res = mDevice->ops->initialize(mDevice, this);
     ATRACE_END();
 
@@ -792,7 +792,7 @@ Status AmlogicCameraDeviceSession::constructDefaultRequestSettingsRaw(int type, 
     Status status = initStatus();
     const camera_metadata_t *rawRequest;
     if (status == Status::OK) {
-        ATRACE_BEGIN("camera3->construct_default_request_settings");
+        ATRACE_BEGIN("aml_camera->construct_default_request_settings");
         rawRequest = mDevice->ops->construct_default_request_settings(mDevice, (int) type);
         ATRACE_END();
         if (rawRequest == nullptr) {
@@ -857,7 +857,7 @@ android_dataspace AmlogicCameraDeviceSession::mapToLegacyDataspace(
  * request.
  */
 bool AmlogicCameraDeviceSession::handleAePrecaptureCancelRequestLocked(
-        const camera3_capture_request_t &halRequest,
+        const aml_camera_capture_request_t &halRequest,
         ::android::hardware::camera::common::V1_0::helper::CameraMetadata *settings /*out*/,
          AETriggerCancelOverride *override /*out*/) {
     if ((mDeviceVersion > CAMERA_DEVICE_API_VERSION_3_2) ||
@@ -922,8 +922,8 @@ void AmlogicCameraDeviceSession::overrideResultForPrecaptureCancelLocked(
 
 bool AmlogicCameraDeviceSession::preProcessConfigurationLocked(
         const StreamConfiguration& requestedConfiguration,
-        camera3_stream_configuration_t *stream_list /*out*/,
-        std::vector<camera3_stream_t*> *streams /*out*/) {
+        aml_camera_stream_configuration_t *stream_list /*out*/,
+        std::vector<aml_camera_stream_t*> *streams /*out*/) {
     if ((stream_list == nullptr) || (streams == nullptr)) {
         return false;
     }
@@ -936,7 +936,7 @@ bool AmlogicCameraDeviceSession::preProcessConfigurationLocked(
     for (uint32_t i = 0; i < stream_list->num_streams; i++) {
         int id = requestedConfiguration.streams[i].id;
         if (mStreamMap.count(id) == 0) {
-            Camera3Stream stream;
+            AmlCameraStream stream;
             convertFromAidl(requestedConfiguration.streams[i], &stream);
             mStreamMap[id] = stream;
             mStreamMap[id].data_space = mapToLegacyDataspace(
@@ -1083,14 +1083,14 @@ ScopedAStatus AmlogicCameraDeviceSession::configureStreams(
         return fromStatus(status);
     }
 
-    camera3_stream_configuration_t stream_list{};
-    std::vector<camera3_stream_t*> streams;
+    aml_camera_stream_configuration_t stream_list{};
+    std::vector<aml_camera_stream_t*> streams;
 
     if (!preProcessConfigurationLocked(in_requestedConfiguration, &stream_list, &streams)) {
         return fromStatus(Status::INTERNAL_ERROR);
     }
 
-    ATRACE_BEGIN("camera3->configure_streams");
+    ATRACE_BEGIN("amlcamera->configure_streams");
     status_t ret = mDevice->ops->configure_streams(mDevice, &stream_list);
     ATRACE_END();
 
@@ -1107,7 +1107,7 @@ ScopedAStatus AmlogicCameraDeviceSession::configureStreams(
     } else {
         out.resize(stream_list.num_streams);
         for (int i = 0; i < stream_list.num_streams; i++) {
-            convertToAidl(static_cast<Camera3Stream*>(stream_list.streams[i]), &out[i]);
+            convertToAidl(static_cast<AmlCameraStream*>(stream_list.streams[i]), &out[i]);
         }
         mFirstRequest = true;
     }
@@ -1175,7 +1175,7 @@ Status AmlogicCameraDeviceSession::processOneCaptureRequest(const CaptureRequest
         return status;
     }
 
-    camera3_capture_request_t halRequest;
+    aml_camera_capture_request_t halRequest;
     halRequest.frame_number = request.frameNumber;
     //const camera_metadata_t* rawSettings = nullptr;
     bool converted;
@@ -1225,7 +1225,7 @@ Status AmlogicCameraDeviceSession::processOneCaptureRequest(const CaptureRequest
         return status;
     }
 
-    std::vector<camera3_stream_buffer_t> outHalBufs;
+    std::vector<aml_camera_stream_buffer_t> outHalBufs;
     outHalBufs.resize(numOutputBufs);
     bool aeCancelTriggerNeeded = false;
     ::android::hardware::camera::common::V1_0::helper::CameraMetadata settingsOverride;
@@ -1233,7 +1233,7 @@ Status AmlogicCameraDeviceSession::processOneCaptureRequest(const CaptureRequest
         Mutex::Autolock _l(mInflightLock);
         if (hasInputBuf) {
             auto key = std::make_pair(request.inputBuffer.streamId, request.frameNumber);
-            auto& bufCache = mInflightBuffers[key] = camera3_stream_buffer_t{};
+            auto& bufCache = mInflightBuffers[key] = aml_camera_stream_buffer_t{};
             convertFromAidl(
                     allBufPtrs[numOutputBufs], request.inputBuffer.status,
                     &mStreamMap[request.inputBuffer.streamId], allFences[numOutputBufs],
@@ -1246,7 +1246,7 @@ Status AmlogicCameraDeviceSession::processOneCaptureRequest(const CaptureRequest
         halRequest.num_output_buffers = numOutputBufs;
         for (size_t i = 0; i < numOutputBufs; i++) {
             auto key = std::make_pair(request.outputBuffers[i].streamId, request.frameNumber);
-            auto& bufCache = mInflightBuffers[key] = camera3_stream_buffer_t{};
+            auto& bufCache = mInflightBuffers[key] = aml_camera_stream_buffer_t{};
             convertFromAidl(
                     allBufPtrs[i], request.outputBuffers[i].status,
                     &mStreamMap[request.outputBuffers[i].streamId], allFences[i],
@@ -1268,7 +1268,7 @@ Status AmlogicCameraDeviceSession::processOneCaptureRequest(const CaptureRequest
     halRequest.num_physcam_settings = 0;
 
     ATRACE_ASYNC_BEGIN("frame capture", request.frameNumber);
-    ATRACE_BEGIN("camera3->process_capture_request");
+    ATRACE_BEGIN("amlcamera->process_capture_request");
     status_t ret = mDevice->ops->process_capture_request(mDevice, &halRequest);
     ATRACE_END();
     if (aeCancelTriggerNeeded) {
@@ -1344,7 +1344,7 @@ ScopedAStatus AmlogicCameraDeviceSession::close() {
             }
         }
 
-        ATRACE_BEGIN("camera3->close");
+        ATRACE_BEGIN("amlcamera->close");
         mDevice->common.close(&mDevice->common);
         ATRACE_END();
 
@@ -1441,7 +1441,7 @@ void AmlogicCameraDeviceSession::invokeProcessCaptureResultCallback(
 }
 
 bool AmlogicCameraDeviceSession::supportOfflineLocked(int32_t streamId) {
-    const Camera3Stream& stream = mStreamMap[streamId];
+    const AmlCameraStream& stream = mStreamMap[streamId];
     if (static_cast<int32_t>(stream.format) == static_cast<int32_t>(PixelFormat::BLOB) &&
         static_cast<int32_t>(stream.data_space) == static_cast<int32_t>(Dataspace::JFIF)) {
         return true;
@@ -1476,7 +1476,7 @@ uint64_t AmlogicCameraDeviceSession::getCapResultBufferId(const buffer_handle_t&
 }
 
 status_t AmlogicCameraDeviceSession::constructCaptureResult(CaptureResult& result,
-                                                 const camera3_capture_result *hal_result) {
+                                                 const aml_camera_capture_result *hal_result) {
     uint32_t frameNumber = hal_result->frame_number;
     bool hasInputBuf = (hal_result->input_buffer != nullptr);
     size_t numOutputBufs = hal_result->num_output_buffers;
@@ -1484,7 +1484,7 @@ status_t AmlogicCameraDeviceSession::constructCaptureResult(CaptureResult& resul
     if (numBufs > 0) {
         Mutex::Autolock _l(mInflightLock);
         if (hasInputBuf) {
-            int streamId = static_cast<Camera3Stream*>(hal_result->input_buffer->stream)->mId;
+            int streamId = static_cast<AmlCameraStream*>(hal_result->input_buffer->stream)->mId;
             // validate if buffer is inflight
             auto key = std::make_pair(streamId, frameNumber);
             if (mInflightBuffers.count(key) != 1) {
@@ -1495,7 +1495,7 @@ status_t AmlogicCameraDeviceSession::constructCaptureResult(CaptureResult& resul
         }
 
         for (size_t i = 0; i < numOutputBufs; i++) {
-            int streamId = static_cast<Camera3Stream*>(hal_result->output_buffers[i].stream)->mId;
+            int streamId = static_cast<AmlCameraStream*>(hal_result->output_buffers[i].stream)->mId;
             // validate if buffer is inflight
             auto key = std::make_pair(streamId, frameNumber);
             if (mInflightBuffers.count(key) != 1) {
@@ -1566,7 +1566,7 @@ status_t AmlogicCameraDeviceSession::constructCaptureResult(CaptureResult& resul
     }
     if (hasInputBuf) {
         result.inputBuffer.streamId =
-                static_cast<Camera3Stream*>(hal_result->input_buffer->stream)->mId;
+                static_cast<AmlCameraStream*>(hal_result->input_buffer->stream)->mId;
         //result.inputBuffer.buffer = nullptr;
         result.inputBuffer.status = (BufferStatus) hal_result->input_buffer->status;
         // skip acquire fence since it's no use to camera service
@@ -1582,7 +1582,7 @@ status_t AmlogicCameraDeviceSession::constructCaptureResult(CaptureResult& resul
     result.outputBuffers.resize(numOutputBufs);
     for (size_t i = 0; i < numOutputBufs; i++) {
         result.outputBuffers[i].streamId =
-                static_cast<Camera3Stream*>(hal_result->output_buffers[i].stream)->mId;
+                static_cast<AmlCameraStream*>(hal_result->output_buffers[i].stream)->mId;
         //result.outputBuffers[i].buffer = nullptr;
         if (hal_result->output_buffers[i].buffer != nullptr) {
             result.outputBuffers[i].bufferId = getCapResultBufferId(
@@ -1608,13 +1608,13 @@ status_t AmlogicCameraDeviceSession::constructCaptureResult(CaptureResult& resul
     if (numBufs > 0) {
         Mutex::Autolock _l(mInflightLock);
         if (hasInputBuf) {
-            int streamId = static_cast<Camera3Stream*>(hal_result->input_buffer->stream)->mId;
+            int streamId = static_cast<AmlCameraStream*>(hal_result->input_buffer->stream)->mId;
             auto key = std::make_pair(streamId, frameNumber);
             mInflightBuffers.erase(key);
         }
 
         for (size_t i = 0; i < numOutputBufs; i++) {
-            int streamId = static_cast<Camera3Stream*>(hal_result->output_buffers[i].stream)->mId;
+            int streamId = static_cast<AmlCameraStream*>(hal_result->output_buffers[i].stream)->mId;
             auto key = std::make_pair(streamId, frameNumber);
             mInflightBuffers.erase(key);
         }
@@ -1628,7 +1628,7 @@ status_t AmlogicCameraDeviceSession::constructCaptureResult(CaptureResult& resul
 
 // Static helper method to copy/shrink capture result metadata sent by HAL
 void AmlogicCameraDeviceSession::sShrinkCaptureResult(
-        camera3_capture_result* dst, const camera3_capture_result* src,
+        aml_camera_capture_result* dst, const aml_camera_capture_result* src,
         std::vector<::android::hardware::camera::common::V1_0::helper::CameraMetadata>* mds,
         std::vector<const camera_metadata_t*>* physCamMdArray,
         bool handlePhysCam) {
@@ -1688,12 +1688,12 @@ camera_metadata_t* AmlogicCameraDeviceSession::sCreateCompactCopy(const camera_m
  * Static callback forwarding methods from HAL to instance
  */
 void AmlogicCameraDeviceSession::sProcessCaptureResult(
-        const camera3_callback_ops *cb,
-        const camera3_capture_result *hal_result) {
+        const aml_camera_callback_ops *cb,
+        const aml_camera_capture_result *hal_result) {
     AmlogicCameraDeviceSession *d =
             const_cast<AmlogicCameraDeviceSession*>(static_cast<const AmlogicCameraDeviceSession*>(cb));
     CaptureResult result = {};
-    camera3_capture_result shadowResult;
+    aml_camera_capture_result shadowResult;
     bool handlePhysCam = (d->mDeviceVersion >= CAMERA_DEVICE_API_VERSION_3_5);
     std::vector<::android::hardware::camera::common::V1_0::helper::CameraMetadata> compactMds;
     std::vector<const camera_metadata_t*> physCamMdArray;
@@ -1706,8 +1706,8 @@ void AmlogicCameraDeviceSession::sProcessCaptureResult(
 }
 
 void AmlogicCameraDeviceSession::sNotify(
-        const camera3_callback_ops *cb,
-        const camera3_notify_msg *msg) {
+        const aml_camera_callback_ops *cb,
+        const aml_notify_message_t *msg) {
     AmlogicCameraDeviceSession *d =
             const_cast<AmlogicCameraDeviceSession*>(static_cast<const AmlogicCameraDeviceSession*>(cb));
     NotifyMsg aidlMsg;

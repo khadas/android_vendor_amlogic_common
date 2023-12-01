@@ -32,7 +32,8 @@
 #include <list>
 #include <map>
 
-#include "hardware/camera3.h"
+//#include "hardware/camera3.h"
+#include "amlogic_camera.h"
 #include "hardware/camera_common.h"
 #include "utils/Mutex.h"
 #include "HandleImporter.h"
@@ -65,25 +66,25 @@ using ::android::hardware::camera::common::helper::SimpleThread;
 //using ::android::hardware::camera::external::common::SizeHasher;
 using ::ndk::ScopedAStatus;
 
-struct Camera3Stream;
+struct AmlCameraStream;
 /**
  * Function pointer types with C calling convention to
  * use for HAL callback functions.
  */
 extern "C" {
     typedef void (callbacks_process_capture_result_t)(
-        const struct camera3_callback_ops *,
-        const camera3_capture_result_t *);
+        const struct aml_camera_callback_ops *,
+        const aml_camera_capture_result_t *);
 
     typedef void (callbacks_notify_t)(
-        const struct camera3_callback_ops *,
-        const camera3_notify_msg_t *);
+        const struct aml_camera_callback_ops *,
+        const aml_notify_message_t *);
 }
 
 
-class AmlogicCameraDeviceSession : public BnCameraDeviceSession, protected  camera3_callback_ops {
+class AmlogicCameraDeviceSession : public BnCameraDeviceSession, protected  aml_camera_callback_ops {
 public:
-    AmlogicCameraDeviceSession(camera3_device_t*,
+    AmlogicCameraDeviceSession(aml_camera_device_t*,
                         const camera_metadata_t* deviceInfo,
                         const std::shared_ptr<ICameraDeviceCallback>&);
     ~AmlogicCameraDeviceSession() override;
@@ -128,8 +129,8 @@ public:
 public:
   //Help methods
   bool preProcessConfigurationLocked(const StreamConfiguration& requestedConfiguration,
-            camera3_stream_configuration_t *stream_list /*out*/,
-            std::vector<camera3_stream_t*> *streams /*out*/);
+            aml_camera_stream_configuration_t *stream_list /*out*/,
+            std::vector<aml_camera_stream_t*> *streams /*out*/);
 
   void postProcessConfigurationLocked(
         const StreamConfiguration& requestedConfiguration);
@@ -150,18 +151,18 @@ protected:
         uint8_t aePrecaptureTrigger;
     };
 
-    camera3_device_t* mDevice;
+    aml_camera_device_t* mDevice;
     const uint32_t mDeviceVersion;
     const bool mFreeBufEarly;
     bool mIsAELockAvailable;
     bool mDerivePostRawSensKey;
     uint32_t mNumPartialResults;
-    // Stream ID -> Camera3Stream cache
-    std::map<int, Camera3Stream> mStreamMap;
+    // Stream ID -> AmlCameraStream cache
+    std::map<int, AmlCameraStream> mStreamMap;
 
     mutable Mutex mInflightLock; // protecting mInflightBuffers and mCirculatingBuffers
     // (streamID, frameNumber) -> inflight buffer cache
-    std::map<std::pair<int, uint32_t>, camera3_stream_buffer_t>  mInflightBuffers;
+    std::map<std::pair<int, uint32_t>, aml_camera_stream_buffer_t>  mInflightBuffers;
 
     // (frameNumber, AETriggerOverride) -> inflight request AETriggerOverrides
     std::map<uint32_t, AETriggerCancelOverride> mInflightAETriggerOverrides;
@@ -349,7 +350,7 @@ protected:
         android_dataspace dataSpace) const;
 
     bool handleAePrecaptureCancelRequestLocked(
-            const camera3_capture_request_t &halRequest,
+            const aml_camera_capture_request_t &halRequest,
             android::hardware::camera::common::V1_0::helper::CameraMetadata *settings /*out*/,
             AETriggerCancelOverride *override /*out*/);
 
@@ -378,12 +379,12 @@ protected:
     virtual uint64_t getCapResultBufferId(const buffer_handle_t& buf, int streamId);
 
     status_t constructCaptureResult(CaptureResult& result,
-                                const camera3_capture_result *hal_result);
+                                const aml_camera_capture_result *hal_result);
 
     // Static helper method to copy/shrink capture result metadata sent by HAL
     // Temporarily allocated metadata copy will be hold in mds
     static void sShrinkCaptureResult(
-            camera3_capture_result* dst, const camera3_capture_result* src,
+            aml_camera_capture_result* dst, const aml_camera_capture_result* src,
             std::vector<::android::hardware::camera::common::V1_0::helper::CameraMetadata>* mds,
             std::vector<const camera_metadata_t*>* physCamMdArray,
             bool handlePhysCam);

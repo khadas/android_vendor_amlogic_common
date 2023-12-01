@@ -24,7 +24,8 @@
 #include <aidl/android/hardware/camera/device/NotifyMsg.h>
 #include <aidl/android/hardware/camera/device/Stream.h>
 #include <aidl/android/hardware/camera/device/StreamConfiguration.h>
-#include <hardware/camera3.h>
+//#include <hardware/camera3.h>
+#include "amlogic_camera.h"
 #include <system/camera_metadata.h>
 
 
@@ -34,7 +35,7 @@ namespace camera {
 namespace device {
 namespace implementation {
 
-struct Camera3Stream : public camera3_stream {
+struct AmlCameraStream : public aml_camera_stream_t {
     int mId;
 };
 
@@ -49,14 +50,14 @@ using ::aidl::android::hardware::camera::device::StreamConfiguration;
 void convertToAidl(const camera_metadata_t* src, CameraMetadata* dest);
 bool convertFromAidl(const CameraMetadata& src, const camera_metadata_t** dst);
 
-void convertFromAidl(const Stream &src, Camera3Stream* dst);
-void convertToAidl(const Camera3Stream* src, HalStream* dst);
+void convertFromAidl(const Stream &src, AmlCameraStream* dst);
+void convertToAidl(const AmlCameraStream* src, HalStream* dst);
 
-void convertToAidl(const camera3_stream_configuration_t& src, StreamConfiguration* dst);
+void convertToAidl(const aml_camera_stream_configuration_t& src, StreamConfiguration* dst);
 void convertFromAidl(
-        buffer_handle_t* bufPtr, BufferStatus status, camera3_stream_t* stream, int acquireFence,
-        camera3_stream_buffer_t* dst);
-void convertToAidl(const camera3_notify_msg* src, NotifyMsg* dst);
+        buffer_handle_t* bufPtr, BufferStatus status, aml_camera_stream_t* stream, int acquireFence,
+        aml_camera_stream_buffer_t* dst);
+void convertToAidl(const aml_notify_message_t* src, NotifyMsg* dst);
 
 inline ndk::ScopedAStatus fromStatus(Status status) {
     return status == Status::OK
