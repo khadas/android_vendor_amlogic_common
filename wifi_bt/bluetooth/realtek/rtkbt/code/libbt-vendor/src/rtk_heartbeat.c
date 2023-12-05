@@ -50,6 +50,10 @@
 #include "bt_vendor_lib.h"
 
 #define RTKBT_HEARTBEAT_CONF_FILE         "/vendor/etc/bluetooth/rtkbt_heartbeat.conf"
+#define BT_WAKE_EVT_1    "/sys/module/amlogic_wireless/parameters/btwake_evt"  // kernel 5.15 btwake_evt path
+#define BT_WAKE_EVT_2    "/sys/module/bt_device/parameters/btwake_evt"  // below kernel 5.15 btwake_evt path
+#define BT_WAKE_HDMI    "/sys/class/amhdmitx/amhdmitx0/ready"
+extern char rtkbt_transtype;
 
 #define HCI_EVT_HEARTBEAT_STATUS_OFFSET          (5)
 #define HCI_EVT_HEARTBEAT_SEQNUM_OFFSET_L          (6)
@@ -160,7 +164,9 @@ void rtkbt_heartbeat_cmpl_cback (void *p_params)
 {
     uint8_t  status = 0;
     uint16_t seqnum = 0;
-	uint8_t *pp_params = (uint8_t *)p_params;
+    uint8_t *pp_params = (uint8_t *)p_params;
+    int fd,sz1,sz2;
+    char buf1[2],buf2[2];
 
     if(!heartbeatFlag)
       return;
@@ -182,10 +188,55 @@ void rtkbt_heartbeat_cmpl_cback (void *p_params)
     }
     else
     {
-        ALOGE("rtkbt_heartbeat_cmpl_cback: Current SeqNum = %d,should SeqNum=%d, status = %d", seqnum, nextSeqNum, status);
-        ALOGE("heartbeat event missing:  restart bluedroid stack\n");
-        usleep(1000);
-        rtkbt_heartbeat_send_hw_error(status, seqnum, nextSeqNum, heartbeatCount);
+        if (access(BT_WAKE_EVT_1, F_OK) == 0) {
+           fd = open(BT_WAKE_EVT_1, O_RDONLY);
+        } else {
+           fd = open(BT_WAKE_EVT_2, O_RDONLY);
+        }
+        if (fd < 0)
+        {
+            ALOGE("open(%s) failed: %s (%d)\n",
+            BT_WAKE_EVT_1, strerror(errno), errno);
+        }
+        sz1 = read(fd, &buf1,sizeof(buf1));
+
+        close(fd);
+        if (rtkbt_transtype & RTKBT_TRANS_UART)
+        {
+            fd = open(BT_WAKE_HDMI,O_RDONLY);
+            if (fd < 0)
+            {
+                ALOGE("open(%s) failed: %s (%d)\n", \
+                BT_WAKE_HDMI, strerror(errno), errno);
+            }
+                sz2 = read(fd, &buf2,sizeof(buf2));
+
+                close(fd);
+        }
+
+        if (rtkbt_transtype & RTKBT_TRANS_UART)
+        {
+            if ((sz1 >= 1 && memcmp(buf1, "1", 1) == 0) && (sz2 >= 1 && memcmp(buf2, "0", 1) == 0)) {//rtc wakeup host and not Bright screen
+                ALOGE("%s,rtc wakeup",__func__);
+            }
+            else {
+                ALOGE("rtkbt_heartbeat_cmpl_cback: Current SeqNum = %d,should SeqNum=%d, status = %d", seqnum, nextSeqNum, status);
+                ALOGE("heartbeat event missing:  restart bluedroid stack\n");
+                usleep(1000);
+                rtkbt_heartbeat_send_hw_error(status, seqnum, nextSeqNum, heartbeatCount);
+            }
+        }
+        else {
+            if (sz1 >= 1 && memcmp(buf1, "1", 1) == 0) {//rtc wakeup host
+                ALOGE("%s,rtc wakeup",__func__);
+            }
+            else {
+                ALOGE("rtkbt_heartbeat_cmpl_cback: Current SeqNum = %d,should SeqNum=%d, status = %d", seqnum, nextSeqNum, status);
+                ALOGE("heartbeat event missing:  restart bluedroid stack\n");
+                usleep(1000);
+                rtkbt_heartbeat_send_hw_error(status, seqnum, nextSeqNum, heartbeatCount);
+            }
+        }
     }
 
 }
