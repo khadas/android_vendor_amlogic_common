@@ -1796,9 +1796,17 @@ bool DisplayMode::isHWCProcess() {
 
 bool DisplayMode::isBestOutputmode() {
     char isBestMode[MODE_LEN] = {0};
+    char hdmimode[MODE_LEN] = {0};
     if (DISPLAY_TYPE_TV == mDisplayType) {
         return false;
     }
+
+    if (!getBootEnv(UBOOTENV_HDMIMODE, hdmimode) || (strstr(hdmimode, "hz") == NULL)) {
+        // when hdmimode is empty or no resolution,
+        // still used Best mode to avoid dummy mode
+        return true;
+    }
+
     return !getBootEnv(UBOOTENV_ISBESTMODE, isBestMode) || strcmp(isBestMode, "true") == 0;
 }
 
