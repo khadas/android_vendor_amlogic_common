@@ -34,21 +34,15 @@
 #include <sys/syscall.h>
 #include <dirent.h>
 
-#include "multibt_hal.h"
-
-//c++
+/* Include c++ header file */
 #include <iostream>
 #include <string>
+
+#include "multibt_hal.h"
 
 /******************************************************************************
 **  Constants & Macros
 ******************************************************************************/
-#ifndef PROP_VALUE_MAX
-#define PROP_VALUE_MAX      92
-#endif
-
-#define MAILBOX_MODULE_NAME
-
 #ifdef MAILBOX_MODULE_NAME
 #define MBOX_USER_MAX_LEN   96
 #define PATH_MAX_LEN        64
@@ -57,766 +51,1025 @@
 #endif
 
 #define VND_PORT_NAME_MAXLEN    256
-#define LOOP_TIMES              1
-static int set_debug_level(const char *p_name, char *p_value);
-static int set_redistinguish(const char *p_name, char *p_value);
-static int rmmod(const char *modname);
+
+#define ENUM_DIR_PCI "/sys/bus/pci/devices"
+#define ENUM_DIR_SDIO "/sys/bus/sdio/devices"
+#define ENUM_DIR_USB "/sys/bus/usb/devices"
+
+#define AML_BT_RFKILL_PATH "/sys/devices/platform/aml_bt/rfkill"
+#define WIFI_POWER_DEV "/dev/wifi_power"
+#define DEFAULT_VND_LIB_NAME "libbt-vendor.so"
+
+#define POWER_EVENT_DEF '0'
+#define POWER_EVENT_RESET '1'
+#define POWER_EVENT_EN '2'
 
 /******************************************************************************
 **  Local type definitions
 ******************************************************************************/
-
-/* vendor serial control block */
+/* serial control block */
 typedef struct
 {
     int fd;                     /* fd to Bluetooth device */
     struct termios termios;     /* serial terminal of BT port */
     char port_name[VND_PORT_NAME_MAXLEN];
-} vnd_userial_cb_t;
+} uart_cb;
 
-struct device_info {
-    unsigned short device_id;
-	char device_name[20];
-    char vendor_lib_name[64];
-	char module_name[20];
-	unsigned short chip_id;
-	bool power_type;
-};
+typedef struct {
+    unsigned int vid;
+    unsigned int pid;
+} dev_id;
 
-struct uart_device_info {
-	unsigned short vendor_id;
-	char device_name[20];
-	char vendor_lib_name[64];
-	bool power_type;
-};
+typedef struct {
+    dev_id mod_id;
+    char dev_name[20];
+    char vnd_lib_name[64];
+    char mod_name[20];
+    char power_type;
+} dev_info;
+
+typedef struct {
+    unsigned int vid;
+    char dev_name[20];
+    char vnd_lib_name[64];
+    char power_type;
+} dev_info_uart;
+
+static int set_debug_level(const char *p_name, char *p_value);
+static int set_redistinguish(const char *p_name, char *p_value);
+static void clr_bt_power_bit(char power_type);
+
+static int insmod(const char *filename, const char *args);
+static int rmmod(const char *modname);
+static bool set_bt_cfg(void);
+static bool get_bt_cfg(void);
+static prop_val *get_bt_prop_val(void);
+static bool distinguish_bt_module(void);
 
 /******************************************************************************
 **  Static variables
 ******************************************************************************/
-
-static vnd_userial_cb_t vnd_userial;
+static uart_cb bt_uart_cb;
 static int rfkill_id = -1;
 static char *rfkill_state_path = NULL;
 static int VDBG = 0;
 static int redistinguish = 0; //default onboot dou't distinguish
 static int distinguish = 0; //distinguish Corresponding module set 1
+static bool pci_flag = false;
 
-static const tUSERIAL_CFG userial_H5_cfg =
+static prop_val bt_prop_val = {
+    .dev_name = {'\0'},
+    .mod_name = {'\0'},
+    .vnd_lib_name = {'\0'},
+    .wifi_bt_name = {'\0'},
+};
+
+static const uart_cfg uart_cfg_h5 =
 {
     (USERIAL_DATABITS_8 | USERIAL_PARITY_EVEN | USERIAL_STOPBITS_1),
     USERIAL_BAUD_115200,
 };
-static const tUSERIAL_CFG userial_H4_cfg =
+
+static const uart_cfg uart_cfg_h4 =
 {
     (USERIAL_DATABITS_8 | USERIAL_PARITY_NONE | USERIAL_STOPBITS_1),
     USERIAL_BAUD_115200,
 };
-static const d_entry_t entry_table[] = {
-	{"debuglevel", set_debug_level},
-	{"redistinguish", set_redistinguish}
+
+static const tag_table entry_table[] = {
+    {"debuglevel", set_debug_level},
+    {"redistinguish", set_redistinguish}
 };
+
+const vendor_hal bt_vendor_hal = {
+    insmod,
+    rmmod,
+    set_bt_cfg,
+    get_bt_cfg,
+    get_bt_prop_val,
+    distinguish_bt_module,
+};
+
 /******************************************************************************
 **  init variables
 ******************************************************************************/
-static uint8_t vendor_info[] =     {0x01,0x01,0x10,0x00};
-static uint8_t vendor_reset[] =    {0x01,0x03,0x0c,0x00};
-static uint8_t vendor_sync[] =     {0xc0,0x00,0x2f,0x00,0xd0,0x01,0x7e,0xc0}; //{0x01, 0x7E}
+static uint8_t vendor_info[] =     {0x01, 0x01, 0x10, 0x00};
+static uint8_t vendor_reset[] =    {0x01, 0x03, 0x0c, 0x00};
+static uint8_t vendor_sync[] =     {0xc0, 0x00, 0x2f, 0x00, 0xd0, 0x01, 0x7e, 0xc0}; //{0x01, 0x7E}
 //static uint8_t vendor_sync_rsp[] = {0xc0,0x00,0x2f,0x00,0xd0,0x02,0x7d,0xc0}; //{0x02, 0x7D}
 
-static const char MULTIBT_VENDOR_PROP_NAME[] = "persist.vendor.libbt_vendor";
-static const char MULTIBT_MODULE_PROP_NAME[] = "persist.vendor.bt_module";
-static const char MULTIBT_NAME_PROP_NAME[] = "persist.vendor.bt_name";
-
-static std::string devid_subdevid[] = {"1", "2", "3", "4", "5"};
-static std::string pciid_subdevid[] = {"0", "1", "2", "3", "4"};
-static std::string dev_typeid[] = {"0000", "0001","8800"};
-
 /******************************************************************************
-**  usb/mmc struct config
+**  Bt device info of pci interface
 ******************************************************************************/
-static const struct device_info bluetooth_dongle[] = {
-	{0xC820, "rtl8821cu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
-	{0xC811, "rtl8821cu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
-	{0xD723, "rtl8723du", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
-	{0xB82C, "rtl8822bu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
-	{0xB720, "rtl8723bu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
-	{0x0823, "rtl8821au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
-	{0x0821, "rtl8821au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
-	{0x885c, "rtl8852au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
-	{0x885a, "rtl8852au", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
-	{0xB733, "rtl8733bu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
-	{0xC82C, "rtl88x2cu", "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, true},
-	{0xB761, "rtl8761u",  "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, false},
-	{0x8771, "rtl8771u",  "libbt-vendor_rtlMulti.so", "rtk_btusb", 0x0000, false},
-	{0x2045, "ap62x8",    "libbt-vendor_bcmMulti.so", "btusb",     0x0000, false},
-	{0xBD27, "ap62x8",    "libbt-vendor_bcmMulti.so", "btusb",     0x0000, false},
-	{0x0BDC, "ap62x8",    "libbt-vendor_bcmMulti.so", "btusb",     0x0000, false},
-	{0x9378, "qca9379",   "libbt-vendor_qcaMulti.so", "bt_usb_qcom", 0x0000, true},
-	{0x7A85, "qca9379",   "libbt-vendor_qcaMulti.so", "bt_usb_qcom", 0x0000, true},
-	{0x7668, "mtk7668u",  "libbt-vendor_mtkMulti.so", "btmtk_usb", 0x0000, true},
-	{0x0000, "mtk7920e",  "libbt-vendor_792Multi.so", "btmtkuart", 0x7961, false},
-	{0x0000, "qca6391",   "libbt-vendor_qtiMulti.so", "NULL"     , 0x1101, false},
-	{0x0000, "qca6174",   "libbt-vendor_qcaMulti.so", "NULL"     , 0x050a, false},
-	{0x0000, "qca206x",   "libbt-vendor_qtiMulti.so", "NULL"     , 0x1103, false},
-	{0x0000, "nxp8987",   "libbt-vendor_nxpMulti.so", "NULL"     , 0x9149, false},
-	{0x0000, "nxp8997",   "libbt-vendor_nxpMulti.so", "NULL"     , 0x9141, false},
-	{0x0000, "nxpiw620",  "libbt-vendor_nxpMulti.so", "NULL"     , 0x2b56, false},
-	{0x0000, "mtk7668s",  "libbt-vendor_mtkMulti.so", "btmtksdio", 0x7608, true},
-	{0x0000, "mtk7661s",  "libbt-vendor_mtkMulti.so", "btmtksdio", 0x7603, true},
-	{0x0000, "uwe5621ds", "libbt-vendor_uweMulti.so", "sprdbt_tty", 0x0000, true},
-	{0x0000, "aml_w1",       "libbt-vendor_amlMulti.so", "NULL"  , 0x8888, true},
-	{0x0000, "aml_w1u_s",    "libbt-vendor_amlMulti.so", "NULL"  , 0x500, false},
-	{0x4C55, "aml_w1u",      "libbt-vendor_amlMulti.so", "NULL"  , 0x0000, false},
-	{0x0000, "aml_w2_p",     "libbt-vendor_amlMulti.so", "NULL"  , 0x602, false},
-	{0x0000, "aml_w2_p",     "libbt-vendor_amlMulti.so", "NULL"  , 0x642, false},
-	{0x0000, "aml_w2_s",     "libbt-vendor_amlMulti.so", "NULL"  , 0x600, false},
-	{0x0000, "aml_w2_s",     "libbt-vendor_amlMulti.so", "NULL"  , 0x640, false},
-	{0x601, "aml_w2_u",     "libbt-vendor_amlMulti.so", "NULL"  , 0x0000, false},
-	{0x641, "aml_w2_u",     "libbt-vendor_amlMulti.so", "NULL"  , 0x0000, false}
+static const dev_info bt_dev_pci[] = {
+    // qualcomm pice modules
+    {{0x0271, 0x1101}, "qca6391",      QTI_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x0271, 0x1103}, "qca206x",      QTI_VND_LIB,   "",                POWER_EVENT_RESET},
+    // mediatek pice modules
+    {{0x14c3, 0x7961}, "mtk7920e",     MT792_VND_LIB, "btmtkuart",       POWER_EVENT_RESET},
+    // amlogic pice modules
+    {{0x1F35, 0x0602}, "aml_w2_p",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1F35, 0x0642}, "aml_w2_p",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    // nxp pice modules
+    {{0x02DF, 0x2b56}, "nxpiw620",     NXP_VND_LIB,   "",                POWER_EVENT_RESET},
 };
 
 /******************************************************************************
-**  uart struct config
+**  Bt device info of sdio interface
 ******************************************************************************/
-static const struct uart_device_info uart_dongle[] = {
-	{0x0F00, "bcm_bt",  "libbt-vendor_bcmMulti.so", false},
-	{0x1D00, "qca_bt",  "libbt-vendor_qcaMulti.so", false},
-	{0x5D00, "rtl_bt",  "libbt-vendor_rtlMulti.so", false},
-	{0x4600, "mtk_bt",  "libbt-vendor_mtkMulti.so", false},
-	{0XFFFF, "aml_bt",  "libbt-vendor_amlMulti.so", false},
-	{0XEC01, "uwe_bt",  "libbt-vendor_uweMulti.so", false},
+static const dev_info bt_dev_sdio[] = {
+    // broadcom sdio modules
+    {{0x02D0, 0x4359}, "ap6398s",      BCM_VND_LIB,   "",                POWER_EVENT_RESET},
+    // mediatek sdio modules
+    {{0x0e8d, 0x7608}, "mtk7668s",     MTK_VND_LIB,   "btmtksdio",       POWER_EVENT_EN},
+    {{0x0e8d, 0x7603}, "mtk7661s",     MTK_VND_LIB,   "btmtksdio",       POWER_EVENT_EN},
+    // amlogic sdio modules
+    {{0x8888, 0x8888}, "aml_w1",       AML_VND_LIB,   "",                POWER_EVENT_EN},
+    {{0x1B8E, 0x0500}, "aml_w1u_s",    AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x0540}, "aml_w1u_s",    AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x0600}, "aml_w2_s",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x0640}, "aml_w2_s",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    // nxp sdio modules
+    {{0x02DF, 0x9149}, "nxp8987",      NXP_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x02DF, 0x9141}, "nxp8997",      NXP_VND_LIB,   "",                POWER_EVENT_RESET},
+    // unisoc sdio modules
+    {{0x0000, 0x0000}, "uwe5621ds",    UWE_VND_LIB,   "sprdbt_tty",      POWER_EVENT_EN},
 };
 
-#if 0
-static int set_module_name(const char * str)
+/******************************************************************************
+**  Bt device info of usb interface
+******************************************************************************/
+static const dev_info bt_dev_usb[] = {
+    // broadcom usb modules
+    {{0x02D0, 0x2045}, "ap62x8",       BCM_VND_LIB,   "btusb",           POWER_EVENT_RESET},
+    {{0x02D0, 0xBD27}, "ap62x8",       BCM_VND_LIB,   "btusb",           POWER_EVENT_RESET},
+    {{0x02D0, 0x0BDC}, "ap62x8",       BCM_VND_LIB,   "btusb",           POWER_EVENT_RESET},
+    // qualcomm usb modules
+    {{0x0CF3, 0x9378}, "qca9379",      QCA_VND_LIB,   "bt_usb_qcom",     POWER_EVENT_EN},
+    {{0x0CF3, 0x7A85}, "qca9379",      QCA_VND_LIB,   "bt_usb_qcom",     POWER_EVENT_EN},
+    // realtek usb modules
+    {{0x0bda, 0xC820}, "rtl8821cu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0xC811}, "rtl8821cu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0xD723}, "rtl8723du",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0xB82C}, "rtl8822bu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0xB720}, "rtl8723bu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0x0823}, "rtl8821au",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0x0821}, "rtl8821au",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0x885c}, "rtl8852au",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0x885a}, "rtl8852au",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0xB733}, "rtl8733bu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0xC82C}, "rtl88x2cu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0xB761}, "rtl8761u",     RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_RESET},
+    {{0x0bda, 0x8771}, "rtl8771u",     RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_RESET},
+    // mediatek usb modules
+    {{0x0e8d, 0x7668}, "mtk7668u",     MTK_VND_LIB,   "btmtk_usb",       POWER_EVENT_EN},
+    {{0x0e8d, 0x7961}, "mtk7920u",     MT792_VND_LIB, "btmtk_usb_unify", POWER_EVENT_RESET},
+    // amlogic usb modules
+    {{0x1B8E, 0x4C55}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x0541}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x0601}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x0641}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
+};
+
+/******************************************************************************
+**  Bt device info of uart interface
+******************************************************************************/
+static const dev_info_uart bt_dev_uart[] = {
+    {BT_VID_BROADCOM, "bcm_bt", BCM_VND_LIB, POWER_EVENT_RESET},
+    {BT_VID_QUALCOMM, "qca_bt", QCA_VND_LIB, POWER_EVENT_RESET},
+    {BT_VID_REALTECK, "rtl_bt", RTK_VND_LIB, POWER_EVENT_RESET},
+    {BT_VID_MEDIATEK, "mtk_bt", MTK_VND_LIB, POWER_EVENT_RESET},
+    {BT_VID_AMLOGIC,  "aml_bt", AML_VND_LIB, POWER_EVENT_RESET},
+    {BT_VID_UNISOC,   "uwe_bt", UWE_VND_LIB, POWER_EVENT_RESET},
+};
+
+int mailbox_qca_bt_name(void)
 {
-	int fd;
-	std::string node_name;
-	node_name = std::string(str);
-	if((fd = open(NODE_PATH, O_CREAT|O_RDWR, S_IRWXU|S_IROTH)) < 0) {
-		PR_ERR("open NODE_PATH error: %s(%d)", strerror(errno), errno);
-		goto error;
-	}
-
-	if (write(fd, node_name.c_str(),node_name.length()) != node_name.length()) {
-		PR_ERR("write node_name error");
-		close(fd);
-		goto error;
-	}
-
-	if (write(fd, "\n", 1) != 1) {
-		PR_ERR("write \n error");
-		close(fd);
-		goto error;
-	}
-
-	close(fd);
-	return 1;
-error:
-	return 0;
-}
-#endif
-
-static int set_module_name(const char * str)
-{
-	if (str == NULL)
-		goto error;
-
-	property_set(MULTIBT_NAME_PROP_NAME, str);
-	return 1;
-error:
-	return 0;
-}
-
-static int get_module_name(char * str)
-{
-	if (str == NULL)
-		goto error;
-
-	property_get(MULTIBT_NAME_PROP_NAME, str, "NULL");
-	return 1;
-error:
-	return 0;
-}
-
 #ifdef MAILBOX_MODULE_NAME
-int mailbox_module_name(void)
-{
-    char path[PATH_MAX_LEN] = {'\0'};
-    int fd = -1;
-    int ret = 0;
-    char str[PROP_VALUE_MAX] = {'\0'};
-    char bt_name[] = {"qca_bt"};
     struct merge_data {
         int cmd;
         char msg[MBOX_USER_MAX_LEN];
     } merge_data;
+    int fd = -1;
+    int ret = -1;
+    char path[PATH_MAX_LEN] = {'\0'};
+    char bt_name[] = {"qca_bt"};
 
-    property_get(MULTIBT_NAME_PROP_NAME, str, "NULL");
-    if (strncmp(str, bt_name, (sizeof(bt_name) -1)) != 0) {
-        PR_INFO("%s: bt_name is not qca_bt\n", __func__);
-        goto err;
+    if (strcmp(bt_prop_val.dev_name, bt_name)) {
+        PR_INFO("bt_name:%s, not qca_bt", bt_prop_val.dev_name);
+        goto exit;
     }
 
     sprintf(path, "%s", ARMV8_TO_AOCPU);
-    PR_INFO("%s: open %s\n", __func__, path);
+    PR_DBG("open %s\n", path);
 
     fd = open(path, O_RDWR);
     if (fd < 0) {
-        PR_ERR("%s: open %s fail\n", __func__, ARMV8_TO_AOCPU);
-        ret = -1;
-        goto err;
+        PR_ERR("open %s failed: %s (%d)", ARMV8_TO_AOCPU, strerror(errno), errno);
+        goto exit;
     }
 
     merge_data.cmd = CMD_SET_MID;
-    memcpy(merge_data.msg, str, (sizeof(str)-1));
+    memcpy(merge_data.msg, bt_name, strlen(bt_name));
     ret = write(fd, &merge_data, sizeof(merge_data));
     if (ret < 0) {
-        PR_ERR("%s: write err: %d\n", __func__, ret);
-        goto err;
+        PR_ERR("write failed: %s (%d)", strerror(errno), errno);
+        goto exit;
     }
-    memset(str, 0, (sizeof(str)-1));
-    ret = read(fd, str, (sizeof(str)-1));
+    memset(bt_name, 0, strlen(bt_name));
+    ret = read(fd, bt_name, strlen(bt_name));
     if (ret < 0) {
-        PR_ERR("%s: read err: %d\n", __func__, ret);
-        goto err;
+        PR_ERR("read failed: %s (%d)", strerror(errno), errno);
+        goto exit;
     }
 
-err:
+exit:
+    if (fd >= 0) {
+        close(fd);
+    }
+
+    return ret;
+#else
+    return -1;
+#endif
+}
+
+bool get_pci_flag(void)
+{
+    return pci_flag;
+}
+
+void set_pci_flag(bool val)
+{
+    pci_flag = val;
+}
+
+
+static void set_bt_prop(const char *dev_name, const char *mod_name, const char *vnd_lib_name)
+{
+    if ((dev_name == NULL) ||(mod_name == NULL) || (vnd_lib_name == NULL)) {
+        PR_ERR("parameters err");
+        return;
+    }
+
+    memcpy(bt_prop_val.dev_name, dev_name, sizeof(bt_prop_val.dev_name));
+    property_set(PROP_BT_NAME, bt_prop_val.dev_name);
+    memcpy(bt_prop_val.mod_name, mod_name, sizeof(bt_prop_val.mod_name));
+    property_set(PROP_BT_MODULE, bt_prop_val.mod_name);
+    memcpy(bt_prop_val.vnd_lib_name, vnd_lib_name, sizeof(bt_prop_val.vnd_lib_name));
+    property_set(PROP_LIBBT_VENDOR, bt_prop_val.vnd_lib_name);
+}
+
+static void get_bt_prop(void)
+{
+    property_get(PROP_BT_NAME, bt_prop_val.dev_name, NULL);
+    property_get(PROP_BT_MODULE, bt_prop_val.mod_name, NULL);
+    property_get(PROP_LIBBT_VENDOR, bt_prop_val.vnd_lib_name, DEFAULT_VND_LIB_NAME);
+
+    property_get(PROP_WIFI_BT_NAME, bt_prop_val.wifi_bt_name, NULL);
+
+    PR_INFO("bt_prop_val dev_name:%s, mod_name:%s, vnd_lib_name:%s, wifi_bt_name:%s,",
+        bt_prop_val.dev_name, bt_prop_val.mod_name, bt_prop_val.vnd_lib_name, bt_prop_val.wifi_bt_name);
+}
+
+static prop_val *get_bt_prop_val(void)
+{
+    return &bt_prop_val;
+}
+
+static bool matching_dev_id(const dev_info *dev, unsigned int dev_size, const dev_id *mod_id)
+{
+    unsigned int cnt;
+    bool ret =false;
+
+    if ((dev == NULL) || (mod_id == NULL)) {
+        PR_ERR("parameters err");
+        return ret;
+    }
+
+    for (cnt = 0; cnt < dev_size; cnt++) {
+        if ((dev[cnt].mod_id.vid == mod_id->vid) && (dev[cnt].mod_id.pid == mod_id->pid)) {
+            PR_INFO("matched vid:%4x, pid:%04x, dev_name:%s, cnt:%u, set property", dev[cnt].mod_id.vid,
+                dev[cnt].mod_id.pid, dev[cnt].dev_name, cnt);
+            set_bt_prop(dev[cnt].dev_name, dev[cnt].mod_name, dev[cnt].vnd_lib_name);
+            ret = true;
+            break;
+        }
+    }
+
+    return ret;
+}
+
+static bool matching_dev_id_uart(unsigned int vid)
+{
+    unsigned int cnt;
+    bool ret = false;
+
+    for (cnt = 0; cnt < (sizeof(bt_dev_uart) / sizeof(dev_info_uart)); cnt++) {
+        if (bt_dev_uart[cnt].vid == vid) {
+            PR_INFO("matched vid:%4x, dev_name:%s, cnt:%u, set property",bt_dev_uart[cnt].vid,
+                bt_dev_uart[cnt].dev_name, cnt);
+            memcpy(bt_prop_val.dev_name, bt_dev_uart[cnt].dev_name, sizeof(bt_prop_val.dev_name));
+            property_set(PROP_BT_NAME, bt_prop_val.dev_name);
+            memcpy(bt_prop_val.vnd_lib_name, bt_dev_uart[cnt].vnd_lib_name, sizeof(bt_prop_val.vnd_lib_name));
+            property_set(PROP_LIBBT_VENDOR, bt_prop_val.vnd_lib_name);
+            ret = true;
+            break;
+        }
+    }
+
+    return ret;
+}
+
+static int matching_dev_name(const dev_info *dev, unsigned int dev_size, const char *val)
+{
+    int ret = -1;
+    int cnt;
+
+    if ((dev == NULL) || (val == NULL)) {
+        PR_ERR("parameters err");
+        return ret;
+    }
+
+    for (cnt = 0; cnt < dev_size; cnt++) {
+        if (!strcmp(dev[cnt].dev_name, val)) {
+            PR_INFO("matched dev_name:%s, cnt:%d", dev[cnt].dev_name, cnt);
+            ret = cnt;
+            break;
+        }
+    }
+
+    return ret;
+}
+
+static bool get_aml_bt_module(char *str)
+{
+    int fd;
+    bool ret = false;
+
+    fd = open(WIFI_POWER_DEV, O_RDWR);
+    if (fd < 0) {
+        PR_ERR("open (%s) failed: %s (%d)", WIFI_POWER_DEV, strerror(errno), errno);
+        goto exit;
+    }
+
+    if (ioctl (fd, GET_AML_WIFI_MODULE, str) < 0) {
+        PR_ERR("ioctl GET_AML_WIFI_MODULE failed: %s (%d)", strerror(errno), errno);
+        goto exit;
+    }
+
+    PR_DBG("get bt module: %s", str);
+    if (!strncmp(str, "aml" ,3)) {
+        PR_INFO("get aml bt module: %s", str);
+        ret = true;
+    }
+
+exit:
     if (fd >= 0) {
         close(fd);
     }
 
     return ret;
 }
-#endif
 
-#define GET_AML_BT_MODULE     _IO('m',7)
-
-static int get_aml_bt_module(char *aml_bt_module)
+static bool distinguish_dev_name_specify(void)
 {
-	int fd = open("/dev/wifi_power", O_RDWR);
-	if (fd < 0) {
-		return -1;
-	}
+    int idx;
 
-	if (ioctl (fd, GET_AML_BT_MODULE, aml_bt_module) < 0) {
-		close(fd);
-		return -1;
-	}
-	close(fd);
+    if (strlen(bt_prop_val.wifi_bt_name)) {
+        idx = matching_dev_name(bt_dev_pci, (sizeof(bt_dev_pci) / sizeof(dev_info)), bt_prop_val.wifi_bt_name);
+        if (idx >= 0) {
+            set_bt_prop(bt_dev_pci[idx].dev_name, bt_dev_pci[idx].mod_name, bt_dev_pci[idx].vnd_lib_name);
+            return true;
+        }
 
-	PR_ERR("get aml true bt is %s", aml_bt_module);
-	if (strncmp(aml_bt_module, "aml" ,3)) {
-		PR_ERR("get aml true bt is %s", aml_bt_module);
-		return -1;
-	}
+        idx = matching_dev_name(bt_dev_sdio, (sizeof(bt_dev_sdio) / sizeof(dev_info)), bt_prop_val.wifi_bt_name);
+        if (idx >= 0) {
+            set_bt_prop(bt_dev_sdio[idx].dev_name, bt_dev_sdio[idx].mod_name, bt_dev_sdio[idx].vnd_lib_name);
+            return true;
+        }
 
-	return 0;
+        idx = matching_dev_name(bt_dev_usb, (sizeof(bt_dev_usb) / sizeof(dev_info)), bt_prop_val.wifi_bt_name);
+        if (idx >= 0) {
+            set_bt_prop(bt_dev_usb[idx].dev_name, bt_dev_usb[idx].mod_name, bt_dev_usb[idx].vnd_lib_name);
+            return true;
+        }
+    }
+
+    return false;
 }
 
-static int matching_specify_device_manually(void)
+static bool write_power_type(const char *power_type, unsigned int len)
 {
-	int dongle_size;
-	int cnt;
-	char value[PROPERTY_VALUE_MAX] = {'\0'};
+    int fd;
+    bool ret = false;
 
-	memset(value, 0, sizeof(value));
-	if (!property_get("persist.vendor.wifibt_name", value, NULL)) {
-		PR_ERR("[bt][%s-%d]: errno=%d,errstr=%s", __func__, __LINE__, errno, strerror(errno));
-		if (get_aml_bt_module(value))
-			return -1;
-		PR_ERR("multibt will rmmod wifi comm");
-		rmmod("wifi_comm");
-		usleep(100000);
-	}
+    if (access(BT_POWER_EVT_1, F_OK) == 0) {
+        fd = open(BT_POWER_EVT_1, O_WRONLY);
+    } else {
+        fd = open(BT_POWER_EVT_2, O_WRONLY);
+    }
 
-	PR_ERR("[bt][%s-%d]: persist.vendor.wifibt_name=%s", __func__, __LINE__, strlen(value) ? value : "NULL");
-	dongle_size = sizeof(bluetooth_dongle)/sizeof(struct device_info);
-	for (cnt = 0; cnt < dongle_size; cnt++) {
-		if (!strcmp(bluetooth_dongle[cnt].device_name, value)) {
-			if (strncmp(bluetooth_dongle[cnt].module_name, "NULL", sizeof("NULL")-1)) {
-				property_set(MULTIBT_MODULE_PROP_NAME, bluetooth_dongle[cnt].module_name);
-			}
-			property_set(MULTIBT_VENDOR_PROP_NAME, bluetooth_dongle[cnt].vendor_lib_name);
-			PR_ERR("[bt][%s-%d]: matched device = %s", __func__, __LINE__, bluetooth_dongle[cnt].device_name);
-			set_module_name(bluetooth_dongle[cnt].device_name);
-			return 0;
-		}
-	}
+    if (fd < 0) {
+        PR_ERR("open btpower_evt failed: %s (%d)", strerror(errno), errno);
+        goto exit;
+    } else {
+        if (write(fd, power_type, len) < len) {
+            PR_ERR("write btpower_evt failed: %s (%d)", strerror(errno), errno);
+        } else {
+            ret = true;
+        }
+    }
 
-	return -1;
+exit:
+    if (fd >= 0) {
+        close(fd);
+    }
+
+    return ret;
 }
 
-static void write_power_type(char * str)
+static bool get_power_type(char *power_type)
 {
-	int fd;
+    int idx = -1;
 
-	if (access(BT_POWER_EVT_1, F_OK) == 0) {
-		fd = open(BT_POWER_EVT_1, O_WRONLY);
-	} else {
-		fd = open(BT_POWER_EVT_2, O_WRONLY);
-	}
+    if (power_type == NULL) {
+        PR_ERR("parameters err");
+        return false;
+    }
 
-	if (fd < 0) {
-		ALOGE("%s: open btpower_evt failed: %s (%d)\n", __func__, strerror(errno), errno);
-	} else {
-		if (write(fd, str, 1) < 0) {
-			ALOGE( "%s: write btpower_evt failed: %s (%d)\n", __func__, strerror(errno), errno);
-		}
-		close(fd);
-	}
+    if (strlen(bt_prop_val.dev_name)) {
+        idx = matching_dev_name(bt_dev_pci, (sizeof(bt_dev_pci) / sizeof(dev_info)), bt_prop_val.dev_name);
+        if (idx >= 0) {
+            *power_type = bt_dev_pci[idx].power_type;
+            set_pci_flag(true);
+            goto exit;
+        }
+
+        idx = matching_dev_name(bt_dev_sdio, (sizeof(bt_dev_sdio) / sizeof(dev_info)), bt_prop_val.dev_name);
+        if (idx >= 0) {
+            *power_type = bt_dev_sdio[idx].power_type;
+            goto exit;
+        }
+
+        idx = matching_dev_name(bt_dev_usb, (sizeof(bt_dev_usb) / sizeof(dev_info)), bt_prop_val.dev_name);
+        if (idx >= 0) {
+            *power_type = bt_dev_usb[idx].power_type;
+            goto exit;
+        }
+
+        for (idx = 0; idx < ( sizeof(bt_dev_uart) / sizeof(dev_info_uart)); idx++) {
+            if (!strcmp(bt_dev_uart[idx].dev_name, bt_prop_val.dev_name)) {
+                *power_type = bt_dev_uart[idx].power_type;
+                goto exit;
+            }
+        }
+    }
+
+    return false;
+
+exit:
+    PR_DBG("matched dev_name:%s, idx:%d, power_type:%c", bt_prop_val.dev_name, idx, *power_type);
+    return true;
 }
 
-static char* get_power_type(void)
+static bool set_power_type(void)
 {
-	char module_name[16];
-	int size = 0;
-	int i;
+    char power_type = '\0';
 
-	memset(module_name, 0, sizeof(module_name));
-	btvendor_hal.get_module_name(module_name);
-	if (!strncmp(module_name, "NULL", 4)) {
-		PR_INFO("dou't find module name");
-		return NULL;
-	}
+    if (!get_power_type(&power_type)) {
+        PR_INFO("get power type failed");
+        return false;
+    }
 
-	size = sizeof(uart_dongle) / sizeof(uart_device_info);
-	for (i = 0; i < size; i++) {
-		if(strstr(module_name, uart_dongle[i].device_name)) {
-			PR_INFO("find name: %s", uart_dongle[i].device_name);
-			if (!uart_dongle[i].power_type) {
-				return (char*)"1";
-			}
-			else {
-				return (char*)"2";
-			}
-		}
-	}
+    if (!write_power_type(&power_type, sizeof(char))) {
+        PR_INFO("write power type failed");
+        return false;
+    }
 
-	size = sizeof(bluetooth_dongle) / sizeof(device_info);
-	for (i = 0; i < size; i++) {
-		if (strstr(module_name, bluetooth_dongle[i].device_name)) {
-			PR_INFO("find name: %s", bluetooth_dongle[i].device_name);
-			if (!bluetooth_dongle[i].power_type) {
-				return (char*)"1";
-			}
-			else {
-				return (char*)"2";
-			}
-		}
-	}
-	return NULL;
-}
+    clr_bt_power_bit(power_type);
 
-static int set_power_type(void)
-{
-	char *str;
-
-	str = get_power_type();
-	if (!str)
-		return 0;
-
-	write_power_type(str);
-	return 0;
+    return true;
 }
 
 static int set_debug_level(const char *p_name, char *p_value)
 {
-	VDBG = std::strtol(p_value, nullptr, 10);
-	if (VDBG) {
-		PR_INFO("%s = %d", p_name, VDBG);
-	}
-	return 0;
+    VDBG = std::strtol(p_value, nullptr, 10);
+    if (VDBG) {
+        PR_INFO("%s = %d", p_name, VDBG);
+    }
+    return 0;
 }
 
 static int set_redistinguish(const char *p_name, char *p_value)
 {
-	redistinguish = std::strtol(p_value, nullptr, 10);
-	if (VDBG) {
-		PR_INFO("%s = %d", p_name, redistinguish);
-	}
-	return 0;
-}
-
-static int insmod(const char *filename, const char *args) {
-  int fd = 0;
-  int ret;
-
-  fd = open(filename, O_RDONLY);
-  if (fd < 0 ) return -1;
-
-  ret = finit_module(fd, args, 0);
-
-  close(fd);
-
-  return ret;
-}
-
-static int rmmod(const char *modname) {
-  int ret = -1;
-  int maxtry = 10;
-
-  while (maxtry-- > 0) {
-    ret = delete_module(modname, O_NONBLOCK | O_EXCL);
-    if (ret < 0 && errno == EAGAIN)
-      usleep(500000);
-    else
-      break;
-  }
-
-  if (ret != 0)
-    PR_ERR("Unable to unload driver module %s",modname);
-  return ret;
-}
-
-/*exist return 1 .or return 0 */
-static int find_target_file(const char *path, const char * targetfile)
-{
-    DIR *dir;
-    struct dirent *name;
-
-    dir = opendir(path);
-    if (dir == NULL) {
-       PR_ERR("fail to open %s", path);
-       return 0;
+    redistinguish = std::strtol(p_value, nullptr, 10);
+    if (VDBG) {
+        PR_INFO("%s = %d", p_name, redistinguish);
     }
-    while ((name = readdir(dir)) != NULL) {
-        if (strncmp(name->d_name, targetfile, strlen(targetfile)) == 0) {
-            closedir(dir);
-            return 1;
-        }
-    }
-    closedir(dir);
     return 0;
 }
 
-static int get_config_param(std::string path, std::string targetfile)
+static int insmod(const char *filename, const char *args)
 {
-	int ret = -1;
-	char *p_name;
-	char *p_value;
-	d_entry_t * temp_table;
-	FILE* fd;
-	std::string pathname;
+    int ret = -1;
+    int fd;
 
-	char line[MAX_LINE_LEN +1];
-	if (!(find_target_file(path.c_str(), targetfile.c_str()))) {
-		PR_ERR("debug config file not exist");
-		goto error;
-	}
+    if ((filename == NULL) || (args == NULL)) {
+        PR_ERR("parameters err");
+        return ret;
+    }
 
-	pathname = std::string(path) + std::string(targetfile);
-	//PR_INFO("pathname: %s", pathname.c_str());
-	fd = fopen(pathname.c_str(), "r");
-	if (fd == NULL) {
-		PR_ERR("open file fail");
-		goto error;
-	}
+    fd = TEMP_FAILURE_RETRY(open(filename, O_RDONLY | O_CLOEXEC | O_NOFOLLOW));
+    if (fd < 0) {
+        PR_ERR("Failed to open %s", filename);
+        return -1;
+    }
 
-	while(fgets(line, MAX_LINE_LEN +1, fd) != NULL) {
-		if (line[0] == '#') {
-			continue;
-		}
+    ret = syscall(__NR_finit_module, fd, args, 0);
 
-		p_name = strtok(line, DELIM);
+    close(fd);
+    if (ret < 0) {
+        PR_ERR("finit_module return: %d", ret);
+    }
 
-		if (p_name == NULL) {
-			continue;
-		}
+    return ret;
+}
 
-		p_value = strtok(NULL, DELIM);
-		temp_table = (d_entry_t*)entry_table;
+static int rmmod(const char *modname)
+{
+    int ret = -1;
+    int maxtry = 10;
 
-		while(temp_table->entry_name != NULL) {
-			if(strcmp(temp_table->entry_name, p_name) == 0) {
-				temp_table->p_action(temp_table->entry_name, p_value);
-				break;
-			}
+    if (modname == NULL) {
+        PR_ERR("parameters err");
+        return ret;
+    }
 
-			temp_table++;
-		}
-	}
-	ret = redistinguish;
-	fclose(fd);
-error:
-	return ret;
+    while (maxtry-- > 0) {
+        ret = delete_module(modname, O_NONBLOCK | O_EXCL);
+        if ((ret < 0) && (errno == EAGAIN)) {
+            usleep(500000);
+        } else {
+            break;
+        }
+    }
+
+    if (ret != 0) {
+        PR_ERR("Unable to unload driver module %s",modname);
+    }
+
+    return ret;
+}
+
+static void rmmod_aml_drv(void)
+{
+    char mod_name[20] = {'\0'};
+
+    if (get_aml_bt_module(mod_name)) {
+        PR_INFO("aml modules need rmmod wifi_comm");
+        rmmod("wifi_comm");
+        usleep(100000);
+    }
+}
+
+static bool find_target_file(const char *path, const char * file)
+{
+    DIR *dir;
+    struct dirent *next;
+    bool ret = false;
+
+    if ((path == NULL) || (file == NULL)) {
+         PR_ERR("parameters err");
+         return ret;
+    }
+
+    dir = opendir(path);
+    if (dir == NULL) {
+       PR_ERR("opendir (%s) failed: %s (%d)", path, strerror(errno), errno);
+       goto exit;
+    }
+
+    while ((next = readdir(dir)) != NULL) {
+        if (!strncmp(next->d_name, file, strlen(file))) {
+            ret = true;
+            goto exit;
+        }
+    }
+
+exit:
+    if (dir) {
+        closedir(dir);
+    }
+
+    return ret;
+}
+
+static int get_config_param(std::string path, std::string file)
+{
+    FILE *fp;
+    std::string target;
+    tag_table *temp_table;
+    int ret = -1;
+    char line[MAX_LINE_LEN] = {'\0'};
+    char *name,*value;
+
+    if (!find_target_file(path.c_str(), file.c_str())) {
+        PR_ERR("debug config file not exist");
+        return ret;
+    }
+
+    target = std::string(path) + std::string(file);
+    PR_DBG("open target: %s", target.c_str());
+    fp = fopen(target.c_str(), "r");
+    if (fp == NULL) {
+        PR_ERR("open %s failed: %s (%d)", target.c_str(), strerror(errno), errno);
+        goto exit;
+    }
+
+    while(fgets(line, MAX_LINE_LEN, fp)) {
+        if (line[0] == '#') {
+            continue;
+        }
+
+        name = strtok(line, DELIM);
+        if (name == NULL) {
+            continue;
+        }
+
+        value = strtok(NULL, DELIM);
+        temp_table = (tag_table *)entry_table;
+
+        while (temp_table->tag) {
+            if (!strcmp(temp_table->tag, name)) {
+                temp_table->tag_ops(temp_table->tag, value);
+                break;
+            }
+
+            temp_table++;
+        }
+    }
+
+    ret = redistinguish;
+
+exit:
+    if (fp) {
+        fclose(fp);
+        fp = NULL;
+    }
+
+    return ret;
 }
 
 static int get_redistinguish(void)
 {
 /*
-	power on or reboot later:    distinguish = 0;
-	distinguish BT successfully: distinguish = 1;
+    power on or reboot later:    distinguish = 0;
+    distinguish BT successfully: distinguish = 1;
 */
 
-	get_config_param(CONFIG_PATH, CONFIG_NAME);
-	if (redistinguish && !distinguish)
-		property_set("persist.vendor.libbt_vendor", "re_libbt");
-
-#ifdef MAILBOX_MODULE_NAME
-	mailbox_module_name();
-#endif
-
-	return 0;
-}
-
-static std::string get_usb_path(std::string devid, std::string subdevid)
-{
-    std::string path = std::string("/sys/bus/usb/devices/") +
-                        std::string(devid) +
-                        std::string("-") +
-                        std::string(subdevid) +
-                        std::string("/") +
-                        std::string("idProduct");
-    return path;
-}
-
-static std::string get_dev_path(std::string dev_type, std::string dev_id)
-{
-    std::string path = std::string("/sys/bus/mmc/devices/") +
-                        std::string(dev_type) +
-                        std::string(":") +
-                        std::string(dev_id) +
-                        std::string("/") +
-                        std::string(dev_type) +
-                        std::string(":") +
-                        std::string(dev_id) +
-                        std::string(":1/device");
-    return path;
-}
-static std::string get_pci_path(std::string pciid)
-{
-    std::string path = std::string("/sys/bus/pci/devices/") +
-                        std::string("0000:0") +
-                        std::string(pciid) +
-                        std::string(":00.0/device");
-    return path;
-}
-
-static unsigned short get_dev_info(std::string path)
-{
-    char info[16];
-    unsigned short val;
-    int fp = open(path.c_str(), O_RDONLY);
-    if (fp < 0) {
-        PR_ERR("Open file failed !!! %s(%d)", strerror(errno), errno);
-        return 0xFF;
-    }
-    memset(info, 0, sizeof(info));
-    if(read(fp, info, sizeof(info)) < 0) {
-		PR_ERR(" %s read failed",__func__);
-		close(fp);
-		return 0xFF;
-	}
-    close(fp);
-    val = std::strtol(info, nullptr, 16);
-    return val;
-}
-
-static int matching_usb_device(std::string path)
-{
-	int cnt;
-	unsigned short device_id;
-	int dongle_size;
-
-	if (!matching_specify_device_manually())
-		return 0;
-
-	if ((device_id = get_dev_info(path)) == 0xFF) {
-		return 1;
-	}
-
-	dongle_size = sizeof(bluetooth_dongle)/sizeof(struct device_info);
-	for (cnt = 0; cnt < dongle_size; cnt++) {
-		if (bluetooth_dongle[cnt].device_id == device_id && bluetooth_dongle[cnt].device_id > 0) {
-			if (strncmp(bluetooth_dongle[cnt].module_name, "NULL", sizeof("NULL")-1)) {
-				property_set(MULTIBT_MODULE_PROP_NAME, bluetooth_dongle[cnt].module_name);
-			}
-			property_set(MULTIBT_VENDOR_PROP_NAME, bluetooth_dongle[cnt].vendor_lib_name);
-			set_module_name(bluetooth_dongle[cnt].device_name);
-			return 0;
-		}
-	}
-	return 1;
-}
-
-static int distinguish_vendorusb_module(void)
-{
-	std::string usb_path;
-	for (auto devid : devid_subdevid) {
-		for(auto subdevid : devid_subdevid) {
-			usb_path = get_usb_path(devid, subdevid);
-			if (!matching_usb_device(usb_path)) {
-				PR_INFO("matching usb device success");
-				return 1;
-			}
-		}
-	}
-	return 0;
-}
-
-static int get_dev_type(char *dev_type)
-{
-    int fd = open("/dev/wifi_power", O_RDWR);
-    if (fd < 0) {
-       PR_ERR("/dev/wifi_power open fail : %s(%d)", strerror(errno), errno);
-       return -1;
+    get_config_param(CONFIG_PATH, CONFIG_NAME);
+    if (redistinguish && !distinguish) {
+        property_set("persist.vendor.libbt_vendor", "re_libbt");
+        PR_INFO();
     }
 
-    if (ioctl (fd, SDIO_GET_DEV_TYPE, dev_type) < 0) {
-        close(fd);
-        return -1;
-    }
-
-    close(fd);
     return 0;
 }
 
-static int clr_bten_bit(int type)
+static bool set_bt_cfg(void)
 {
-	int fd = open("/dev/wifi_power", O_RDWR);
+    bool ret;
+
+    mailbox_qca_bt_name();
+    rmmod_aml_drv();
+    ret = set_power_type();
+
+    return ret;
+}
+
+static bool get_bt_cfg(void)
+{
+    get_redistinguish();
+    get_bt_prop();
+
+    return true;
+}
+
+static void clr_bt_power_bit(char power_type)
+{
+    int fd;
+
+    if (get_pci_flag()) {
+        PR_INFO("pcie needn't clr bt power bit");
+        return;
+    }
+
+    if (!strcmp(bt_prop_val.dev_name, "aml_w2_s")) {
+        PR_INFO("aml w2_s needn't clr bt power bit");
+        return;
+    }
+
+    if (power_type == POWER_EVENT_RESET) {
+        PR_INFO("power_type:(%c) on separately", power_type);
+    } else {
+        PR_INFO("power_type:(%c) not on separately",  power_type);
+        return;
+    }
+
+    fd = open(WIFI_POWER_DEV, O_RDWR);
     if (fd < 0) {
-       PR_ERR("/dev/wifi_power open fail : %s(%d)", strerror(errno), errno);
-       return -1;
+        PR_ERR("open (%s) failed: %s (%d)", WIFI_POWER_DEV, strerror(errno), errno);
+        return;
     }
 
-	switch(type) {
-	case CLR_BT_POWER_BIT:
-		if (ioctl(fd, type) < 0)
-			PR_ERR("%s fail", __func__);
-		break;
-	default:
-		PR_INFO("pls input correct parameters");
-		break;
-	}
-	return 0;
-}
+    if (ioctl(fd, CLR_BT_POWER_BIT) < 0) {
+        PR_ERR("ioctl CLR_BT_POWER_BIT failed: %s (%d)", strerror(errno), errno);
+    }
 
-static int enum_mmc_type(std::string path)
-{
-	int cnt;
-	unsigned short chip_id;
-	int dongle_size;
-
-	if (!matching_specify_device_manually())
-		return 0;
-
-	if ((chip_id = get_dev_info(path)) == 0xFF) {
-		return 1;
-	}
-
-	dongle_size = sizeof(bluetooth_dongle)/sizeof(struct device_info);
-	for (cnt = 0; cnt < dongle_size; cnt++) {
-		if (bluetooth_dongle[cnt].chip_id == chip_id && bluetooth_dongle[cnt].device_id <= 0) {
-			if (strncmp(bluetooth_dongle[cnt].module_name, "NULL", sizeof("NULL")-1)) {
-				property_set(MULTIBT_MODULE_PROP_NAME, bluetooth_dongle[cnt].module_name);
-			}
-			property_set(MULTIBT_VENDOR_PROP_NAME, bluetooth_dongle[cnt].vendor_lib_name);
-			set_module_name(bluetooth_dongle[cnt].device_name);
-			return 0;
-		}
-	}
-	return 1;
-}
-
-static int enum_uart_type(uint16_t vendor_id)
-{
-	int cnt;
-	int dongle_size = sizeof(uart_dongle)/sizeof(struct uart_device_info);
-
-	if (!matching_specify_device_manually())
-		return 1;
-
-	for (cnt = 0; cnt < dongle_size; cnt++) {
-		if (uart_dongle[cnt].vendor_id == vendor_id) {
-			property_set(MULTIBT_VENDOR_PROP_NAME, uart_dongle[cnt].vendor_lib_name);
-			set_module_name(uart_dongle[cnt].device_name);
-			return 1;
-		}
-	}
-	return 0;
-}
-
-static int distinguish_vendorpci_module(void)
-{
-	std::string pci_path;
-	for (auto pciid : pciid_subdevid) {
-		pci_path = get_pci_path(pciid);
-		if (!enum_mmc_type(pci_path)) {
-			PR_INFO("matching pci device success");
-			return 1;
-		}
-	}
-	return 0;
-}
-
-static int distinguish_vendormmc_module(void)
-{
-	int cnt = LOOP_TIMES;
-	std::string dev_path;
-	char dev_type[10] ={"\0"};
-
-	if (get_dev_type(dev_type)) {
-		PR_ERR("get dev type error: %s", dev_type);
-		return 0;
-	}
-	PR_INFO("get dev : %s", dev_type);
-
-	while(cnt) {
-		for (auto dev_id : dev_typeid) {
-			dev_path = get_dev_path(dev_type, dev_id);
-			if (!enum_mmc_type(dev_path)) {
-				PR_INFO("matching mmc success");
-				return 1;
-			}
-		}
-		cnt--;
-	}
-	return 0;
-}
-
-/*****************************************************************************
-**   Helper Functions
-*****************************************************************************/
-static int init_rfkill()
-{
-    char path[64];
-    char buf[16];
-    int fd, sz, id;
-    sz = -1;//initial
-
-    for (id = 0; ; id++)
-    {
-        snprintf(path, sizeof(path), "/sys/class/rfkill/rfkill%d/type", id);
-        fd = open(path, O_RDONLY);
-        if (fd < 0)
-        {
-            PR_ERR("init_rfkill : open(%s) failed: %s (%d)\n", \
-                 path, strerror(errno), errno);
-            return -1;
-        }
-
-        sz = read(fd, &buf, sizeof(buf));
+    if (fd >= 0) {
         close(fd);
-        if (sz >= 9 && memcmp(buf, "bluetooth", 9) == 0)
-        {
-            PR_INFO("break");
-            rfkill_id = id;
-			break;
+    }
+
+    return;
+}
+
+static bool distinguish_bt_module_pci(void)
+{
+    DIR *dir;
+    struct dirent *next;
+    FILE *fp = NULL;
+    bool ret = false;
+
+    dir = opendir(ENUM_DIR_PCI);
+    if (!dir) {
+        PR_ERR("opendir (%s) failed: %s (%d)", ENUM_DIR_PCI, strerror(errno), errno);
+        goto exit;
+    }
+
+    while ((next = readdir(dir)) != NULL) {
+        char line[256]= {'\0'};
+        char uevent_file[256] = {'\0'};
+
+        /* Read pci uevent file, uevent's data like below:
+         * DRIVER=w2_comm
+         * PCI_CLASS=78000
+         * PCI_ID=1F35:0602
+         * PCI_SUBSYS_ID=1556:1111
+         * PCI_SLOT_NAME=0000:01:00.0
+         * MODALIAS=pci:v00001F35d00000602sv00001556sd00001111bc07sc80i00
+         */
+        sprintf(uevent_file, "%s/%s/uevent", ENUM_DIR_PCI, next->d_name);
+        fp = fopen(uevent_file, "r");
+        if (fp == NULL) {
+            continue;
         }
-        else if (sz == -1)
-        {
-            PR_ERR("init_rfkill : read(%s) failed: %s (%d)\n", \
-                 path, strerror(errno), errno);
-            return -1;
+
+        while (fgets(line, sizeof(line), fp)) {
+            dev_id mod_id = {0, 0};
+            char *pos = NULL;
+
+            pos = strstr(line, "PCI_ID=");
+            if (!pos) {
+                continue;
+            }
+
+            if (sscanf(pos + 7, "%x:%x", &(mod_id.vid), &(mod_id.pid)) <= 0) {
+                continue;
+            }
+
+            PR_DBG("list vid:0x%04x, pid:0x%04x", mod_id.vid, mod_id.pid);
+            ret = matching_dev_id(bt_dev_pci, (sizeof(bt_dev_pci) / sizeof(dev_info)), &mod_id);
+            if (ret) {
+                goto exit;
+            }
         }
     }
 
-    asprintf(&rfkill_state_path, "/sys/class/rfkill/rfkill%d/state", rfkill_id);
-    return 0;
+exit:
+    if (fp) {
+        fclose(fp);
+        fp = NULL;
+    }
+
+    if (dir) {
+        closedir(dir);
+    }
+
+    return ret;
 }
 
+static bool distinguish_bt_module_sdio(void)
+{
+    DIR *dir;
+    struct dirent *next;
+    FILE *fp = NULL;
+    bool ret = false;
+
+    dir = opendir(ENUM_DIR_SDIO);
+    if (!dir) {
+        PR_ERR("opendir (%s) failed: %s (%d)", ENUM_DIR_SDIO, strerror(errno), errno);
+        goto exit;
+    }
+
+    while ((next = readdir(dir)) != NULL) {
+        char line[256]= {'\0'};
+        char uevent_file[256] = {'\0'};
+
+        /* Read sdio uevent file, uevent's data like below:
+         * DRIVER=aml_sdio
+         * OF_NAME=wifi
+         * OF_FULLNAME=/soc/sdio@fe088000/wifi@1
+         * OF_COMPATIBLE_0=brcm,bcm4329-fmac
+         * OF_COMPATIBLE_N=1
+         * SDIO_CLASS=07
+         * SDIO_ID=1B8E:0540
+         * MODALIAS=sdio:c07v1B8Ed0540
+         */
+        sprintf(uevent_file, "%s/%s/uevent", ENUM_DIR_SDIO, next->d_name);
+        fp = fopen(uevent_file, "r");
+        if (fp == NULL) {
+            continue;
+        }
+
+        while (fgets(line, sizeof(line), fp)) {
+            dev_id mod_id = {0, 0};
+            char *pos = NULL;
+
+            pos = strstr(line, "SDIO_ID=");
+            if (!pos) {
+                continue;
+            }
+
+            if (sscanf(pos + 8, "%x:%x", &(mod_id.vid), &(mod_id.pid)) <= 0) {
+                continue;
+            }
+
+            PR_DBG("list vid:0x%04x, pid:0x%04x", mod_id.vid, mod_id.pid);
+            ret = matching_dev_id(bt_dev_sdio, (sizeof(bt_dev_sdio) / sizeof(dev_info)), &mod_id);
+            if (ret) {
+                goto exit;
+            }
+        }
+    }
+
+exit:
+    if (fp) {
+        fclose(fp);
+        fp = NULL;
+    }
+
+    if (dir) {
+        closedir(dir);
+    }
+
+    return ret;
+}
+
+static bool distinguish_bt_module_usb(void)
+{
+    DIR *dir;
+    struct dirent *next;
+    FILE *fp = NULL;
+    bool ret = false;
+
+    dir = opendir(ENUM_DIR_USB);
+    if (!dir) {
+        PR_ERR("opendir (%s) failed: %s (%d)", ENUM_DIR_USB, strerror(errno), errno);
+        goto exit;
+    }
+
+    while ((next = readdir(dir)) != NULL) {
+        char line[256]= {'\0'};
+        char uevent_file[256] = {'\0'};
+
+        /* Read usb uevent file, uevent's data like below:
+         * MAJOR=189
+         * MINOR=1
+         * DEVNAME=bus/usb/001/002
+         * DEVTYPE=usb_device
+         * DRIVER=usb
+         * PRODUCT=1b8e/601/101
+         * TYPE=0/0/0
+         * BUSNUM=001
+         * DEVNUM=002
+         */
+        sprintf(uevent_file, "%s/%s/uevent", ENUM_DIR_USB, next->d_name);
+        fp = fopen(uevent_file, "r");
+        if (fp == NULL) {
+            continue;
+        }
+
+        while (fgets(line, sizeof(line), fp)) {
+            unsigned int bcdev;
+            dev_id mod_id = {0, 0};
+            char *pos = NULL;
+
+            pos = strstr(line, "PRODUCT=");
+            if (!pos) {
+                continue;
+            }
+
+            if (sscanf(pos + 8, "%x/%x/%x", &(mod_id.vid), &(mod_id.pid), &bcdev) <= 0) {
+                continue;
+            }
+
+            PR_DBG("list vid:0x%04x, pid:0x%04x", mod_id.vid, mod_id.pid);
+            ret = matching_dev_id(bt_dev_usb, (sizeof(bt_dev_usb) / sizeof(dev_info)), &mod_id);
+            if (ret) {
+                goto exit;
+            }
+        }
+    }
+
+exit:
+    if (fp) {
+        fclose(fp);
+        fp = NULL;
+    }
+
+    if (dir) {
+        closedir(dir);
+    }
+
+    return ret;
+}
+
+static bool is_rfkill_bt_dev(int id)
+{
+    FILE *fp = NULL;
+    char line[256]= {'\0'};
+    char uevent_file[256] = {'\0'};
+    char *pos = NULL;
+    bool ret = false;
+
+    /* Read rfkill uevent file, uevent's data like below:
+     * RFKILL_NAME=bt-dev
+     * RFKILL_TYPE=bluetooth
+     * RFKILL_STATE=0
+     * RFKILL_HW_BLOCK_REASON=0x0
+     */
+    snprintf(uevent_file, sizeof(uevent_file), "/sys/class/rfkill/rfkill%d/uevent", id);
+    fp = fopen(uevent_file, "r");
+    if (fp == NULL) {
+        PR_ERR("open (%s) failed: %s (%d)", uevent_file, strerror(errno), errno);
+        goto exit;
+    }
+
+    while (fgets(line, sizeof(line), fp)) {
+        pos = strstr(line, "RFKILL_NAME=");
+        if (!pos) {
+            continue;
+        }
+
+        if (!strncmp(pos + 12, "bt-dev", 6)) {
+            ret = true;
+            goto exit;
+        }
+    }
+
+exit:
+    if (fp) {
+        fclose(fp);
+        fp = NULL;
+    }
+
+    return ret;
+}
+
+static bool init_rfkill_aml_bt(void)
+{
+    DIR* dir;
+    struct dirent *next;
+    int id = -1;
+    bool ret = false;
+
+    dir = opendir(AML_BT_RFKILL_PATH);
+    if (dir == NULL) {
+        PR_ERR("opendir (%s) failed: %s (%d)", AML_BT_RFKILL_PATH, strerror(errno), errno);
+        goto exit;
+    }
+
+    while ((next = readdir(dir)) != NULL) {
+        if (!strncmp(next->d_name, "rfkill", 6)) {
+            id = atoi(&(next->d_name[6]));
+            if (is_rfkill_bt_dev(id)) {
+                rfkill_id = id;
+                PR_INFO("rfkill_id: %d", rfkill_id);
+                asprintf(&rfkill_state_path, "/sys/class/rfkill/rfkill%d/state", rfkill_id);
+                ret = true;
+                goto exit;
+            }
+        }
+    }
+
+exit:
+    if (dir) {
+        closedir(dir);
+    }
+
+    return ret;
+}
 
 /*******************************************************************************
 **
@@ -831,48 +1084,36 @@ static int init_rfkill()
 *******************************************************************************/
 static int upio_set_bluetooth_power(int on)
 {
-    int sz;
-    int fd = -1;
+    int fd;
+    int len = -1;
     int ret = -1;
-    char buffer = '0';
 
-    switch(on)
-    {
-        case UPIO_BT_POWER_OFF:
-            buffer = '0';
-            break;
-
-        case UPIO_BT_POWER_ON:
-            buffer = '1';
-            break;
-    }
-
-    if (rfkill_id == -1)
-    {
-        if (init_rfkill())
+    if (rfkill_id == -1) {
+        if (!init_rfkill_aml_bt()) {
+            PR_ERR("init rfkill failed");
             return ret;
+        }
     }
 
     fd = open(rfkill_state_path, O_WRONLY);
-
-    if (fd < 0)
-    {
-        ALOGE("set_bluetooth_power : open(%s) for write failed: %s (%d)",
-            rfkill_state_path, strerror(errno), errno);
+    if (fd < 0) {
+        PR_ERR("open (%s) failed: %s (%d)", rfkill_state_path, strerror(errno), errno);
         return ret;
     }
 
-    sz = write(fd, &buffer, 1);
-
-    if (sz < 0) {
-        ALOGE("set_bluetooth_power : write(%s) failed: %s (%d)",
-            rfkill_state_path, strerror(errno),errno);
+    if (on == UPIO_BT_POWER_OFF) {
+        len = write(fd, "0", 1);
+    } else if (on == UPIO_BT_POWER_ON) {
+        len = write(fd, "1", 1);
     }
-    else
-        ret = 0;
 
-    if (fd >= 0)
-        close(fd);
+    if (len < 1) {
+        PR_ERR("write (%s) failed: %s (%d)", rfkill_state_path, strerror(errno), errno);
+    } else {
+        ret = 0;
+    }
+
+    close(fd);
 
     return ret;
 }
@@ -887,7 +1128,7 @@ static int upio_set_bluetooth_power(int on)
 ** Returns         TRUE/FALSE
 **
 *******************************************************************************/
-static uint8_t userial_to_tcio_baud(uint8_t cfg_baud, uint32_t *baud)
+static bool userial_to_tcio_baud(uint8_t cfg_baud, uint32_t *baud)
 {
     if (cfg_baud == USERIAL_BAUD_115200)
         *baud = B115200;
@@ -919,10 +1160,10 @@ static uint8_t userial_to_tcio_baud(uint8_t cfg_baud, uint32_t *baud)
     {
         PR_ERR( "userial vendor open: unsupported baud idx %i", cfg_baud);
         *baud = B115200;
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 #if (BT_WAKE_VIA_USERIAL_IOCTL==TRUE)
@@ -945,7 +1186,7 @@ static void userial_ioctl_init_bt_wake(int fd)
     int ldisc = N_BRCM_HCI; /* brcm sleep mode support line discipline */
 
     /* attempt to load enable discipline driver */
-    if (ioctl(vnd_userial.fd, TIOCSETD, &ldisc) < 0)
+    if (ioctl(bt_uart_cb.fd, TIOCSETD, &ldisc) < 0)
     {
         PR_INFO("USERIAL_Open():fd %d, TIOCSETD failed: error %d for ldisc: %d",
                       fd, errno, ldisc);
@@ -978,9 +1219,8 @@ static void userial_ioctl_init_bt_wake(int fd)
 *******************************************************************************/
 static void userial_vendor_init(void)
 {
-    vnd_userial.fd = -1;
-    snprintf(vnd_userial.port_name, VND_PORT_NAME_MAXLEN, "%s", \
-            BLUETOOTH_UART_DEVICE_PORT);
+    bt_uart_cb.fd = -1;
+    snprintf(bt_uart_cb.port_name, VND_PORT_NAME_MAXLEN, "%s", UART_DEV_PORT_BT);
 }
 
 /*******************************************************************************
@@ -992,14 +1232,14 @@ static void userial_vendor_init(void)
 ** Returns         device fd
 **
 *******************************************************************************/
-static int userial_vendor_open(tUSERIAL_CFG *p_cfg)
+static int userial_vendor_open(uart_cfg *p_cfg)
 {
     uint32_t baud;
     uint8_t data_bits;
     uint16_t parity;
     uint8_t stop_bits;
 
-    vnd_userial.fd = -1;
+    bt_uart_cb.fd = -1;
 
     if (!userial_to_tcio_baud(p_cfg->baud, &baud))
     {
@@ -1042,42 +1282,42 @@ static int userial_vendor_open(tUSERIAL_CFG *p_cfg)
         return -1;
     }
 
-    PR_INFO("userial vendor open: opening %s", vnd_userial.port_name);
+    PR_INFO("userial vendor open: opening %s", bt_uart_cb.port_name);
 
-    if ((vnd_userial.fd = open(vnd_userial.port_name, O_RDWR)) < 0)
+    if ((bt_uart_cb.fd = open(bt_uart_cb.port_name, O_RDWR)) < 0)
     {
-        PR_ERR("userial vendor open: unable to open %s", vnd_userial.port_name);
+        PR_ERR("userial vendor open: unable to open %s", bt_uart_cb.port_name);
         return -1;
     }
 
     PR_INFO("userial vendor open success!!");
 
-    tcflush(vnd_userial.fd, TCIOFLUSH);
+    tcflush(bt_uart_cb.fd, TCIOFLUSH);
 
-    tcgetattr(vnd_userial.fd, &vnd_userial.termios);
-    cfmakeraw(&vnd_userial.termios);
+    tcgetattr(bt_uart_cb.fd, &bt_uart_cb.termios);
+    cfmakeraw(&bt_uart_cb.termios);
 
-	/* Set UART Control Modes */
-	vnd_userial.termios.c_cflag |= CLOCAL;
-	vnd_userial.termios.c_cflag |= (CRTSCTS | stop_bits| parity);
+    /* Set UART Control Modes */
+    bt_uart_cb.termios.c_cflag |= CLOCAL;
+    bt_uart_cb.termios.c_cflag |= (CRTSCTS | stop_bits| parity);
 
 
-    tcsetattr(vnd_userial.fd, TCSANOW, &vnd_userial.termios);
+    tcsetattr(bt_uart_cb.fd, TCSANOW, &bt_uart_cb.termios);
 
     /* set input/output baudrate */
-    cfsetospeed(&vnd_userial.termios, baud);
-    cfsetispeed(&vnd_userial.termios, baud);
-    tcsetattr(vnd_userial.fd, TCSANOW, &vnd_userial.termios);
+    cfsetospeed(&bt_uart_cb.termios, baud);
+    cfsetispeed(&bt_uart_cb.termios, baud);
+    tcsetattr(bt_uart_cb.fd, TCSANOW, &bt_uart_cb.termios);
 
 #if (BT_WAKE_VIA_USERIAL_IOCTL==TRUE)
-    userial_ioctl_init_bt_wake(vnd_userial.fd);
+    userial_ioctl_init_bt_wake(bt_uart_cb.fd);
 #endif
-	tcflush(vnd_userial.fd, TCIOFLUSH);
+    tcflush(bt_uart_cb.fd, TCIOFLUSH);
 
 
-    PR_INFO("device fd = %d open", vnd_userial.fd);
+    PR_INFO("device fd = %d open", bt_uart_cb.fd);
 
-    return vnd_userial.fd;
+    return bt_uart_cb.fd;
 }
 
 /*******************************************************************************
@@ -1098,15 +1338,14 @@ static int do_write(int fd, unsigned char *buf,int len)
         ret = write(fd,buf+write_offset,write_len);
         if (ret < 0)
         {
-            PR_ERR("%s, write failed ret = %d err = %s",__func__,ret,strerror(errno));
+            PR_ERR("write failed: %s (%d)", strerror(errno), errno);
             return -1;
         } else if (ret == 0) {
-            PR_ERR("%s, write failed with ret 0 err = %s",__func__,strerror(errno));
+            PR_ERR("write failed: %s (%d)", strerror(errno), errno);
             return 0;
         } else {
             if (ret < write_len) {
-                PR_INFO("%s, Write pending,do write ret = %d err = %s",__func__,ret,
-                       strerror(errno));
+                PR_INFO("write pending, do write ret: %d, %s (%d)", ret, strerror(errno), errno);
                 write_len = write_len - ret;
                 write_offset = ret;
             } else {
@@ -1131,18 +1370,18 @@ static int check_event(unsigned char * rsp, int size, unsigned char *cmd)
 {
 
 #if 0
-	int i = 0;
-	for(i = 0; i< size; i++)
-		PR_INFO("%02x", rsp[i]);
+    int i = 0;
+    for(i = 0; i< size; i++)
+        PR_INFO("%02x", rsp[i]);
 #endif
-	if (!(size >= 7))
-		return 0;
+    if (!(size >= 7))
+        return 0;
 
-	if (rsp[4] != cmd[1] || rsp[5] != cmd[2] || rsp[6] != 0X00)
-	{
-		return 0;
-	}
-	return 1;
+    if (rsp[4] != cmd[1] || rsp[5] != cmd[2] || rsp[6] != 0X00)
+    {
+        return 0;
+    }
+    return 1;
 }
 
 /*******************************************************************************
@@ -1156,11 +1395,11 @@ static int check_event(unsigned char * rsp, int size, unsigned char *cmd)
 *******************************************************************************/
 static int read_vendor_event(int fd, unsigned char* buf, int size)
 {
-	int remain, r;
-	int count = 0;
+    int remain, r;
+    int count = 0;
 
-	if (size <= 0)
-		return -1;
+    if (size <= 0)
+        return -1;
 
     struct pollfd pfd;
     int poll_ret;
@@ -1170,40 +1409,40 @@ static int read_vendor_event(int fd, unsigned char* buf, int size)
     poll_ret = poll(&pfd, 1, 100);
 
     if (poll_ret <= 0) {
-        PR_ERR("%s: receive hci event timeout! ret=%d", __func__, poll_ret);
+        PR_ERR("receive hci event timeout! ret=%d", poll_ret);
         return -1;
     }
-    PR_INFO("%s: poll ret=%d", __func__, poll_ret);
+    PR_DBG("poll ret=%d", poll_ret);
 
-	while (1) {
-		r = read(fd, buf, 1);
-		if (r <= 0)
-			return -1;
-		if (buf[0] == 0x04)
-			break;
-	}
-	count++;
+    while (1) {
+        r = read(fd, buf, 1);
+        if (r <= 0)
+            return -1;
+        if (buf[0] == 0x04)
+            break;
+    }
+    count++;
 
-	while (count < 3) {
-		r = read(fd, buf + count, 3 - count);
-		if (r <= 0)
-			return -1;
-		count += r;
-	}
+    while (count < 3) {
+        r = read(fd, buf + count, 3 - count);
+        if (r <= 0)
+            return -1;
+        count += r;
+    }
 
-	if (buf[2] < (size - 3))
-		remain = buf[2];
-	else
-		remain = size - 3;
+    if (buf[2] < (size - 3))
+        remain = buf[2];
+    else
+        remain = size - 3;
 
-	while ((count - 3) < remain) {
-		r = read(fd, buf + count, remain - (count - 3));
-		if (r <= 0)
-			return -1;
-		count += r;
-	}
+    while ((count - 3) < remain) {
+        r = read(fd, buf + count, remain - (count - 3));
+        if (r <= 0)
+            return -1;
+        count += r;
+    }
 
-	return count;
+    return count;
 }
 
 /*******************************************************************************
@@ -1217,11 +1456,11 @@ static int read_vendor_event(int fd, unsigned char* buf, int size)
 *******************************************************************************/
 static int h5_read_vendor_event(int fd, unsigned char* buf, int size)
 {
-	int r;
-	int count = 0;
+    int r;
+    int count = 0;
 
-	if (size <= 0)
-		return -1;
+    if (size <= 0)
+        return -1;
 
     struct pollfd pfd;
     int poll_ret;
@@ -1231,40 +1470,40 @@ static int h5_read_vendor_event(int fd, unsigned char* buf, int size)
     poll_ret = poll(&pfd, 1, 100);
 
     if (poll_ret <= 0) {
-        PR_ERR("%s: receive hci event timeout! ret=%d", __func__, poll_ret);
+        PR_ERR("receive hci event timeout! ret=%d", poll_ret);
         return -1;
     }
-    PR_INFO("%s: poll ret=%d", __func__, poll_ret);
+    PR_DBG("poll ret=%d", poll_ret);
 
-	while (1) {
-		r = read(fd, buf, 1);
-		if (r <= 0)
-			return -1;
-		if (buf[0] == 0xc0)
-			break;
-	}
-	count++;
+    while (1) {
+        r = read(fd, buf, 1);
+        if (r <= 0)
+            return -1;
+        if (buf[0] == 0xc0)
+            break;
+    }
+    count++;
 
-	while (count < 2) {
-		r = read(fd, buf + count, 2 - count);
-		if (r <= 0)
-			return -1;
-		count += r;
-	}
+    while (count < 2) {
+        r = read(fd, buf + count, 2 - count);
+        if (r <= 0)
+            return -1;
+        count += r;
+    }
 
-	return count;
+    return count;
 }
 
 static int h5_send_vendor_cmd(int fd, unsigned char* cmd, int size)
 {
-	if (do_write(fd, cmd, size) != size)
-	{
-		PR_ERR("cmd send is error");
-		goto error;
-	}
-	return 0;
+    if (do_write(fd, cmd, size) != size)
+    {
+        PR_ERR("cmd send is error");
+        goto error;
+    }
+    return 0;
 error:
-	return 1;
+    return 1;
 }
 
 /*******************************************************************************
@@ -1278,33 +1517,33 @@ error:
 *******************************************************************************/
 static int start_vendor_cmd(int fd, unsigned char* cmd, int size)
 {
-	int rsp_size = 0;
+    int rsp_size = 0;
 
-	unsigned char rsp[HCI_MAX_EVENT_SIZE];
+    unsigned char rsp[HCI_MAX_EVENT_SIZE];
 
-	memset(rsp, 0x0, HCI_MAX_EVENT_SIZE);
-	if (do_write(fd, cmd, size) != size)
-	{
-		PR_ERR("cmd send is error");
-		goto error;
-	}
+    memset(rsp, 0x0, HCI_MAX_EVENT_SIZE);
+    if (do_write(fd, cmd, size) != size)
+    {
+        PR_ERR("cmd send is error");
+        goto error;
+    }
 
-	rsp_size = read_vendor_event(fd, rsp, HCI_MAX_EVENT_SIZE);
+    rsp_size = read_vendor_event(fd, rsp, HCI_MAX_EVENT_SIZE);
 
-	if (rsp_size < 0)
-	{
-		PR_ERR("%s error",__func__);
-		goto error;
-	}
+    if (rsp_size < 0)
+    {
+        PR_ERR("read vendor event error");
+        goto error;
+    }
 
-	if (!check_event(rsp, rsp_size, cmd))
-	{
-		PR_ERR("%s rsp event is error", __func__);
-		goto error;
-	}
-	return 0;
+    if (!check_event(rsp, rsp_size, cmd))
+    {
+        PR_ERR("rsp event is error");
+        goto error;
+    }
+    return 0;
 error:
-	return 1;
+    return 1;
 
 }
 
@@ -1319,119 +1558,60 @@ error:
 *******************************************************************************/
 static unsigned char * get_vendor_info(int fd, unsigned char * cmd, int size, unsigned char * event, int *event_size)
 {
-	int rsp_size = 0;
+    int rsp_size = 0;
+    unsigned char rsp[HCI_MAX_EVENT_SIZE];
 
-	unsigned char rsp[HCI_MAX_EVENT_SIZE];
-	PR_ERR("%s",__func__);
+    PR_DBG();
 
-	memset(rsp, 0x0, HCI_MAX_EVENT_SIZE);
-	if (do_write(fd, cmd, size) != size)
-	{
-		PR_ERR("cmd send is error");
-		goto error;
-	}
+    memset(rsp, 0x0, HCI_MAX_EVENT_SIZE);
+    if (do_write(fd, cmd, size) != size)
+    {
+        PR_ERR("cmd send is error");
+        goto error;
+    }
 
-	rsp_size = read_vendor_event(fd, rsp, HCI_MAX_EVENT_SIZE);
+    rsp_size = read_vendor_event(fd, rsp, HCI_MAX_EVENT_SIZE);
 
-	if (rsp_size < 0)
-	{
-		PR_ERR("get_vendor_info error");
-		goto error;
-	}
+    if (rsp_size < 0)
+    {
+        PR_ERR("get_vendor_info error");
+        goto error;
+    }
 
-	if (!check_event(rsp, rsp_size, cmd))
-	{
-		PR_ERR("rsp event is error");
-		goto error;
-	}
+    if (!check_event(rsp, rsp_size, cmd))
+    {
+        PR_ERR("rsp event is error");
+        goto error;
+    }
 
-	*event_size = rsp_size;
-	memcpy(event, rsp, rsp_size);
+    *event_size = rsp_size;
+    memcpy(event, rsp, rsp_size);
 
-	return event;
+    return event;
 error:
-	return NULL;
+    return NULL;
 }
 
-/*******************************************************************************
-**
-** Function        matching_vendor_lib
-**
-** Description     matching_vendor_lib
-**
-** Returns         0(success) or ~0
-**
-*******************************************************************************/
-static int matching_vendor_lib(unsigned char * buf, int size)
+static bool matching_mfrs_vid(const unsigned char *buf, int size)
 {
-	int ret = -1;
-	uint16_t vendor_id = 0;
+    bool ret = false;
+    unsigned int vid = 0;
 
-	if (size >= 13)
-	{
-		vendor_id = (((uint16_t)buf[11])<< 8) | ((uint16_t)buf[12]);
-	}
-	else
-	{
-		if(buf[0] == 0xc0 && buf[1] == 0x00)
-		{
-			vendor_id = BT_VENDOR_ID_REALTECK;
-		}
-	}
+    if (size >= 13) {
+        vid = (((unsigned int)buf[11])<< 8) | ((unsigned int)buf[12]);
+    } else {
+        if ((buf[0] == 0xc0) && (buf[1] == 0x00)) {
+            vid = BT_VID_REALTECK;
+        }
+    }
 
-	if (vendor_id == BT_VENDOR_ID_QUALCOMM)
-	{
-		if (btvendor_hal.pci_module())
-		{
-			return 0;
-		}
-		else
-		{
-			if(enum_uart_type(vendor_id)) {
-				return 0;
-			}
-			else {
-				PR_INFO("need add qca module struct");
-				goto error;
-			}
-		}
-	}
-	else if (enum_uart_type(vendor_id))
-	{
-		return 0;
-	}
-	else
-	{
-		PR_INFO("vendor dou't matching");
-		goto error;
-	}
+    if (matching_dev_id_uart(vid)) {
+        ret = true;
+    } else {
+        PR_ERR("vendor id don't match :0x%04x", vid);
+    }
 
-	return 0;
-error:
-	return ret;
-}
-
-static int init_bt_status(void)
-{
-	char *str;
-	char module_name[16];
-	memset(module_name, 0, sizeof(module_name));
-	btvendor_hal.get_module_name(module_name);
-	if(!strcmp(module_name, "aml_w2_s")) {
-		PR_INFO("aml w2_s not clr bten bit");
-		return 0;
-	}
-
-	distinguish = 1;
-	str = get_power_type();
-	if (!str)
-		return 0;
-
-	if (!strncmp(str, "1", 1)) {
-		PR_INFO("BT is powered on separately");
-		clr_bten_bit(CLR_BT_POWER_BIT);
-	}
-	return 0;
+    return ret;
 }
 
 /*******************************************************************************
@@ -1447,153 +1627,151 @@ static void userial_vendor_close(void)
 {
     int result;
 
-    if (vnd_userial.fd == -1)
+    if (bt_uart_cb.fd == -1)
         return;
 
 #if (BT_WAKE_VIA_USERIAL_IOCTL==TRUE)
     /* de-assert bt_wake BEFORE closing port */
-    ioctl(vnd_userial.fd, USERIAL_IOCTL_BT_WAKE_DEASSERT, NULL);
+    ioctl(bt_uart_cb.fd, USERIAL_IOCTL_BT_WAKE_DEASSERT, NULL);
 #endif
 
-    PR_INFO("device fd = %d close", vnd_userial.fd);
+    PR_INFO("device fd = %d close", bt_uart_cb.fd);
     // flush Tx before close to make sure no chars in buffer
-    tcflush(vnd_userial.fd, TCIOFLUSH);
-    if ((result = close(vnd_userial.fd)) < 0)
-        PR_ERR( "close(fd:%d) FAILED result:%d", vnd_userial.fd, result);
+    tcflush(bt_uart_cb.fd, TCIOFLUSH);
+    if ((result = close(bt_uart_cb.fd)) < 0)
+        PR_ERR( "close(fd:%d) FAILED result:%d", bt_uart_cb.fd, result);
 
-    vnd_userial.fd = -1;
+    bt_uart_cb.fd = -1;
 }
 
-/*******************************************************************************
-**
-** Function        bluetooth_distinguish_module
-**
-** Description     get vendor manufacturer id
-**
-** Returns         str
-**
-*******************************************************************************/
-static int distinguish_vendoruart_module(void)
+static bool distinguish_bt_module_uart_h4(void)
 {
-	int fd;
-	unsigned char event[HCI_MAX_EVENT_SIZE];
-	int event_size = 0;
-	memset(event, 0x0, HCI_MAX_EVENT_SIZE);
+    int fd;
+    int event_size = 0;
+    unsigned char event[HCI_MAX_EVENT_SIZE] = {'\0'};
+    bool ret = false;
 
-	PR_INFO("start H4 init");
+    PR_DBG("start uart h4 init");
 
-	btvendor_hal.userial_init();
+    userial_vendor_init();
+    fd = userial_vendor_open((uart_cfg *) &uart_cfg_h4);
+    if (fd < 0) {
+        PR_ERR("open uart h4 fail");
+        goto exit;
+    }
 
-	fd = btvendor_hal.userial_open((tUSERIAL_CFG *) &userial_H4_cfg);
-	if (fd < 0)
-	{
-		return 0;
-	}
+    if (start_vendor_cmd(fd,(unsigned char *)vendor_reset, sizeof(vendor_reset))) {
+        PR_ERR("start_vendor_cmd err");
+        goto exit;
+    }
 
-	if(start_vendor_cmd(fd,(unsigned char *)vendor_reset, sizeof(vendor_reset)))
-	{
-		btvendor_hal.userial_close();
-		goto H5;
-	}
+    if (get_vendor_info(fd, (unsigned char *)vendor_info, sizeof(vendor_info),  event, &event_size) == NULL) {
+        PR_ERR("get_vendor_info err");
+        goto exit;
+    }
 
-	if(get_vendor_info(fd, (unsigned char *)vendor_info, sizeof(vendor_info),  event, &event_size) == NULL)
-	{
-		btvendor_hal.userial_close();
-		goto H5;
-	}
-	if (matching_vendor_lib(event, event_size))
-	{
-		PR_ERR("matching vendor is fail");
-		btvendor_hal.userial_close();
-		return 0;
-	}
-	btvendor_hal.userial_close();
-	PR_INFO("H4 matching success");
-	return 1;
-H5:
-	PR_INFO("start H5 init");
-	event_size = 0;
-	memset(event, 0x0, HCI_MAX_EVENT_SIZE);
-#if 0
-	upio_set_bluetooth_power(UPIO_BT_POWER_OFF);
-	usleep(20000);
-	upio_set_bluetooth_power(UPIO_BT_POWER_ON);
-	usleep(20000);
-#endif
-	btvendor_hal.userial_init();
-	fd = btvendor_hal.userial_open((tUSERIAL_CFG *) &userial_H5_cfg);
-	if (fd < 0)
-	{
-		return 0;
-	}
-	if(h5_send_vendor_cmd(fd, (unsigned char *)vendor_sync, sizeof(vendor_sync)))
-	{
-		btvendor_hal.userial_close();
-		return 0;
-	}
+    if (matching_mfrs_vid(event, event_size)) {
+        PR_INFO("uart h4 matching vid success");
+        ret = true;
+    } else {
+        PR_ERR("uart h4 matching vid fail");
+    }
 
-	event_size = h5_read_vendor_event(fd, event, HCI_MAX_EVENT_SIZE);
-	if (event_size < 0)
-	{
-		PR_ERR("h5_read_vendor_event error ");
-		btvendor_hal.userial_close();
-		return 0;
-	}
-
-	if (matching_vendor_lib(event, event_size))
-	{
-		PR_ERR("matching vendor is fail");
-		btvendor_hal.userial_close();
-		return 0;
-	}
-	btvendor_hal.userial_close();
-	PR_INFO("H5 matching success");
-	return 1;
+exit:
+    userial_vendor_close();
+    return ret;
 }
 
-static int bluetooth_distinguish_module(void)
+static bool distinguish_bt_module_uart_h5(void)
 {
-	/*pcie dou't need go power when uart dou't rsp cmd*/
-	if (btvendor_hal.pci_module()) {
-		distinguish = 1;
-		return 1;
-	}
+    int fd;
+    int event_size = 0;
+    unsigned char event[HCI_MAX_EVENT_SIZE] = {'\0'};
+    bool ret = false;
 
-	upio_set_bluetooth_power(UPIO_BT_POWER_ON);
+    PR_DBG("start uart h5 init");
 
-	if (btvendor_hal.usb_module()) {
-		goto out;
-	}
-	if (btvendor_hal.mmc_module()) {
-		goto out;
-	}
-	if (btvendor_hal.uart_module()) {
-		goto out;
-	}
+    userial_vendor_init();
+    fd = userial_vendor_open((uart_cfg *) &uart_cfg_h5);
+    if (fd < 0) {
+        PR_ERR("open uart h5 fail");
+        goto exit;
+    }
 
-	return 0;
+    if (h5_send_vendor_cmd(fd, (unsigned char *)vendor_sync, sizeof(vendor_sync))) {
+        PR_ERR("h5_send_vendor_cmd err");
+        goto exit;
+    }
 
-out:
-	init_bt_status();
-#ifdef MAILBOX_MODULE_NAME
-	mailbox_module_name();
-#endif
-	return 1;
+    event_size = h5_read_vendor_event(fd, event, HCI_MAX_EVENT_SIZE);
+    if (event_size < 0) {
+        PR_ERR("h5_read_vendor_event err");
+        goto exit;
+    }
+
+    if (matching_mfrs_vid(event, event_size)) {
+        PR_INFO("uart h5 matching vid success");
+        ret = true;
+        goto exit;
+    } else {
+        PR_ERR("uart h5 matching vid fail");
+    }
+
+exit:
+    userial_vendor_close();
+    return ret;
 }
 
-const struct vendor_action btvendor_hal {
-	insmod,
-	rmmod,
-	set_power_type,
-	get_redistinguish,
-	userial_vendor_init,
-	userial_vendor_open,
-	userial_vendor_close,
-	get_module_name,
-	distinguish_vendoruart_module,
-	distinguish_vendorusb_module,
-	distinguish_vendormmc_module,
-	distinguish_vendorpci_module,
-	bluetooth_distinguish_module
-};
+static bool distinguish_bt_module_uart(void)
+{
+    bool ret;
+
+    ret = distinguish_bt_module_uart_h4();
+    if(!ret) {
+        ret = distinguish_bt_module_uart_h5();
+    }
+
+    return ret;
+
+}
+
+static bool distinguish_bt_module(void)
+{
+    unsigned int cnt = 0;
+
+    PR_DBG();
+
+    while(cnt < 2) {
+        cnt ++;
+
+        if (distinguish_dev_name_specify()) {
+            goto exit;
+        }
+
+        if (distinguish_bt_module_pci()) {
+            goto exit;
+        }
+
+        if (distinguish_bt_module_sdio()) {
+            goto exit;
+        }
+
+        if (distinguish_bt_module_usb()) {
+            goto exit;
+        }
+
+        if (distinguish_bt_module_uart()) {
+            goto exit;
+        }
+
+        upio_set_bluetooth_power(UPIO_BT_POWER_ON);
+        PR_INFO("retry cnt: %u", cnt);
+    }
+
+    return false;
+
+exit:
+    distinguish = 1;
+    return  true;
+}
 

@@ -28,8 +28,8 @@ const uint8_t WOLE_PULSE_TIME_NETFLIX[] = {0x01,0x02,0x20}; //idx is 0, key is 0
 #define HCI_EVT_CMD_CMPL_STATUS_RET_BYTE        5
 #define HCI_EVT_CMD_CMPL_OPCODE                 3
 
-#define BT_WAKE_EVT_1    "/sys/module/amlogic_wireless/parameters/btwake_evt"  // kernel 5.15 btwake_evt path
-#define BT_WAKE_EVT_2    "/sys/module/bt_device/parameters/btwake_evt"  // below kernel 5.15 btwake_evt path
+#define BT_WAKE_EVT_1    "/sys/module/amlogic_wireless/parameters/btwake_evt"  // Kernel 5.15 btwake_evt path
+#define BT_WAKE_EVT_2    "/sys/module/bt_device/parameters/btwake_evt"  // Below kernel 5.15 btwake_evt path
 
 pthread_mutex_t s_vsclock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t s_vsccond = PTHREAD_COND_INITIALIZER;
@@ -108,7 +108,8 @@ void* wole_vsc_write_thread( void *ptr)
 
 		if (fd < 0)
 		{
-			ALOGE("%s: broadcom open btwake_evt failed: %s (%d)\n", __func__, strerror(errno), errno);
+			ALOGE("[%s-%d]: bcm open btwake_evt failed: %s (%d)", \
+				__func__, __LINE__, strerror(errno), errno);
 		}
 		else
 		{
@@ -118,7 +119,7 @@ void* wole_vsc_write_thread( void *ptr)
 
 		if ((sz >= 1) && (memcmp(buf, "1", 1) == 0))
 		{
-			ALOGE("%s,rtc wakeup",__func__);
+			ALOGE("%s,rtc wakeup", __func__);
 			continue;
 		}
 		pthread_mutex_lock(&s_vsclock);

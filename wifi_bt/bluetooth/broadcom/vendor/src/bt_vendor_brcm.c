@@ -181,7 +181,10 @@ static int op(bt_vendor_opcode_t opcode, void *param)
                     upio_set_bluetooth_power(UPIO_BT_POWER_OFF);
                 }
                 else if (*state == BT_VND_PWR_ON)
+                {
+                    ALOGD("[%s-%d]: bcm BT_VND_PWR_ON", __func__, __LINE__);
                     upio_set_bluetooth_power(UPIO_BT_POWER_ON);
+                }
             }
             break;
 

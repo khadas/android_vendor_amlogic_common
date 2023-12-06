@@ -34,6 +34,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
+#include <dirent.h>
 #include <cutils/properties.h>
 #include "bt_vendor_brcm.h"
 #include "upio.h"
@@ -90,6 +92,8 @@ typedef struct
 static vnd_lpm_proc_cb_t lpm_proc_cb;
 #endif
 
+#define AML_BT_RFKILL_PATH "/sys/devices/platform/aml_bt/rfkill"
+
 /******************************************************************************
 **  Static variables
 ******************************************************************************/
@@ -145,48 +149,80 @@ static int is_rfkill_disabled(void)
     return UPIO_BT_POWER_OFF;
 }
 
-static int init_rfkill()
+static bool is_rfkill_bt_dev(int id)
 {
-    char path[64];
-    char buf[16];
-    int fd, sz, id;
-    sz = -1;//initial
-    if (is_rfkill_disabled())
-        return -1;
+    FILE *fp = NULL;
+    char line[256]= {'\0'};
+    char uevent_file[256] = {'\0'};
+    char *pos = NULL;
+    bool ret = false;
 
-    for (id = 0; ; id++)
-    {
-
-        snprintf(path, sizeof(path), "/sys/class/rfkill/rfkill%d/type", id);
-        fd = open(path, O_RDONLY);
-        if (fd < 0)
-        {
-            ALOGE("init_rfkill : open(%s) failed: %s (%d)\n", \
-                 path, strerror(errno), errno);
-            ALOGE("open failed,use syscontrol\n");
-            sz = amSystemWriteGetProperty(path, (char *)&buf);
-            goto end;
-            //return -1;
-        }
-
-        sz = read(fd, &buf, sizeof(buf));
-        close(fd);
-        end:if (sz >= 9 && memcmp(buf, "bluetooth", 9) == 0)
-            {
-                ALOGE("break");
-                rfkill_id = id;
-                break;
-            }
-            else if (sz == -1)
-            {
-                ALOGE("init_rfkill : open(%s) failed: %s (%d)\n", \
-                     path, strerror(errno), errno);
-                return -1;
-            }
+    /* Read rfkill uevent file, uevent's data like below:
+     * RFKILL_NAME=bt-dev
+     * RFKILL_TYPE=bluetooth
+     * RFKILL_STATE=0
+     * RFKILL_HW_BLOCK_REASON=0x0
+     */
+    snprintf(uevent_file, sizeof(uevent_file), "/sys/class/rfkill/rfkill%d/uevent", id);
+    fp = fopen(uevent_file, "r");
+    if (fp == NULL) {
+        ALOGE("[%s-%d]: open (%s) failed: %s (%d)", __func__, __LINE__, uevent_file, strerror(errno), errno);
+        goto exit;
     }
 
-    asprintf(&rfkill_state_path, "/sys/class/rfkill/rfkill%d/state", rfkill_id);
-    return 0;
+    while (fgets(line, sizeof(line), fp)) {
+        pos = strstr(line, "RFKILL_NAME=");
+        if (!pos) {
+            continue;
+        }
+
+        if (!strncmp(pos + 12, "bt-dev", 6)) {
+            ret = true;
+            goto exit;
+        }
+    }
+
+exit:
+    if (fp) {
+        fclose(fp);
+        fp = NULL;
+    }
+
+    return ret;
+}
+
+static bool init_rfkill_aml_bt(void)
+{
+    DIR* dir;
+    struct dirent *next;
+    int id = -1;
+    bool ret = false;
+
+    dir = opendir(AML_BT_RFKILL_PATH);
+    if (dir == NULL) {
+        ALOGE("[%s-%d]: opendir (%s) failed: %s (%d)", __func__, __LINE__, AML_BT_RFKILL_PATH, strerror(errno), errno);
+        goto exit;
+    }
+
+    while ((next = readdir(dir)) != NULL) {
+        if (!strncmp(next->d_name, "rfkill", 6)) {
+            id = atoi(&(next->d_name[6]));
+            if (is_rfkill_bt_dev(id)) {
+                rfkill_id = id;
+                ALOGD("[%s-%d]: rfkill_id: %d", __func__, __LINE__, rfkill_id);
+                asprintf(&rfkill_state_path, "/sys/class/rfkill/rfkill%d/state", rfkill_id);
+                ret = true;
+                goto exit;
+            }
+        }
+    }
+
+exit:
+    if (dir) {
+        closedir(dir);
+    }
+
+    return ret;
 }
 
 /*****************************************************************************
@@ -326,13 +362,17 @@ int upio_set_bluetooth_power(int on)
     }
 
     /* check if we have rfkill interface */
-    if (is_rfkill_disabled())
+    if (is_rfkill_disabled()) {
+        ALOGD("[%s-%d]: bcm don't have rfkill interface", __func__, __LINE__);
         return 0;
+    }
 
     if (rfkill_id == -1)
     {
-        if (init_rfkill())
+        if (!init_rfkill_aml_bt()) {
+            ALOGE("[%s-%d]: init rfkill failed", __func__, __LINE__);
             return ret;
+        }
     }
 
     fd = open(rfkill_state_path, O_WRONLY);

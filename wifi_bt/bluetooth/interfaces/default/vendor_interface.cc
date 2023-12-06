@@ -28,18 +28,21 @@
 #include "mct_protocol.h"
 #include "multibt_hal.h"
 
-static const char* VENDOR_LIBRARY_NAME = "libbt-vendor.so";
-static const char* VENDOR_LIBRARY_SYMBOL_NAME =
-    "BLUETOOTH_VENDOR_LIB_INTERFACE";
-
 #define HCI_VSC_WAKE_ON_BLE 0xFE54
+
 static uint16_t PreOpcode=0x0;
 static uint8_t gVscWakeEnabled=0;
 
-#define BT_WAKE_EVT_1    "/sys/module/amlogic_wireless/parameters/btwake_evt"  // kernel 5.15 btwake_evt path
-#define BT_WAKE_EVT_2    "/sys/module/bt_device/parameters/btwake_evt"  // below kernel 5.15 btwake_evt path
+#ifdef BT_FUZZER
+static const char* VENDOR_LIBRARY_NAME = "libbt-vendor-fuzz.so";
+#else
+static const char* VENDOR_LIBRARY_NAME = "libbt-vendor.so";
+#endif
+static const char* VENDOR_LIBRARY_SYMBOL_NAME =
+    "BLUETOOTH_VENDOR_LIB_INTERFACE";
 
 static const int INVALID_FD = -1;
+
 namespace {
 
 using android::hardware::hidl_vec;
@@ -195,53 +198,47 @@ bool VendorInterface::Open(InitializeCompleteCallback initialize_complete_cb,
                            PacketReadCallback sco_cb,
                            PacketReadCallback iso_cb) {
   initialize_complete_cb_ = initialize_complete_cb;
-  char dev_type[20] = {'\0'};
-  static char bt_vendor_name[100];
-  static char bt_vendor_name_temp[100];
-  static char bt_vendor_module[100];
 
-  memset(dev_type,'\0',sizeof(dev_type));
-  property_get("ro.vendor.btmodule", bt_vendor_module, "no_set");
-  ALOGE("%s ,bt interfaces get btmodule:  %s", __func__, bt_vendor_module);
-  if(strstr(bt_vendor_module, "multibt") != NULL) {
-	memset(bt_vendor_name_temp,'\0',sizeof(bt_vendor_name_temp));
-	memset(bt_vendor_name,'\0',sizeof(bt_vendor_name));
-	btvendor_hal.get_config();
+  char temp[PROP_VALUE_MAX] = {'\0'};
+  char vnd_lib_name[PROP_VALUE_MAX] = {'\0'};
+  prop_val *bt_prop_val;
 
-	property_get("persist.vendor.libbt_vendor", bt_vendor_name_temp, VENDOR_LIBRARY_NAME);
-	ALOGE("%s ,get vendor lib: %s", __func__, bt_vendor_name_temp);
-	if (strstr(bt_vendor_name_temp,"Multi") == NULL)
-	{
-		if (btvendor_hal.vendor_lib())
-		{
-			memset(bt_vendor_name_temp,'\0',sizeof(bt_vendor_name_temp));
-			property_get("persist.vendor.libbt_vendor", bt_vendor_name_temp, VENDOR_LIBRARY_NAME);
-		}
-		else
-		{
-			ALOGE("unable to get vendor lib, Initialize fail");
-			return false;
-		}
-	}
+  property_get(PROP_RO_BTMODULE, temp, NULL);
+  PR_INFO("%s:%s", PROP_RO_BTMODULE, temp);
+  if (strstr(temp, "multibt")) {  // Handle multibt case
+    bt_vendor_hal.get_cfg_cb();
+    bt_prop_val = bt_vendor_hal.prop_act_cb();
 
-	btvendor_hal.set_config();
-	if (strstr(bt_vendor_name_temp,"Multi"))
-	{
-		sprintf(bt_vendor_name, "%s.so", strncpy(dev_type, bt_vendor_name_temp, 16));
-		lib_handle_ = dlopen(bt_vendor_name, RTLD_NOW);
-		if (!lib_handle_) {
-			ALOGE("%s unable to open %s (%s)", __func__, bt_vendor_name,
-			   dlerror());
-			return false;
-		}
-	}
-  } else if(strstr(bt_vendor_module, "no_set") != NULL){
-	lib_handle_ = dlopen(VENDOR_LIBRARY_NAME, RTLD_NOW);
-	if (!lib_handle_) {
-		ALOGE("%s unable to open %s (%s)", __func__, VENDOR_LIBRARY_NAME,
-           dlerror());
+    PR_INFO("cur dev_name:%s, wifi_bt_name:%s, libbt_vendor:%s,",
+        bt_prop_val->dev_name, bt_prop_val->wifi_bt_name, bt_prop_val->vnd_lib_name);
+
+    if ((!strstr(bt_prop_val->vnd_lib_name,"Multi")) || (!strlen(bt_prop_val->dev_name)) ||
+        (strlen(bt_prop_val->wifi_bt_name) && strcmp(bt_prop_val->dev_name, bt_prop_val->wifi_bt_name))) {
+      if (!bt_vendor_hal.vendor_act_cb()) {
+        PR_ERR("Multi bt init failed, vnd_lib_name:%s", bt_prop_val->vnd_lib_name);
         return false;
-	}
+      }
+    }
+
+    bt_vendor_hal.set_cfg_cb();
+
+    if (strstr(bt_prop_val->vnd_lib_name,"Multi")) {
+      memset(temp, '\0', PROP_VALUE_MAX);
+      // Obtain actual name of libbt_vendor dynamic library
+      sprintf(vnd_lib_name, "%s.so", strncpy(temp, bt_prop_val->vnd_lib_name, 16));
+      PR_INFO("open vnd_lib_name:%s", vnd_lib_name);
+      lib_handle_ = dlopen(vnd_lib_name, RTLD_NOW);
+      if (!lib_handle_) {
+        PR_ERR("unable to open %s (%s)", vnd_lib_name, dlerror());
+        return false;
+      }
+    }
+  } else {
+    lib_handle_ = dlopen(VENDOR_LIBRARY_NAME, RTLD_NOW);
+    if (!lib_handle_) {
+        PR_ERR("unable to open %s (%s)", VENDOR_LIBRARY_NAME, dlerror());
+        return false;
+    }
   }
 
   lib_interface_ = reinterpret_cast<bt_vendor_interface_t*>(
@@ -363,16 +360,16 @@ size_t VendorInterface::Send(uint8_t type, const uint8_t* data, size_t length) {
   int fd;
   int sz = -1;
   char buf[2] = {'\0'};
-  char shutdown_val[PROPERTY_VALUE_MAX];
+  char shutdown_val[PROPERTY_VALUE_MAX] = {'\0'};
 
   if (access(BT_WAKE_EVT_1, F_OK) == 0) {
-     fd = open(BT_WAKE_EVT_1, O_RDONLY);
+    fd = open(BT_WAKE_EVT_1, O_RDONLY);
   } else {
-     fd = open(BT_WAKE_EVT_2, O_RDONLY);
+    fd = open(BT_WAKE_EVT_2, O_RDONLY);
   }
 
   if (fd < 0) {
-    ALOGE("%s: open btwake_evt failed: %s (%d)\n", __func__, strerror(errno), errno);
+    PR_ERR("open btwake_evt failed: %s (%d)", strerror(errno), errno);
   } else {
     sz = read(fd, buf, sizeof(buf));
     close(fd);
@@ -388,34 +385,38 @@ size_t VendorInterface::Send(uint8_t type, const uint8_t* data, size_t length) {
     lib_interface_->op(BT_VND_OP_LPM_WAKE_SET_STATE, &wakeState);
     ALOGV("%s: Sent wake before (%02x)", __func__, data[0] | (data[1] << 8));
   }
-  if( type == HCI_PACKET_TYPE_COMMAND && (sz >= 1 && memcmp(buf, "1", 1) == 0))  {
-    ALOGV("rtc wake: %s: opcode: %02x,	data[2] = %02x,length = %d ", __func__,
-			data[0]|data[1] <<8 , data[2], (int)length);
-    if( data[0] == 0x54 && data[1] == 0xFD) {
-      hidl_vec<uint8_t> fake_rsp = {0x0E, 0x05,0x01, data[0],data[1],0x00,data[3]};
-      ALOGV("Send fake rsp for 0xfd54");
+
+  if ((type == HCI_PACKET_TYPE_COMMAND) && (sz >= 1) && (buf[0] == '1')) {
+    PR_INFO("rtc wake: opcode:%02x, data[2]:%02x,length:%u", (data[0]|data[1] << 8),
+        data[2], (uint32_t)length);
+    if ((data[0] == 0x54) && (data[1] == 0xFD)) {
+      hidl_vec<uint8_t> fake_rsp = {0x0E, 0x05, 0x01, data[0], data[1], 0x00, data[3]};
+      PR_INFO("Send fake rsp for 0xfd54");
       event_cb_(fake_rsp);
       return length+1;
-    } else if (internal_command.opcode == opcode){
+    } else if (internal_command.opcode == opcode) {
       // rtc wake up. response fake rsp to hci command
-      ALOGE("Send fake rsp");
-      hidl_vec<uint8_t> fake_rsp = {0x0E, 0x04,0x01, data[0],data[1],0x00};
+      PR_INFO("Send fake rsp");
+      hidl_vec<uint8_t> fake_rsp = {0x0E, 0x04, 0x01, data[0], data[1], 0x00};
       event_cb_(fake_rsp);
       return length+1;
     }
   }
 
-  if (opcode == HCI_VSC_WAKE_ON_BLE)
+  if (opcode == HCI_VSC_WAKE_ON_BLE) {
       gVscWakeEnabled = 1;
+  }
 
-  /*As Android T will disable bluetooth while shutdown. Not to send HCI_LE_Clear_White_List to controller as we need whitelist to know who can wake it up*/
-  // if( gVscWakeEnabled && PreOpcode == 0x0c1a /*HCI_Write_ScanEnable*/ && opcode == 0x2010 /*HCI_LE_Clear_White_List*/ )
-  property_get("sys.shutdown.requested", shutdown_val, "unknown");
+  /* As Android T will disable bluetooth while shutdown. Not to send HCI_LE_Clear_White_List to controller as
+     we need whitelist to know who can wake it up */
+  // 0x0c1a:HCI_Write_ScanEnable; 0x2010:HCI_LE_Clear_White_List
+  // if (gVscWakeEnabled && (PreOpcode == 0x0c1a) && (opcode == 0x2010))
+  property_get("sys.shutdown.requested", shutdown_val, NULL);
   if (gVscWakeEnabled && (opcode == 0x2010) && (strstr(shutdown_val, "0userrequested") != NULL)) {
-      ALOGD("%s: Send a fake HCI_LE_Clear_White_List to stack", __func__);
-      hidl_vec<uint8_t> LE_Clear_White_List_Complete_Packet = {0x0e,0x04,0x01,0x10,0x20,0x00};
-      event_cb_(LE_Clear_White_List_Complete_Packet);
-      return length+1;
+    PR_INFO("Send a fake HCI_LE_Clear_White_List to stack");
+    hidl_vec<uint8_t> packet = {0x0e, 0x04, 0x01, 0x10, 0x20, 0x00}; // LE_Clear_White_List_Complete_Packet
+    event_cb_(packet);
+    return length+1;
   }
   PreOpcode=opcode;
 
@@ -467,11 +468,10 @@ void VendorInterface::HandleIncomingEvent(const hidl_vec<uint8_t>& hci_packet) {
 
     // Here to send hardware error to restart stack if VSC status is non-zero
     uint16_t opcode = hci_packet[3] | (hci_packet[3 + 1] << 8);
-    if(opcode == HCI_VSC_WAKE_ON_BLE     && hci_packet[5] != 0 )
-    {
-        ALOGE("Send a fake hardware error to stack");
-        hidl_vec<uint8_t> hardware_error_packet = {0x10,0x01,0x00};
-        event_cb_(hardware_error_packet);
+    if ((opcode == HCI_VSC_WAKE_ON_BLE) && (hci_packet[5] != 0)) {
+      PR_INFO("Send a fake hardware error to stack");
+      hidl_vec<uint8_t> hardware_error_packet = {0x10, 0x01, 0x00};
+      event_cb_(hardware_error_packet);
     }
 
     // The callbacks can send new commands, so don't zero after calling.

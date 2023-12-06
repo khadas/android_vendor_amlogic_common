@@ -19,19 +19,6 @@
 #define MULTIBT_HAL_H
 
 #include <utils/Log.h>
-#include "userial.h"
-
-#ifndef BT_DBG
-#define BT_DBG TRUE
-#endif
-
-#if (BT_DBG == TRUE)
-#define PR_INFO(param, ...) {if(VDBG) {ALOGD(param, ## __VA_ARGS__);}}
-#else
-#define PR_INFO(param, ...) {}
-#endif
-
-#define PR_ERR(param, ...) {ALOGE(param, ## __VA_ARGS__);}
 
 #ifndef FALSE
 #define FALSE  0
@@ -41,16 +28,41 @@
 #define TRUE   (!FALSE)
 #endif
 
-#ifndef BLUETOOTH_UART_DEVICE_PORT
-#define BLUETOOTH_UART_DEVICE_PORT      "/dev/ttyS1"    /* android */
+#ifndef DBG_IO
+#define DBG_IO false
+#endif
+
+#ifndef PR_INFO
+#define PR_INFO(param, ...)  {ALOGI("[%s-%d]: " param, __func__, __LINE__, ## __VA_ARGS__); }
+#endif
+
+#ifndef PR_DBG
+#define PR_DBG(param, ...)  {if (DBG_IO) {ALOGD("[%s-%d]: " param, __func__, __LINE__, ## __VA_ARGS__); }}
+#endif
+
+#ifndef PR_ERR
+#define PR_ERR(param, ...)  {ALOGE("[%s-%d]: " param, __func__, __LINE__, ## __VA_ARGS__); }
+#endif
+
+#ifndef MAILBOX_MODULE_NAME
+#define MAILBOX_MODULE_NAME
+#endif
+
+#ifndef PROP_VALUE_MAX
+#define PROP_VALUE_MAX      92
+#endif
+
+#ifndef UART_DEV_PORT_BT
+#define UART_DEV_PORT_BT      "/dev/ttyS1"    /* android */
 #endif
 
 #define UPIO_BT_POWER_OFF 0
 #define UPIO_BT_POWER_ON  1
 #define SDIO_GET_DEV_TYPE       _IO('m',5)
 #define CLR_BT_POWER_BIT        _IO('m',6)
+#define GET_AML_WIFI_MODULE     _IO('m',7)
 
-#define MAX_LINE_LEN 255
+#define MAX_LINE_LEN 256
 #define DELIM " =\n\t\r"
 #define UNRE_IDENTIFICATION 0
 #define RE_IDENTIFICATION 1
@@ -59,22 +71,37 @@ extern "C" int delete_module(const char *, unsigned int);
 
  #define HCI_MAX_EVENT_SIZE     260
 
-/*vendor info*/
-#define BT_VENDOR_ID_BROADCOM 0x0F00
-#define BT_VENDOR_ID_QUALCOMM 0x1D00
-#define BT_VENDOR_ID_REALTECK 0x5D00
-#define BT_VENDOR_ID_MEDIATEK 0x4600
-#define BT_VENDOR_ID_AMLOGIC  0XFFFF
+/* Manufacturer vendor info */
+#define BT_VID_BROADCOM 0x0F00
+#define BT_VID_QUALCOMM 0x1D00
+#define BT_VID_REALTECK 0x5D00
+#define BT_VID_MEDIATEK 0x4600
+#define BT_VID_AMLOGIC  0xFFFF
+#define BT_VID_UNISOC   0xEC01
 
-#define BCM_VENDOR_LIB "libbt-vendor_bcmMulti.so"
-#define QCA_VENDOR_LIB "libbt-vendor_qcaMulti.so"
-#define RTK_VENDOR_LIB "libbt-vendor_rtlMulti.so"
-#define MTK_VENDOR_LIB "libbt-vendor_mtkMulti.so"
-#define AML_VENDOR_LIB "libbt-vendor_amlMulti.so"
+#define BCM_VND_LIB "libbt-vendor_bcmMulti.so"
+#define QCA_VND_LIB "libbt-vendor_qcaMulti.so"
+#define QTI_VND_LIB "libbt-vendor_qtiMulti.so"
+#define RTK_VND_LIB "libbt-vendor_rtlMulti.so"
+#define MTK_VND_LIB "libbt-vendor_mtkMulti.so"
+#define MT792_VND_LIB "libbt-vendor_792Multi.so"
+#define AML_VND_LIB "libbt-vendor_amlMulti.so"
+#define NXP_VND_LIB "libbt-vendor_nxpMulti.so"
+#define UWE_VND_LIB "libbt-vendor_uweMulti.so"
+
 #define NODE_PATH "/data/misc/bluetooth/bt_module"
 
-#define BT_POWER_EVT_1 "/sys/module/amlogic_wireless/parameters/btpower_evt"  // kernel 5.15 btpower_evt path
-#define BT_POWER_EVT_2 "/sys/module/bt_device/parameters/btpower_evt"  // below kernel 5.15 btpower_evt path
+#define PROP_RO_BTMODULE "ro.vendor.btmodule"
+#define PROP_LIBBT_VENDOR "persist.vendor.libbt_vendor"
+#define PROP_BT_MODULE "persist.vendor.bt_module"
+#define PROP_BT_NAME "persist.vendor.bt_name"
+#define PROP_WIFI_BT_NAME "persist.vendor.wifibt_name"  // Developer debugging set it manually
+
+#define BT_POWER_EVT_1 "/sys/module/amlogic_wireless/parameters/btpower_evt"  // Kernel 5.15 btpower_evt path
+#define BT_POWER_EVT_2 "/sys/module/bt_device/parameters/btpower_evt"  // Below kernel 5.15 btpower_evt path
+
+#define BT_WAKE_EVT_1 "/sys/module/amlogic_wireless/parameters/btwake_evt"  // Kernel 5.15 btwake_evt path
+#define BT_WAKE_EVT_2 "/sys/module/bt_device/parameters/btwake_evt"  // Below kernel 5.15 btwake_evt path
 
 #define CONFIG_PATH "vendor/etc/bluetooth/"
 #define CONFIG_NAME "bt_hal.conf"
@@ -135,13 +162,18 @@ extern "C" int delete_module(const char *, unsigned int);
 /******************************************************************************
 **  Type definitions
 ******************************************************************************/
+typedef struct {
+    char dev_name[PROP_VALUE_MAX];
+    char mod_name[PROP_VALUE_MAX];
+    char vnd_lib_name[PROP_VALUE_MAX];
+    char wifi_bt_name[PROP_VALUE_MAX];
+} prop_val;
 
 /* Structure used to configure serial port during open */
-typedef struct
-{
-    uint16_t fmt;       /* Data format */
-    uint8_t  baud;      /* Baud rate */
-} tUSERIAL_CFG;
+typedef struct {
+    uint16_t fmt;       // Data format
+    uint8_t  baud;      // Baud rate
+} uart_cfg;
 
 typedef enum {
 #if (BT_WAKE_VIA_USERIAL_IOCTL==TRUE)
@@ -152,40 +184,29 @@ typedef enum {
     USERIAL_OP_NOP,
 } userial_vendor_ioctl_op_t;
 
-typedef int (*vendor_act)(void);
-typedef void (*userial_init_act)(void);
-typedef void (*userial_close_act)(void);
-typedef int (*get_module_name_act)(char* str);
-typedef int (*userial_open_act)(tUSERIAL_CFG *p_cfg);
+typedef int (*action_ops)(const char *name, char *value);
 
-typedef int (*action_act)(const char *p_name, char *p_value);
 typedef int (*insmod_act)(const char *filename, const char *args);
 typedef int (*rmmod_act)(const char *modname);
-typedef int (*get_config_act)(void);
-typedef int (*set_config_act)(void);
+typedef bool (*set_cfg_act)(void);
+typedef bool (*get_cfg_act)(void);
+typedef prop_val *(*prop_act)(void);
+typedef bool (*vendor_act)(void);
 
 typedef struct {
-    const char *entry_name;
-    action_act p_action;
-} d_entry_t;
+    const char *tag;
+    action_ops tag_ops;
+} tag_table;
 
+typedef struct {
+    insmod_act insmod_cb;
+    rmmod_act rmmod_cb;
+    set_cfg_act set_cfg_cb;
+    get_cfg_act get_cfg_cb;
+    prop_act prop_act_cb;
+    vendor_act vendor_act_cb;
+} vendor_hal;
 
-struct vendor_action {
-	insmod_act insmod_t;
-	rmmod_act rmmod_t;
-	set_config_act set_config;
-	get_config_act get_config;
-	userial_init_act userial_init;
-	userial_open_act userial_open;
-	userial_close_act userial_close;
-	get_module_name_act get_module_name;
-	vendor_act uart_module;
-	vendor_act usb_module;
-	vendor_act mmc_module;
-	vendor_act pci_module;
-	vendor_act vendor_lib;
-};
-
-extern const struct vendor_action btvendor_hal;
+extern const vendor_hal bt_vendor_hal;
 
 #endif /* MULTIBT_HAL_H */
