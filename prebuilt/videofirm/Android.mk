@@ -8,35 +8,6 @@ else
 OUT_PATH := $(TARGET_OUT)/
 endif
 
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := libtee_load_video_fw
-LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0 SPDX-license-identifier-BSD SPDX-license-identifier-LGPL legacy_by_exception_only legacy_proprietary
-LOCAL_LICENSE_CONDITIONS := by_exception_only notice restricted proprietary by_exception_only
-LOCAL_MODULE_TAGS := optional
-LOCAL_MODULE_SUFFIX := .so
-LOCAL_MULTILIB := both
-LOCAL_MODULE_CLASS := SHARED_LIBRARIES
-LOCAL_MODULE_PATH_64 := $(OUT_PATH)/lib64/
-LOCAL_MODULE_PATH_32 := $(OUT_PATH)/lib/
-LOCAL_SRC_FILES_arm :=  arm/$(LOCAL_MODULE)$(LOCAL_MODULE_SUFFIX)
-LOCAL_SRC_FILES_arm64 := arm64/$(LOCAL_MODULE)$(LOCAL_MODULE_SUFFIX)
-LOCAL_STRIP_MODULE := false
-LOCAL_SHARED_LIBRARIES := libteec
-include $(BUILD_PREBUILT)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := tee_preload_fw
-LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0 SPDX-license-identifier-BSD SPDX-license-identifier-LGPL legacy_by_exception_only legacy_proprietary
-LOCAL_LICENSE_CONDITIONS := by_exception_only notice restricted proprietary by_exception_only
-LOCAL_MODULE_CLASS := ETC
-LOCAL_MODULE_PATH_64 := $(OUT_PATH)/bin
-LOCAL_MODULE_PATH_32 := $(OUT_PATH)/bin
-LOCAL_SRC_FILES_arm := arm/$(LOCAL_MODULE)
-LOCAL_SRC_FILES_arm64 := arm64/$(LOCAL_MODULE)
-LOCAL_INIT_RC := tee_preload_fw.rc
-include $(BUILD_PREBUILT)
-
 ifneq ($(USE_PRESIGNED_TA),true)
 include $(CLEAR_VARS)
 TA_UUID := 526fc4fc-7ee6-4a12-96e3-83da9565bce8
