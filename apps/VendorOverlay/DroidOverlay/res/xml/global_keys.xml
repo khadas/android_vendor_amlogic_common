@@ -26,7 +26,7 @@
     <key keyCode="KEYCODE_SETTINGS" component="com.droidlogic/.GlobalKeyReceiver" />
     <key keyCode="KEYCODE_PAIRING" component="com.droidlogic/.GlobalKeyReceiver" />
     <key keyCode="KEYCODE_F6" component="com.droidlogic/.GlobalKeyReceiver" />
-    <key keyCode="KEYCODE_BUTTON_3" component="com.droidlogic/.GlobalKeyReceiver" />
+    <key keyCode="KEYCODE_BUTTON_3" component="com.droidlogic/.GlobalKeyReceiver" dispatchWhenNonInteractive="true" />
     <key keyCode="KEYCODE_BUTTON_4" component="com.droidlogic/.GlobalKeyReceiver" dispatchWhenNonInteractive="true" />
     <key keyCode="KEYCODE_BUTTON_6" component="com.droidlogic/.GlobalKeyReceiver" />
     <key keyCode="KEYCODE_BUTTON_7" component="com.droidlogic/.GlobalKeyReceiver" />
