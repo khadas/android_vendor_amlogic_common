@@ -29,6 +29,7 @@ public class HdmiCecManager {
     public static final String SETTINGS_ARC_ENABLED = "hdmi_system_audio_control_enabled";
     public static final String SETTINGS_HDMI_VOLUME_CONTROL = "hdmi_control_volume_control_enabled";
     public static final String SETTINGS_EARC_ENABLE = "earc_enable";
+    public static final String SETTINGS_DROIDLOGIC_CEC_SUPPORT = "droidlogic_cec_support";
 
     // Prop used for hdmi cec hal as it can't directly read system prop or Settings.
     public static final String PERSIST_HDMI_CEC_SET_MENU_LANGUAGE = "persist.vendor.sys.cec.set_menu_language";
