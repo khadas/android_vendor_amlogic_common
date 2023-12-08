@@ -162,8 +162,12 @@ public:
     int SSMReadMcDiMode(int offset, int *rw_val);
     int SSMReadAipqEnableVal(int *rw_val);
     int SSMSaveAipqEnableVal(int rw_val);
+    int SSMReadAipqMode(int *rw_val);
+    int SSMSaveAipqMode(int rw_val);
     int SSMReadAiSrEnable(int *rw_val);
     int SSMSaveAiSrEnable(int rw_val);
+    int SSMReadAiSrMode(int *rw_val);
+    int SSMSaveAiSrMode(int rw_val);
     int SSMReadDLGEnable(int *rw_val);
     int SSMSaveDLGEnable(int rw_val);
     int SSMSaveColorGamutMode(int offset, int rw_val);

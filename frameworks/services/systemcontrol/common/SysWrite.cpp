@@ -841,8 +841,8 @@ void SysWrite::initConstCharforSysNode() {
     mPathforSysNode[AUTO_LOW_LATENCY_MODE]      = "/sys/class/amhdmitx/amhdmitx0/allm_mode";
     mPathforSysNode[HDMI_CONTENT_TYPE_CAP]      = "/sys/class/amhdmitx/amhdmitx0/contenttype_cap";
     mPathforSysNode[HDMI_CONTENT_TYPE]          = "/sys/class/amhdmitx/amhdmitx0/contenttype_mode";
-
     mPathforSysNode[DV_SUPPORT_INFO]            = "/sys/class/amdolby_vision/support_info";
+    mPathforSysNode[VIDEO_AIFACE_ENABLE]        = "/sys/module/aml_media/parameters/uvm_open_aiface";
 }
 #if 0
 status_t SysWrite::dump(int fd, const Vector<String16>& args){

@@ -120,6 +120,8 @@
 #define CFG_BLUESTRETCH_DEF                     "pq.BlueStretch.def"
 #define CFG_CHMROMACORING_DEF                   "pq.ChromaCoring.def"
 #define CFG_LOCALDIMMING_DEF                    "pq.LocalDimming.def"
+#define CFG_AISRMODE_DEF                        "pq.AisrMode.def"
+#define CFG_AIPQMODE_DEF                        "pq.AipqMode.def"
 
 //for backlight
 #define CFG_SECTION_BACKLIGHT                   "BACKLIGHT"

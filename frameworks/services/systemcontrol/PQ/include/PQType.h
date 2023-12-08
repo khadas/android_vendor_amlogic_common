@@ -1046,4 +1046,18 @@ typedef struct aml_lcd_ss_ctl_s {
     unsigned int mode;
 }aml_lcd_ss_ctl_t;
 
+typedef enum _aipq_mode_e {
+    AIPQ_MODE_OFF = 0,
+    AIPQ_MODE_LOW,
+    AIPQ_MODE_MID,
+    AIPQ_MODE_MAX,
+} aipq_mode_e;
+
+typedef enum _aisr_mode_e {
+    AISR_MODE_OFF = 0,
+    AISR_MODE_LOW,
+    AISR_MODE_MID,
+    AISR_MODE_MAX,
+} aisr_mode_e;
+
 #endif

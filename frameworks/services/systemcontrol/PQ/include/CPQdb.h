@@ -54,7 +54,7 @@ typedef enum output_type_e {
     OUTPUT_TYPE_HDMI_576_720,
     OUTPUT_TYPE_HDMI_480_720,
 
-    OUTPUT_TYPE_HDMI_4K_HDR,
+    OUTPUT_TYPE_HDMI_4K_HDR = 30,
     OUTPUT_TYPE_HDMI_1080_1080_HDR,
     OUTPUT_TYPE_HDMI_720_720_HDR,
     OUTPUT_TYPE_HDMI_576_576_HDR,
@@ -65,6 +65,18 @@ typedef enum output_type_e {
     OUTPUT_TYPE_HDMI_576_720_HDR,
     OUTPUT_TYPE_HDMI_480_720_HDR,
     OUTPUT_TYPE_HDMI_NOSCALE_HDR,
+
+    OUTPUT_TYPE_HDMI_4K_4K120 = 41,
+    OUTPUT_TYPE_HDMI_1080_4K120,
+    OUTPUT_TYPE_HDMI_720_4K120,
+    OUTPUT_TYPE_HDMI_576_4K120,
+    OUTPUT_TYPE_HDMI_480_4K120,
+
+    OUTPUT_TYPE_HDMI_4K_4K120_HDR,
+    OUTPUT_TYPE_HDMI_1080_4K120_HDR,
+    OUTPUT_TYPE_HDMI_720_4K120_HDR,
+    OUTPUT_TYPE_HDMI_576_4K120_HDR,
+    OUTPUT_TYPE_HDMI_480_4K120_HDR,
 
     OUTPUT_TYPE_MAX,
 } output_type_t;
@@ -82,6 +94,8 @@ typedef enum resolution_height_type_e {
 typedef enum tvout_with_io_table_type_t {
     TABLE_TYPE_SDR = 0,
     TABLE_TYPE_HDR,
+    TABLE_TYPE_4K120,
+    TABLE_TYPE_4K120_HDR,
     TABLE_TYPE_MAX,
 } tvout_with_io_table_type_t;
 
@@ -202,7 +216,7 @@ public:
     int PQ_SetVGAAdjustPara(tvin_sig_fmt_t vga_fmt, tvafe_vga_parm_t adjparam);
     int PQ_GetPhaseArray(am_phase_t *am_phase);
     int PQ_GetPLLParams(source_input_param_t source_input_param, am_regs_t *regs);
-    int PQ_GetAIParams(source_input_param_t source_input_param, ai_pic_table_t *regs);
+    int PQ_GetAIParams(aipq_mode_e mode, source_input_param_t source_input_param, ai_pic_table_t *regs);
     int PQ_GetHDRTMOParams(source_input_param_t source_input_param, hdr_tmo_t mode, hdr_tmo_sw_s *newParams);
     int PQ_GetSmoothPlusParams(vpp_smooth_plus_mode_t smoothplus_mode, source_input_param_t source_input_param, am_regs_t *regs);
     int PQ_GetAADParams(source_input_param_t source_input_param, aad_param_t *newParams);
@@ -223,6 +237,7 @@ public:
     int PQ_GetBlueStretchParams(int level, source_input_param_t source_input_param, am_regs_t *regs);
     int PQ_GetChromaCoringParams(int level, source_input_param_t source_input_param, am_regs_t *regs);
     int PQ_GetLocalDimmingParams(int level, source_input_param_t source_input_param, aml_ldim_pq_s *newParams);
+    int PQ_GetAiSrParams(aisr_mode_e mode, source_input_param_t source_input_param, am_regs_t *regs);
 
 private:
     String8 GetTableName(const char *GeneralTableName, source_input_param_t source_input_param);

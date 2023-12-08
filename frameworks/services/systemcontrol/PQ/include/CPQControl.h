@@ -527,18 +527,19 @@ public:
     int SetCurrentAspectRatioInfo(tvin_aspect_ratio_e aspectRatioInfo);
     int SetDtvKitSourceEnable(bool isEnable);
     //AI
-    void AipqInit();
-    bool hasAipqFunc();
+    bool hasAipqFunc(void);
     int SetAipqEnable(bool isEnable);
     int GetAipqEnable(void);
-    void enableAipq(bool isEnable);
-    int AiParamLoad(void);
-    //aisr
-    bool hasAisrFunc();
+    int SetAipqMode(aipq_mode_e mode, int is_save);
+    int GetAipqMode(void);
+    int HasAiFace(void);
+    int SetAiFaceEnable(bool isEnable);
+    int GetAiFaceEnable(void);
+    bool hasAisrFunc(void);
     int SetAiSrEnable(bool isEnable);
     int GetAiSrEnable(void);
-    int SaveAiSrEnable(bool enable);
-    int Cpq_SetAiSrEnable(bool enable);
+    int SetAiSrMode(aisr_mode_e mode, int is_save);
+    int GetAiSrMode(void);
 
     //COLOR SPACE
     int SetColorGamutMode(vpp_colorgamut_mode_t value, int is_save);
@@ -596,6 +597,7 @@ public:
     int AMHal_VPQ_Get_TconlessBinPath(aml_path_t *param);
     int AMHal_VPQ_Set_TconlessBinIndex(unsigned int index);
     int AMHal_VPQ_Set_TconlessBinData(am_pq_bin_param_t *param);
+
 private:
     int VPPOpenModule(void);
     int VPPCloseModule(void );
@@ -640,6 +642,16 @@ private:
     int OpenVideotunnel();
     int CloseVideotunnel();
     int SetVideotunnelSolidColor(video__color_Window window, video_color_frame cmd, video_color_frame_time cmd_data);
+
+    //AI
+    void AipqInit(void);
+    void enableAipq(bool isEnable);
+    int SaveAipqMode(int mode);
+    int Cpq_SetAipqMode(aipq_mode_e mode, source_input_param_t source_input_param);
+    int SaveAiSrEnable(bool enable);
+    int Cpq_SetAiSrEnable(bool enable);
+    int SaveAiSrMode(int mode);
+    int Cpq_SetAiSrMode(aisr_mode_e mode, source_input_param_t source_input_param);
 
     //cfg
     bool mbCpqCfg_separate_db_enable;
@@ -715,5 +727,7 @@ private:
     vpp_picture_mode_t mLastPictureMode = VPP_PICTURE_MODE_STANDARD;
 
     int mCurrentNodeNumber;
+    bool mDisplayMode4k120 = false;
+    bool mDisplayMode4k100 = false;
 };
 #endif

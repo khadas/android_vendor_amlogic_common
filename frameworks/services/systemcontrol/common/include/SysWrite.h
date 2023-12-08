@@ -137,7 +137,9 @@ typedef enum {
     DV_SUPPORT_INFO,
     PQ_DISPLAY_HDR_POLICY,
     AMDOLBY_VISION_HDR10_POLICY,
+    VIDEO_AIFACE_ENABLE,
     AML_AUTO_NR_PARAMS,
+
     NodeIndexMax,
 } ConstCharforSysNodeIndex;
 

@@ -1100,6 +1100,22 @@ int SSMAction::SSMSaveAipqEnableVal(int rw_val)
     return SSMWriteNTypes(VPP_DATA_POS_AIPQ_ENABLE_START, 1, &rw_val);
 }
 
+int SSMAction::SSMReadAipqMode(int *rw_val)
+{
+    int tmp_ret = 0;
+    int ret = 0;
+
+    ret = SSMReadNTypes(VPP_DATA_POS_AIPQ_MODE_START, 1, &tmp_ret);
+    *rw_val = tmp_ret;
+
+    return ret;
+}
+
+int SSMAction::SSMSaveAipqMode(int rw_val)
+{
+    return SSMWriteNTypes(VPP_DATA_POS_AIPQ_MODE_START, 1, &rw_val);
+}
+
 int SSMAction::SSMSaveColorGamutMode(int offset, int rw_val)
 {
     return SSMWriteNTypes(VPP_DATA_POS_COLORGAMUT_START, 1, &rw_val, offset);
@@ -1129,6 +1145,22 @@ int SSMAction::SSMReadAiSrEnable(int *rw_val)
 int SSMAction::SSMSaveAiSrEnable(int rw_val)
 {
     return SSMWriteNTypes(VPP_DATA_POS_AISR_ENABLE_START, 1, &rw_val);
+}
+
+int SSMAction::SSMReadAiSrMode(int *rw_val)
+{
+    int tmp_ret = 0;
+    int ret = 0;
+
+    ret = SSMReadNTypes(VPP_DATA_POS_AISR_MODE_START, 1, &tmp_ret);
+    *rw_val = tmp_ret;
+
+    return ret;
+}
+
+int SSMAction::SSMSaveAiSrMode(int rw_val)
+{
+    return SSMWriteNTypes(VPP_DATA_POS_AISR_MODE_START, 1, &rw_val);
 }
 
 int SSMAction::SSMReadDLGEnable(int *rw_val)

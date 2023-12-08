@@ -2168,27 +2168,32 @@ int CPQdb::PQ_GetPLLParams(source_input_param_t source_input_param, am_regs_t *r
     return ret;
 }
 
-int CPQdb::PQ_GetAIParams(source_input_param_t source_input_param, ai_pic_table_t *aiRegs)
+int CPQdb::PQ_GetAIParams(aipq_mode_e mode, source_input_param_t source_input_param, ai_pic_table_t *aiRegs)
 {
     CSqlite::Cursor c;
+    char sqlmaster[256];
     char buf[512];
     int ret = -1;
+
+    SYS_LOGD("%s: mode:%d\n", __FUNCTION__, mode);
 
     if (CheckHdrStatus("GeneralAITable")) {
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
     }
 
     String8 TableName = GetTableName("GeneralAITable", source_input_param);
+    SYS_LOGD("%s: TableName:%s\n", __FUNCTION__, TableName.string());
     if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
         char sqlmaster[256] = {0};
         getSqlParams(
             __FUNCTION__,
             sqlmaster,
-            "select Width, Height, Array from %s;", TableName.c_str());
+            "select Width, Height, Array from %s where Level = %d;", TableName.string(), (int)mode);
         this->select(sqlmaster, c);
         if (c.moveToFirst()) {
             aiRegs->width = c.getInt(0);
             aiRegs->height = c.getInt(1);
+            SYS_LOGD("%s: aiRegs->width:%d aiRegs->height:%d\n", __FUNCTION__, aiRegs->width, aiRegs->height);
             if (strlen(c.getString(2).c_str()) < sizeof(buf)/sizeof(char)) {
                 strncpy(buf, c.getString(2).c_str(), strlen(c.getString(2).c_str()));
             }
@@ -3290,8 +3295,9 @@ String8 CPQdb::GetTableName(const char *GeneralTableName, source_input_param_t s
             || (strcmp(GeneralTableName, "GeneralSharpness0VariableTable") == 0)
             || (strcmp(GeneralTableName, "GeneralSharpness1FixedTable") == 0)
             || (strcmp(GeneralTableName, "GeneralSharpness1VariableTable") == 0)
+            || (strcmp(GeneralTableName, "GeneralSharpnessPIFixedTable") == 0)
             || (strcmp(GeneralTableName, "GeneralSharpnessPIVariableTable") == 0)
-            || (strcmp(GeneralTableName, "GeneralSharpnessPIVariableTable") == 0)) {
+            || (strcmp(GeneralTableName, "GeneralNNSRTable") == 0)) {
             getSqlParams(__FUNCTION__, sqlmaster, "select TableName from %s where "
                          "TVOUT_CVBS = %d ;", GeneralTableName, mOutPutType);
         } else {
@@ -4168,5 +4174,28 @@ bool CPQdb::CheckIdExistInDb(const char *Id, const char *TableName)
     }*/
 
     return ret;
+}
+
+int CPQdb::PQ_GetAiSrParams(aisr_mode_e mode, source_input_param_t source_input_param, am_regs_t *regs)
+{
+    int rval = -1;
+
+    String8 TableName = GetTableName("GeneralNNSRTable", source_input_param);
+
+    if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
+        rval = getRegValuesByValue(TableName.c_str(), LEVEL_NAME, "", (int)mode, 0, regs);
+        am_reg_t tmp_buf[regs->length];
+        for (unsigned int i = 0; i < regs->length; i++) {
+              tmp_buf[i].addr = regs->am_reg[i].addr;
+              tmp_buf[i].mask = regs->am_reg[i].mask;
+              tmp_buf[i].type = regs->am_reg[i].type;
+              tmp_buf[i].val  = regs->am_reg[i].val;
+        }
+
+    } else {
+        SYS_LOGE("%s GeneralNNSRTable don't have table!!\n", __FUNCTION__);
+    }
+
+    return rval;
 }
 

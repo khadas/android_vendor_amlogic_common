@@ -732,16 +732,18 @@ int CPQControl::LoadPQSettings()
         //int HdrTmoMode = GetHDRTMOMode();
         ret |= SetHDRTMOMode(HDR_TMO_DYNAMIC, 1);
 
-        ret |= AiParamLoad();
-
         if (isGameMode()) {
             SetMemcMode(VPP_MEMC_MODE_OFF, 0);
             SetAiSrEnable(false);
         } else {
             int MemcMode = GetMemcMode();
             int aisr_enable = GetAiSrEnable();
+            int aisr_mode = GetAiSrMode();
+            int aipq_mode = GetAipqMode();
             ret |= SetMemcMode(MemcMode, 1);
             ret |= SetAiSrEnable((aisr_enable > 0)? true : false);
+            ret |= Cpq_SetAiSrMode((aisr_mode_e)aisr_mode, mCurrentSourceInputInfo);
+            ret |= Cpq_SetAipqMode((aipq_mode_e)aipq_mode, mCurrentSourceInputInfo);
        }
 
         vpp_smooth_plus_mode_t smoothplus_mode = VPP_SMOOTH_PLUS_MODE_OFF;
@@ -786,17 +788,18 @@ int CPQControl::LoadPQTableSettings()
     //int HdrTmoMode = GetHDRTMOMode();
     ret |= SetHDRTMOMode(HDR_TMO_DYNAMIC, 1);
 
-    ret |= AiParamLoad();
-
-
     if (isGameMode()) {
         SetMemcMode(VPP_MEMC_MODE_OFF, 0);
         SetAiSrEnable(false);
     } else {
         int MemcMode = GetMemcMode();
         int aisr_enable = GetAiSrEnable();
+        int aisr_mode = GetAiSrMode();
+        int aipq_mode = GetAipqMode();
         ret |= SetMemcMode(MemcMode, 1);
         ret |= SetAiSrEnable((aisr_enable > 0)? true : false);
+        ret |= Cpq_SetAiSrMode((aisr_mode_e)aisr_mode, mCurrentSourceInputInfo);
+        ret |= Cpq_SetAipqMode((aipq_mode_e)aipq_mode, mCurrentSourceInputInfo);
     }
 
     vpp_smooth_plus_mode_t smoothplus_mode = VPP_SMOOTH_PLUS_MODE_OFF;
@@ -2041,7 +2044,7 @@ int CPQControl::Cpq_CheckColorTemperatureParams(void)
 //Brightness
 int CPQControl::SetBrightness(int value, int is_save)
 {
-    int ret =0;
+    int ret = 0;
     SYS_LOGI("%s, source: %d, value = %d\n", __FUNCTION__, mSourceInputForSaveParam, value);
 
     ret = Cpq_SetBrightness(value, mCurrentSourceInputInfo);
@@ -8097,15 +8100,16 @@ int CPQControl::SetDtvKitSourceEnable(bool isEnable)
 }
 
 //AI
-void CPQControl::AipqInit()
+void CPQControl::AipqInit(void)
 {
-    SYS_LOGI("%s, AipqInit\n", __FUNCTION__);
+    SYS_LOGI("%s\n", __FUNCTION__);
+
     if (GetAipqEnable() == 1) {
         enableAipq(true);
     }
 }
 
-bool CPQControl::hasAipqFunc()
+bool CPQControl::hasAipqFunc(void)
 {
     int ret = -1;
     SYS_LOGI("%s, hasAipqFunc\n", __FUNCTION__);
@@ -8128,7 +8132,7 @@ int CPQControl::SetAipqEnable(bool isEnable)
     return 0;
 }
 
-int CPQControl::GetAipqEnable()
+int CPQControl::GetAipqEnable(void)
 {
     int data = 0;
     SYS_LOGI("%s, GetAipqEnable\n", __FUNCTION__);
@@ -8148,16 +8152,59 @@ void CPQControl::enableAipq(bool isEnable)
     pqWriteSys(AIPQ_PARAMETERS_UVM_OPEN,  isEnable ? "1" : "0");
 }
 
-int CPQControl::AiParamLoad(void)
+int CPQControl::SetAipqMode(aipq_mode_e mode, int is_save)
 {
+    SYS_LOGI("%s mode:%d is_save:%d\n", __FUNCTION__, mode, is_save);
+    int ret = -1;
+
+    ret = Cpq_SetAipqMode(mode, mCurrentSourceInputInfo);
+
+    if ((ret == 0) && (is_save == 1)) {
+        ret = SaveAipqMode((int)mode);
+    }
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed\n", __FUNCTION__);
+    } else {
+        SYS_LOGI("%s success\n", __FUNCTION__);
+    }
+    return ret;
+}
+
+int CPQControl::GetAipqMode(void)
+{
+    int data = 0;
+
+    mSSMAction->SSMReadAipqMode(&data);
+    SYS_LOGI("%s, data:%d\n", __FUNCTION__, data);
+
+    return data;
+}
+
+int CPQControl::SaveAipqMode(int mode)
+{
+    int ret = mSSMAction->SSMSaveAipqMode(mode);
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed\n", __FUNCTION__);
+    } else {
+        SYS_LOGI("%s success\n", __FUNCTION__);
+    }
+
+    return ret;
+}
+
+int CPQControl::Cpq_SetAipqMode(aipq_mode_e mode, source_input_param_t source_input_param)
+{
+    SYS_LOGI("%s mode: %d\n", __FUNCTION__, mode);
     int ret = -1;
 
     if (mbCpqCfg_ai_enable) {
         ai_pic_table_t aiRegs;
         memset(&aiRegs, 0, sizeof(ai_pic_table_t));
-        ret = mPQdb->PQ_GetAIParams(mCurrentSourceInputInfo, &aiRegs);
+        ret = mPQdb->PQ_GetAIParams(mode, mCurrentSourceInputInfo, &aiRegs);
         if (ret >= 0) {
-            SYS_LOGI("%s: width: %d, height: %d, array: %s.\n", __FUNCTION__, aiRegs.width, aiRegs.height, (char *)aiRegs.table_ptr);
+            SYS_LOGI("%s: width:%d, height:%d, array:%s.\n", __FUNCTION__, aiRegs.width, aiRegs.height, (char *)aiRegs.table_ptr);
             ret = VPPDeviceIOCtl(AMVECM_IOC_S_AIPQ_TABLE, &aiRegs);
             if (ret < 0) {
                 SYS_LOGE("%s: iocontrol failed\n", __FUNCTION__);
@@ -8179,32 +8226,88 @@ int CPQControl::AiParamLoad(void)
     return ret;
 }
 
- bool CPQControl::hasAisrFunc() {
-    int ret = -1;
+ bool CPQControl::hasAisrFunc(void)
+ {
+    bool hasAisr = false;
 
-    SYS_LOGD("%s, hasAisrFunc\n", __FUNCTION__);
     if (mbCpqCfg_aisr_enable && isFileExist(pqSysWrite->getSysNode(AISR_PARAMETERS_UVM_OPEN_NN))) {
-        ret = true;
-    } else {
-        ret = false;
+        hasAisr = true;
     }
 
-    SYS_LOGI("%s, has aisr or not:%d\n", __FUNCTION__, ret);
-    return ret;
+    SYS_LOGI("%s, has aisr or not:%d\n", __FUNCTION__, hasAisr);
+    return hasAisr;
  }
 
 int CPQControl::SetAiSrEnable(bool isEnable)
 {
-    SYS_LOGI("%s isEnable = %d\n", __FUNCTION__, isEnable);
+    SYS_LOGI("%s isEnable:%d\n", __FUNCTION__, isEnable);
     int ret = -1;
+
     ret = Cpq_SetAiSrEnable(isEnable);
+    if (ret < 0) {
+        SYS_LOGE("%s Cpq_SetAiSrEnable failed\n", __FUNCTION__);
+        return ret;
+    }
+
+    ret = SaveAiSrEnable(isEnable);
+    property_set(PROP_MEDIA_AISR, (isEnable > 0) ? "true" : "false");
 
     if (ret < 0) {
-        SYS_LOGE("%s Cpq_SetAiSrEnable fail\n", __FUNCTION__);
-        return ret;
+        SYS_LOGE("%s failed\n", __FUNCTION__);
     } else {
-        ret = SaveAiSrEnable(isEnable);
-        property_set(PROP_MEDIA_AISR, isEnable > 0 ? "true" : "false");
+        SYS_LOGI("%s success\n", __FUNCTION__);
+    }
+    return ret;
+}
+
+int CPQControl::GetAiSrEnable(void)
+{
+    int data = 0;
+
+    mSSMAction->SSMReadAiSrEnable(&data);
+    SYS_LOGI(" %s, data:%d\n", __FUNCTION__, data);
+
+    if (data < 0 || data > 1) {
+        data = 0;
+    }
+    return data;
+}
+
+int CPQControl::SaveAiSrEnable(bool enable)
+{
+    int ret = mSSMAction->SSMSaveAiSrEnable(enable ? 1 : 0);
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed\n", __FUNCTION__);
+    } else {
+        SYS_LOGI("%s success\n", __FUNCTION__);
+    }
+    return ret;
+}
+
+int CPQControl::Cpq_SetAiSrEnable(bool enable)
+{
+    SYS_LOGI("%s, Cpq_SetAiSrEnable\n", __FUNCTION__);
+    int ret = -1;
+
+    if (mbCpqCfg_aisr_enable) {
+        ret = pqWriteSys(VIDEO_AISR_ENABLE, enable ? "1" : "0");
+    } else {
+        SYS_LOGE("%s disabled\n", __FUNCTION__);
+    }
+
+    return ret;
+}
+
+int CPQControl::SetAiSrMode(aisr_mode_e mode, int is_save)
+{
+    SYS_LOGI("%s mode:%d is_save:%d\n", __FUNCTION__, mode, is_save);
+    int ret = -1;
+
+    ret = Cpq_SetAiSrMode(mode, mCurrentSourceInputInfo);
+
+    if ((ret == 0) && (is_save == 1)) {
+        ret = SaveAiSrMode((int)mode);
     }
 
     if (ret < 0) {
@@ -8215,42 +8318,100 @@ int CPQControl::SetAiSrEnable(bool isEnable)
     return ret;
 }
 
-int CPQControl::GetAiSrEnable()
+int CPQControl::GetAiSrMode(void)
 {
     int data = 0;
-    mSSMAction->SSMReadAiSrEnable(&data);
-    SYS_LOGD(" %s, data = %d\n", __FUNCTION__, data);
 
-    if (data < 0 || data > 1) {
-        data = 0;
-    }
+    mSSMAction->SSMReadAiSrMode(&data);
+    SYS_LOGI("%s, data:%d\n", __FUNCTION__, data);
+
     return data;
 }
 
-int CPQControl::SaveAiSrEnable(bool enable)
+int CPQControl::SaveAiSrMode(int mode)
 {
-    SYS_LOGD(" %s, enable = %d\n", __FUNCTION__, enable);
-    int ret = mSSMAction->SSMSaveAiSrEnable(enable ? 1 : 0);
+    int ret = mSSMAction->SSMSaveAiSrMode(mode);
 
     if (ret < 0) {
-        SYS_LOGE("%s failed!\n",__FUNCTION__);
+        SYS_LOGE("%s failed\n", __FUNCTION__);
     } else {
-        SYS_LOGD("%s success!\n",__FUNCTION__);
+        SYS_LOGI("%s success\n", __FUNCTION__);
+    }
+    return ret;
+}
+
+int CPQControl::Cpq_SetAiSrMode(aisr_mode_e mode, source_input_param_t source_input_param)
+{
+    SYS_LOGI("%s mode:%d\n", __FUNCTION__, mode);
+    int ret = -1;
+    am_regs_t regs;
+
+    memset(&regs, 0, sizeof(am_regs_t));
+
+    if (mbCpqCfg_aisr_enable) {
+        ret = mPQdb->PQ_GetAiSrParams(mode, source_input_param, &regs);
+        if (ret < 0) {
+            SYS_LOGE("%s PQ_GetAiSrParams failed\n", __FUNCTION__);
+        } else {
+            ret = Cpq_LoadRegs(regs);
+        }
+    } else {
+        SYS_LOGE("%s: AiSr disabled\n", __FUNCTION__);
+        ret = 0;
+    }
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed\n", __FUNCTION__);
+    } else {
+        SYS_LOGI("%s success\n", __FUNCTION__);
     }
 
     return ret;
 }
 
-int CPQControl::Cpq_SetAiSrEnable(bool enable)
+int CPQControl::HasAiFace(void)
 {
-    int ret = 0;
-    SYS_LOGI("%s, Cpq_SetAiSrEnable\n", __FUNCTION__);
-    if (mbCpqCfg_aisr_enable) {
-        ret =pqWriteSys(VIDEO_AISR_ENABLE, enable ? "1" : "0");
+    char buf[32] = {0};
+
+    if (pqReadSys(VIDEO_AIFACE_ENABLE, buf, sizeof(buf)) > 0) {
+        SYS_LOGI("%s has aiface\n", __FUNCTION__);
+        return 0;
     } else {
-        SYS_LOGE("%s disabled\n",__FUNCTION__);
+        SYS_LOGE("%s read VIDEO_AIFACE_ENABLE failed\n", __FUNCTION__);
+        return -1;
     }
+}
+
+int CPQControl::SetAiFaceEnable(bool isEnable)
+{
+    SYS_LOGI("%s isEnable:%d\n", __FUNCTION__, isEnable);
+    int ret = -1;
+
+    ret = pqWriteSys(VIDEO_AIFACE_ENABLE, isEnable ? "1" : "0");
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed\n", __FUNCTION__);
+    } else {
+        SYS_LOGI("%s success\n", __FUNCTION__);
+    }
+
     return ret;
+}
+
+int CPQControl::GetAiFaceEnable(void)
+{
+    int enable = 0;
+    char buf[32] = {0};
+
+    if (pqReadSys(VIDEO_AIFACE_ENABLE, buf, sizeof(buf)) > 0) {
+        enable = atoi(buf);
+    } else {
+        SYS_LOGE("%s read VIDEO_AIFACE_ENABLE failed!\n", __FUNCTION__);
+    }
+
+    SYS_LOGI("%s enable:%d\n", __FUNCTION__, enable);
+
+    return enable;
 }
 
 //DLG
@@ -9064,6 +9225,10 @@ void CPQControl::resetAllUserSettingParam()
 
     mSSMAction->SSMSaveAipqEnableVal(0);
     mSSMAction->SSMSaveAiSrEnable(1);
+    config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_AISRMODE_DEF, 3);
+    mSSMAction->SSMSaveAiSrMode(config_val);
+    config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_AIPQMODE_DEF, 2);
+    mSSMAction->SSMSaveAipqMode(config_val);
 
     return;
 }
@@ -9154,6 +9319,22 @@ int Table_TvoutWithIOResolution[TABLE_TYPE_MAX][RESOLUTION_MAX][RESOLUTION_MAX] 
         /*1080*/{OUTPUT_TYPE_HDMI_NOSCALE_HDR, OUTPUT_TYPE_HDMI_NOSCALE_HDR, OUTPUT_TYPE_HDMI_NOSCALE_HDR, OUTPUT_TYPE_HDMI_NOSCALE_HDR,  OUTPUT_TYPE_HDMI_1080_1080_HDR,OUTPUT_TYPE_HDMI_1080_1080_HDR},
         /*2160*/{OUTPUT_TYPE_HDMI_NOSCALE_HDR, OUTPUT_TYPE_HDMI_NOSCALE_HDR, OUTPUT_TYPE_HDMI_NOSCALE_HDR, OUTPUT_TYPE_HDMI_NOSCALE_HDR,  OUTPUT_TYPE_HDMI_4K_HDR,       OUTPUT_TYPE_HDMI_4K_HDR},
         /*4320*/{OUTPUT_TYPE_HDMI_NOSCALE_HDR, OUTPUT_TYPE_HDMI_NOSCALE_HDR, OUTPUT_TYPE_HDMI_NOSCALE_HDR, OUTPUT_TYPE_HDMI_NOSCALE_HDR,  OUTPUT_TYPE_HDMI_NOSCALE_HDR,  OUTPUT_TYPE_HDMI_NOSCALE_HDR}
+    },
+    { //4K 120HZ
+        /*480*/ {OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_480_4K120,  OUTPUT_TYPE_HDMI_NOSCALE},
+        /*576*/ {OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_576_4K120,  OUTPUT_TYPE_HDMI_NOSCALE},
+        /*720*/ {OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_720_4K120,  OUTPUT_TYPE_HDMI_NOSCALE},
+        /*1080*/{OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_1080_4K120, OUTPUT_TYPE_HDMI_NOSCALE},
+        /*2160*/{OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_4K_4K120,   OUTPUT_TYPE_HDMI_NOSCALE},
+        /*4320*/{OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE,    OUTPUT_TYPE_HDMI_NOSCALE}
+    },
+    { //4K 120HZ HDR
+        /*480*/ {OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_480_4K120_HDR,  OUTPUT_TYPE_HDMI_NOSCALE},
+        /*576*/ {OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_576_4K120_HDR,  OUTPUT_TYPE_HDMI_NOSCALE},
+        /*720*/ {OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_720_4K120_HDR,  OUTPUT_TYPE_HDMI_NOSCALE},
+        /*1080*/{OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_1080_4K120_HDR, OUTPUT_TYPE_HDMI_NOSCALE},
+        /*2160*/{OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_4K_4K120_HDR,   OUTPUT_TYPE_HDMI_NOSCALE},
+        /*4320*/{OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE, OUTPUT_TYPE_HDMI_NOSCALE,        OUTPUT_TYPE_HDMI_NOSCALE}
     }
 };
 
@@ -9174,7 +9355,7 @@ output_type_t CPQControl::MapDbTvoutWithIOResolution(int inputFrameHeight, int o
     SYS_LOGD("%s inputFrameHeight %d outputFrameHeight %d\n", __FUNCTION__, inputFrameHeight, outputFrameHeight);
 
     if (mPQdb->mDbMatchType == MATCH_TYPE_MBOX_S5) {
-        int index_in = 0, index_out = 0;
+        int index_in = 0, index_out = 0, table_type = 0;
 
         for (int i = 0; i < RESOLUTION_MAX; i++) { //pick up input index
             if (inputFrameHeight < Table_ResolutionHeightThread[i][1]) {
@@ -9196,8 +9377,22 @@ output_type_t CPQControl::MapDbTvoutWithIOResolution(int inputFrameHeight, int o
             }
         }
 
-        printf("%s mHdrStatus %d index_in %d index_out %d\n", __func__, mPQdb->mHdrStatus, index_in, index_out);
-        OutPutType = (output_type_t)Table_TvoutWithIOResolution[(mPQdb->mHdrStatus == false) ? 0 : 1][index_in][index_out];
+        if (mPQdb->mHdrStatus == true) {
+            if (mDisplayMode4k120 == true || mDisplayMode4k100 ==  true) {
+                table_type = 3;
+            } else {
+                table_type = 1;
+            }
+        } else {
+            if (mDisplayMode4k120 == true || mDisplayMode4k100 == true) {
+                table_type = 2;
+            } else {
+                table_type = 0;
+            }
+        }
+
+        SYS_LOGD("%s table_type %d index_in %d index_out %d\n", __FUNCTION__, table_type, index_in, index_out);
+        OutPutType = (output_type_t)Table_TvoutWithIOResolution[table_type][index_in][index_out];
     } else { //old project logic
         if (inputFrameHeight > 1088) {//inputsource is 4k
             OutPutType = OUTPUT_TYPE_HDMI_4K;
@@ -9228,7 +9423,7 @@ output_type_t CPQControl::MapDbTvoutWithIOResolution(int inputFrameHeight, int o
         }
     }
 
-    printf("%s OutPutType %d\n", __func__, OutPutType);
+    SYS_LOGD("%s OutPutType %d\n", __FUNCTION__, OutPutType);
     return OutPutType;
 }
 
@@ -9263,6 +9458,17 @@ output_type_t CPQControl::CheckOutPutMode(tv_source_input_t source_input)
                     outputFrameHeight = atoi(tempBuf);
                 }
                 SYS_LOGD("%s: outputFrameHeight: %d!\n", __FUNCTION__, outputFrameHeight);
+
+                if (strstr(outputModeBuf, "120hz")) {
+                    mDisplayMode4k120 = true;
+                } else if (strstr(outputModeBuf, "100hz")) {
+                    mDisplayMode4k100 = true;
+                } else {
+                    mDisplayMode4k120 = false;
+                    mDisplayMode4k100= false;
+                }
+                SYS_LOGD("%s: mDisplayMode4k120:%d mDisplayMode4k100:%d!\n", __FUNCTION__, mDisplayMode4k120, mDisplayMode4k100);
+
                 //check outputmode
                 if ((source_input == SOURCE_MPEG)
                     || (source_input == SOURCE_DTV)
@@ -9540,6 +9746,10 @@ void CPQControl::resetPQTableSetting(void)
     //ai pq/sr
     mSSMAction->SSMSaveAipqEnableVal(0);
     mSSMAction->SSMSaveAiSrEnable(1);
+    config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_AISRMODE_DEF, 3);
+    mSSMAction->SSMSaveAiSrMode(config_val);
+    config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_AIPQMODE_DEF, 2);
+    mSSMAction->SSMSaveAipqMode(config_val);
 
     return;
 }
