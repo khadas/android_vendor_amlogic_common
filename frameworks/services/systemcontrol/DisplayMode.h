@@ -640,6 +640,7 @@ private:
     void getHighestPriorityMode(char* mode, hdmi_data_t* data);
     bool isMatchMode(char* curmode, const char* outputmode);
     void filterHdmiDispcap(hdmi_data_t* data);
+    bool filterHdmiDccap(char* color);
     void applyDisplaySetting(hdmi_output_info_t* output_info);
     void sceneProcess(hdmi_data_t* data);
     void setAutoSwitchFrameRate(int state);

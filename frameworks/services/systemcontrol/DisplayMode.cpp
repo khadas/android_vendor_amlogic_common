@@ -1437,6 +1437,38 @@ void DisplayMode::filterHdmiDispcap(hdmi_data_t* data) {
     SYS_LOGI("after filtered HdmiDispcap: %s\n", data->disp_cap);
 }
 
+bool DisplayMode::filterHdmiDccap(char* color) {
+    bool ret = false;
+    const char *delim = "\n";
+    char cur_displaymode[MAX_STR_LEN] = {0};
+    char dc_cap[MAX_STR_LEN] = {0};
+    char *save_ptr = NULL;
+
+    getDisplayMode(cur_displaymode);
+    strcpy(dc_cap, mHdmidata.dc_cap);
+
+    SYS_LOGD("before filtered HdmiDccap: %s\n", dc_cap);
+
+    char *colorspace = strtok_r(dc_cap, delim, &save_ptr);
+    while (colorspace != NULL) {
+        if (getModeSupportDeepColorAttr(cur_displaymode, colorspace)) {
+            if ((strlen(color) + strlen(colorspace)) < (MAX_STR_LEN-1)) {
+                strcat(color, colorspace);
+                strcat(color, delim);
+                ret = true;
+            } else {
+                SYS_LOGE("DisplayMode strcat overflow: src=%s, dst=%s\n", colorspace, color);
+                break;
+            }
+        }
+
+        colorspace = strtok_r(NULL, delim, &save_ptr);
+    }
+
+    SYS_LOGD("after filtered HdmiDccap: %s\n", color);
+    return ret;
+}
+
 bool DisplayMode::isHdmiEdidParseOK(void) {
     bool ret = true;
 
@@ -2319,8 +2351,13 @@ bool DisplayMode::setColorSpace(const char* colorspace) {
 
 bool DisplayMode::getColorSpaceList(std::string& list) {
     bool ret = false;
-
-    ret = DisplayModeMgr::getInstance().getColorSpaceList(list);
+    if (isHWCProcess()) {
+        ret = DisplayModeMgr::getInstance().getColorSpaceList(list);
+    } else {
+        char dc_cap[MAX_STR_LEN] = {0};
+        ret = filterHdmiDccap(dc_cap);
+        list = dc_cap;
+    }
     SYS_LOGD("%s list:%s\n", __FUNCTION__, list.c_str());
 
     return ret;
