@@ -227,14 +227,8 @@ public class DroidlogicApplication extends Application {
     boolean tvflag = isSupportDTVKIT.equals("1");
 
         int value;
-        if (tvflag) {
-            value = Settings.Global.getInt(this.getContentResolver(),
-                OutputModeManager.DRC_MODE, OutputModeManager.IS_DRC_RF);
-        } else {
-            value = Settings.Global.getInt(this.getContentResolver(),
-                OutputModeManager.DRC_MODE, OutputModeManager.IS_DRC_LINE);
-        }
-
+        value = Settings.Global.getInt(this.getContentResolver(),
+            OutputModeManager.DRC_MODE, OutputModeManager.IS_DRC_RF);
         switch (value) {
         case OutputModeManager.IS_DRC_OFF:
             return DRC_OFF;
