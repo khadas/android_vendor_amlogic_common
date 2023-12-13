@@ -41,6 +41,7 @@ public class ShutdownService extends Service {
 
     public static final String BT_NAME_QCA                  = "persist.vendor.libbt_vendor";//"persist.vendor.bt_vendor";
     public static final String BLUETOOTH_PKG_NAME           = "com.android.bluetooth";
+    public static final String BLUETOOTH_MAINLINE_PKG_NAME  = "com.google.android.bluetooth";
     private static final int BT_SLEEP_TIME = 300;
     private boolean qcabt = false;
     private Context mContext;
@@ -117,7 +118,7 @@ public class ShutdownService extends Service {
         List<RunningAppProcessInfo> services = mActivityManager.getRunningAppProcesses();
         for (int i = 0; i < services.size(); i++) {
             String servicename = services.get (i).processName;
-            if (servicename.contains (BLUETOOTH_PKG_NAME)) {
+            if (servicename.contains (BLUETOOTH_PKG_NAME) || servicename.contains (BLUETOOTH_MAINLINE_PKG_NAME )) {
                 Log.d (TAG, "find process: " + servicename + " pid: " + services.get (i).pid);
                 return services.get (i).pid;
             }
