@@ -78,7 +78,7 @@ public class NetflixService extends Service {
     private static final String NRDP_AUDIO_PLATFORM_CAP = "nrdp_audio_platform_capabilities";
     private static final String NRDP_AUDIO_PLATFORM_CAP_MS12 = "nrdp_audio_platform_capabilities_ms12";
     private static final String NRDP_PLATFORM_CONFIG_DIR = "/vendor/etc/";
-    private static final String FIRST_BOOT_COUNT = "FirstBootCount";
+    private static final String DOLBY_LIB = "dolby_lib";
     private static final String NETFLIX_KEY_POWER_MODE = "power_on";
     private static final String ACTION_LAUNCH_APP = "com.google.global_button.ACTION_LAUNCH_APP";
     private static final String ACTION_LAUNCH_BENCH_APP = "com.amlogic.ACTION_LAUNCH_BENCH_APP";
@@ -235,16 +235,10 @@ public class NetflixService extends Service {
         mHdmiControlManager = (HdmiControlManager)mContext.getSystemService(Context.HDMI_CONTROL_SERVICE);
         mDisplayManager = (DisplayManager)getSystemService(DisplayManager.class);
 
-        String buildDate = PlatformAPI.getStringProperty("ro.build.version.incremental", "");
-        boolean needUpdate = !buildDate.equals(SettingsPref.getSavedBuildDate(mContext));
         hasMS12 = mOutputModeManager.isAudioSupportMs12System();
+        initNrdpCapabilities();
         atmosSupportedByConfig = isAtmosConfiged();
         Log.d(TAG, "atmosSupportedByConfig = " + atmosSupportedByConfig);
-        setNrdpCapabilitiesIfNeed(NRDP_PLATFORM_CAP, needUpdate);
-        setNrdpCapabilitiesIfNeed(NRDP_AUDIO_PLATFORM_CAP, needUpdate);
-        if (needUpdate) {
-            SettingsPref.setSavedBuildDate(mContext, buildDate);
-        }
 
         IntentFilter filter = new IntentFilter("android.intent.action.HDMI_PLUGGED");
         filter.addAction(ACTION_LAUNCH_BENCH_APP);
@@ -272,7 +266,6 @@ public class NetflixService extends Service {
         } catch (RemoteException e) {
             Log.e(TAG, "could not get IActivityManager");
         }
-        setNfrDisable();
         if (SystemProperties.get("sys.vendor.ethernet.wol", "enable").equals("enable")) {
             if (mSCM != null)
                 mSCM.writeSysFs("/sys/class/ethernet/wol" , "1");
@@ -313,6 +306,29 @@ public class NetflixService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    private void initNrdpCapabilities() {
+        String buildDate = PlatformAPI.getStringProperty("ro.build.version.incremental", "");
+        boolean needUpdate = !buildDate.equals(SettingsPref.getSavedBuildDate(mContext));
+        boolean audioNeedUpdate = false;
+        if (needUpdate && hasMS12) {
+            Settings.Global.putInt(mContext.getContentResolver(), DOLBY_LIB, 2);
+        }
+        int dolbyint = Settings.Global.getInt(mContext.getContentResolver(), DOLBY_LIB, 0);
+        if ( hasMS12 && (dolbyint != 2)) {
+            audioNeedUpdate =true;
+            Settings.Global.putInt(mContext.getContentResolver(), DOLBY_LIB, 2);
+        }
+        if ( !hasMS12 && (dolbyint != 0)) {
+            audioNeedUpdate =true;
+            Settings.Global.putInt(mContext.getContentResolver(), DOLBY_LIB, 0);
+        }
+        setNrdpCapabilitiesIfNeed(NRDP_PLATFORM_CAP, needUpdate);
+        setNrdpCapabilitiesIfNeed(NRDP_AUDIO_PLATFORM_CAP, needUpdate || audioNeedUpdate);
+        if (needUpdate) {
+            SettingsPref.setSavedBuildDate(mContext, buildDate);
+        }
     }
 
     private void startNetflixIfNeed() {
@@ -396,16 +412,6 @@ public class NetflixService extends Service {
             return true;
         }
         return false;
-    }
-
-
-    private void setNfrDisable(){
-        int mFirstBootCount = Settings.Global.getInt(mContext.getContentResolver(), FIRST_BOOT_COUNT, 0);
-        if (mFirstBootCount == 0) {
-            Settings.Secure.putInt(mContext.getContentResolver(),Settings.Secure.MATCH_CONTENT_FRAME_RATE,
-                Settings.Secure.MATCH_CONTENT_FRAMERATE_NEVER);
-            Settings.Global.putInt(mContext.getContentResolver(), FIRST_BOOT_COUNT, 1);
-        }
     }
 
     private void setNrdpCapabilitiesIfNeed(String capName, boolean needUpdate) {
