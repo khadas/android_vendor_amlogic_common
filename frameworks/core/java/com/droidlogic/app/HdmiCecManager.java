@@ -158,12 +158,18 @@ public class HdmiCecManager {
     }
 
     public boolean isEarcEnabled() {
-         return Settings.Global.getInt(mContext.getContentResolver(), SETTINGS_EARC_ENABLE, ON) == ON;
+         if (mHdmiControlManager == null) {
+            return false;
+        }
+        return mHdmiControlManager.getEarcEnabled() == ON;
      }
 
      public void enableEarc(boolean value) {
+        if (mHdmiControlManager == null) {
+            return;
+        }
          Log.d(TAG, "enable eARC Audio : " + value);
-         Settings.Global.putInt(mContext.getContentResolver(), SETTINGS_EARC_ENABLE, (value ? ON : OFF));
+         mHdmiControlManager.setEarcEnabled(value ? ON : OFF);
      }
 
     private boolean readValue(String key) {
