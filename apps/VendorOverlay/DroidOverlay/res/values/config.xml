@@ -180,4 +180,7 @@
       <item>"/system/lib/libhidltransport.so"</item>
    </string-array>
 
+    <!-- Whether Low Power Standby is supported and can be enabled. -->
+    <bool name="config_lowPowerStandbySupported">false</bool>
+
 </resources>
