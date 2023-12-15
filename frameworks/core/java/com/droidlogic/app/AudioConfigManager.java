@@ -24,6 +24,8 @@ import android.media.AudioManager;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 import com.droidlogic.app.DroidLogicUtils;
 
@@ -269,7 +271,9 @@ public class AudioConfigManager {
         try {
             StringBuffer parameter;
             String realValue = "";
-            DecimalFormat decimalFormat = new DecimalFormat("0.0");
+            DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
+            symbols.setDecimalSeparator('.');
+            DecimalFormat decimalFormat = new DecimalFormat("0.0", symbols);
             Settings.Global.putInt(mResolver, DB_ID_AUDIO_PRESCALE_ARRAY[source], value);
 
             // packaging "SOURCE_GAIN=1.0 1.0 1.0 1.0 1.0" [atv,dtv,hdmi,av,media]
