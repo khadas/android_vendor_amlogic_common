@@ -1,0 +1,37 @@
+
+package {
+    // See: http://go/android-license-faq
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "vendor_amlogic_common_frameworks_core_license"
+    // to get the below license kinds:
+    //   SPDX-license-identifier-Apache-2.0
+    //   legacy_proprietary
+    default_applicable_licenses: [
+        "vendor_amlogic_common_license",
+    ],
+}
+
+cc_library_shared {
+    name: "libdisplaycontroller",
+
+    srcs: ["MultiDisplayController.cpp"],
+    system_ext_specific: true,
+    header_libs: ["jni_headers"],
+
+    cflags: ["-Wno-unused-parameter"],
+
+    shared_libs: [
+        "libandroidfw",
+        "libbase",
+        "libcutils",
+        "libutils",
+        "libhwui",
+        "libgui",
+        "libui",
+        "libandroid_runtime",
+        "liblog",
+        "libhardware",
+        "libnativehelper",
+    ],
+
+}

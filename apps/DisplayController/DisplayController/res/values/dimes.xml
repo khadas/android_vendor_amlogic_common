@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="paddingTop" type="dimen">100dp</item>
+    <item name="spanner" type="dimen">10dp</item>
+</resources>

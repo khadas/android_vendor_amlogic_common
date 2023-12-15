@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/paddingTop"
+        android:layout_marginTop="@dimen/paddingTop"
+        android:layout_marginRight="@dimen/paddingTop"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/current_display_title"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/current_display_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/paddingTop"
+            android:singleLine="false" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/paddingTop"
+        android:layout_marginTop="@dimen/spanner"
+        android:layout_marginRight="@dimen/paddingTop"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/mirror_title"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/mirror_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spanner"
+        android:layout_marginLeft="@dimen/paddingTop"
+        android:layout_marginRight="@dimen/paddingTop"></ListView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spanner"
+        android:layout_marginLeft="@dimen/paddingTop"
+        android:layout_marginRight="@dimen/paddingTop"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="@dimen/paddingTop"
+            android:text="@string/switch_display"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/swith_display0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/displayName0"></Button>
+
+        <Button
+            android:id="@+id/swith_display2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/displayName2"></Button>
+
+        <Button
+            android:id="@+id/swith_display3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/displayName3"></Button>
+    </LinearLayout>
+
+</LinearLayout>

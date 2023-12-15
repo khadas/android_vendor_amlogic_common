@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.droidlogic.displaycontrollerservice"
+    android:sharedUserId="android.uid.system">
+    <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS_FULL" />
+    <application
+        android:persistent="true"
+        android:hasCode="true"
+        android:supportsRtl="true"
+        android:killAfterRestore="true"
+        android:exported="true"
+        android:defaultToDeviceProtectedStorage="true"
+        android:directBootAware="true"
+        android:extractNativeLibs="true"
+        android:usesNonSdkApi="true">
+
+        <receiver android:exported="true"
+                  android:name=".BootComplete"
+                  android:singleUser="true">
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </receiver>
+        <service  android:name=".MultiDisplayService"
+                  android:exported="true"
+                  android:singleUser="true"/>
+    </application>
+
+</manifest>

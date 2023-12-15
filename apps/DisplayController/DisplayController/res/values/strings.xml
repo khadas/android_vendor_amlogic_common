@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name" translatable="false">DisplayControlCenter</string>
+    <string name="mirror_title" translatable="false">"镜像当前设备到"</string>
+    <string name="displayName" translatable="false">Display</string>
+    <string name="displayName0" translatable="false">Display0</string>
+    <string name="displayName2" translatable="false">Display2</string>
+    <string name="displayName3" translatable="false">Display3</string>
+    <string name="current_display_title">"当前display设备信息:"</string>
+    <string name="display_device">"当前设备名称:"</string>
+    <string name="mirroring">"是否在镜像:"</string>
+    <string name ="switch_display">"实验性功能--屏幕互切--1分钟后自动恢复”</string>
+</resources>

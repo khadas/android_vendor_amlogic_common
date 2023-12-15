@@ -1,0 +1,48 @@
+// *** THIS PACKAGE HAS SPECIAL LICENSING CONDITIONS.  PLEASE
+//     CONSULT THE OWNERS AND opensource-licensing@google.com BEFORE
+//     DEPENDING ON IT IN YOUR PROJECT. ***
+package {
+    // See: http://go/android-license-faq
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "vendor_amlogic_common_frameworks_core_license"
+    // to get the below license kinds:
+    //   SPDX-license-identifier-Apache-2.0
+    //   SPDX-license-identifier-MIT
+    //   legacy_by_exception_only (by exception only)
+    //   legacy_notice
+    //   legacy_proprietary
+    default_applicable_licenses: [
+        "vendor_amlogic_common_license",
+    ],
+}
+
+subdirs = ["jni",]
+prebuilt_etc {
+    name: "droidlogic_controller_permissions.xml",
+    system_ext_specific: true,
+    sub_dir: "permissions",
+    src: "droidlogic_controller_permissions.xml",
+    filename_from_src: true,
+}
+android_app {
+    name: "DisplayControllerService",
+
+    privileged: true,
+    system_ext_specific: true,
+    platform_apis: true,
+    srcs: [
+        "**/*.java",
+        "**/*.aidl"
+    ],
+    resource_dirs: [],
+    certificate: "platform",
+    required: [
+        "droidlogic_controller_permissions.xml",
+        "libdisplaycontroller",
+    ],
+
+    optimize: {
+        enabled: false,
+    },
+
+}
