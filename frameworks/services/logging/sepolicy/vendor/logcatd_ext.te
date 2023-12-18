@@ -1,0 +1,13 @@
+
+
+#allow logcatd_ext proc:file rw_file_perms;
+allow logcatd_ext sysfs_amhdmitx:file rw_file_perms;
+allow logcatd_ext sysfs_amhdmitx:dir { search r_dir_perms };
+
+# never allowed for vendor property
+#set_prop(logcatd_ext, vendor_media_prop)
+#set_prop(logcatd_ext, vendor_platform_prop)
+#set_prop(logcatd_ext, vendor_persist_prop)
+#set_prop(logcatd_ext, vendor_default_prop)
+#set_prop(logcatd_ext, vendor_tv_prop)
+#set_prop(logcatd_ext, vendor_bluetooth_prop)
