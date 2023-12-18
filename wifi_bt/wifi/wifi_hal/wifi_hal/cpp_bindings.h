@@ -214,7 +214,8 @@ public:
         return nla_nest_start(mMsg, attribute);
     }
     void attr_end(struct nlattr *attr) {
-        nla_nest_end(mMsg, attr);
+        if (nla_nest_end(mMsg, attr) < 0)
+            ALOGD("nla_nest_end: failed!");
     }
 
     int set_iface_id(int ifindex) {

@@ -111,6 +111,8 @@ void wifi_mdns_offload_set_log(uint8_t style, uint32_t mask)
 
 int wifi_mdns_offload_init()
 {
+    int ret = 0;
+
     LOGD("wifi_mdns_offload_init\n");
     struct nl_sock *sock = nl_socket_alloc();
     if (sock == NULL) {
@@ -127,8 +129,9 @@ int wifi_mdns_offload_init()
     }
     nl_socket_set_buffer_size(sock, 8192, 8192);
     int err = 1;
-    setsockopt(nl_socket_get_fd(sock), SOL_NETLINK,
-        NETLINK_EXT_ACK, &err, sizeof(err));
+    if ((ret = setsockopt(nl_socket_get_fd(sock), SOL_NETLINK,
+        NETLINK_EXT_ACK, &err, sizeof(err))) != 0)
+        LOGE("setsockopt: failed! ret:%d\n", ret);
     int nl80211_family_id = genl_ctrl_resolve(sock, "nl80211");
     if (nl80211_family_id < 0) {
         LOGE("Could not resolve nl80211 family id\n");
@@ -345,6 +348,8 @@ static void dump_msg(unsigned char *buf, uint32_t len)
 	uint32_t n = 0;
     char *dump = NULL;
 
+    if (!buf)
+        return;
     dump = (char *)malloc(256);
     if (!dump) {
         LOGD("alloc failed!\n");
@@ -374,7 +379,6 @@ static void dump_msg(unsigned char *buf, uint32_t len)
         i = i + line - 1;
     }
     free(dump);
-    dump = NULL;
 }
 
 int response_handler(struct nl_msg *msg, void *arg) {
@@ -388,6 +392,7 @@ int response_handler(struct nl_msg *msg, void *arg) {
     }
     LOGD("response msg len = %d,dump msg:\n", nlmsg_hdr(msg)->nlmsg_len);
     dump_msg((unsigned char *)(nlmsg_hdr(msg)), nlmsg_hdr(msg)->nlmsg_len);
+    memset(attributes, 0, sizeof(attributes));
     int ret = nla_parse(attributes, NL80211_ATTR_MAX_INTERNAL,
         genlmsg_attrdata(header, 0), genlmsg_attrlen(header, 0), NULL);
     if (ret < 0) {
@@ -407,8 +412,9 @@ int response_handler(struct nl_msg *msg, void *arg) {
     LOGD("vendor id: 0x%04x\n", vendor_id);
     LOGD("vendor subcmd: 0x%04x\n", vendor_subcmd);
     LOGD("vendor data len: %d\n", vendor_data_len);
-    if (vendor_subcmd == WIFI_MDNS_OFFLOAD_SET_STATE
-        || vendor_subcmd == WIFI_MDNS_OFFLOAD_ADD_TO_PASSTHROUGH_LIST) {
+    if ((vendor_subcmd == WIFI_MDNS_OFFLOAD_SET_STATE
+        || vendor_subcmd == WIFI_MDNS_OFFLOAD_ADD_TO_PASSTHROUGH_LIST)
+        && vendor_data) {
         *((u32_boolean *)arg) = *((u32_boolean *)vendor_data);
         return NL_OK;
     } else if ((vendor_subcmd == WIFI_MDNS_OFFLOAD_ADD_PROTOCOL_RESPONSES
@@ -426,6 +432,8 @@ static int requestResponse(struct nl_msg *msg, void *arg)
 	struct nl_cb *cb = NULL;
     int err = 0;
     struct nl_sock *sock = socket_handler.sock;
+    int err_count = 50;
+
     if (sock == NULL) {
         LOGE("sock == NULL!\n");
         err = -1;
@@ -448,11 +456,12 @@ static int requestResponse(struct nl_msg *msg, void *arg)
     nl_cb_set(cb, NL_CB_FINISH, NL_CB_CUSTOM, finish_handler, &err);
     nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, ack_handler, &err);
     nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, response_handler, arg);
-    while (err > 0) {
+    while (err > 0 && err_count > 0) {
         int ret = nl_recvmsgs(sock, cb);
         if (ret) {
             LOGE("nl80211: %s->nl_recvmsgs failed: %d\n", __func__, ret);
         }
+        err_count--;
     }
 out:
     if (cb)
@@ -535,10 +544,8 @@ int addProtocolResponses(char *networkInterface,
                     offloadData->matchCriteriaList[i].type,
                     offloadData->matchCriteriaList[i].nameOffset,
                     (qname && strlen(qname) > 0) ? qname : "none");
-                if (qname) {
+                if (qname)
                     free(qname);
-                    qname = NULL;
-                }
             }
         }
         if (offloadData->rawOffloadPacket) {

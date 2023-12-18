@@ -76,12 +76,12 @@ static int read_file(FILE *file, unsigned char *buf, size_t size,
     unsigned char isHex)
 {
     size_t count = 0;
-    unsigned char c;
+    int c;
     char data[3];
 
     if (isHex) {
         memset(data, 0, sizeof(data));
-        while (!feof(file) && fscanf(file, "%2s", data) == 1) {
+        while (!feof(file) && (fscanf(file, "%2s", data) == 1)) {
             if (count >= size)
                 return -1;
             if (!strcasecmp(data, "0x"))
@@ -96,10 +96,10 @@ static int read_file(FILE *file, unsigned char *buf, size_t size,
         return count;
     }
 
-    while (!feof(file) && (c = fgetc(file)) != EOF) {
+    while (!feof(file) && ((c = fgetc(file)) != EOF)) {
         if (count >= size)
             return -1;
-        buf[count] = c;
+        buf[count] = (unsigned char)c;
         count++;
     }
 
@@ -163,7 +163,6 @@ static void dump_buf(unsigned char *buf, uint32_t len)
         i = i + line - 1;
     }
     free(dump);
-    dump = NULL;
 }
 
 static void exec_setOffloadState(int argc, char **argv)
@@ -217,45 +216,39 @@ static void exec_addProtocolResponses(int argc, char **argv)
     unsigned char hexDataFile = 1;
     int count = 0, n = argc - 2;
     memset(&matchCriteriaList, -1, sizeof(matchCriteria));
-    memset(rawOffloadBuf, 0, sizeof(rawOffloadBuf));
     for (i = 2; i < argc; i++) {
         n--;
         if (strstr(argv[i], "--ifname") && argv[i + 1])
             ifname = argv[i + 1];
         if (strstr(argv[i], "--criteria") && argv[i + 1]) {
-            matchCriteriaListNum++;
-            sscanf(argv[i + 1], "%d,%d", &matchCriteriaList[j].type,
-                &matchCriteriaList[j].nameOffset);
-            j++;
+            if (2 == sscanf(argv[i + 1], "%d,%d", &matchCriteriaList[j].type,
+                &matchCriteriaList[j].nameOffset)) {
+                matchCriteriaListNum++;
+                j++;
+            }
         }
         if (strstr(argv[i], "--rawOffloadpacket") && argv[i + 1]) {
-            if (!strcmp(argv[i + 1], "-hex")) {
-                fileName =  argv[i + 2];
-                hexData = &argv[i + 2];
+            fileName = NULL;
+            file = NULL;
+            hexData = NULL;
+            count = 0;
+            if (!strcmp(argv[i + 1], "./hexdata_file")) {
+                fileName =  "./hexdata_file";
                 hexDataFile = 1;
-                n--;
-            } else if (!strcmp(argv[i + 1], "-raw")) {
-                fileName =  argv[i + 2];
-                hexData = &argv[i + 2];
+            } else if (!strcmp(argv[i + 1], "./rawdata_file")) {
+                fileName =  "./rawdata_file";
                 hexDataFile = 0;
-                n--;
-            } else {
-                fileName = argv[i + 1];
+            } else
                 hexData = &argv[i + 1];
-                hexDataFile = 1;
-            }
-            if (fileName) {
-                if (!strcmp(fileName, "-"))
-                    file = stdin;
-                else
-                    file = fopen(fileName, "r");
-            }
+            if (fileName)
+                file = fopen(fileName, "r");
+            memset(rawOffloadBuf, 0, sizeof(rawOffloadBuf));
             if (file) {
                 count = read_file(file, rawOffloadBuf,
                     sizeof(rawOffloadBuf), hexDataFile);
                 if (file != stdin)
                     fclose(file);
-            } else
+            } else if (hexData)
                 count = read_hex(n, hexData, rawOffloadBuf,
                     sizeof(rawOffloadBuf));
             if (count > 0) {
@@ -404,7 +397,7 @@ static void usage(char *name)
     PRINT("%s [-d|--debug] addProtocolResponses\n"\
           "\t --ifname wlan0|wlan1|...\n"\
           "\t --criteria type,nameoffset [--criteria type,nameoffset]...\n"\
-          "\t --rawOffloadpacket hexdata | [-raw|-hex] filename\n",
+          "\t --rawOffloadpacket hexdata|./rawdata_file|./hexdata_file\n",
           name);
     PRINT("%s [-d|--debug] removeProtocolResponses\n"\
           "\t --recordkey value\n",
@@ -422,7 +415,7 @@ static void usage(char *name)
           "\t --ifname wlan0|wlan1|...\n"\
           "\t --qname value\n",
           name);
-    PRINT("%s [-d|--debug|--debug] setPassthroughBehavior\n"\
+    PRINT("%s [-d|--debug] setPassthroughBehavior\n"\
           "\t --ifname wlan0|wlan1|...\n"\
           "\t --behavior value\n",
           name);
@@ -436,16 +429,15 @@ static void usage(char *name)
           "--criteria 255,52 --rawOffloadpacket 01 02 03 04\n",
           name);
     PRINT("%s addProtocolResponses --ifname wlan0 --criteria 1,52 "\
-          "--criteria 255,52 --rawOffloadpacket -raw /data/rawdata\n",
+          "--criteria 255,52 --rawOffloadpacket ./rawdata_file\n",
           name);
     PRINT("%s addProtocolResponses --ifname wlan0 --criteria 1,52 "\
-          "--criteria 255,52 --rawOffloadpacket -hex /data/hexdata\n",
+          "--criteria 255,52 --rawOffloadpacket ./hexdata_file\n",
           name);
     PRINT("\n");
     PRINT("Note:\n");
     PRINT("when a param is not specified, the default "\
           "param will be used.\n");
-    PRINT("--rawOffloadpacket: defaults to using -hex to read file data.\n");
     PRINT("\n");
 }
 
