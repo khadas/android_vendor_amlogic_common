@@ -767,6 +767,45 @@ Value* OtaZipCheck(const char* name, State* state,
     return StringValue(strdup("0"));
 }
 
+Value* OtaPartCheck(const char* name, State* state,
+                           const std::vector<std::unique_ptr<Expr>>&argv) {
+
+    if (argv.size() != 0) {
+        return ErrorAbort(state, kArgsParsingFailure, "%s() expects 0 args, got %zu", name, argv.size());
+    }
+
+    ZipArchiveHandle za = state->updater->GetPackageHandle();
+
+    printf("\n-- Part Check...\n");
+    char *check_result = get_bootloader_env("check_result");
+    if (check_result != NULL) {
+        if (!strcmp(check_result, "bootloader_fail")) {
+            set_bootloader_env("check_result", "succ");
+            return ErrorAbort(state, kArgsParsingFailure, "Try update bootloader, but bootloader start failed after update\n");
+        } else if (!strcmp(check_result, "recovery_fail")) {
+            set_bootloader_env("check_result", "succ");
+            return ErrorAbort(state, kArgsParsingFailure, "Try update recovery, but recovery start failed after update\n");
+        }
+    }
+
+    char *check_part = get_bootloader_env("recovery_check_part");
+    if (check_part && !strcmp(check_part, "3") ) {
+        set_bootloader_env("check_result", "succ");
+        set_bootloader_env("recovery_check_part", "0");
+        return ErrorAbort(state, kArgsParsingFailure, "Try OTA, but partition table check failed\n");
+    } else if (check_part && !strcmp(check_part, "2") ) {
+        set_bootloader_env("check_result", "succ");
+        set_bootloader_env("recovery_check_part", "0");
+        printf("\n-- Part Check OK ...\n");
+        set_stage();
+        return StringValue(strdup("0"));
+    } else {
+        printf("\n-- Start Part Check --\n");
+        PrepareUpdate(za);
+        return StringValue(strdup("1"));
+    }
+}
+
 Value* BackupDataCache(const char* name, State* state, const std::vector<std::unique_ptr<Expr>>& argv) {
     int ret = 0;
     if (argv.size() != 2) {
@@ -2256,4 +2295,5 @@ void Register_libinstall_amlogic() {
 
     RegisterFunction("delete_file", DeleteFileByName);
     RegisterFunction("recovery_backup_exist", RecoveryBackupExist);
+    RegisterFunction("ota_part_check", OtaPartCheck);
 }

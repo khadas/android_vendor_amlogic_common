@@ -15,6 +15,8 @@ Description:
 #define RECOVERY_IMG    "recovery.img"
 #define VENDOR_BOOT_IMG "vendor_boot.img"
 #define BOOTLOADER_IMG  "bootloader.img"
+#define GPT_IMG "gpt.bin"
+
 #define ARRAY_SIZE(x)   (int)(sizeof(x)/sizeof(x[0]))
 
 #define ANDROID_VERSION_U "34"
@@ -97,6 +99,7 @@ typedef struct _boot_img_hdr_secure_boot
 }*AmlSecureBootImgHeader;
 
 int RecoveryPreUpdate(const ZipArchiveHandle zipArchive);
+int PrepareUpdate(const ZipArchiveHandle zipArchive);
 
 int RecoverySecureCheck(const ZipArchiveHandle zipArchive);
 

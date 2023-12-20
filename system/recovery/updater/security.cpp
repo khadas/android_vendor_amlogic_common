@@ -636,6 +636,52 @@ int ImageWrite(char *dst, unsigned char *buffer, int size, int offset){
     return 0;
 }
 
+int PrepareUpdate(const ZipArchiveHandle zipArchive){
+    int ret = 0;
+    int imageSize = 0;
+    int fd = -1;
+
+    //update expect bootloader block device
+    ret = GetZipArchiveImage(zipArchive, BOOTLOADER_IMG, &imageSize);
+    if (ret > 0) {
+        printf("Find bootloader.img, start to update\n");
+
+        int fd = open("/dev/block/by-name/bootloader_up", O_RDWR | O_CREAT, 00777);
+        if (fd < 0) {
+            printf("open /dev/block/by-name/bootloader_up failed\n");
+            printf("write to /dev/block/by-name/bootloader\n");
+            ImageWrite("/dev/block/by-name/bootloader", s_pImageBuffer, imageSize, 512);
+            ImageWrite("/dev/block/by-name/mmcblk0boot0", s_pImageBuffer, imageSize, 512);
+            set_bootloader_env("recovery_check_part", "4");
+        } else {
+            printf("write to /dev/block/by-name/bootloader_up\n");
+            ImageWrite("/dev/block/by-name/bootloader_up", s_pImageBuffer, imageSize, 0);
+            set_bootloader_env("recovery_check_part", "1");
+        }
+    }
+
+    //update recovery.img to cache
+    ret = GetZipArchiveImage(zipArchive, RECOVERY_IMG, &imageSize);
+    if (ret > 0) {
+        printf("Find recovery.img, start to update /cache/recovery/recovery.img\n");
+        ImageWrite("/cache/recovery/recovery.img",  s_pImageBuffer, imageSize, 0);
+    }
+
+    //update vendor_boot.img to cache
+    char *VendorbootFlag = get_bootloader_env("vendor_boot_mode");
+    ret = GetZipArchiveImage(zipArchive, VENDOR_BOOT_IMG, &imageSize);
+    if (ret > 0) {
+        printf("Find vendor_boot.img, start to update /cache/recovery/vendor_boot.img\n");
+        ImageWrite("/cache/recovery/vendor_boot.img",  s_pImageBuffer, imageSize, 0);
+        if ((!VendorbootFlag) || (strcmp(VendorbootFlag, "true") != 0))
+            set_bootloader_env("reboot_vendor_boot", "true");
+    }
+
+    sleep(2);
+
+    return 0;
+}
+
 int RecoveryPreUpdate(const ZipArchiveHandle zipArchive){
     int ret = 0;
     int imageSize = 0;

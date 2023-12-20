@@ -981,7 +981,7 @@ RecoveryDtbCheck(const ZipArchiveHandle za){
         }
     }
 
-    if ((recovery_offset_dev != recovery_offset_zip) || (recovery_size_dev != recovery_size_zip)) {
+    if (recovery_offset_dev != recovery_offset_zip) {
         printf("recovery part changed! can not upgrade!\n ");
         ret = DTB_ERROR;
         goto END;
