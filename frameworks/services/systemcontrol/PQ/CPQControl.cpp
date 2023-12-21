@@ -746,7 +746,7 @@ int CPQControl::LoadPQSettings()
             ret |= Cpq_SetAipqMode((aipq_mode_e)aipq_mode, mCurrentSourceInputInfo);
        }
 
-        vpp_smooth_plus_mode_t smoothplus_mode = VPP_SMOOTH_PLUS_MODE_OFF;
+        vpp_smooth_plus_mode_t smoothplus_mode = (vpp_smooth_plus_mode_t)GetSmoothPlusMode();
         ret |= Cpq_SetSmoothPlusMode(smoothplus_mode, mCurrentSourceInputInfo);
     }
     return ret;
@@ -801,9 +801,6 @@ int CPQControl::LoadPQTableSettings()
         ret |= Cpq_SetAiSrMode((aisr_mode_e)aisr_mode, mCurrentSourceInputInfo);
         ret |= Cpq_SetAipqMode((aipq_mode_e)aipq_mode, mCurrentSourceInputInfo);
     }
-
-    vpp_smooth_plus_mode_t smoothplus_mode = VPP_SMOOTH_PLUS_MODE_OFF;
-    ret |= Cpq_SetSmoothPlusMode(smoothplus_mode, mCurrentSourceInputInfo);
 
     return ret;
 }
@@ -8558,7 +8555,17 @@ int CPQControl::SetSmoothPlusMode(int smoothplus_mode, int is_save)
 int CPQControl::GetSmoothPlusMode(void)
 {
     int mode = VPP_SMOOTH_PLUS_MODE_MID;
-    mSSMAction->SSMReadSmoothPlus(mSourceInputForSaveParam, &mode);
+
+    if (mbCpqCfg_new_picture_mode_enable) {
+        vpp_picture_mode_t pq_mode = (vpp_picture_mode_t)GetPQMode();
+        vpp_pictur_mode_para_t para;
+        if (GetPictureModeData(mCurrentPqSource, pq_mode, &para) == 0) {
+            mode = para.SmoothPlus;
+        }
+    } else {
+        mSSMAction->SSMReadSmoothPlus(mSourceInputForSaveParam, &mode);
+    }
+
     if (mode < VPP_SMOOTH_PLUS_MODE_OFF || mode > VPP_SMOOTH_PLUS_MODE_AUTO) {
         mode = VPP_SMOOTH_PLUS_MODE_MID;
     }
@@ -8569,8 +8576,19 @@ int CPQControl::GetSmoothPlusMode(void)
 
 int CPQControl::SaveSmoothPlusMode(int smoothplus_mode)
 {
-    SYS_LOGI("%s, source: %d, value = %d\n", __FUNCTION__, mSourceInputForSaveParam, smoothplus_mode);
-    int ret = mSSMAction->SSMSaveSmoothPlus(mSourceInputForSaveParam, smoothplus_mode);
+    int ret = -1;
+
+    if (mbCpqCfg_new_picture_mode_enable) {
+        vpp_pictur_mode_para_t para;
+        vpp_picture_mode_t pq_mode = (vpp_picture_mode_t)GetPQMode();
+        if (GetPictureModeData(mCurrentPqSource, pq_mode, &para) == 0) {
+            para.SmoothPlus = (int)smoothplus_mode;
+            ret = SetPictureModeData(mCurrentPqSource, pq_mode, &para);
+        }
+    } else {
+        ret = mSSMAction->SSMSaveSmoothPlus(mSourceInputForSaveParam, smoothplus_mode);
+    }
+
     if (ret < 0) {
         SYS_LOGE("%s failed!\n",__FUNCTION__);
     } else {
@@ -9861,6 +9879,7 @@ int CPQControl::Set_PictureMode(vpp_picture_mode_t pq_mode, pq_src_param_t sourc
         ret |= Cpq_BlueStretch(pq_para.BlueStretch, mCurrentSourceInputInfo);
         ret |= Cpq_ChromaCoring(pq_para.ChromaCoring, mCurrentSourceInputInfo);
         ret |= Cpq_SetMpegNr((vpp_pq_level_t)pq_para.MpegNr, mCurrentSourceInputInfo);
+        ret |= Cpq_SetSmoothPlusMode((vpp_smooth_plus_mode_t)pq_para.SmoothPlus, mCurrentSourceInputInfo);
 
         //dobly mode
         if (pq_para.DvMode >= 0) {

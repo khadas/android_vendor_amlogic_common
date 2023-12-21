@@ -3005,6 +3005,8 @@ int CPQdb::PQ_GetPictureModeParams(pq_src_param_t source_input, vpp_picture_mode
                     params->DvMode = c.getInt(1);
                 } else if (!strcmp(type, "DvDarkDetail")) {
                     params->DvDarkDetail = c.getInt(1);
+                } else if (!strcmp(type, "SmoothPlus")) {
+                    params->SmoothPlus = c.getInt(1);
                 }
             } while (c.moveToNext());
         } else {

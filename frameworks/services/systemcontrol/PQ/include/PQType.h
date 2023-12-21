@@ -157,6 +157,7 @@ typedef struct vpp_pictur_mode_para_s {
     int ChromaCoring;
     int DvMode;
     int DvDarkDetail;
+    int SmoothPlus;
 
     //PM5 XML not has config
     int Deblock;
