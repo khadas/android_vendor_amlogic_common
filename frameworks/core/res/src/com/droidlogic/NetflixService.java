@@ -477,7 +477,7 @@ public class NetflixService extends Service {
         }
     }
 
-    private boolean isTvTs_CTS() {
+    private boolean isTvtsOrCtsRunning() {
         ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningAppProcessInfo> infos = am.getRunningAppProcesses();
 
@@ -702,7 +702,7 @@ public class NetflixService extends Service {
         synchronized (mLock) {
             boolean fg = isTopTask(NETFLIX_PKG_NAME);
             boolean netflix = isVisibleApp(NETFLIX_PKG_NAME);
-            if (netflix  && !isTvTs_CTS()) {
+            if (netflix  && !isTvtsOrCtsRunning()) {
                 ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
                 final List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
                 for (ActivityManager.RunningAppProcessInfo info: procs) {
