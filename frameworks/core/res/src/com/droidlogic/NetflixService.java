@@ -677,8 +677,8 @@ public class NetflixService extends Service {
         setUiAudioBufferDelayOffset(hasMS12 ? UI_AUDIO_DELAY_OFFSET_TV_MS12 : UI_AUDIO_DELAY_OFFSET_TV_NON_DOLBY);
     }
 
-    private void setAlwayHDR(boolean NetflixIsForeground) {
-        //when netflix is fg, enable alway HDR whatever.
+    private void setAlwaysHDR(boolean NetflixIsForeground) {
+        //when netflix is fg, enable always HDR whatever.
         if (tempHDR) {
            Log.i(TAG, "setHdrStrategy adaptive default");
            mSCM.setHdrStrategy(STR_ADAPTIVE);
@@ -690,10 +690,6 @@ public class NetflixService extends Service {
             mSCM.setHdrStrategy(STR_ALWAYS);
             tempHDR = true;
         }
-            /*if (NetflixIsForeground && (mOutputModeManager.getHdrStrategy().startsWith(STR_ADAPTIVE) == false ||
-                                mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).isHdr()==false)){
-                Log.d(TAG,"something error!");
-             }*/
          Log.d(TAG,"NetflixIsForeground,startsWith,isHdr: "+NetflixIsForeground
                 +mOutputModeManager.getHdrStrategy().startsWith(STR_ADAPTIVE)+mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).isHdr());
     }
