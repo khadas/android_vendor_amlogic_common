@@ -86,14 +86,17 @@ public class SubtitleManager {
     static public final int TYPE_SUBTITLE_MKV_STR = 2;
     static public final int TYPE_SUBTITLE_SSA = 3;
     static public final int TYPE_SUBTITLE_MKV_VOB = 4;
-    static public final int TYPE_SUBTITLE_DVB = 5;
-    static public final int TYPE_SUBTITLE_TMD_TXT = 7;
-    static public final int TYPE_SUBTITLE_IDX_SUB = 8;
-    static public final int TYPE_SUBTITLE_DVB_TELETEXT = 9;
+    static public final int TYPE_SUBTITLE_TMD_TXT = 5;
+    static public final int TYPE_SUBTITLE_IDX_SUB = 6;
+    static public final int TYPE_SUBTITLE_DVB = 7;
+    static public final int TYPE_SUBTITLE_DVB_TELETEXT = 8;
+    static public final int TYPE_SUBTITLE_TTML = 9;
     static public final int TYPE_SUBTITLE_CLOSED_CAPTION = 10;
     static public final int TYPE_SUBTITLE_SCTE27 = 11;
-    static public final int TYPE_SUBTITLE_EXTERNAL = 15;
-    static public final int TYPE_SUBTITLE_MAX = 13;
+    static public final int TYPE_SUBTITLE_ARIB_B24 = 12;
+    static public final int TYPE_SUBTITLE_SMPTE_TTML = 13;
+    static public final int TYPE_SUBTITLE_EXTERNAL = 14;
+    static public final int TYPE_SUBTITLE_MAX = 15;
     //for the subtitle display type:text or image
     static public final int SUBTITLE_TXT =1;
     static public final int SUBTITLE_IMAGE =2;
