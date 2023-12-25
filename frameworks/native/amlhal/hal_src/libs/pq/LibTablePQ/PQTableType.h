@@ -47,68 +47,6 @@ typedef enum pq_level_e {
     VPP_PQ_LV_MAX,
 } pq_level_t;
 
-typedef struct ldim_pq_s {
-    unsigned int func_en;
-    unsigned int remapping_en;
-
-    /* switch fw, use for custom fw. 0=aml_hw_fw, 1=aml_sw_fw */
-    unsigned int fw_sel;
-
-    /* fw parameters */
-    unsigned int ldc_hist_mode;
-    unsigned int ldc_hist_blend_mode;
-    unsigned int ldc_hist_blend_alpha;
-    unsigned int ldc_hist_adap_blend_max_gain;
-    unsigned int ldc_hist_adap_blend_diff_th1;
-    unsigned int ldc_hist_adap_blend_diff_th2;
-    unsigned int ldc_hist_adap_blend_th0;
-    unsigned int ldc_hist_adap_blend_thn;
-    unsigned int ldc_hist_adap_blend_gain_0;
-    unsigned int ldc_hist_adap_blend_gain_1;
-    unsigned int ldc_init_bl_min;
-    unsigned int ldc_init_bl_max;
-
-    unsigned int ldc_sf_mode;
-    unsigned int ldc_sf_gain_up;
-    unsigned int ldc_sf_gain_dn;
-    unsigned int ldc_sf_tsf_3x3;
-    unsigned int ldc_sf_tsf_5x5;
-
-    unsigned int ldc_bs_bl_mode;
-    //unsigned int ldc_glb_apl; //read only
-    unsigned int ldc_bs_glb_apl_gain;
-    unsigned int ldc_bs_dark_scene_bl_th;
-    unsigned int ldc_bs_gain;
-    unsigned int ldc_bs_limit_gain;
-    unsigned int ldc_bs_loc_apl_gain;
-    unsigned int ldc_bs_loc_max_min_gain;
-    unsigned int ldc_bs_loc_dark_scene_bl_th;
-
-    unsigned int ldc_tf_en;
-    //unsigned int ldc_tf_sc_flag; //read only
-    unsigned int ldc_tf_low_alpha;
-    unsigned int ldc_tf_high_alpha;
-    unsigned int ldc_tf_low_alpha_sc;
-    unsigned int ldc_tf_high_alpha_sc;
-
-    unsigned int ldc_dimming_curve_en;
-    unsigned int ldc_sc_hist_diff_th;
-    unsigned int ldc_sc_apl_diff_th;
-    unsigned int bl_remap_curve[17];
-
-    /* comp parameters */
-    unsigned int ldc_bl_buf_diff;
-    unsigned int ldc_glb_gain;
-    unsigned int ldc_dth_en;
-    unsigned int ldc_dth_bw;
-    unsigned int ldc_gain_lut[16][64];
-    unsigned int ldc_min_gain_lut[64];
-}ldim_pq_t;
-
-typedef struct pq_aml_ldim_pq_s {
-    ldim_pq_t LDData[VPP_PQ_LV_MAX];
-}pq_aml_ldim_pq_t;
-
 typedef enum _PQ_SOURCE_TIMING {
     PQ_SRC_INDEX_VGA = 0,
 

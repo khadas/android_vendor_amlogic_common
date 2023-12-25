@@ -15,7 +15,6 @@ static bool IsloadFromBinFile = false;
 extern TABLE_VER_PQ                  mVerInfoPQ;
 extern PQ_TABLE_PARAM                mPQTableParam;
 extern pq_tcon_gamma_table_t         mGammaTable;
-extern pq_aml_ldim_pq_t              mLDTable;
 
 PQTable::PQTable()
 {
@@ -89,7 +88,6 @@ bool PQTable::Load_PQBin(char *name)
         memcpy(&mVerInfoPQ, (TABLE_VER_PQ*)m_PQTable[PQ_TABLE_VERSION].pTableArray, sizeof(TABLE_VER_PQ));
         memcpy(&mPQTableParam, (PQ_TABLE_PARAM*)m_PQTable[PQ_TABLE_DATA].pTableArray, sizeof(PQ_TABLE_PARAM));
         memcpy(&mGammaTable, (pq_tcon_gamma_table_t*)m_PQTable[PQ_TABLE_GAMMA_DATA].pTableArray, sizeof(pq_tcon_gamma_table_t));
-        memcpy(&mLDTable, (pq_aml_ldim_pq_t*)m_PQTable[PQ_TABLE_LD_DATA].pTableArray, sizeof(pq_aml_ldim_pq_t));
     #else
     //send PQ table data to driver
         ADAP_PQ_SetPQTable((PQ_TABLE_PARAM*)m_PQTable[PQ_TABLE_DATA].pTableArray);

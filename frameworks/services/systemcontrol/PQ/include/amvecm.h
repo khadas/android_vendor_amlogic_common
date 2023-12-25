@@ -136,14 +136,17 @@
 #define AMVECM_IOC_G_HDR_TM        _IOR(AMVECM_IOC_MAGIC, 0x64, struct hdr_tone_mapping_s)
 
 /*hdr10_tmo ioc*/
-#define AMVECM_IOC_S_HDR_TMO   _IOW(AMVECM_IOC_MAGIC, 0x74, struct hdr_tmo_sw_s)
-#define AMVECM_IOC_G_HDR_TMO   _IOR(AMVECM_IOC_MAGIC, 0x75, struct hdr_tmo_sw_s)
+#define AMVECM_IOC_S_HDR_TMO       _IOW(AMVECM_IOC_MAGIC, 0x74, struct hdr_tmo_sw_s)
+#define AMVECM_IOC_G_HDR_TMO       _IOR(AMVECM_IOC_MAGIC, 0x75, struct hdr_tmo_sw_s)
 
 /*cabc command list*/
 #define AMVECM_IOC_S_CABC_PARAM    _IOW(AMVECM_IOC_MAGIC, 0x76, struct db_cabc_param_s)
 
 /*aad command list*/
 #define AMVECM_IOC_S_AAD_PARAM     _IOW(AMVECM_IOC_MAGIC, 0x77, struct db_aad_param_s)
+
+/*aicolor command list*/
+#define AMVECM_IOC_AI_COLOR_EN	   _IO(AMVECM_IOC_MAGIC, 0x8b)
 
 #endif /* __AMVECM_H */
 

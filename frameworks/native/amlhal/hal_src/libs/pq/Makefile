@@ -4,7 +4,7 @@
 SUBDIRS  :=
 SUBDIRS  += LibTableOSD/
 SUBDIRS  += LibTablePQ/
-
+SUBDIRS  += LibTableLD/
 ##############################################
 #  Make
 ##############################################

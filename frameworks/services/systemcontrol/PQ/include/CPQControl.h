@@ -124,7 +124,7 @@
 #define FRC_IOC_SET_MEMC_DEMO       _IOW('F', 0x08, unsigned int)
 
 //lcd
-#define MAX_TABLE_SIZE                            0xC0000
+#define MAX_TABLE_SIZE                            0x300000
 #define CPQ_LCD_SYSFS                             "/dev/lcd0"
 #define LCD_IOC_NR_GET_HDR_INFO                   _IOR('C', 0x0, struct lcd_optical_info_s)
 #define LCD_IOC_NR_SET_HDR_INFO                   _IOW('C', 0x1, struct lcd_optical_info_s)

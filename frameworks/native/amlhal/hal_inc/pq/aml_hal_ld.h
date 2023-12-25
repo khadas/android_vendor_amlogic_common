@@ -222,7 +222,7 @@ HAL_STATUS_T AML_HAL_LD_SeBlMatrix(int iMatrix);
 HAL_STATUS_T AML_HAL_LD_GetDemoMode(aml_hal_ldim_demo_info_t *pDemoInfo);
 HAL_STATUS_T AML_HAL_LD_SetDemoMode(aml_hal_ldim_demo_info_t *pDemoInfo);
 HAL_STATUS_T AML_HAL_LD_GetLdmInfo(aml_hal_ld_info_t *pLdmInfo);
-HAL_STATUS_T AML_HAL_LD_SetLocalDimming(int iLevel);
+HAL_STATUS_T AML_HAL_LD_SetLocalDimming(aml_hal_ld_info_t *pLdmInfo);
 HAL_STATUS_T AML_HAL_LD_SetInit(aml_hal_led_panel_info_t *pLedPanelInfo);
 HAL_STATUS_T AML_HAL_LD_GetAplInfo(aml_hal_led_apl_info_t *pAplInfo);
 HAL_STATUS_T AML_HAL_LD_SetDbIdx(int idx);

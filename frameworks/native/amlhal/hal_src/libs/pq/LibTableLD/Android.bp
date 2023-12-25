@@ -21,32 +21,24 @@ package {
 // See: http://go/android-license-faq
 
 cc_library_shared {
-    name: "libaml_hal_pq",
+    name: "libPQTableLD",
     proprietary: true,
 
 
     srcs: [
-        "aml_hal_di.cpp",
-        "aml_hal_ld.cpp",
-        "aml_hal_memc.cpp",
-        "aml_hal_pq.cpp",
+        "PQTableLD.cpp",
+        "PQTableLDLoader.cpp",
+        "AML_LD_Table_Public.cpp",
     ],
 
     include_dirs: [
-        "vendor/amlogic/common/frameworks/native/amlhal/hal_inc",
         "vendor/amlogic/common/frameworks/native/amlhal/hal_src/adaptor/inc",
-        "vendor/amlogic/common/frameworks/native/amlhal/hal_src/libs/pq/LibTableOSD",
-        "vendor/amlogic/common/frameworks/native/amlhal/hal_src/libs/pq/LibTablePQ",
-        "vendor/amlogic/common/frameworks/native/amlhal/hal_src/libs/pq/LibTableLD",
     ],
-	
+
 	shared_libs: [
         "liblog",
         "liblog_cout",
 	    "libadap_pq",
-		"libPQTableOSD",
-		"libPQTable",
-		"libPQTableLD",
     ],
 
     cflags: [
@@ -55,6 +47,3 @@ cc_library_shared {
         "-Wno-implicit-fallthrough",
     ],
 }
-
-
-

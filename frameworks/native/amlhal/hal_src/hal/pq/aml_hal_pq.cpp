@@ -11,6 +11,7 @@
 #include "pq/adap_di.h"
 
 #include "PQTableOSD.h"
+#include "PQTableLD.h"
 #include "PQTable.h"
 
 #ifdef __cplusplus
@@ -22,6 +23,9 @@ HAL_STATUS_T AML_HAL_PQ_INIT(void)
 {
     if (ADAP_PQ_INIT() != ADAP_OK) {
         LOGE("%s VPP INIT fail  \n", __FUNCTION__);
+    } else {
+        PQTable::GetInstance()->Init();
+        PQTableOSD::GetInstance()->Init();
     }
 
     if (ADAP_DI_INIT() != ADAP_OK) {
@@ -34,9 +38,9 @@ HAL_STATUS_T AML_HAL_PQ_INIT(void)
 
     if (ADAP_LD_INIT() != ADAP_OK) {
         LOGE("%s LD INIT fail  \n", __FUNCTION__);
+    } else {
+        PQTableLD::GetInstance()->Init();
     }
-
-    PQTableOSD::GetInstance()->Init();
 
     return API_OK;
 }
@@ -849,59 +853,37 @@ HAL_STATUS_T AML_HAL_PQ_SetPQSrcTiming(aml_hal_pq_source_timing_e eSrcTiming)
     return API_OK;
 }
 
+//LD
+HAL_STATUS_T AML_HAL_PQ_LD_SetLevelIdx(int iLevelIdx)
+{
+    if (ADAP_LD_SetLevelIdx(iLevelIdx) != true) {
+        return API_NOT_OK;
+    }
+
+    return API_OK;
+}
+
 //for pqserver get table data
-HAL_STATUS_T AML_HAL_PQ_GetPQOsdVerData(void *pData)
+void* AML_HAL_PQ_GetPQOsdVerData(void)
 {
     UINT32 tableLen = 0;
 
-    if (pData == NULL) {
-        return API_INVALID_PARAMS;
-    }
-
-    pData = PQTableOSD::GetInstance()->GetTableData(PQ_OSD_TABLE_VERSION, &tableLen);
-
-    if (tableLen == 0 || pData == NULL) {
-        LOGE("%s pData is NULL\n", __FUNCTION__);
-        return API_NOT_OK;
-    }
-
-    return API_OK;
+    return PQTableOSD::GetInstance()->GetTableData(PQ_OSD_TABLE_VERSION, &tableLen);
 }
 
-HAL_STATUS_T AML_HAL_PQ_GetPQOsdNonlinearData(void *pData, UINT32 *TableNum)
+void* AML_HAL_PQ_GetPQOsdNonlinearData(UINT32 *TableNum)
 {
-    pData = PQTableOSD::GetInstance()->GetTableData(PQ_OSD_TABLE_NONLINEARMAPPING, TableNum);
-
-    if (pData == NULL) {
-        LOGE("%s fail\n", __FUNCTION__);
-        return API_NOT_OK;
-    }
-
-    return API_OK;
+    return PQTableOSD::GetInstance()->GetTableData(PQ_OSD_TABLE_NONLINEARMAPPING, TableNum);
 }
 
-HAL_STATUS_T AML_HAL_PQ_GetPQOsdPictureData(void *pData, UINT32 *TableNum)
+void* AML_HAL_PQ_GetPQOsdPictureData(UINT32 *TableNum)
 {
-    pData = PQTableOSD::GetInstance()->GetTableData(PQ_OSD_TABLE_PICTUREMODE, TableNum);
-
-    if (pData == NULL) {
-        LOGE("%s fail\n", __FUNCTION__);
-        return API_NOT_OK;
-    }
-
-    return API_OK;
+    return PQTableOSD::GetInstance()->GetTableData(PQ_OSD_TABLE_PICTUREMODE, TableNum);
 }
 
-HAL_STATUS_T AML_HAL_PQ_GetPQOsdColorTempData(void *pData, UINT32 *TableNum)
+void* AML_HAL_PQ_GetPQOsdColorTempData(UINT32 *TableNum)
 {
-    pData = PQTableOSD::GetInstance()->GetTableData(PQ_OSD_TABLE_COLORTEMP, TableNum);
-
-    if (pData == NULL) {
-        LOGE("%s fail\n", __FUNCTION__);
-        return API_NOT_OK;
-    }
-
-    return API_OK;
+    return PQTableOSD::GetInstance()->GetTableData(PQ_OSD_TABLE_COLORTEMP, TableNum);
 }
 
 #ifdef __cplusplus

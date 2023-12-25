@@ -7,7 +7,6 @@ typedef enum _PQ_TABLE_TYPE {
     PQ_TABLE_VERSION = 0,
     PQ_TABLE_DATA,
     PQ_TABLE_GAMMA_DATA,
-    PQ_TABLE_LD_DATA,
     PQ_TABLE_MAX,
 } PQ_TABLE_TYPE;
 
@@ -16,7 +15,6 @@ typedef struct _PQ_FILE_HEADER {
     int PqVerOffset;
     int PqTableDataOffset;
     int PqGammaDataOffset;
-    int PqLDDataOffset;
     int chip;
     unsigned int crc;
 } PQ_FILE_HEADER;

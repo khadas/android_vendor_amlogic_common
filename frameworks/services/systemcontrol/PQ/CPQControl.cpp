@@ -147,13 +147,6 @@ void CPQControl::CPQControlInit()
     } else {
         SYS_LOGD("Open DI module success!\n");
     }
-    // open LD module
-    mLdFd = LDOpenModule();
-    if (mLdFd < 0) {
-        SYS_LOGE("Open LD module failed!\n");
-    } else {
-        SYS_LOGD("Open LD module success!\n");
-    }
     //open MEMC module
     mMemcFd = MEMCOpenModule();
     if (mMemcFd < 0) {
@@ -9052,26 +9045,18 @@ int CPQControl::GetLocalDimming(void)
 
 int CPQControl::Cpq_LocalDimming(vpp_pq_level_t level)
 {
-    int ret = -1;
-    aml_ldim_pq_s ld;
-    memset(&ld, 0, sizeof(aml_ldim_pq_s));
-
-    if (mbCpqCfg_LocalDimming_enable && (mLdFd > 0)) {
-        ret = mPQdb->PQ_GetLocalDimmingParams(level, mCurrentSourceInputInfo, &ld);
-
-        if (ret < 0) {
-            SYS_LOGE("%s: PQ_GetLocalDimmingParams failed!\n", __FUNCTION__);
-        } else {
-            ret = LDDeviceIOCtl(AML_LDIM_IOC_CMD_SET_INFO_NEW, &ld);
-        }
-    } else {
-        SYS_LOGE("%s: LocalDimming disabled!\n", __FUNCTION__);
-        ret = 0;
+    if (!mbCpqCfg_LocalDimming_enable) {
+        SYS_LOGD("%s: LocalDimming disabled!\n", __FUNCTION__);
+        return 0;
     }
 
-    return ret;
-}
+    if (AML_HAL_PQ_LD_SetLevelIdx((int)level) != API_OK) {
+        SYS_LOGE("%s: AML_HAL_LD_SetLevelIdx failed!\n", __FUNCTION__);
+        return -1;
+    }
 
+    return 0;
+}
 
 void CPQControl::resetAllUserSettingParam()
 {

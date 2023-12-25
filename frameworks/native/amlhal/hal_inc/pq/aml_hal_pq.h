@@ -708,11 +708,13 @@ HAL_STATUS_T AML_HAL_PQ_GetSaturation_OSD(SINT32 *pValue);
 HAL_STATUS_T AML_HAL_PQ_SetHue_OSD(SINT32 value);
 HAL_STATUS_T AML_HAL_PQ_GetHue_OSD(SINT32 *pValue);
 
+HAL_STATUS_T AML_HAL_PQ_LD_SetLevelIdx(int iLevelIdx);
+
 //PQ OSD Params
-HAL_STATUS_T AML_HAL_PQ_GetPQOsdVerData(void *pData);
-HAL_STATUS_T AML_HAL_PQ_GetPQOsdNonlinearData(void *pData, UINT32 *TableNum);
-HAL_STATUS_T AML_HAL_PQ_GetPQOsdPictureData(void *pData, UINT32 *TableNum);
-HAL_STATUS_T AML_HAL_PQ_GetPQOsdColorTempData(void *pData, UINT32 *TableNum);
+void* AML_HAL_PQ_GetPQOsdVerData(void);
+void* AML_HAL_PQ_GetPQOsdNonlinearData(UINT32 *TableNum);
+void* AML_HAL_PQ_GetPQOsdPictureData(UINT32 *TableNum);
+void* AML_HAL_PQ_GetPQOsdColorTempData(UINT32 *TableNum);
 
 #ifdef  __cplusplus
 }

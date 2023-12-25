@@ -27,23 +27,9 @@ enum ioc_ld_cmd
     IOC_LD_CMD_GET_BL_PROFILE_PATH                      = 0x57,
     IOC_LD_CMD_SET_BL_PROFILE                           = 0x58,
 };
-/*
-    // VPP.Local dimming command list
-#define LDIM_IOC_PARA              _IOW(AMVECM_IOC_MAGIC, 0x50, struct vpu_ldim_param_s)
-#define AML_LDIM_IOC_CMD_GET_INFO      _IOR(AMVECM_IOC_MAGIC, 0x51, struct aml_ldim_info_s)
-#define AML_LDIM_IOC_CMD_SET_INFO      _IOW(AMVECM_IOC_MAGIC, 0x52, struct aml_ldim_info_s)
-#define AML_LDIM_IOC_CMD_GET_INFO_NEW  _IOR(AMVECM_IOC_MAGIC, 0x53, struct aml_ldim_pq_s)
-#define AML_LDIM_IOC_CMD_SET_INFO_NEW  _IOW(AMVECM_IOC_MAGIC, 0x54, struct aml_ldim_pq_s)
 
-#define AML_LDIM_IOC_CMD_GET_BL_MAPPING_PATH   _IOR(AMVECM_IOC_MAGIC, 0x55, struct aml_path_s)
-#define AML_LDIM_IOC_CMD_SET_BL_MAPPING        _IOW(AMVECM_IOC_MAGIC, 0x56, struct am_pq_bin_param_s)
-
-#define AML_LDIM_IOC_CMD_GET_BL_PROFILE_PATH   _IOR(AMVECM_IOC_MAGIC, 0x57, struct aml_path_s)
-#define AML_LDIM_IOC_CMD_SET_BL_PROFILE        _IOW(AMVECM_IOC_MAGIC, 0x58, struct am_pq_bin_param_s)
-*/
-
-#define AML_LDIM_IOC_NR_GET_PQ_INIT                     _IO(LD_IOC_MAGIC, IOC_LD_CMD_GET_PQ_INIT)
-#define AML_LDIM_IOC_NR_SET_PQ_INIT                     _IO(LD_IOC_MAGIC, IOC_LD_CMD_SET_PQ_INIT)
+#define AML_LDIM_IOC_NR_GET_PQ_INIT                     _IOR(LD_IOC_MAGIC, IOC_LD_CMD_GET_PQ_INIT, am_pq_bin_param_s)
+#define AML_LDIM_IOC_NR_SET_PQ_INIT                     _IOW(LD_IOC_MAGIC, IOC_LD_CMD_SET_PQ_INIT, am_pq_bin_param_s)
 #define AML_LDIM_IOC_NR_GET_LEVEL_IDX                   _IOR(LD_IOC_MAGIC, IOC_LD_CMD_GET_LEVEL_IDX, int)
 #define AML_LDIM_IOC_NR_SET_LEVEL_IDX                   _IOW(LD_IOC_MAGIC, IOC_LD_CMD_SET_LEVEL_IDX, int)
 #define AML_LDIM_IOC_NR_GET_FUNC_EN                     _IOR(LD_IOC_MAGIC, IOC_LD_CMD_GET_FUNC_EN, int)
@@ -57,9 +43,9 @@ enum ioc_ld_cmd
 
 #define AML_LDIM_IOC_CMD_GET_INFO_NEW                   _IOR(LD_IOC_MAGIC, IOC_LD_CMD_GET_INFO_NEW, struct aml_ldim_pq_s)
 #define AML_LDIM_IOC_CMD_SET_INFO_NEW                   _IOW(LD_IOC_MAGIC, IOC_LD_CMD_SET_INFO_NEW, struct aml_ldim_pq_s)
-#define AML_LDIM_IOC_NR_GET_BL_MAPPING_PATH             _IOR(LD_IOC_MAGIC, IOC_LD_CMD_GET_BL_MAPPING_PATH, int)
-#define AML_LDIM_IOC_NR_SET_BL_MAPPING                  _IOW(LD_IOC_MAGIC, IOC_LD_CMD_SET_MAPPING, int)
-#define AML_LDIM_IOC_NR_GET_BL_PROFILE_PATH             _IOR(LD_IOC_MAGIC, IOC_LD_CMD_GET_BL_PROFILE_PATH, int)
-#define AML_LDIM_IOC_NR_SET_BL_PROFILE                  _IOW(LD_IOC_MAGIC, IOC_LD_CMD_SET_BL_PROFILE, int)
+#define AML_LDIM_IOC_NR_GET_BL_MAPPING_PATH             _IOR(LD_IOC_MAGIC, IOC_LD_CMD_GET_BL_MAPPING_PATH, aml_path_s)
+#define AML_LDIM_IOC_NR_SET_BL_MAPPING                  _IOW(LD_IOC_MAGIC, IOC_LD_CMD_SET_MAPPING, am_pq_bin_param_s)
+#define AML_LDIM_IOC_NR_GET_BL_PROFILE_PATH             _IOR(LD_IOC_MAGIC, IOC_LD_CMD_GET_BL_PROFILE_PATH, aml_path_s)
+#define AML_LDIM_IOC_NR_SET_BL_PROFILE                  _IOW(LD_IOC_MAGIC, IOC_LD_CMD_SET_BL_PROFILE, am_pq_bin_param_s)
 
 #endif

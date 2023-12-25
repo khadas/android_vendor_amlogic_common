@@ -6,7 +6,6 @@
 extern TABLE_VER_PQ                  mVerInfoPQ;
 extern PQ_TABLE_PARAM                mPQTableParam;
 extern pq_tcon_gamma_table_t         mGammaTable;
-extern pq_aml_ldim_pq_t              mLDTable;
 
 #define MAX_TABLE_SIZE 128
 #define INT_VALUE_MAX_RANGE    2147483647 //1<<31 -1
@@ -90,33 +89,6 @@ bool GetGammaTableBuffer(void** ppBuffer, int* piBufferLen)
     return true;
 }
 
-bool GetLDTableBuffer(void** ppBuffer, int* piBufferLen)
-{
-    int iSize = sizeof(PQ_TABLE_STRUCT_HEADER) + sizeof(pq_aml_ldim_pq_t);
-    void* pBuffer = malloc(iSize);
-    unsigned char* pCurPtr = (unsigned char*)pBuffer;
-    if (pCurPtr == NULL) {
-        return false;
-    }
-
-    PQ_TABLE_STRUCT_HEADER header;
-    memset(&header, 0, sizeof(PQ_TABLE_STRUCT_HEADER));
-    header.TotalSize = iSize;
-    header.TableSize = sizeof(pq_aml_ldim_pq_t);
-    header.TableOffset = PQ_TABLE_LD_DATA;
-    header.TableNum = 1;
-
-    memcpy(pCurPtr, &header, sizeof(header));
-    pCurPtr += sizeof(header);
-
-    memcpy(pCurPtr, &mLDTable, sizeof(pq_aml_ldim_pq_t));
-
-    *ppBuffer = pBuffer;
-    *piBufferLen = iSize;
-
-    return true;
-}
-
 bool PQTableGenerate(char* pPanelFile)
 {
     if (NULL == pPanelFile)
@@ -142,16 +114,11 @@ bool PQTableGenerate(char* pPanelFile)
     int PqGammaDataLen = 0;
     ret |= !GetGammaTableBuffer(&PqGammaDataBuf, &PqGammaDataLen);
 
-    void* PqLDDataBuf = NULL;
-    int PqLDDataLen = 0;
-    ret |= !GetLDTableBuffer(&PqLDDataBuf, &PqLDDataLen);
-
     if (!ret) {
         header.Size = sizeof(header);
         header.PqVerOffset = 0;
         header.PqTableDataOffset = PqVerLen;
         header.PqGammaDataOffset = PqVerLen + PqTableDataLen;
-        header.PqLDDataOffset = PqVerLen + PqTableDataLen + PqGammaDataLen;
         header.chip = 0;
         header.crc = 0;
 
@@ -159,7 +126,6 @@ bool PQTableGenerate(char* pPanelFile)
         fwrite(PqVerBuf, PqVerLen, 1, pFile);
         fwrite(PqTableDataBuf, PqTableDataLen, 1, pFile);
         fwrite(PqGammaDataBuf, PqGammaDataLen, 1, pFile);
-        fwrite(PqLDDataBuf, PqLDDataLen, 1, pFile);
 
     }
 
@@ -169,8 +135,6 @@ bool PQTableGenerate(char* pPanelFile)
         free(PqTableDataBuf);
     if (PqGammaDataBuf != NULL)
         free(PqGammaDataBuf);
-    if (PqLDDataBuf != NULL)
-        free(PqLDDataBuf);
 
     fclose(pFile);
 
@@ -204,9 +168,6 @@ bool PQ_TableLoader_GetTable(FILE *pPanelFile, PQ_TABLE_TYPE type, PQ_TABLE_STRU
             break;
         case PQ_TABLE_GAMMA_DATA:
             iOffset = header.PqGammaDataOffset;
-            break;
-        case PQ_TABLE_LD_DATA:
-            iOffset = header.PqLDDataOffset;
             break;
         default:
             return false;

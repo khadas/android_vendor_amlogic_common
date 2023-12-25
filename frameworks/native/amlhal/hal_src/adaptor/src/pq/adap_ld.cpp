@@ -9,9 +9,6 @@
 
 #include "pq/adap_ld.h"
 #include "ioctrl/ld_cmd_id.h"
-//#include "PQTableLogic.h"
-
-
 
 /**
 *** definition
@@ -82,7 +79,7 @@ ADAP_STATUS_T ADAP_LD_DevIoCtl(int request, ...)
     arg = va_arg ( ap, void * );
     va_end(ap);
     ret = ioctl(mLdFd, request, arg);
-    LOGI("%s %s\n", __FUNCTION__, (ret < 0) ? "faile" : "success");
+    LOGI("%s %s\n", __FUNCTION__, (ret < 0) ? "fail" : "success");
     pthread_mutex_unlock(&ld_mutex);
 
     return (ret < 0) ? ADAP_NOT_OK : ADAP_OK;
@@ -110,22 +107,37 @@ ADAP_STATUS_T ADAP_LD_SetPqInit(void)
 
 ADAP_STATUS_T ADAP_LD_GetLevelIdx(int *pLevelIdx)
 {
-    ADAP_STATUS_T ret = ADAP_NOT_OK;
+    if (mLdFd < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s OPEN /dev/%s fail\n", __FUNCTION__, LD_DEVICE_NAME);
+        return ADAP_NOT_OK;
+    }
 
-    ret = ADAP_LD_DevIoCtl(AML_LDIM_IOC_NR_GET_LEVEL_IDX, pLevelIdx);
-    LOGI("%s %d %d\n", __FUNCTION__, ret, *pLevelIdx);
+    if (pLevelIdx == NULL) {
+        AML_LOG_ERROR(LOG_LD, "%s pLdmInfo is INVALID PARAMS\n", __FUNCTION__);
+        return ADAP_INVALID_PARAMS;
+    }
 
-    return ret;
+    if (ioctl(mLdFd, AML_LDIM_IOC_NR_GET_LEVEL_IDX, &pLevelIdx) < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s VBE ioctl AML_LDIM_IOC_NR_GET_LEVEL_IDX fail\n", __FUNCTION__);
+        return ADAP_NOT_OK;
+    }
+
+    return ADAP_OK;
 }
 
 ADAP_STATUS_T ADAP_LD_SetLevelIdx(int iLevelIdx)
 {
-    ADAP_STATUS_T ret = ADAP_NOT_OK;
+    if (mLdFd < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s OPEN /dev/%s fail\n", __FUNCTION__, LD_DEVICE_NAME);
+        return ADAP_NOT_OK;
+    }
 
-    ret = ADAP_LD_DevIoCtl(AML_LDIM_IOC_NR_SET_LEVEL_IDX, &iLevelIdx);
-    LOGI("%s %d\n", __FUNCTION__, ret);
+    if (ioctl(mLdFd, AML_LDIM_IOC_NR_SET_LEVEL_IDX, &iLevelIdx) < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s VBE ioctl AML_LDIM_IOC_NR_SET_LEVEL_IDX fail\n", __FUNCTION__);
+        return ADAP_NOT_OK;
+    }
 
-    return ret;
+    return ADAP_OK;
 }
 
 ADAP_STATUS_T ADAP_LD_GetFuncEn(int *pFuncEn)
@@ -218,20 +230,143 @@ ADAP_STATUS_T ADAP_LD_GetLdmInfo(aml_ldim_pq_t *pLdmInfo)
     return ret;
 }
 
-ADAP_STATUS_T ADAP_LD_SetLdmInfo(adap_ld_level_e eLevel)
+ADAP_STATUS_T ADAP_LD_SetLdmInfo(aml_ldim_pq_t *pLdmInfo)
 {
-    ADAP_STATUS_T ret = ADAP_NOT_OK;
-    /*
-    aml_ldim_pq_t ldm_param_drv;
-    ldim_pq_t ldm_param_table;
+    if (mLdFd < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s OPEN /dev/%s fail\n", __FUNCTION__, LD_DEVICE_NAME);
+        return ADAP_NOT_OK;
+    }
 
-    memset(&ldm_param_table, 0, sizeof(ldim_pq_t));
+    if (pLdmInfo == NULL) {
+        AML_LOG_ERROR(LOG_LD, "%s pLdmInfo is INVALID PARAMS\n", __FUNCTION__);
+        return ADAP_INVALID_PARAMS;
+    }
 
-    PQTableLogic::instance()->GetLdmParam((pq_level_t)eLevel, &ldm_param_table);
-    memcpy(&ldm_param_drv, &ldm_param_table, sizeof(ldim_pq_t));
+    if (ioctl(mLdFd, AML_LDIM_IOC_CMD_SET_INFO_NEW, pLdmInfo) < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s VBE ioctl AML_LDIM_IOC_CMD_SET_INFO_NEW fail\n", __FUNCTION__);
+        return ADAP_NOT_OK;
+    }
 
-    ret = ADAP_LD_DevIoCtl(AML_LDIM_IOC_CMD_SET_INFO_NEW, &ldm_param_drv);
-    LOGI("%s %d\n", __FUNCTION__, ret);
-*/
-    return ret;
+    return ADAP_OK;
 }
+
+ADAP_STATUS_T ADAP_LD_GetLdBLMappingPath(aml_path_t *Path)
+{
+    if (mLdFd < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s OPEN /dev/%s fail\n", __FUNCTION__, LD_DEVICE_NAME);
+        return ADAP_NOT_OK;
+    }
+
+    if (Path == NULL) {
+        AML_LOG_ERROR(LOG_LD, "%s BlMapping_Path is INVALID PARAMS\n", __FUNCTION__);
+        return ADAP_INVALID_PARAMS;
+    }
+
+    if (ioctl(mLdFd, AML_LDIM_IOC_NR_GET_BL_MAPPING_PATH, Path) < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s VBE ioctl AML_LDIM_IOC_NR_GET_BL_MAPPING_PATH fail\n", __FUNCTION__);
+        return ADAP_NOT_OK;
+    }
+
+    return ADAP_OK;
+}
+
+ADAP_STATUS_T ADAP_LD_SetLdBLMapping(am_pq_bin_param_t *pData)
+{
+    if (mLdFd < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s OPEN /dev/%s fail\n", __FUNCTION__, LD_DEVICE_NAME);
+        return ADAP_NOT_OK;
+    }
+
+    if (pData == NULL) {
+        AML_LOG_ERROR(LOG_LD, "%s pData is INVALID PARAMS\n", __FUNCTION__);
+        return ADAP_INVALID_PARAMS;
+    }
+
+    if (ioctl(mLdFd, AML_LDIM_IOC_NR_SET_BL_MAPPING, pData) < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s VBE ioctl AML_LDIM_IOC_NR_GET_BL_MAPPING_PATH fail\n", __FUNCTION__);
+        return ADAP_NOT_OK;
+    }
+
+    return ADAP_OK;
+}
+
+ADAP_STATUS_T ADAP_LD_GetLdBLProfilePath(aml_path_t *Path)
+{
+    if (mLdFd < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s OPEN /dev/%s fail\n", __FUNCTION__, LD_DEVICE_NAME);
+        return ADAP_NOT_OK;
+    }
+
+    if (Path == NULL) {
+        AML_LOG_ERROR(LOG_LD, "%s BlProfile_Path is INVALID PARAMS\n", __FUNCTION__);
+        return ADAP_INVALID_PARAMS;
+    }
+
+    if (ioctl(mLdFd, AML_LDIM_IOC_NR_GET_BL_PROFILE_PATH, Path) < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s VBE ioctl AML_LDIM_IOC_NR_GET_BL_PROFILE_PATH fail\n", __FUNCTION__);
+        return ADAP_NOT_OK;
+    }
+
+    return ADAP_OK;
+}
+
+ADAP_STATUS_T ADAP_LD_SetLdBLProfile(am_pq_bin_param_t *pData)
+{
+    if (mLdFd < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s OPEN /dev/%s fail\n", __FUNCTION__, LD_DEVICE_NAME);
+        return ADAP_NOT_OK;
+    }
+
+    if (pData == NULL) {
+        AML_LOG_ERROR(LOG_LD, "%s pData is INVALID PARAMS\n", __FUNCTION__);
+        return ADAP_INVALID_PARAMS;
+    }
+
+    if (ioctl(mLdFd, AML_LDIM_IOC_NR_SET_BL_PROFILE, pData) < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s VBE ioctl AML_LDIM_IOC_NR_SET_BL_PROFILE fail\n", __FUNCTION__);
+        return ADAP_NOT_OK;
+    }
+
+    return ADAP_OK;
+}
+
+ADAP_STATUS_T ADAP_LD_GetLdStructTable(am_pq_bin_param_t *pData)
+{
+    if (mLdFd < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s OPEN /dev/%s fail\n", __FUNCTION__, LD_DEVICE_NAME);
+        return ADAP_NOT_OK;
+    }
+
+    if (pData == NULL) {
+        AML_LOG_ERROR(LOG_LD, "%s pData is INVALID PARAMS\n", __FUNCTION__);
+        return ADAP_INVALID_PARAMS;
+    }
+
+    if (ioctl(mLdFd, AML_LDIM_IOC_NR_GET_PQ_INIT, pData) < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s VBE ioctl AML_LDIM_IOC_NR_GET_PQ_INIT fail\n", __FUNCTION__);
+        return ADAP_NOT_OK;
+    }
+
+    return ADAP_OK;
+}
+
+ADAP_STATUS_T ADAP_LD_SetLdStructTable(am_pq_bin_param_t *pData)
+{
+    if (mLdFd < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s OPEN /dev/%s fail\n", __FUNCTION__, LD_DEVICE_NAME);
+        return ADAP_NOT_OK;
+    }
+
+    if (pData == NULL) {
+        AML_LOG_ERROR(LOG_LD, "%s pData is INVALID PARAMS\n", __FUNCTION__);
+        return ADAP_INVALID_PARAMS;
+    }
+
+    if (ioctl(mLdFd, AML_LDIM_IOC_NR_SET_PQ_INIT, pData) < 0) {
+        AML_LOG_ERROR(LOG_LD, "%s VBE ioctl AML_LDIM_IOC_NR_SET_PQ_INIT fail\n", __FUNCTION__);
+        return ADAP_NOT_OK;
+    }
+
+    return ADAP_OK;
+}
+
