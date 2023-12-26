@@ -71,6 +71,7 @@ public class NetflixService extends Service {
 
     private static final String NETFLIX_PKG_NAME = "com.netflix.ninja";
     private static final String YOUTUBE_PKG_NAME = "com.google.android.youtube.tv";
+    private static final String LAUNCHER_PKG_NAME = "com.google.android.apps.tv.launcherx";
     private static final String SYS_AUDIO_CAP = "/sys/class/amhdmitx/amhdmitx0/aud_cap";
     private static final String WAKEUP_REASON_DEVICE = "/sys/class/meson_pm/suspend_reason";
     private static final String WAKEUP_REASON_DEVICE_OTHER = "/sys/devices/platform/aml_pm/suspend_reason";
@@ -705,7 +706,8 @@ public class NetflixService extends Service {
                     if (info.importance
                             == ActivityManager.RunningAppProcessInfo.IMPORTANCE_CACHED
                             && !TextUtils.equals(NETFLIX_PKG_NAME, info.processName)
-                            && !TextUtils.equals(YOUTUBE_PKG_NAME, info.processName)) {
+                            && !TextUtils.equals(YOUTUBE_PKG_NAME, info.processName)
+                            && !TextUtils.equals(LAUNCHER_PKG_NAME, info.processName)) {
                         am.killBackgroundProcesses(info.pkgList[0]);
                     }
                 }
