@@ -2204,16 +2204,16 @@ void DisplayMode::getPosition(const char* curMode, int *position) {
     if (isHWCProcess()) {
         sprintf(ubootvar, "ubootenv.var.%s_x", keyValue);
         std::string value;
-        DisplayModeMgr::getInstance().getDisplayAttribute(ubootvar, value);
+        DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
         position[0] = atoi(value.c_str());
         sprintf(ubootvar, "ubootenv.var.%s_y", keyValue);
-        DisplayModeMgr::getInstance().getDisplayAttribute(ubootvar, value);
+        DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
         position[1] = atoi(value.c_str());
         sprintf(ubootvar, "ubootenv.var.%s_w", keyValue);
-        DisplayModeMgr::getInstance().getDisplayAttribute(ubootvar, value);
+        DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
         position[2] = atoi(value.c_str());
         sprintf(ubootvar, "ubootenv.var.%s_h", keyValue);
-        DisplayModeMgr::getInstance().getDisplayAttribute(ubootvar, value);
+        DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
         position[3] = atoi(value.c_str());
     } else {
         sprintf(ubootvar, "ubootenv.var.%s_x", keyValue);
