@@ -291,6 +291,7 @@ Status AmlogicCameraDeviceSession::importRequestImpl(
         Mutex::Autolock _l(mCbsLock);
         for (size_t i = 0; i < numBufs; i++) {
             Status st = importBufferLocked(streamIds[i], allBufIds[i], allBufs[i], &allBufPtrs[i]);
+            native_handle_delete((native_handle_t *)allBufs[i]);
             if (st != Status::OK) {
                 // Detailed error logs printed in importBuffer
                 return st;
@@ -298,14 +299,17 @@ Status AmlogicCameraDeviceSession::importRequestImpl(
         }
     }
 
+
     // All buffers are imported. Now validate output buffer acquire fences
     for (size_t i = 0; i < numOutputBufs; i++) {
-        if (!sHandleImporter.importFence(
-                    ::android::makeFromAidl(request.outputBuffers[i].acquireFence), allFences[i])) {
+        buffer_handle_t fenceHandle = ::android::makeFromAidl(request.outputBuffers[i].acquireFence);
+        if (!sHandleImporter.importFence(fenceHandle, allFences[i])) {
             ALOGE("%s: output buffer %zu acquire fence is invalid", __FUNCTION__, i);
             cleanupInflightFences(allFences, i);
+            native_handle_delete((native_handle_t *)fenceHandle);
             return Status::INTERNAL_ERROR;
         }
+        native_handle_delete((native_handle_t *)fenceHandle);
     }
     return Status::OK;
 }
@@ -442,28 +446,34 @@ void AmlogicCameraDeviceSession::ResultBatcher::sendBatchShutterCbsLocked(
 void AmlogicCameraDeviceSession::ResultBatcher::moveStreamBuffer(StreamBuffer&& src, StreamBuffer& dst) {
 
     // Only dealing with releaseFence here. Assume buffer/acquireFence are null
-    const native_handle_t* handle = ::android::makeFromAidl(src.releaseFence);
+    const native_handle_t* srcFenceHandle = ::android::makeFromAidl(src.releaseFence);
     dst.streamId = src.streamId;
     dst.bufferId = src.bufferId;
-    dst.releaseFence = ::android::makeToAidl(handle);
-    if (handle != ::android::makeFromAidl(dst.releaseFence)) {
+    dst.releaseFence = ::android::makeToAidl(srcFenceHandle);
+    native_handle_t* dtsFenceHandle = ::android::makeFromAidl(dst.releaseFence);
+    if (srcFenceHandle != dtsFenceHandle) {
         ALOGE("%s: native handle cloned!", __FUNCTION__);
     }
+    native_handle_delete((native_handle_t *)srcFenceHandle);
+    native_handle_delete(dtsFenceHandle);
 }
 
 void AmlogicCameraDeviceSession::ResultBatcher::pushStreamBuffer(
         StreamBuffer&& src, std::vector<StreamBuffer>& dst) {
 
     // Only dealing with releaseFence here. Assume buffer/acquireFence are null
-    const native_handle_t* handle = ::android::makeFromAidl(src.releaseFence);
+    const native_handle_t* srcFenceHandle = ::android::makeFromAidl(src.releaseFence);
     StreamBuffer sb;
     sb.streamId = src.streamId;
     sb.bufferId = src.bufferId;
     dst.push_back(std::move(src));
-    dst.back().releaseFence = ::android::makeToAidl(handle);
-    if (handle != ::android::makeFromAidl(dst.back().releaseFence)) {
+    dst.back().releaseFence = ::android::makeToAidl(srcFenceHandle);
+    native_handle_t* dstFenceHandle = ::android::makeFromAidl(dst.back().releaseFence);
+    if (srcFenceHandle != dstFenceHandle) {
         ALOGE("%s: native handle cloned!", __FUNCTION__);
     }
+    native_handle_delete((native_handle_t *)srcFenceHandle);
+    native_handle_delete(dstFenceHandle);
 }
 
 void AmlogicCameraDeviceSession::ResultBatcher::sendBatchBuffersLocked(
