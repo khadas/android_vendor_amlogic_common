@@ -13,6 +13,7 @@ package com.droidlogic.audioservice.services;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -20,6 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.ContentObserver;
 
 import android.media.AudioDeviceInfo;
@@ -962,7 +964,13 @@ public class AudioSystemCmdService extends Service {
         mShowingPassthroughHint = true;
         mHandler.post(()->{
             //String hint = "To adjust volume, enable CEC control(Settings > Display & Sound > HDMI CEC) or adjust the TV remote control.";
-            Toast toast = Toast.makeText(mContext,R.string.volume_control_hint, Toast.LENGTH_LONG);
+            int dialogTitle;
+            if (isGtvLauncher(mContext)) {
+                dialogTitle = R.string.volume_control_hint_gtv;
+            } else {
+                dialogTitle = R.string.volume_control_hint;
+            }
+            Toast toast = Toast.makeText(mContext, dialogTitle, Toast.LENGTH_LONG);
             toast.addCallback(new Toast.Callback() {
                 public void onToastHidden() {
                     mShowingPassthroughHint = false;
@@ -970,6 +978,18 @@ public class AudioSystemCmdService extends Service {
             });
             toast.show();
         });
+    }
+
+    private boolean isGtvLauncher(Context context) {
+
+        final String PACKAGENAME_LAUNCHERX = "com.google.android.apps.tv.launcherx";
+        final Intent homeIntent = new Intent(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_HOME);
+        final ResolveInfo homeInfo = context.getPackageManager().resolveActivity(homeIntent, 0);
+        if (Objects.equals(PACKAGENAME_LAUNCHERX, homeInfo.activityInfo.packageName)) {
+            return true;
+        }
+        return false;
     }
 
     private void handleAudioSinkUpdated() {

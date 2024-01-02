@@ -25,7 +25,8 @@
     <string name="droidlogic_perm_system_control_label">droidlogic system control permission</string>
     <string name="droidlogic_perm_system_control_description">If use droidlogic system control, must use the permission</string>
     <string name="app_name">DroidBtPair</string>
-    <string name="volume_control_hint">To adjust volume, enable CEC control(Settings > Display &amp; Sound > HDMI CEC) or adjust the TV remote control. </string>
+    <string name="volume_control_hint_gtv">To adjust volume, enable CEC control(Settings > Display &amp; Sound > HDMI CEC) or adjust the TV remote control. </string>
+    <string name="volume_control_hint">To adjust volume, enable CEC control(More Settings > HDMI CEC) or adjust the TV remote control. </string>
     <string name="config_globalButtonLaunch">com.google.android.apps.tv.launcherx/com.google.android.apps.tv.launcherx.globalbutton.GlobalButtonLaunch_Receiver</string>
     <string name="prepare">AI PQ invalid value...</string>
     <string name="arc_port_warning">Audio system device is not connected to the ARC port!</string>

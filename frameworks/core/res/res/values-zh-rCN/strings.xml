@@ -7,6 +7,7 @@
     <string name="droidlogic_perm_group_description">包含所有的droidlogic权限</string>
     <string name="droidlogic_perm_system_control_label">droidlogic 系统控制权限</string>
     <string name="droidlogic_perm_system_control_description">如果要使用系统控制的服务, 必须要申请这个权限</string>
-    <string name="volume_control_hint">如果要调节音量, 请打开CEC开关(Settings > Display &amp; Sound > HDMI CEC)或者调节电视的遥控器</string>
+    <string name="volume_control_hint_gtv">如果要调节音量, 请打开CEC开关(Settings > Display &amp; Sound > HDMI CEC)或者调节电视的遥控器</string>
+    <string name="volume_control_hint">如果要调节音量, 请打开CEC开关(More Settings > HDMI CEC)或者调节电视的遥控器</string>
     <string name="arc_port_warning">音频设备未连接ARC端口!</string>
 </resources>
