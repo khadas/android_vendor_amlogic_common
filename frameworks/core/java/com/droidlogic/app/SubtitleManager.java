@@ -170,7 +170,7 @@ public class SubtitleManager {
     public static final int TT_EVENT_GO_TO_PAGE = 30;
     public static final int TT_EVENT_GO_TO_SUBTITLE = 31;
     public static final int TT_EVENT_SET_REGION_ID = 32;
-
+    public static final int TT_EVENT_SUBPAGE_MODE = 33;
 
     /*subtitle info callback type*/
     static public final int SUBTITLE_INFO_TELETEXT_LOAD_STATE = 900;
