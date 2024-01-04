@@ -38,7 +38,7 @@
 #define LOG_TAG  "WifiHAL"
 
 #include <utils/Log.h>
-
+#include <log/log.h>
 #include <hardware_legacy/wifi_hal.h>
 #include "common.h"
 #include "cpp_bindings.h"
@@ -51,12 +51,16 @@ typedef enum {
 } WIFI_OFFLOAD_SUB_COMMAND;
 
 typedef enum {
-    MKEEP_ALIVE_ATTRIBUTE_ID,
-    MKEEP_ALIVE_ATTRIBUTE_IP_PKT,
-    MKEEP_ALIVE_ATTRIBUTE_IP_PKT_LEN,
-    MKEEP_ALIVE_ATTRIBUTE_SRC_MAC_ADDR,
-    MKEEP_ALIVE_ATTRIBUTE_DST_MAC_ADDR,
-    MKEEP_ALIVE_ATTRIBUTE_PERIOD_MSEC
+    MKEEP_ALIVE_ATTRIBUTE_INVALID		= 0,
+    MKEEP_ALIVE_ATTRIBUTE_ID			= 1,
+    MKEEP_ALIVE_ATTRIBUTE_IP_PKT		= 2,
+    MKEEP_ALIVE_ATTRIBUTE_IP_PKT_LEN		= 3,
+    MKEEP_ALIVE_ATTRIBUTE_SRC_MAC_ADDR		= 4,
+    MKEEP_ALIVE_ATTRIBUTE_DST_MAC_ADDR		= 5,
+    MKEEP_ALIVE_ATTRIBUTE_PERIOD_MSEC		= 6,
+    MKEEP_ALIVE_ATTRIBUTE_ETHER_TYPE		= 7,
+    /* Add new attributes just above this */
+    MKEEP_ALIVE_ATTRIBUTE_MAX
 } WIFI_MKEEP_ALIVE_ATTRIBUTE;
 
 typedef enum {
@@ -74,13 +78,14 @@ class MKeepAliveCommand : public WifiCommand
     u8 *mDstMacAddr;
     u32 mPeriodMsec;
     GetCmdType mType;
+    u16 mEther_type;
 
 public:
 
     // constructor for start sending
-    MKeepAliveCommand(wifi_interface_handle iface, u8 index, u8 *ip_packet, u16 ip_packet_len,
+    MKeepAliveCommand(wifi_interface_handle iface, u8 index, u16 ether_type, u8 *ip_packet, u16 ip_packet_len,
             u8 *src_mac_addr, u8 *dst_mac_addr, u32 period_msec, GetCmdType cmdType)
-        : WifiCommand("MKeepAliveCommand", iface, 0), mIndex(index), mIpPkt(ip_packet),
+        : WifiCommand("MKeepAliveCommand", iface, 0), mIndex(index), mEther_type(ether_type), mIpPkt(ip_packet),
         mIpPktLen(ip_packet_len), mSrcMacAddr(src_mac_addr), mDstMacAddr(dst_mac_addr),
         mPeriodMsec(period_msec), mType(cmdType)
     { }
@@ -88,10 +93,17 @@ public:
     // constructor for stop sending
     MKeepAliveCommand(wifi_interface_handle iface, u8 index, GetCmdType cmdType)
         : WifiCommand("MKeepAliveCommand", iface, 0), mIndex(index), mType(cmdType)
-    { }
+    {
+        mIpPkt = NULL;
+        mIpPktLen = 0;
+        mSrcMacAddr = NULL;
+        mDstMacAddr = NULL;
+        mPeriodMsec = 0;
+        mEther_type = 0;
+    }
 
     int createRequest(WifiRequest &request) {
-        int result;
+        int result = WIFI_SUCCESS;
 
         switch (mType) {
             case START_MKEEP_ALIVE:
@@ -137,6 +149,11 @@ public:
                 result = request.put_u32(MKEEP_ALIVE_ATTRIBUTE_PERIOD_MSEC, mPeriodMsec);
                 if (result < 0) {
                     ALOGE("Failed to put period request; result = %d", result);
+                    return result;
+                }
+                result = request.put_u16(MKEEP_ALIVE_ATTRIBUTE_ETHER_TYPE, mEther_type);
+                if (result < 0) {
+                    ALOGE("Failed to put ether type; result = %d", result);
                     return result;
                 }
 
@@ -215,7 +232,7 @@ public:
 
 /* API to send specified mkeep_alive packet periodically. */
 wifi_error wifi_start_sending_offloaded_packet(wifi_request_id index, wifi_interface_handle iface,
-        u16 /* ether_type */, u8 *ip_packet, u16 ip_packet_len, u8 *src_mac_addr, u8 *dst_mac_addr,
+        u16 ether_type, u8 *ip_packet, u16 ip_packet_len, u8 *src_mac_addr, u8 *dst_mac_addr,
         u32 period_msec)
 {
     if (strncmp(get_wifi_name(), "rtl", 3) == 0 ||
@@ -226,8 +243,9 @@ wifi_error wifi_start_sending_offloaded_packet(wifi_request_id index, wifi_inter
     }
     if ((index > 0 && index <= N_AVAIL_ID) && (ip_packet != NULL) && (src_mac_addr != NULL)
             && (dst_mac_addr != NULL) && (period_msec > 0)
-            && (ip_packet_len <= MKEEP_ALIVE_IP_PKT_MAX)) {
-        MKeepAliveCommand *cmd = new MKeepAliveCommand(iface, index, ip_packet, ip_packet_len,
+            && (ip_packet_len <= MKEEP_ALIVE_IP_PKT_MAX) && ((ether_type == ETHERTYPE_IP) ||
+            (ether_type == ETHERTYPE_IPV6))) {
+        MKeepAliveCommand *cmd = new MKeepAliveCommand(iface, index, ether_type, ip_packet, ip_packet_len,
                 src_mac_addr, dst_mac_addr, period_msec, START_MKEEP_ALIVE);
         NULL_CHECK_RETURN(cmd, "memory allocation failure", WIFI_ERROR_OUT_OF_MEMORY);
         wifi_error result = (wifi_error)cmd->start();

@@ -34,6 +34,9 @@
 #include "common.h"
 #include "cpp_bindings.h"
 
+/* test mode flag for halutil only */
+bool halutil_mode = false;
+
 int read_wifi(char *wifi_type)
 {
     FILE *fd = fopen("/data/vendor/wifi/wifi_module", "r");
@@ -140,14 +143,34 @@ wifi_error wifi_register_vendor_handler(wifi_handle handle,
     wifi_error result = WIFI_ERROR_OUT_OF_MEMORY;
 
     if (info->num_event_cb < info->alloc_event_cb) {
-        info->event_cb[info->num_event_cb].nl_cmd  = NL80211_CMD_VENDOR;
-        info->event_cb[info->num_event_cb].vendor_id  = id;
-        info->event_cb[info->num_event_cb].vendor_subcmd  = subcmd;
-        info->event_cb[info->num_event_cb].cb_func = func;
-        info->event_cb[info->num_event_cb].cb_arg  = arg;
-        ALOGV("Added event handler %p:%p for vendor 0x%0x and subcmd 0x%0x at %d",
-                arg, func, id, subcmd, info->num_event_cb);
-        info->num_event_cb++;
+        /* To avoid an unwanted duplication of the record, find first.
+         * Update it if the same record is already exist.
+         * KEY => [nl_cmd, vendor_id, vendor_subcmd]
+         */
+        int i = 0;
+        bool is_update = false;
+        for (i = 0; i < info->num_event_cb; i++) {
+            if ((info->event_cb[i].nl_cmd == NL80211_CMD_VENDOR) &&
+                    (info->event_cb[i].vendor_id == id) &&
+                    (info->event_cb[i].vendor_subcmd == subcmd)) {
+                is_update = true;
+                break;
+            }
+        }
+
+        if (is_update) {
+            info->event_cb[i].cb_func = func;
+            info->event_cb[i].cb_arg = arg;
+        } else {
+            info->event_cb[info->num_event_cb].nl_cmd  = NL80211_CMD_VENDOR;
+            info->event_cb[info->num_event_cb].vendor_id  = id;
+            info->event_cb[info->num_event_cb].vendor_subcmd  = subcmd;
+            info->event_cb[info->num_event_cb].cb_func = func;
+            info->event_cb[info->num_event_cb].cb_arg  = arg;
+            info->num_event_cb++;
+        }
+        ALOGI("%s ""event handler %p:%p for vendor 0x%0x and subcmd 0x%0x at %d",
+            is_update ? "Updated" : "Added", arg, func, id, subcmd, info->num_event_cb);
         result = WIFI_SUCCESS;
     }
 
@@ -181,18 +204,16 @@ void wifi_unregister_handler(wifi_handle handle, int cmd)
     pthread_mutex_unlock(&info->cb_lock);
 }
 
-void wifi_unregister_vendor_handler(wifi_handle handle, uint32_t id, int subcmd)
+
+void wifi_unregister_vendor_handler_without_lock(wifi_handle handle, uint32_t id, int subcmd)
 {
     hal_info *info = (hal_info *)handle;
 
-    pthread_mutex_lock(&info->cb_lock);
-
     for (int i = 0; i < info->num_event_cb; i++) {
-
         if (info->event_cb[i].nl_cmd == NL80211_CMD_VENDOR
                 && info->event_cb[i].vendor_id == id
                 && info->event_cb[i].vendor_subcmd == subcmd) {
-            ALOGV("Successfully removed event handler %p:%p for vendor 0x%0x, subcmd 0x%0x from %d",
+            ALOGI("Successfully removed event handler %p:%p for vendor 0x%0x, subcmd 0x%0x from %d",
                     info->event_cb[i].cb_arg, info->event_cb[i].cb_func, id, subcmd, i);
             memmove(&info->event_cb[i], &info->event_cb[i+1],
                 (info->num_event_cb - i - 1) * sizeof(cb_info));
@@ -200,7 +221,14 @@ void wifi_unregister_vendor_handler(wifi_handle handle, uint32_t id, int subcmd)
             break;
         }
     }
+}
 
+void wifi_unregister_vendor_handler(wifi_handle handle, uint32_t id, int subcmd)
+{
+    hal_info *info = (hal_info *)handle;
+
+    pthread_mutex_lock(&info->cb_lock);
+    wifi_unregister_vendor_handler_without_lock(handle, id, subcmd);
     pthread_mutex_unlock(&info->cb_lock);
 }
 
@@ -298,3 +326,24 @@ wifi_error wifi_cancel_cmd(wifi_request_id id, wifi_interface_handle iface)
     return WIFI_ERROR_INVALID_ARGS;
 }
 
+wifi_error wifi_get_cancel_cmd(wifi_request_id id, wifi_interface_handle iface)
+{
+    wifi_handle handle = getWifiHandle(iface);
+    WifiCommand *cmd = wifi_get_cmd(handle, id);
+    ALOGV("Get Cancel WifiCommand = %p", cmd);
+    if (cmd) {
+        cmd->cancel();
+        cmd->releaseRef();
+        return WIFI_SUCCESS;
+    }
+
+    return WIFI_ERROR_INVALID_ARGS;
+}
+void set_hautil_mode(bool util_mode)
+{
+    halutil_mode = util_mode;
+}
+bool get_halutil_mode()
+{
+    return halutil_mode;
+}

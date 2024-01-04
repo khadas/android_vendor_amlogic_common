@@ -1,0 +1,1 @@
+#define HAL_VERSION "AML vendor WiFi HAL BCMDHD_V20240104.1"

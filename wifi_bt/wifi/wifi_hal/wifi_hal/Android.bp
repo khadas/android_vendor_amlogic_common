@@ -75,10 +75,14 @@ cc_library_static {
     ],
 
     header_libs: [
+        "libnetlink_iface_headers",
         "libhardware_legacy_headers",
     ],
 
     shared_libs: [
+        // added for libwifi-hal-bcm
+        "libcrypto",
+        // shared_libs in libwifi-hal
         "liblog",
         "libnl",
         "libutils",
@@ -90,9 +94,12 @@ cc_library_static {
         "common.cpp",
         "cpp_bindings.cpp",
         "gscan.cpp",
+        "nan.cpp",
         "link_layer_stats.cpp",
         "wifi_logger.cpp",
         "wifi_offload.cpp",
+        "twt.cpp",
+        "scan.cpp",
     ],
 
     proprietary: true,

@@ -41,21 +41,47 @@
 #include "common.h"
 #include "cpp_bindings.h"
 
+typedef enum {
+    ANDR_WIFI_ATTRIBUTE_INVALID        = 0,
+    ANDR_WIFI_ATTRIBUTE_NUM_RADIO      = 1,
+    ANDR_WIFI_ATTRIBUTE_STATS_INFO     = 2,
+    ANDR_WIFI_ATTRIBUTE_STATS_MAX      = 3
+} LINK_STAT_ATTRIBUTE;
+
 /* Internal radio statistics structure in the driver */
 typedef struct {
-	wifi_radio radio;
-	uint32_t on_time;
-	uint32_t tx_time;
-	uint32_t rx_time;
-	uint32_t on_time_scan;
-	uint32_t on_time_nbd;
-	uint32_t on_time_gscan;
-	uint32_t on_time_roam_scan;
-	uint32_t on_time_pno_scan;
-	uint32_t on_time_hs20;
-	uint32_t num_channels;
-	wifi_channel_stat channels[];
+    wifi_radio radio;
+    uint32_t on_time;
+    uint32_t tx_time;
+    uint32_t rx_time;
+    uint32_t on_time_scan;
+    uint32_t on_time_nbd;
+    uint32_t on_time_gscan;
+    uint32_t on_time_roam_scan;
+    uint32_t on_time_pno_scan;
+    uint32_t on_time_hs20;
+    uint32_t num_channels;
+    wifi_channel_stat channels[];
 } wifi_radio_stat_internal;
+
+/* Internal radio statistics structure in the driver v2 [Android Version >= 13] */
+typedef struct {
+    wifi_radio radio;                      // wifi radio (if multiple radio supported)
+    u32 on_time;                           // msecs the radio is awake (32 bits number accruing over time)
+    u32 tx_time;                           // msecs the radio is transmitting (32 bits number accruing over time)
+    u32 num_tx_levels;                     // number of radio transmit power levels
+    u32 *tx_time_per_levels;               // pointer to an array of radio transmit per power levels in
+//                                         // msecs accured over time
+    u32 rx_time;                           // msecs the radio is in active receive (32 bits number accruing over time)
+    u32 on_time_scan;                      // msecs the radio is awake due to all scan (32 bits number accruing over time)
+    u32 on_time_nbd;                       // msecs the radio is awake due to NAN (32 bits number accruing over time)
+    u32 on_time_gscan;                     // msecs the radio is awake due to G?scan (32 bits number accruing over time)
+    u32 on_time_roam_scan;                 // msecs the radio is awake due to roam?scan (32 bits number accruing over time)
+    u32 on_time_pno_scan;                  // msecs the radio is awake due to PNO scan (32 bits number accruing over time)
+    u32 on_time_hs20;                      // msecs the radio is awake due to HS2.0 scans and GAS exchange (32 bits number accruing over time)
+    u32 num_channels;                      // number of channels
+    wifi_channel_stat channels[];          // channel statistics
+} wifi_radio_stat_internal_v2;
 
 enum {
     LSTATS_SUBCMD_GET_INFO = ANDROID_NL80211_SUBCMD_LSTATS_RANGE_START,
@@ -70,7 +96,7 @@ public:
     { }
 
     virtual int create() {
-        // ALOGI("Creating message to get link statistics; iface = %d", mIfaceInfo->id);
+        ALOGI("Creating message to get link statistics; iface = %d", mIfaceInfo->id);
 
         int ret = mMsg.create(GOOGLE_OUI, LSTATS_SUBCMD_GET_INFO);
         if (ret < 0) {
@@ -83,74 +109,159 @@ public:
 
 protected:
     virtual int handleResponse(WifiEvent& reply) {
+        void *data = NULL;
+        wifi_radio_stat *radio_stat_ptr = NULL;
+        u8 *iface_stat = NULL;
+        u8 *radioStatsBuf = NULL, *output = NULL, *data_ptr = NULL;
+        uint32_t total_size = 0, per_radio_size = 0, data_len = 0, rem_len = 0;
+        int num_radios = 0, id = 0, subcmd = 0, len = 0;
 
-        // ALOGI("In GetLinkStatsCommand::handleResponse");
+        ALOGV("In GetLinkStatsCommand::handleResponse");
 
         if (reply.get_cmd() != NL80211_CMD_VENDOR) {
             ALOGD("Ignoring reply with cmd = %d", reply.get_cmd());
             return NL_SKIP;
         }
 
-        int id = reply.get_vendor_id();
-        /*int subcmd = */reply.get_vendor_subcmd();
+        id = reply.get_vendor_id();
+        subcmd = reply.get_vendor_subcmd();
+        nlattr *vendor_data = reply.get_attribute(NL80211_ATTR_VENDOR_DATA);
+        len = reply.get_vendor_data_len();
 
-        // ALOGI("Id = %0x, subcmd = %d", id, subcmd);
-
-        void *data = reply.get_vendor_data();
-        /*int len = */reply.get_vendor_data_len();
-        wifi_radio_stat *radio_stat =
-            convertToExternalRadioStatStructure((wifi_radio_stat_internal *)data);
-        if (!radio_stat) {
-            ALOGE("Invalid stats pointer received");
+        ALOGV("Id = %0x, subcmd = %d, len = %d\n", id, subcmd, len);
+        if (vendor_data == NULL || len == 0) {
+            ALOGE("no vendor data in GetLinkStatCommand response; ignoring it");
             return NL_SKIP;
         }
-        if (radio_stat->num_channels > 11) {
-            ALOGE("Incorrect number of channels = %d", radio_stat->num_channels);
-            // dump data before num_channels
-            ALOGE("radio: = %d", radio_stat->radio);
-            ALOGE("on_time: = %d", radio_stat->on_time);
-            ALOGE("tx_time: = %d", radio_stat->tx_time);
-            ALOGE("rx_time: = %d", radio_stat->rx_time);
-            ALOGE("on_time_scan: = %d", radio_stat->on_time_scan);
-            ALOGE("on_time_nbd: = %d", radio_stat->on_time_nbd);
-            ALOGE("on_time_gscan: = %d", radio_stat->on_time_gscan);
-            ALOGE("on_time_pno_scan: = %d", radio_stat->on_time_pno_scan);
-            ALOGE("on_time_hs20: = %d", radio_stat->on_time_hs20);
-            free(radio_stat);
-            return NL_SKIP;
-        }
-        if (strncmp(get_wifi_name(), "rtl", 3) == 0) {
-            wifi_iface_stat *iface_stat = (wifi_iface_stat *)((char* )data + sizeof(wifi_radio_stat));
 
-            if (*mHandler.on_link_stats_results == NULL) {
-                ALOGE("*mHandler.on_link_stats_results is NULL");
+        for (nl_iterator it(vendor_data); it.has_next(); it.next()) {
+            if (it.get_type() == ANDR_WIFI_ATTRIBUTE_NUM_RADIO) {
+                num_radios = it.get_u32();
+            } else if (it.get_type() == ANDR_WIFI_ATTRIBUTE_STATS_INFO) {
+                data = it.get_data();
+                data_len = it.get_len();
             } else {
-                (*mHandler.on_link_stats_results)(id, iface_stat, 1, radio_stat);
+                ALOGW("Ignoring invalid attribute type = %d, size = %d\n",
+                it.get_type(), it.get_len());
+                return NL_SKIP;
             }
-        } else {
-            wifi_iface_stat *iface_stat =
-                (wifi_iface_stat *)((char *)&((wifi_radio_stat_internal *)data)->channels
-                + radio_stat->num_channels * sizeof(wifi_channel_stat));
-            (*mHandler.on_link_stats_results)(id, iface_stat, 1, radio_stat);
         }
-        free(radio_stat);
+
+        if (num_radios) {
+            if (!data || !data_len) {
+                ALOGE("%s: null data\n", __func__);
+                return NL_SKIP;
+            }
+            ALOGV("num_radios=%d\n", num_radios);
+            rem_len = MAX_CMD_RESP_BUF_LEN;
+            radioStatsBuf = (u8 *)malloc(MAX_CMD_RESP_BUF_LEN);
+            if (!radioStatsBuf) {
+                ALOGE("No memory\n");
+                return NL_SKIP;
+            }
+            memset(radioStatsBuf, 0, MAX_CMD_RESP_BUF_LEN);
+            output = radioStatsBuf;
+
+            data_ptr = (u8*)data;
+            for (int i = 0; i < num_radios; i++) {
+                rem_len -= per_radio_size;
+                if (rem_len < per_radio_size) {
+                    ALOGE("No data left for radio %d\n", i);
+                    goto exit;
+                }
+                data_ptr = (u8*)data + total_size;
+                if (!data_ptr) {
+                    ALOGE("Invalid data for radio index = %d\n", i);
+                    goto exit;
+                }
+                radio_stat_ptr =
+                    convertToExternalRadioStatStructure((wifi_radio_stat*)data_ptr,
+                        &per_radio_size);
+                if (!radio_stat_ptr || !per_radio_size) {
+                    if (radio_stat_ptr) {
+                        free(radio_stat_ptr);
+                        radio_stat_ptr = NULL;
+                    }
+                    ALOGE("No data for radio %d\n", i);
+                    continue;
+                }
+                memcpy(output, radio_stat_ptr, per_radio_size);
+
+                if (!radio_stat_ptr) {
+                    ALOGE("radioStatsBuf is null\n");
+                    //return NL_SKIP;
+                } else {
+                    //just for debug
+                    ALOGV("after convertToExternalRadioStatStructure, radioStatsBuf's number of channels = %d", radio_stat_ptr->num_channels);
+                    // dump data before num_channels
+                    ALOGV("radio: = %d", radio_stat_ptr->radio);
+                    ALOGV("on_time: = %d", radio_stat_ptr->on_time);
+                    ALOGV("tx_time: = %d", radio_stat_ptr->tx_time);
+                    ALOGV("num_tx_levels: = %d", radio_stat_ptr->num_tx_levels);
+                    //ALOGV("tx_time: = %s", radio_stat->tx_time_per_levels); //it is NULL
+                    ALOGV("rx_time: = %d", radio_stat_ptr->rx_time);
+                    ALOGV("on_time_scan: = %d", radio_stat_ptr->on_time_scan);
+                    ALOGV("on_time_nbd: = %d", radio_stat_ptr->on_time_nbd);
+                    ALOGV("on_time_gscan: = %d", radio_stat_ptr->on_time_gscan);
+                    ALOGV("on_time_pno_scan: = %d", radio_stat_ptr->on_time_pno_scan);
+                    ALOGV("on_time_hs20: = %d", radio_stat_ptr->on_time_hs20);
+                }
+
+                output += per_radio_size;
+                total_size += per_radio_size;
+                free(radio_stat_ptr);
+                radio_stat_ptr = NULL;
+            }
+
+            iface_stat = ((u8*)data + total_size);
+            if (!iface_stat || data_len < total_size) {
+                ALOGE("No data for iface stats!!, data_len = %d, total_size = %d\n",
+                    data_len, total_size);
+                goto exit;
+            }
+            (*mHandler.on_link_stats_results)(id, (wifi_iface_stat *)iface_stat,
+            num_radios, (wifi_radio_stat *)radioStatsBuf);
+        }
+exit:
+        if (radioStatsBuf) {
+            free(radioStatsBuf);
+            radioStatsBuf = NULL;
+        }
         return NL_OK;
     }
 
 private:
-    wifi_radio_stat *convertToExternalRadioStatStructure(wifi_radio_stat_internal *internal_stat_ptr) {
+    wifi_radio_stat *convertToExternalRadioStatStructure(wifi_radio_stat *internal_stat_ptr,
+        uint32_t *per_radio_size) {
         wifi_radio_stat *external_stat_ptr = NULL;
-        if (internal_stat_ptr) {
+        if (!internal_stat_ptr) {
+            ALOGE("Incoming data is null\n");
+        } else {
             uint32_t channel_size = internal_stat_ptr->num_channels * sizeof(wifi_channel_stat);
-            uint32_t total_size = sizeof(wifi_radio_stat) + channel_size;
-            external_stat_ptr = (wifi_radio_stat *)malloc(total_size);
+            *per_radio_size = offsetof(wifi_radio_stat, channels) + channel_size;
+            external_stat_ptr = (wifi_radio_stat *)malloc(*per_radio_size);
+
+            ALOGV("in convertToExternalRadioStatStructure befor copy, internal_stat_ptr number of channels = %d", internal_stat_ptr->num_channels);
+            // dump data before num_channels
+            ALOGV("radio: = %d", internal_stat_ptr->radio);
+            ALOGV("on_time: = %d", internal_stat_ptr->on_time);
+            ALOGV("tx_time: = %d", internal_stat_ptr->tx_time);
+            ALOGV("num_tx_levels: = %d", internal_stat_ptr->num_tx_levels);
+            //ALOGV("tx_time: = %s", radio_stat->tx_time_per_levels);
+            ALOGV("rx_time: = %d", internal_stat_ptr->rx_time);
+            ALOGV("on_time_scan: = %d", internal_stat_ptr->on_time_scan);
+            ALOGV("on_time_nbd: = %d", internal_stat_ptr->on_time_nbd);
+            ALOGV("on_time_gscan: = %d", internal_stat_ptr->on_time_gscan);
+            ALOGV("on_time_pno_scan: = %d", internal_stat_ptr->on_time_pno_scan);
+            ALOGV("on_time_hs20: = %d", internal_stat_ptr->on_time_hs20);
+
             if (external_stat_ptr) {
                 external_stat_ptr->radio = internal_stat_ptr->radio;
                 external_stat_ptr->on_time = internal_stat_ptr->on_time;
                 external_stat_ptr->tx_time = internal_stat_ptr->tx_time;
-                external_stat_ptr->rx_time = internal_stat_ptr->rx_time;
+                external_stat_ptr->num_tx_levels = internal_stat_ptr->num_tx_levels;
                 external_stat_ptr->tx_time_per_levels = NULL;
-                external_stat_ptr->num_tx_levels = 0;
+                external_stat_ptr->rx_time = internal_stat_ptr->rx_time;
                 external_stat_ptr->on_time_scan = internal_stat_ptr->on_time_scan;
                 external_stat_ptr->on_time_nbd = internal_stat_ptr->on_time_nbd;
                 external_stat_ptr->on_time_gscan = internal_stat_ptr->on_time_gscan;
@@ -171,6 +282,8 @@ private:
 wifi_error wifi_get_link_stats(wifi_request_id id,
         wifi_interface_handle iface, wifi_stats_result_handler handler)
 {
+    ALOGI("call wifi_get_link_stats handler");
+    //return WIFI_SUCCESS;
     GetLinkStatsCommand command(iface, handler);
     return (wifi_error) command.requestResponse();
 }

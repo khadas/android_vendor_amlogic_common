@@ -99,6 +99,9 @@ public:
         return mAttributes[attribute] ? nla_data(mAttributes[attribute]) : NULL;
     }
 
+    void *get_string(int attribute) {
+        return mAttributes[attribute] ? nla_get_string(mAttributes[attribute]) : NULL;
+    }
 private:
     WifiEvent(const WifiEvent&);        // hide copy constructor to prevent copies
 };
@@ -121,7 +124,7 @@ public:
         return pos;
     }
     uint16_t get_type() {
-        return pos->nla_type;
+        return nla_type(pos);
     }
     uint8_t get_u8() {
         return nla_get_u8(pos);
@@ -140,6 +143,9 @@ public:
     }
     int get_len() {
         return nla_len(pos);
+    }
+    void* get_string() {
+        return nla_get_string(pos);
     }
 private:
     nl_iterator(const nl_iterator&);    // hide copy constructor to prevent copies
@@ -190,6 +196,9 @@ public:
 
     int put(int attribute, void *ptr, unsigned len) {
         return nla_put(mMsg, attribute, len, ptr);
+    }
+    int put_s8(int attribute, int8_t value) {
+        return nla_put(mMsg, attribute, sizeof(value), &value);
     }
     int put_u8(int attribute, uint8_t value) {
         return nla_put(mMsg, attribute, sizeof(value), &value);
@@ -337,6 +346,10 @@ protected:
         return wifi_register_vendor_handler(wifiHandle(), id, subcmd, &event_handler, this);
     }
 
+    void unregisterVendorHandlerWithoutLock(uint32_t id, int subcmd) {
+        wifi_unregister_vendor_handler_without_lock(wifiHandle(), id, subcmd);
+    }
+
     void unregisterVendorHandler(uint32_t id, int subcmd) {
         wifi_unregister_vendor_handler(wifiHandle(), id, subcmd);
     }
@@ -366,3 +379,5 @@ private:
         nla_ok(pos, rem); \
         pos = (nlattr *)nla_next(pos, &(rem)))
 
+extern void InitResponseLock();
+extern void DestroyResponseLock();
