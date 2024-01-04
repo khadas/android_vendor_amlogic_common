@@ -184,7 +184,7 @@ public class DroidlogicApplication extends Application {
     }
 
     private void DisableBtPairInstrumentation(Context context) {
-        if (SystemProperties.get("ro.product.system.name", "aosp").contains("atv_generic"))
+        if (SystemProperties.get("sys.vendor.remote.type", "IR_NONE").contains("BT"))
             return;
         PackageManager pm = context.getPackageManager();
         ComponentName name = new ComponentName(context, BluetoothAutoPairReceiver.class);
