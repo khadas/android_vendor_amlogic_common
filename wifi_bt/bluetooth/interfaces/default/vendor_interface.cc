@@ -43,6 +43,9 @@ static const char* VENDOR_LIBRARY_SYMBOL_NAME =
 
 static const int INVALID_FD = -1;
 
+bool wake_lock_acquired;
+const char *wake_lock_name = "amlogic_bt_hal_wake";
+
 namespace {
 
 using android::hardware::hidl_vec;
@@ -169,6 +172,48 @@ class FirmwareStartupTimer {
   std::chrono::steady_clock::time_point start_time_;
 };
 
+void bt_vendor_acquire_wake_lock()
+{
+    ALOGE("%s call in", __func__);
+    if (!wake_lock_acquired)
+    {
+        if (acquire_wake_lock(PARTIAL_WAKE_LOCK, wake_lock_name) == 0)
+        {
+            ALOGE("%s get lock", __func__);
+            wake_lock_acquired = true;
+        }
+        else
+        {
+            ALOGE("%s failed to acquire_wake_lock", __func__);
+        }
+    }
+    else
+    {
+        ALOGE("%s wakelock unreleased", __func__);
+    }
+}
+
+void bt_vendor_release_wake_lock()
+{
+    ALOGE("%s call in", __func__);
+    if (wake_lock_acquired)
+    {
+        if (release_wake_lock(wake_lock_name) == 0)
+        {
+            ALOGE("%s release lock", __func__);
+            wake_lock_acquired = false;
+        }
+        else
+        {
+            ALOGE("%s failed to release_wake_lock", __func__);
+        }
+    }
+    else
+    {
+        ALOGE("%s wakelock unacquired", __func__);
+    }
+}
+
 bool VendorInterface::Initialize(
     InitializeCompleteCallback initialize_complete_cb,
     PacketReadCallback event_cb, PacketReadCallback acl_cb,
@@ -177,6 +222,10 @@ bool VendorInterface::Initialize(
     ALOGE("%s: No previous Shutdown()?", __func__);
     return false;
   }
+
+  wake_lock_acquired = false;
+  bt_vendor_acquire_wake_lock();
+
   g_vendor_interface = new VendorInterface();
   return g_vendor_interface->Open(initialize_complete_cb, event_cb, acl_cb,
                                   sco_cb, iso_cb);
@@ -188,6 +237,9 @@ void VendorInterface::Shutdown() {
   g_vendor_interface->Close();
   delete g_vendor_interface;
   g_vendor_interface = nullptr;
+
+  bt_vendor_release_wake_lock();
+
 }
 
 VendorInterface* VendorInterface::get() { return g_vendor_interface; }
@@ -357,23 +409,8 @@ size_t VendorInterface::Send(uint8_t type, const uint8_t* data, size_t length) {
   recent_activity_flag = true;
   uint16_t opcode = data[0] | (data[1] << 8);
 
-  int fd;
-  int sz = -1;
-  char buf[2] = {'\0'};
   char shutdown_val[PROPERTY_VALUE_MAX] = {'\0'};
 
-  if (access(BT_WAKE_EVT_1, F_OK) == 0) {
-    fd = open(BT_WAKE_EVT_1, O_RDONLY);
-  } else {
-    fd = open(BT_WAKE_EVT_2, O_RDONLY);
-  }
-
-  if (fd < 0) {
-    PR_ERR("open btwake_evt failed: %s (%d)", strerror(errno), errno);
-  } else {
-    sz = read(fd, buf, sizeof(buf));
-    close(fd);
-  }
 
   if (lpm_wake_deasserted == true) {
     // Restart the timer.
@@ -386,22 +423,6 @@ size_t VendorInterface::Send(uint8_t type, const uint8_t* data, size_t length) {
     ALOGV("%s: Sent wake before (%02x)", __func__, data[0] | (data[1] << 8));
   }
 
-  if ((type == HCI_PACKET_TYPE_COMMAND) && (sz >= 1) && (buf[0] == '1')) {
-    PR_INFO("rtc wake: opcode:%02x, data[2]:%02x,length:%u", (data[0]|data[1] << 8),
-        data[2], (uint32_t)length);
-    if ((data[0] == 0x54) && (data[1] == 0xFD)) {
-      hidl_vec<uint8_t> fake_rsp = {0x0E, 0x05, 0x01, data[0], data[1], 0x00, data[3]};
-      PR_INFO("Send fake rsp for 0xfd54");
-      event_cb_(fake_rsp);
-      return length+1;
-    } else if (internal_command.opcode == opcode) {
-      // rtc wake up. response fake rsp to hci command
-      PR_INFO("Send fake rsp");
-      hidl_vec<uint8_t> fake_rsp = {0x0E, 0x04, 0x01, data[0], data[1], 0x00};
-      event_cb_(fake_rsp);
-      return length+1;
-    }
-  }
 
   if (opcode == HCI_VSC_WAKE_ON_BLE) {
       gVscWakeEnabled = 1;
@@ -445,6 +466,8 @@ void VendorInterface::OnFirmwareConfigured(uint8_t result) {
   ALOGD("%s Calling StartLowPowerWatchdog()", __func__);
   fd_watcher_.ConfigureTimeout(std::chrono::milliseconds(lpm_timeout_ms),
                                [this]() { OnTimeout(); });
+
+  bt_vendor_release_wake_lock();
 }
 
 void VendorInterface::OnTimeout() {

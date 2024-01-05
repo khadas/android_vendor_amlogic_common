@@ -35,7 +35,8 @@ cc_library_shared {
         "multibt_hal.cc",
     ],
 	include_dirs: [
-        "packages/modules/Bluetooth/system/hci/include"
+        "packages/modules/Bluetooth/system/hci/include",
+        "hardware/libhardware_legacy/include",
 	],
     shared_libs: [
         "android.hardware.bluetooth@1.0",
@@ -45,6 +46,7 @@ cc_library_shared {
         "libhidlbase",
         "liblog",
         "libutils",
+        "libpower",
     ],
     static_libs: [
         "android.hardware.bluetooth-async-droidlogic",

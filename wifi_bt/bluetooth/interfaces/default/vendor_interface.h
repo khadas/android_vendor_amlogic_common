@@ -21,6 +21,7 @@
 #include "async_fd_watcher.h"
 #include "bt_vendor_lib.h"
 #include "hci_protocol.h"
+#include <hardware_legacy/power.h>
 
 namespace android {
 namespace hardware {
