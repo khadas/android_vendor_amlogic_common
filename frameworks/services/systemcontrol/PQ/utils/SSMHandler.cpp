@@ -331,6 +331,8 @@ struct SSMHeader_section2_t gSSMHeader_section2[] = {
     {.id =VPP_DATA_POS_PICTURE_MODE_PARAM_CRC_START, .addr = 0, .size = SSM_SOURCE_MAX * SSM_FMT_MAX * SSM_PICTURE_MODE_MAX, .valid = 0, .rsv = {0}},
     {.id =VPP_DATA_POS_AIPQ_MODE_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =VPP_DATA_POS_AISR_MODE_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
+    {.id =VPP_DATA_POS_AICOLOR_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
+    {.id =VPP_DATA_PQMODULE_DEMO_STATE_START, .addr = 0, .size = SSM_PQ_DEMO_MAX, .valid = 0, .rsv = {0}},
 };
 
 struct SSMHeader_section1_t gSSMHeader_section1 =

@@ -303,6 +303,9 @@ public:
     bool aisrContrl(bool on);
     bool hasAisrFunc();
     bool getAisr();
+    //aicolor
+    int setAiColor(int value, int isSave);
+    int getAiColor(void);
 
     bool frameRateDisplay(bool on);
 
@@ -320,6 +323,8 @@ public:
     int getBlueStretch(void);
     int setLocalDimming(int level, int is_save);
     int getLocalDimming(void);
+    int SetPQModuleDemoState(int modules, int state);
+    int GetPQModuleDemoState(int modules);
     bool syncDensity(int displayid, int width, int height);
     int setDolbyDarkDetail(int mode, int is_save);
     int getDolbyDarkDetail(void);

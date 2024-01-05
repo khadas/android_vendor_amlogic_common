@@ -2044,6 +2044,24 @@ bool SystemControlService::getAisr()
     }
 }
 
+int SystemControlService::setAiColor(int value, int is_save)
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->SetAiColor(value, is_save);
+    } else {
+        return -1;
+    }
+}
+
+int SystemControlService::getAiColor()
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->GetAiColor();
+    } else {
+        return -1;
+    }
+}
+
 int SystemControlService::setColorGamutMode(int mode, int is_save)
 {
     if (pCPQControl != NULL) {
@@ -2576,6 +2594,24 @@ tvpq_databaseinfo_t SystemControlService::getPQDatabaseInfo(int dataBaseName) {
         pq_databaseinfo = pCPQControl->GetDBVersionInfo((db_name_t)dataBaseName);
     }
     return pq_databaseinfo;
+}
+
+int SystemControlService::SetPQModuleDemoState(int modules, int state)
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->SetPQModuleDemoState((pq_module_demo_t)modules, (pq_module_demo_state_t)state);
+    } else {
+        return -1;
+    }
+}
+
+int SystemControlService::GetPQModuleDemoState(int modules)
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->GetPQModuleDemoState(modules);
+    } else {
+        return -1;
+    }
 }
 
 int SystemControlService::setBlueStretch(int level, int is_save)

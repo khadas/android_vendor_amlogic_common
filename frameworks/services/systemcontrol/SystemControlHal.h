@@ -306,10 +306,15 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     Return<int32_t> setLocalDimming(int32_t level, int32_t is_save) override;
     Return<int32_t> getDolbyDarkDetail(void) override;
     Return<int32_t> setDolbyDarkDetail(int32_t mode, int32_t is_save) override;
+    Return<int32_t> SetPQModuleDemoState(int32_t modules, int32_t state) override;
+    Return<int32_t> GetPQModuleDemoState(int32_t modules) override;
     //aisr
     Return<Result> aisrContrl(bool on) override;
     Return<Result> hasAisrFunc() override;
     Return<Result> getAisr() override;
+    //aicolor
+    Return<int32_t> setAiColor(int32_t value, int32_t isSave) override;
+    Return<int32_t> getAiColor(void) override;
 
     //DLG
     Return<int32_t> setDLGEnable(int32_t enable, int32_t isSave) override;

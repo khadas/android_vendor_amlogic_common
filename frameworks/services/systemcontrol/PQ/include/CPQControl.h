@@ -199,6 +199,8 @@ public:
     void CPQControlUnInit(void);
     virtual void onVframeSizeChange();
     virtual void onTXStatusChange();
+    int SetPQModuleDemoState(pq_module_demo_t modules, pq_module_demo_state_t state);
+    int GetPQModuleDemoState(int modules);
     virtual void resetAllUserSettingParam();
     virtual void resetPQUiSetting(void);
     virtual void resetPQTableSetting(void);
@@ -541,6 +543,12 @@ public:
     int SetAiSrMode(aisr_mode_e mode, int is_save);
     int GetAiSrMode(void);
 
+    //aicolor
+    int SetAiColor(int value, int is_save);
+    int GetAiColor(void);
+    int SaveAiColor(int value);
+    int Cpq_SetAiColor(int value);
+
     //COLOR SPACE
     int SetColorGamutMode(vpp_colorgamut_mode_t value, int is_save);
     int GetColorGamutMode(void);
@@ -679,6 +687,7 @@ private:
     bool mbCpqCfg_pq_param_check_source_enable;
     bool mbCpqCfg_ai_enable;
     bool mbCpqCfg_aisr_enable;
+    bool mbCpqCfg_aicolor_enable;
     bool mbCpqCfg_aad_enable;
     bool mbCpqCfg_cabc_enable;
     bool mbCpqCfg_smoothplus_enable;

@@ -986,6 +986,22 @@ typedef struct tvpq_databaseinfo_s {
     char GenerateTime[32];
 }tvpq_databaseinfo_t;
 
+typedef enum pq_module_demo_e
+{
+    PQ_DEMO_MEMC = 0,
+    PQ_DEMO_AISR,
+    PQ_DEMO_MAX,
+} pq_module_demo_t;
+
+typedef enum pq_module_demo_state_e
+{
+    PQ_DEMO_STATE_OFF = 0,
+    PQ_DEMO_STATE_4K,
+    PQ_DEMO_STATE_8K,
+    PQ_DEMO_STATE_1080P,
+    PQ_DEMO_STATE_MAX,
+} pq_module_demo_state_t;
+
 typedef enum vpp_pq_level_e {
     VPP_PQ_LV_OFF,
     VPP_PQ_LV_LOW,

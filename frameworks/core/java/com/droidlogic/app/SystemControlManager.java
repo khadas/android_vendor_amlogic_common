@@ -4375,6 +4375,40 @@ public class SystemControlManager {
              }
          }
          return false;
+    }
+
+    /**
+     * @Function: SetAiColor
+     * @Description: Set aicolor status
+     * @Param: value 0(ui off) 1(ui on), isSave 1 to save
+     * @Return: 0 success, -1 fail
+     */
+    public int SetAiColor(int value, int isSave) {
+          synchronized (mLock) {
+            try {
+                return mProxy.setAiColor(value, isSave);
+            } catch (RemoteException e) {
+                Log.e(TAG, "setAiColor:" + e);
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * @Function: GetAiColor
+     * @Description: Get current aicolor status
+     * @Param:
+     * @Return: aicolor value 0/1
+     */
+    public int GetAiColor() {
+          synchronized (mLock) {
+            try {
+                return mProxy.getAiColor();
+            } catch (RemoteException e) {
+                Log.e(TAG, "getAiColor:" + e);
+            }
+        }
+        return -1;
      }
 
      public int SetColorGamutMode(int mode, int isSave) {
@@ -4463,6 +4497,61 @@ public class SystemControlManager {
              }
          }
          return -1;
+     }
+
+     /**
+      * @Function: SetPQModuleDemoState
+      * @Description: Set PQ Module Demo State
+      * @Param: typedef enum pq_module_demo_e
+                {
+                    PQ_DEMO_MEMC = 0,
+                    PQ_DEMO_AISR = 1,
+                    PQ_DEMO_MAX,
+                } pq_module_demo_t;
+
+                typedef enum pq_module_demo_state_e
+                {
+                    PQ_DEMO_STATE_OFF   = 0,
+                    PQ_DEMO_STATE_4K    = 1,
+                    PQ_DEMO_STATE_8K    = 2,
+                    PQ_DEMO_STATE_1080P = 3,
+                    PQ_DEMO_STATE_MAX,
+                } pq_module_demo_state_t;
+      * @Return: fail -1
+      */
+     public int SetPQModuleDemoState(int modules, int state) {
+           synchronized (mLock) {
+             try {
+                 return mProxy.SetPQModuleDemoState(modules, state);
+             } catch (RemoteException e) {
+                 Log.e(TAG, "SetPQModuleDemoState:" + e);
+             }
+         }
+         return -1;
+
+     }
+
+     /**
+      * @Function: GetPQModuleDemoState
+      * @Description: Get PQ Module Demo State
+      * @Param: typedef enum pq_module_demo_e
+                {
+                    PQ_DEMO_MEMC = 0,
+                    PQ_DEMO_AISR = 1,
+                    PQ_DEMO_MAX,
+                } pq_module_demo_t;
+      * @Return: state
+      */
+     public int GetPQModuleDemoState(int modules) {
+           synchronized (mLock) {
+             try {
+                 return mProxy.GetPQModuleDemoState(modules);
+             } catch (RemoteException e) {
+                 Log.e(TAG, "GetPQModuleDemoState:" + e);
+             }
+         }
+         return -1;
+
      }
 
      /**

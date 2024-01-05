@@ -1617,6 +1617,14 @@ Return<Result> SystemControlHal::getAisr() {
     return Result::FAIL;
 }
 
+Return<int32_t> SystemControlHal::setAiColor(int32_t value, int32_t isSave) {
+    return mSysControl->setAiColor(value, isSave);
+}
+
+Return<int32_t> SystemControlHal::getAiColor(void) {
+    return mSysControl->getAiColor();
+}
+
 Return<int32_t> SystemControlHal::setColorGamutMode(int32_t isEnable, int32_t is_save) {
     return mSysControl->setColorGamutMode(isEnable, is_save);
 }
@@ -1624,6 +1632,15 @@ Return<int32_t> SystemControlHal::setColorGamutMode(int32_t isEnable, int32_t is
 Return<int32_t> SystemControlHal::getColorGamutMode(void) {
     return mSysControl->getColorGamutMode();
 }
+
+Return<int32_t> SystemControlHal::SetPQModuleDemoState(int32_t modules, int32_t state) {
+    return mSysControl->SetPQModuleDemoState(modules, state);
+}
+
+Return<int32_t> SystemControlHal::GetPQModuleDemoState(int32_t modules) {
+    return mSysControl->GetPQModuleDemoState(modules);
+}
+
 Return<int32_t> SystemControlHal::getBlueStretch(void) {
     return mSysControl->getBlueStretch();
 }

@@ -307,6 +307,9 @@ public:
     bool aisrContrl(int isEnable);
     bool hasAisrFunc();
     bool getAisr();
+    //aicolor
+    int setAiColor(int value, int isSave);
+    int getAiColor(void);
 
     int setColorGamutMode(int mode, int is_save);
     int getColorGamutMode(void);
@@ -316,6 +319,8 @@ public:
     int setLocalDimming(int32_t level, int is_save);
     int getDolbyDarkDetail(void);
     int setDolbyDarkDetail(int32_t mode, int is_save);
+    int SetPQModuleDemoState(int32_t modules, int32_t state);
+    int GetPQModuleDemoState(int32_t modules);
     //PQ end
 
     //memc

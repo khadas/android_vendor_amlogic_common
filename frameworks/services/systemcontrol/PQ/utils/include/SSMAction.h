@@ -108,6 +108,9 @@ public:
     //Gamma
     int SSMSaveGammaValue(int offset, int rw_val);
     int SSMReadGammaValue(int offset, int *rw_val);
+    //PQModuleDemoState
+    int SSMSavePQModuleDemoState(int offset, int rw_val);
+    int SSMReadPQModuleDemoState(int offset, int *rw_val);
     //Memc
     int SSMSaveMemcMode(int offset, int rw_val);
     int SSMReadMemcMode(int offset, int *rw_val);
@@ -168,6 +171,8 @@ public:
     int SSMSaveAiSrEnable(int rw_val);
     int SSMReadAiSrMode(int *rw_val);
     int SSMSaveAiSrMode(int rw_val);
+    int SSMReadAiColor(int *rw_val);
+    int SSMSaveAiColor(int rw_val);
     int SSMReadDLGEnable(int *rw_val);
     int SSMSaveDLGEnable(int rw_val);
     int SSMSaveColorGamutMode(int offset, int rw_val);

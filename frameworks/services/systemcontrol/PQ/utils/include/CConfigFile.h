@@ -77,6 +77,7 @@
 #define CFG_AI_ENABLE                           "pq.ai.en"
 #define CFG_MEMC_ENABLE                         "pq.memc.en"
 #define CFG_AISR_ENABLE                         "pq.aisr.en"
+#define CFG_AICOLOR_ENABLE                      "pq.aicolor.en"
 #define CFG_AAD_ENABLE                          "pq.aad.en"
 #define CFG_CABC_ENABLE                         "pq.cabc.en"
 #define CFG_BLUESTRETCH_ENABLE                  "pq.BlueStretch.en"
@@ -122,6 +123,7 @@
 #define CFG_LOCALDIMMING_DEF                    "pq.LocalDimming.def"
 #define CFG_AISRMODE_DEF                        "pq.AisrMode.def"
 #define CFG_AIPQMODE_DEF                        "pq.AipqMode.def"
+#define CFG_AICOLOR_DEF                         "pq.AiColor.def"
 
 //for backlight
 #define CFG_SECTION_BACKLIGHT                   "BACKLIGHT"

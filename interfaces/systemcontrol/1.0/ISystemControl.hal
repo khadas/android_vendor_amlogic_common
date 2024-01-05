@@ -767,6 +767,13 @@ interface ISystemControl {
   getAisr ()
       generates (Result result);
 
+  //aicolor
+  setAiColor(int32_t value, int32_t isSave)
+      generates (int32_t ret);
+
+  getAiColor()
+      generates (int32_t ret);
+
   setColorGamutMode(int32_t mode,int32_t isSave)
       generates (int32_t ret);
 
@@ -775,6 +782,12 @@ interface ISystemControl {
 
   getModeSupportDeepColorAttr(string mode, string color)
       generates (Result result);
+
+  SetPQModuleDemoState(int32_t modules, int32_t state)
+      generates (int32_t ret);
+
+  GetPQModuleDemoState(int32_t modules)
+      generates (int32_t ret);
 
   setBlueStretch(int32_t level,int32_t isSave)
       generates (int32_t ret);

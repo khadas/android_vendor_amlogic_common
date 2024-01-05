@@ -843,6 +843,10 @@ void SysWrite::initConstCharforSysNode() {
     mPathforSysNode[HDMI_CONTENT_TYPE]          = "/sys/class/amhdmitx/amhdmitx0/contenttype_mode";
     mPathforSysNode[DV_SUPPORT_INFO]            = "/sys/class/amdolby_vision/support_info";
     mPathforSysNode[VIDEO_AIFACE_ENABLE]        = "/sys/module/aml_media/parameters/uvm_open_aiface";
+    mPathforSysNode[AICOLOR_PARAMETERS_UVM_OPEN] = "/sys/module/aml_media/parameters/uvm_open_aicolor";
+    mPathforSysNode[PQ_MODULE_MEMC_DEMO_WIN] = "/sys/class/frc/param";
+    mPathforSysNode[PQ_MODULE_AISR_DEMO_EN] = "/sys/class/video/aisr_demo_en";
+    mPathforSysNode[PQ_MODULE_AISR_DEMO_AXIS] = "/sys/class/video/aisr_demo_axis";
 }
 #if 0
 status_t SysWrite::dump(int fd, const Vector<String16>& args){

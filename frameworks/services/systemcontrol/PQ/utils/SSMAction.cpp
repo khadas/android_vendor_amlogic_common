@@ -802,6 +802,22 @@ int SSMAction::SSMReadGammaValue(int offset, int *rw_val)
     return ret;
 }
 
+//PQModuleDemoState
+int SSMAction::SSMSavePQModuleDemoState(int offset, int rw_val)
+{
+    return SSMWriteNTypes(VPP_DATA_PQMODULE_DEMO_STATE_START, 1, &rw_val, offset);
+}
+
+int SSMAction::SSMReadPQModuleDemoState(int offset, int *rw_val)
+{
+    int tmp_val = 0;
+    int ret = 0;
+    ret = SSMReadNTypes(VPP_DATA_PQMODULE_DEMO_STATE_START, 1, &tmp_val, offset);
+    *rw_val = tmp_val;
+
+    return ret;
+}
+
 //EdgeEnhance
 int SSMAction::SSMSaveEdgeEnhanceStatus(int offset, int rw_val)
 {
@@ -1161,6 +1177,22 @@ int SSMAction::SSMReadAiSrMode(int *rw_val)
 int SSMAction::SSMSaveAiSrMode(int rw_val)
 {
     return SSMWriteNTypes(VPP_DATA_POS_AISR_MODE_START, 1, &rw_val);
+}
+
+int SSMAction::SSMReadAiColor(int *rw_val)
+{
+    int tmp_ret = 0;
+    int ret = 0;
+
+    ret = SSMReadNTypes(VPP_DATA_POS_AICOLOR_START, 1, &tmp_ret);
+    *rw_val = tmp_ret;
+
+    return ret;
+}
+
+int SSMAction::SSMSaveAiColor(int rw_val)
+{
+    return SSMWriteNTypes(VPP_DATA_POS_AICOLOR_START, 1, &rw_val);
 }
 
 int SSMAction::SSMReadDLGEnable(int *rw_val)

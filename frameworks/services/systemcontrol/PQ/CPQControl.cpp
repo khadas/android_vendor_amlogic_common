@@ -81,6 +81,7 @@ CPQControl::CPQControl()
     mbCpqCfg_chroma_coring_enable = false;
     mbCpqCfg_LocalDimming_enable = false;
     mbCpqCfg_aisr_enable = false;
+    mbCpqCfg_aicolor_enable = false;
     mbCpqCfg_new_picture_mode_enable = false;
     mbCpqCfg_separate_db_enable = false;
     mbCpqCfg_amvecm_basic_enable = false;
@@ -733,10 +734,12 @@ int CPQControl::LoadPQSettings()
             int aisr_enable = GetAiSrEnable();
             int aisr_mode = GetAiSrMode();
             int aipq_mode = GetAipqMode();
+            int aicolor = GetAiColor();
             ret |= SetMemcMode(MemcMode, 1);
             ret |= SetAiSrEnable((aisr_enable > 0)? true : false);
             ret |= Cpq_SetAiSrMode((aisr_mode_e)aisr_mode, mCurrentSourceInputInfo);
             ret |= Cpq_SetAipqMode((aipq_mode_e)aipq_mode, mCurrentSourceInputInfo);
+            ret |= Cpq_SetAiColor(aicolor);
        }
 
         vpp_smooth_plus_mode_t smoothplus_mode = (vpp_smooth_plus_mode_t)GetSmoothPlusMode();
@@ -789,10 +792,12 @@ int CPQControl::LoadPQTableSettings()
         int aisr_enable = GetAiSrEnable();
         int aisr_mode = GetAiSrMode();
         int aipq_mode = GetAipqMode();
+        int aicolor = GetAiColor();
         ret |= SetMemcMode(MemcMode, 1);
         ret |= SetAiSrEnable((aisr_enable > 0)? true : false);
         ret |= Cpq_SetAiSrMode((aisr_mode_e)aisr_mode, mCurrentSourceInputInfo);
         ret |= Cpq_SetAipqMode((aipq_mode_e)aipq_mode, mCurrentSourceInputInfo);
+        ret |= Cpq_SetAiColor(aicolor);
     }
 
     return ret;
@@ -7543,6 +7548,13 @@ int CPQControl::SetFlagByCfg(void)
         mbCpqCfg_aisr_enable = false;
     }
 
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_AICOLOR_ENABLE, "disable");
+    if (strcmp(config_value, "enable") == 0) {
+        mbCpqCfg_aicolor_enable = true;
+    } else {
+        mbCpqCfg_aicolor_enable = false;
+    }
+
     config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_NEW_PICTURE_MODE_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_new_picture_mode_enable = true;
@@ -8359,6 +8371,73 @@ int CPQControl::Cpq_SetAiSrMode(aisr_mode_e mode, source_input_param_t source_in
     return ret;
 }
 
+int CPQControl::SetAiColor(int value, int is_save)
+{
+    SYS_LOGI("%s value = %d\n", __FUNCTION__, value);
+    int ret = -1;
+
+    ret = Cpq_SetAiColor(value);
+
+    if ((ret == 0) && (is_save == 1)) {
+        ret = SaveAiColor(value);
+    }
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed\n", __FUNCTION__);
+    } else {
+        SYS_LOGI("%s success\n", __FUNCTION__);
+    }
+    return ret;
+}
+
+int CPQControl::GetAiColor(void)
+{
+    int data = 0;
+
+    mSSMAction->SSMReadAiColor(&data);
+    SYS_LOGI("%s, data = %d\n", __FUNCTION__, data);
+
+    return data;
+}
+
+int CPQControl::SaveAiColor(int value)
+{
+    SYS_LOGI(" %s, value = %d\n", __FUNCTION__, value);
+    int ret = -1;
+
+    ret = mSSMAction->SSMSaveAiColor(value);
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed!\n",__FUNCTION__);
+    } else {
+        SYS_LOGI("%s success!\n",__FUNCTION__);
+    }
+
+    return ret;
+}
+
+int CPQControl::Cpq_SetAiColor(int value)
+{
+    SYS_LOGI("%s value = %d\n", __FUNCTION__, value);
+    int ret = -1;
+
+    if (mbCpqCfg_aicolor_enable) {
+        ret = VPPDeviceIOCtl(AMVECM_IOC_AI_COLOR_EN, &value);
+        pqWriteSys(AICOLOR_PARAMETERS_UVM_OPEN,  value ? "1" : "0");
+    } else {
+        SYS_LOGE("%s: AiColor disabled!\n", __FUNCTION__);
+        ret = 0;
+    }
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed!\n",__FUNCTION__);
+    } else {
+        SYS_LOGI("%s success!\n",__FUNCTION__);
+    }
+
+    return ret;
+}
+
 int CPQControl::HasAiFace(void)
 {
     char buf[32] = {0};
@@ -9058,6 +9137,77 @@ int CPQControl::Cpq_LocalDimming(vpp_pq_level_t level)
     return 0;
 }
 
+int CPQControl::SetPQModuleDemoState(pq_module_demo_t modules, pq_module_demo_state_t state)
+{
+    SYS_LOGD("%s, modules:%d, state:%d\n",__FUNCTION__, modules, state);
+    int ret = -1;
+    switch (modules) {
+        case PQ_DEMO_MEMC://left memc on, right memc off
+            if (hasMemcFunc()) {
+                ret = pqWriteSys(PQ_MODULE_MEMC_DEMO_WIN, (state > 0) ? "demo_win 1" : "demo_win 0");
+            } else {
+                SYS_LOGE("%s MEMC Module disabled\n",__FUNCTION__);
+                ret = -1;
+            }
+            break;
+        case PQ_DEMO_AISR:
+            if (mbCpqCfg_aisr_enable) {
+                ret = pqWriteSys(PQ_MODULE_AISR_DEMO_EN, (state > 0) ? "1" : "0");
+                    if (state == PQ_DEMO_STATE_4K) {
+                        ret = pqWriteSys(PQ_MODULE_AISR_DEMO_AXIS, "0 0 1919 2159");
+                    } else if(state == PQ_DEMO_STATE_8K){
+                        ret = pqWriteSys(PQ_MODULE_AISR_DEMO_AXIS, "0 0 3839 4319");
+                    } else if(state == PQ_DEMO_STATE_1080P){
+                        ret = pqWriteSys(PQ_MODULE_AISR_DEMO_AXIS, "0 0 960 1079");
+                    } else if(state < PQ_DEMO_STATE_OFF || state >= PQ_DEMO_STATE_MAX){
+                        SYS_LOGE("%s state:%d out of range\n", __FUNCTION__, state);
+                        state = PQ_DEMO_STATE_4K;
+                        ret = pqWriteSys(PQ_MODULE_AISR_DEMO_AXIS, "0 0 1919 2159");
+                    }
+            } else {
+                SYS_LOGE("%s AISR Module disabled\n",__FUNCTION__);
+                ret = -1;
+            }
+            break;
+        default:
+            SYS_LOGE("%s This Module ：%d is missing \n",__FUNCTION__, modules);
+            ret = -1;
+            break;
+    }
+
+    if (ret != -1) {
+        if (mSSMAction->SSMSavePQModuleDemoState((int)modules, (int)state) < 0) {
+            SYS_LOGE("%s, SSMSavePQModuleDemoState ERROR!!!\n", __FUNCTION__);
+            ret = -1;
+        }
+    }
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed\n",__FUNCTION__);
+    } else {
+        SYS_LOGD("%s success\n",__FUNCTION__);
+    }
+    return ret;
+}
+
+int CPQControl::GetPQModuleDemoState(int modules)
+{
+    int state = 0;
+    if (mSSMAction->SSMReadPQModuleDemoState(modules, &state) < 0) {
+        SYS_LOGE("%s, SSMReadPQModuleDemoState ERROR!!!\n", __FUNCTION__);
+        return -1;
+    } else {
+        SYS_LOGD("%s, modules:%d, state:%d\n",__FUNCTION__, modules, state);
+    }
+
+    if (state < PQ_DEMO_STATE_OFF || state >= PQ_DEMO_STATE_MAX) {
+        SYS_LOGE("%s state:%d out of range\n", __FUNCTION__, state);
+        state = PQ_DEMO_STATE_4K;
+    }
+
+    return state;
+}
+
 void CPQControl::resetAllUserSettingParam()
 {
     int ret = 0, i = 0, config_val = 0;
@@ -9232,6 +9382,11 @@ void CPQControl::resetAllUserSettingParam()
     mSSMAction->SSMSaveAiSrMode(config_val);
     config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_AIPQMODE_DEF, 2);
     mSSMAction->SSMSaveAipqMode(config_val);
+
+    //PQ Module Demo State
+    for (i = PQ_DEMO_MEMC; i < PQ_DEMO_MAX; i++) {
+        mSSMAction->SSMSavePQModuleDemoState(i, 0);
+    }
 
     return;
 }
@@ -9667,6 +9822,11 @@ void CPQControl::resetPQUiSetting(void)
         mSSMAction->SSMSaveRGBPostOffsetBStart(offset, 0);
     }
 
+    //PQ Module Demo State
+    for (int i = PQ_DEMO_MEMC; i < PQ_DEMO_MAX; i++) {
+        mSSMAction->SSMSavePQModuleDemoState(i, 0);
+    }
+
     return;
 }
 
@@ -9746,13 +9906,15 @@ void CPQControl::resetPQTableSetting(void)
     config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_EYEPROJECTMODE_DEF, 0);
     mSSMAction->SSMSaveEyeProtectionMode(config_val);
 
-    //ai pq/sr
+    //ai pq/sr/color
     mSSMAction->SSMSaveAipqEnableVal(0);
     mSSMAction->SSMSaveAiSrEnable(1);
     config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_AISRMODE_DEF, 3);
     mSSMAction->SSMSaveAiSrMode(config_val);
     config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_AIPQMODE_DEF, 2);
     mSSMAction->SSMSaveAipqMode(config_val);
+    config_val = mPQConfigFile->GetInt(CFG_SECTION_PQ, CFG_AICOLOR_DEF, 0);
+    mSSMAction->SSMSaveAiColor(config_val);
 
     return;
 }

@@ -180,7 +180,8 @@ enum{
     VPP_DATA_POS_PICTURE_MODE_PARAM_CRC_START = 311,
     VPP_DATA_POS_AIPQ_MODE_START = 312,
     VPP_DATA_POS_AISR_MODE_START = 313,
-
+    VPP_DATA_POS_AICOLOR_START = 314,
+    VPP_DATA_PQMODULE_DEMO_STATE_START = 315,
     SSM_DATA_MAX,
 };
 
@@ -233,6 +234,13 @@ typedef enum SSM_picture_mode_e {
     SSM_PICTURE_MODE_DV_DARK,
     SSM_PICTURE_MODE_MAX,
 } SSM_picture_mode_t;
+
+typedef enum ssm_pq_module_demo_e
+{
+    SSM_PQ_DEMO_MEMC = 0,
+    SSM_PQ_DEMO_AISR,
+    SSM_PQ_DEMO_MAX,
+} ssm_pq_module_demo_t;
 
 struct SSMHeader_section1_t
 {

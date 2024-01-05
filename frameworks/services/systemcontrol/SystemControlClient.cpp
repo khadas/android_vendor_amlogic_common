@@ -1447,6 +1447,14 @@ bool SystemControlClient::getAisr() {
     return (mSysCtrl->getAisr() == Result::OK);
 }
 
+int SystemControlClient::setAiColor(int value, int isSave) {
+    return mSysCtrl->setAiColor(value, isSave);
+}
+
+int SystemControlClient::getAiColor(void) {
+    return mSysCtrl->getAiColor();
+}
+
 int SystemControlClient::setColorGamutMode(int mode, int is_save) {
     return mSysCtrl->setColorGamutMode(mode, is_save);
 }
@@ -1454,6 +1462,15 @@ int SystemControlClient::setColorGamutMode(int mode, int is_save) {
 int SystemControlClient::getColorGamutMode(void) {
     return mSysCtrl->getColorGamutMode();
 }
+
+int SystemControlClient::SetPQModuleDemoState(int32_t modules, int32_t state) {
+    return mSysCtrl->SetPQModuleDemoState(modules, state);
+}
+
+int SystemControlClient::GetPQModuleDemoState(int32_t modules) {
+    return mSysCtrl->GetPQModuleDemoState(modules);
+}
+
 int SystemControlClient::getBlueStretch(void) {
     return mSysCtrl->getBlueStretch();
 }
