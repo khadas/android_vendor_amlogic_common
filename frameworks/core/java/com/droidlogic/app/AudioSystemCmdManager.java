@@ -65,6 +65,7 @@ public class AudioSystemCmdManager {
 
     public static final int AUDIO_SERVICE_CMD_SET_MEDIA_FIRST_LANG                  = 29;
     public static final int AUDIO_SERVICE_CMD_SET_MEDIA_SECOND_LANG                 = 30;
+    public static final int AUDIO_SERVICE_CMD_SET_AUDIO_PICTURE_MODE                = 31;
 
     public static final String PROP_AUDIO_OUTPUT_STRATEGY                           = "persist.vendor.media.audio.output.strategy";
     public static final String PROP_AUDIO_OUTPUT_SPDIF_COEXIST                      = "persist.vendor.media.audio.spdif.coexist";

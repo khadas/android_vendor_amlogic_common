@@ -827,6 +827,14 @@ public class AudioSystemCmdService extends Service {
                 mHasOpenedDecoder = false;
                 mMixAdSupported = false;
                 break;
+            case AudioSystemCmdManager.AUDIO_SERVICE_CMD_SET_AUDIO_PICTURE_MODE:
+                Log.d(TAG, "SET_AUDIO_PICTURE_MODE:" + (param1 == 1?"GAME":"STANDARD"));
+                if (param1 == 1) {
+                    mAudioManager.setParameters("picture_mode=PQ_MODE_GAME");
+                } else {
+                    mAudioManager.setParameters("picture_mode=PQ_MODE_STANDARD");
+                }
+                break;
             default:
                 Log.w(TAG,"HandleAudioEvent unknown audio cmd:" + cmd);
                 break;
