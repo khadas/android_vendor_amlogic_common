@@ -26,6 +26,7 @@ public class DroidLogicBenchService extends Service {
     private static final String PCMARK_PKG_NAME = "com.futuremark.pcmark.android.benchmark";
     private static final String ANTUTU_PKG_NAME = "com.antutu.ABenchMark";
     private static final String ANTUTU_3D_PKG_NAME = "com.antutu.benchmark.full";
+    private static final String BASEMARK_PKG_NAME = "com.rightware.BasemarkOSIICN";
     private Context mContext;
     private SystemControlManager mSCM;
     private IActivityManager mIActivityManager;
@@ -136,7 +137,8 @@ public class DroidLogicBenchService extends Service {
                 boolean pcMark = isVisibleApp(PCMARK_PKG_NAME);
                 boolean geekbench = isVisibleApp(GEEKBENCH_PKG_NAME);
                 boolean gfx = isVisibleApp(GFXBENCH_PKG_NAME);
-                if (antutu || antutu3D || pcMark || geekbench || gfx) {
+                boolean baseMark = isVisibleApp(BASEMARK_PKG_NAME);
+                if (antutu || antutu3D || pcMark || geekbench || gfx || baseMark) {
                     Log.d(TAG, "bench app is onForeground");
                     hidePoorApp();
                     performanceOptimization(true);
