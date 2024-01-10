@@ -253,7 +253,7 @@ else # epivers.h doesn't exist
 	origincr=${origincr/#0/}
 	build=${build/#0/}
 
-	# some numbers may now be null.  replace with with zero.
+	# some numbers may now be null.  replace with zero.
 	maj=${maj:-0}
 	min=${min:-0}
 

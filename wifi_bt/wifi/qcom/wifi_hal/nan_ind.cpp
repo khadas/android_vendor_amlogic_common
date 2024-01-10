@@ -279,7 +279,7 @@ int NanCommand::getNanMatch(NanMatchInd *event)
     pNanMatchIndMsg pRsp = (pNanMatchIndMsg)mNanVendorEvent;
     event->publish_subscribe_id = pRsp->fwHeader.handle;
     event->requestor_instance_id = pRsp->matchIndParams.matchHandle;
-    event->match_occured_flag = pRsp->matchIndParams.matchOccuredFlag;
+    event->match_occurred_flag = pRsp->matchIndParams.matchOccurredFlag;
     event->out_of_resource_flag = pRsp->matchIndParams.outOfResourceFlag;
 
     u8 *pInputTlv = pRsp->ptlv;
