@@ -1104,50 +1104,6 @@ void DisplayMode::applyDisplaySetting(hdmi_output_info_t* output_info) {
             }
         }
 
-        if (hdr_policy_change) {
-            //box not support dv or dv disable
-            if (isDolbyVisionEnable() == false) {
-                if (strstr(hdr_policy, HDR_POLICY_SINK)) {
-                    DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_HDR_POLICY, HDR_POLICY_SINK, ConnectorType::CONN_TYPE_HDMI);
-                } else if (strstr(hdr_policy, HDR_POLICY_SOURCE)) {
-                    DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_HDR_POLICY, HDR_POLICY_SOURCE, ConnectorType::CONN_TYPE_HDMI);
-                } else if (strstr(hdr_policy, HDR_POLICY_FORCE)) {
-                    char hdr_force_mode[MODE_LEN] = {0};
-                    memset(hdr_force_mode, 0, MODE_LEN);
-                    getBootEnv(UBOOTENV_HDR_FORCE_MODE, hdr_force_mode);
-                    DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_HDR_POLICY, HDR_POLICY_SOURCE, ConnectorType::CONN_TYPE_HDMI);
-                    DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_FORCE_HDR_MODE, hdr_force_mode, ConnectorType::CONN_TYPE_HDMI);
-                }
-            } else {
-                if (strstr(hdr_policy, HDR_POLICY_SINK)) {
-                    DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_DOLBY_VISION_POLICY, HDR_POLICY_SINK, ConnectorType::CONN_TYPE_HDMI);
-                } else if (strstr(hdr_policy, HDR_POLICY_SOURCE)) {
-                    DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_DOLBY_VISION_POLICY, HDR_POLICY_SOURCE, ConnectorType::CONN_TYPE_HDMI);
-                } else if (strstr(hdr_policy, HDR_POLICY_FORCE)) {
-                    char hdr_force_mode[MODE_LEN] = {0};
-                    memset(hdr_force_mode, 0, MODE_LEN);
-                    getBootEnv(UBOOTENV_HDR_FORCE_MODE, hdr_force_mode);
-                    if (strstr(hdr_force_mode, FORCE_DV)) {
-                        DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_DOLBY_VISION_POLICY, HDR_POLICY_FORCE, ConnectorType::CONN_TYPE_HDMI);
-                        DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_DOLBY_VISION_MODE, FORCE_DV, ConnectorType::CONN_TYPE_HDMI);
-                    } else if (strstr(hdr_force_mode, FORCE_HDR10)) {
-                        DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_DOLBY_VISION_POLICY, HDR_POLICY_FORCE, ConnectorType::CONN_TYPE_HDMI);
-                        DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_DOLBY_VISION_MODE, FORCE_HDR10, ConnectorType::CONN_TYPE_HDMI);
-                    } else if (strstr(hdr_force_mode, FORCE_SDR)) {
-                        DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_DOLBY_VISION_POLICY, HDR_POLICY_FORCE, ConnectorType::CONN_TYPE_HDMI);
-                        // 8bit or not
-                        std::string cur_ColorAttribute;
-                        DisplayModeMgr::getInstance().getDisplayAttribute(DISPLAY_HDMI_COLOR_ATTR, cur_ColorAttribute, ConnectorType::CONN_TYPE_HDMI);
-                        if (cur_ColorAttribute.find("8bit", 0) != std::string::npos) {
-                            DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_DOLBY_VISION_MODE, DV_ENABLE_FORCE_SDR_8BIT, ConnectorType::CONN_TYPE_HDMI);
-                        } else {
-                            DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_DOLBY_VISION_MODE, DV_ENABLE_FORCE_SDR_10BIT, ConnectorType::CONN_TYPE_HDMI);
-                        }
-                    }
-                }
-            }
-        }
-
         //apply hdr priority to driver sysfs
         if (hdr_priority_change) {
             DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_HDR_PRIORITY, HDR_PRIORITY_TYPE[hdr_priority], ConnectorType::CONN_TYPE_HDMI);
@@ -2197,24 +2153,42 @@ void DisplayMode::getPosition(const char* curMode, int *position) {
         defaultHeight = FULL_HEIGHT_1080;
     }
 
-
-
     pthread_mutex_lock(&mEnvLock);
 
     if (isHWCProcess()) {
-        sprintf(ubootvar, "ubootenv.var.%s_x", keyValue);
+        bool ret = false;
         std::string value;
-        DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
-        position[0] = atoi(value.c_str());
+        sprintf(ubootvar, "ubootenv.var.%s_x", keyValue);
+        ret = DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
+        if (ret) {
+            position[0] = atoi(value.c_str());
+        } else {
+            position[0] = 0;
+        }
+
         sprintf(ubootvar, "ubootenv.var.%s_y", keyValue);
-        DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
-        position[1] = atoi(value.c_str());
+        ret = DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
+        if (ret) {
+            position[1] = atoi(value.c_str());
+        } else {
+            position[1] = 0;
+        }
+
         sprintf(ubootvar, "ubootenv.var.%s_w", keyValue);
-        DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
-        position[2] = atoi(value.c_str());
+        ret = DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
+        if (ret) {
+            position[2] = atoi(value.c_str());
+        } else {
+            position[2] = defaultWidth;
+        }
+
         sprintf(ubootvar, "ubootenv.var.%s_h", keyValue);
-        DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
-        position[3] = atoi(value.c_str());
+        ret = DisplayModeMgr::getInstance().getUbootenv(ubootvar, value);
+        if (ret) {
+            position[3] = atoi(value.c_str());
+        } else {
+            position[3] = defaultHeight;
+        }
     } else {
         sprintf(ubootvar, "ubootenv.var.%s_x", keyValue);
         position[0] = getBootenvInt(ubootvar, 0);
