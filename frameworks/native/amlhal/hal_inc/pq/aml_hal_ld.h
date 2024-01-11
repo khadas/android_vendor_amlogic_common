@@ -150,7 +150,7 @@ typedef enum _aml_hal_led_bar_e {
     AML_HAL_LED_BAR_216,
     AML_HAL_LED_BAR_180,
     AML_HAL_LED_BAR_MAX,
-    AML_HAL_LED_BAR_DEFALT = AML_HAL_LED_BAR_MAX,
+    AML_HAL_LED_BAR_DEFAULT = AML_HAL_LED_BAR_MAX,
 } aml_hal_led_bar_e;
 
 typedef enum _aml_hal_led_module_maker_e {

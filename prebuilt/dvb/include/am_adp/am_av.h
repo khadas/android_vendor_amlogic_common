@@ -347,7 +347,7 @@ typedef enum
 typedef enum
 {
 	AM_AV_JPEG_OPT_THUMBNAIL_ONLY     = 1, /**< Decode in thumbnail only mode*/
-	AM_AV_JPEG_OPT_THUMBNAIL_PREFERED = 2, /**< Decode in thumbnail preferred mode*/
+	AM_AV_JPEG_OPT_THUMBNAIL_PREFERRED = 2, /**< Decode in thumbnail preferred mode*/
 	AM_AV_JPEG_OPT_FULLRANGE          = 4  /**< Normal*/
 } AM_AV_JPEGOption_t;
 

@@ -43,7 +43,7 @@ public:
     UChar32            fStartChar;      // Start of range, unicode 32 bit value.
     UChar32            fEndChar;        // End of range, unicode 32 bit value.
     int32_t            fNum;            // runtime-mapped input value for this range.
-    UVector           *fIncludesSets;   // vector of the the original
+    UVector           *fIncludesSets;   // vector of the original
                                         //   Unicode sets that include this range.
                                         //    (Contains ptrs to uset nodes)
     RangeDescriptor   *fNext;           // Next RangeDescriptor in the linked list.

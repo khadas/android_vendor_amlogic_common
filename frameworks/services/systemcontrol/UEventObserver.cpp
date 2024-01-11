@@ -380,7 +380,7 @@ int UEventObserver::tv_framerateevent_thread() {
 #endif
     return ret;
 }
-// AFR uevent prcessed in this loop
+// AFR uevent processed in this loop
 void* UEventObserver::AFRUenventThreadLoop(void* data) {
     UEventObserver *pThiz = (UEventObserver*)data;
 
@@ -403,7 +403,7 @@ void* UEventObserver::AFRUenventThreadLoop(void* data) {
     return NULL;
 }
 
-//start HDMI TX UEVENT prcessed thread
+//start HDMI TX UEVENT processed thread
 int UEventObserver::start_hdmitxuevent_thread() {
     int ret;
     pthread_t thread_id;
@@ -425,7 +425,7 @@ int UEventObserver::start_hdmitxuevent_thread() {
 
     return 0;
 }
-// HDMI TX uevent prcessed in this loop
+// HDMI TX uevent processed in this loop
 void* UEventObserver::HDMITxUenventThreadLoop(void* data) {
     UEventObserver *pThiz = (UEventObserver*)data;
 

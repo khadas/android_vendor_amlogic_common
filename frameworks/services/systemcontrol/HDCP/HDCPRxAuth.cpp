@@ -192,7 +192,7 @@ void HDCPRxAuth::forceFlushVideoLayer() {
 #endif
 }
 
-// HDMI RX uevent prcessed in this loop
+// HDMI RX uevent processed in this loop
 void* HDCPRxAuth::RxUenventThreadLoop(void* data) {
     HDCPRxAuth *pThiz = (HDCPRxAuth*)data;
 

@@ -176,7 +176,7 @@
 ** MEMWATCH will, when this is enabled, convert recently free memory
 ** into NML allocations.
 **
-** MEMWATCH protects it's own data buffers with checksums. If you
+** MEMWATCH protects its own data buffers with checksums. If you
 ** get an internal error, it means you're overwriting wildly,
 ** or using an uninitialized pointer.
 **
@@ -663,7 +663,7 @@ extern void mwDummyTraceFunction(const char *,...);
 **  You must NOT enable it until AFTER the inclusion of all header
 **  files belonging to code that are not compiled with MEMWATCH, and
 **  possibly for some that are! The reason for this is that a C++
-**  class may implement it's own new() function, and the preprocessor
+**  class may implement its own new() function, and the preprocessor
 **  would substitute this crucial declaration for MEMWATCH new().
 **  You can forcibly deny C++ support by defining MEMWATCH_NOCPP.
 **  To enble C++ support, you must be compiling C++, MEMWATCH must

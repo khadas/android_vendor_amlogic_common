@@ -5570,7 +5570,7 @@ static void btmtk_usb_intr_complete(struct urb *urb)
 			BTUSB_WARN("%s: Queue is full !!", __func__);
 
 		if (length + g_data->metabuffer->write_p < META_BUFFER_SIZE) {
-			/* only one interrupt event, not be splitted */
+			/* only one interrupt event, not be split */
 			if (leftHciEventSize == 0) {
 				/* copy event header: 0x04 */
 				g_data->metabuffer->buffer[g_data->metabuffer->write_p] = HCI_EVENT_PKT;
@@ -5583,7 +5583,7 @@ static void btmtk_usb_intr_complete(struct urb *urb)
 			BTUSB_DBG("%s: back to meta buffer head", __func__);
 			last_len = META_BUFFER_SIZE - g_data->metabuffer->write_p;
 
-			/* only one interrupt event, not be splitted */
+			/* only one interrupt event, not be split */
 			if (leftHciEventSize == 0) {
 				if (last_len != 0) {
 					/* copy event header: 0x04 */

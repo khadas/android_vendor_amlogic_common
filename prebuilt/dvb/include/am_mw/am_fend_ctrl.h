@@ -153,7 +153,7 @@ typedef struct AM_SEC_DVBSatelliteDiseqcParameters
 	AM_Bool_t m_seq_repeat;	/**< send the complete DiSEqC Sequence twice...*/
 	unsigned char m_command_order;					/**< low 4 bits for diseqc 1.0, high 4 bits for diseqc > 1.0*/
 	/* 	diseqc 1.0)
-			0) commited, toneburst
+			0) committed, toneburst
 			1) toneburst, committed
 		diseqc > 1.0)
 			2) committed, uncommitted, toneburst

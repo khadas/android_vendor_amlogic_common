@@ -518,7 +518,7 @@ public class AudioSystemCmdService extends Service {
                 if (DroidLogicUtils.getAudioDebugEnable()) {
                     Log.d(TAG, "demuxid"+param3+",mOpenStatus="+mOpenStatus.get(mDemuxIds.indexOf(param3))+"mMuteStatus"+mMuteStatus.get(mDemuxIds.indexOf(param3)));
                 }
-                //1.if there are the multi-demux case, the start and stop need be controled bu mute or mute.
+                //1.if there are the multi-demux case, the start and stop need be controlled bu mute or mute.
                 //2.if there have not received the open cmd, we could not start the decoder directly.
                 //3.if there have started the decoder, we need not restart the decoder.
                 if (mDemuxIds.size() > 1 || (mDemuxIds.isEmpty()   || mMuteStatus.isEmpty() || mVolume.isEmpty())) {
@@ -719,7 +719,7 @@ public class AudioSystemCmdService extends Service {
                     Log.d(TAG, "CLOSE_DECODER_2("+param3+")+maudiopatch  "+ mAudioPatch+"demuxid="+param3+",mOpenStatus="+mOpenStatus.get(mDemuxIds.indexOf(param3))+",mStartStatus="+mStartStatus.get(mDemuxIds.indexOf(param3))+",mMuteStatus="+mMuteStatus.get(mDemuxIds.indexOf(param3))+",mDemuxIds count="+mDemuxIds.size());
                 }
 
-                if (mAudioPatch != null) {//IPTV case and create or relese audio patch be controled by AUDIOSYSTEMSERVICE
+                if (mAudioPatch != null) {//IPTV case and create or relese audio patch be controlled by AUDIOSYSTEMSERVICE
                    if (param3 >= 0) {
                         if (mDemuxIds.contains(param3)) {
                             mAudioFormat.remove(mDemuxIds.indexOf(param3));
@@ -747,7 +747,7 @@ public class AudioSystemCmdService extends Service {
                         mAudioPatch = null;
                         mAudioSource = null;
                     }
-                } else {//DTVKIT case and create or relese audio patch be controled by TIF
+                } else {//DTVKIT case and create or relese audio patch be controlled by TIF
                     mHasStartedDecoder = false;
                     mHasOpenedDecoder = false;
                     mMixAdSupported = false;

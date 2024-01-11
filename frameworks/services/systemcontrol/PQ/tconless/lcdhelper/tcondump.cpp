@@ -487,7 +487,7 @@ static void help(char *appName)
         "  -v <mode> : dump vac lut, supported mode: avac/ip01\n"
         "  -r <reg> <num>: dump a field of regs, from reg to reg+num\n"
         "  -r <reg>      : dump reg value\n"
-        "  -f        : display regs in formated address\n",
+        "  -f        : display regs in formatted address\n",
         appName,
         appName
     );

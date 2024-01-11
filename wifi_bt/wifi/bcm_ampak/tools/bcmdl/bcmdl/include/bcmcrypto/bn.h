@@ -71,7 +71,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * The licence and distribution terms for any publically available version or
+ * The licence and distribution terms for any publicly available version or
  * derivative of this code cannot be changed.  i.e. this code cannot simply be
  * copied and put under another distribution licence
  * [including the GNU Public Licence.]
@@ -252,7 +252,7 @@ extern "C" {
 
 #define BN_FLG_MALLOCED		0x01
 #define BN_FLG_STATIC_DATA	0x02
-#define BN_FLG_FREE		0x8000	/* used for debuging */
+#define BN_FLG_FREE		0x8000	/* used for debugging */
 #define BN_set_flags(b, n)	((b)->flags |= (n))
 #define BN_get_flags(b, n)	((b)->flags & (n))
 

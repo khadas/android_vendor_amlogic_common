@@ -574,7 +574,7 @@ public:
      *                     storage for the cloned object.
      *
      * @param status       Error status.  U_SAFECLONE_ALLOCATED_WARNING will be
-     *                     returned if the the provided buffer was too small, and
+     *                     returned if the provided buffer was too small, and
      *                     the clone was therefore put on the heap.
      *
      * @return  Pointer to the clone object.  This may differ from the stackBuffer

@@ -191,6 +191,7 @@ cc_prebuilt_library_shared {
         x86_64: {
             enabled: false,
         },
+
     },
 
     export_include_dirs: ["include", "include/am_ver"],
@@ -263,3 +264,4 @@ cc_prebuilt_library_static {
     proprietary: true,
 
 }
+

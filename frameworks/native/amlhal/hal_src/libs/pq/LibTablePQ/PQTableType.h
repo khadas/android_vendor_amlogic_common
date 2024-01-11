@@ -357,7 +357,7 @@ typedef struct _PQ_TABLE_PARAM {
     unsigned char PQ_Index_Table0[PQ_SRC_INDEX_MAX][PQ_INDEX_TABLE_SIZE];
     unsigned char PQ_Index_Table1[PQ_SRC_INDEX_MAX][PQ_INDEX_TABLE_SIZE];
     pq_dnlp_curve_param_t DNLPTable[DNLP_TABLE_NUM_MAX];
-    pq_hdr_tmo_sw_t HDRToneMapingTable[HDR_TONEMAPPING_TABLE_NUM_MAX];
+    pq_hdr_tmo_sw_t HDRToneMappingTable[HDR_TONEMAPPING_TABLE_NUM_MAX];
     pq_ai_pq_para_t AIPQ_Table[AI_PQ_TABLE_NUM_MAX];
     pq_ve_lc_curve_parm_t LC_NODE_Table[LC_TABLE_NUM_MAX][VPP_PQ_LV_MAX];
     pq_ve_lc_reg_parm_t LC_REG_Table[LC_TABLE_NUM_MAX][VPP_PQ_LV_MAX];

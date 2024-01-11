@@ -21,7 +21,7 @@ func dvb_go_DefaultsFactory() (android.Module) {
 
        dvbSrcPath := "vendor/amlogic/reference/external/dvb"
        icuSrcPath := "vendor/amlogic/reference/external/icu"
-       
+
        if android.ExistentPathForSource(ctx, dvbSrcPath).Valid() == true {
             p.Enabled = proptools.BoolPtr(false)
             //fmt.Printf("dvb:%s exist, use source to build\n", dvbSrcPath)
