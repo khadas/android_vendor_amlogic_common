@@ -717,6 +717,7 @@ void SysWrite::initConstCharforSysNode() {
         mPathforSysNode[VIDEO_POLL_PRIMARY_SRC_FMT] = "/sys/class/video_poll/primary_src_fmt";
         mPathforSysNode[VIDEO_CROP]                 = "/sys/class/video/crop";
         mPathforSysNode[VIDEO_SCREEN_MODE]          = "/sys/class/video/screen_mode";
+        mPathforSysNode[VIDEO_SCREEN_MODE_PIP]      = "/sys/class/video/screen_mode_pip";
         mPathforSysNode[VIDEO_NONLINEAR_FACTOR]     = "/sys/class/video/nonlinear_factor";
         mPathforSysNode[VIDEO_RGB_SCREEN]           = "/sys/class/video/rgb_screen";
         mPathforSysNode[VIDEO_TEST_SCREEN]          = "/sys/class/video/test_screen";
@@ -764,6 +765,7 @@ void SysWrite::initConstCharforSysNode() {
         mPathforSysNode[VIDEO_POLL_PRIMARY_SRC_FMT] = "/sys/class/video_poll/primary_src_fmt";
         mPathforSysNode[VIDEO_CROP]                 = "/sys/class/video/crop";
         mPathforSysNode[VIDEO_SCREEN_MODE]          = "/sys/class/video/screen_mode";
+        mPathforSysNode[VIDEO_SCREEN_MODE_PIP]      = "/sys/class/video/screen_mode_pip";
         mPathforSysNode[VIDEO_NONLINEAR_FACTOR]     = "/sys/class/video/nonlinear_factor";
         mPathforSysNode[VIDEO_RGB_SCREEN]           = "/sys/class/video/rgb_screen";
         mPathforSysNode[VIDEO_TEST_SCREEN]          = "/sys/class/video/test_screen";

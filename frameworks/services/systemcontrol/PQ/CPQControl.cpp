@@ -3928,6 +3928,9 @@ int CPQControl::Cpq_SetVideoScreenMode(int value)
 
     char val[64] = {0};
     sprintf(val, "%d", value);
+    if (isFileExist(pqSysWrite->getSysNode(VIDEO_SCREEN_MODE_PIP))) {
+        pqWriteSys(VIDEO_SCREEN_MODE_PIP, val);
+    }
     return pqWriteSys(VIDEO_SCREEN_MODE, val);
 }
 
