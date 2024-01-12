@@ -107,6 +107,11 @@ static int  pixel_to_ge2d_format(int *img_format, int *pge2d_format,int *p_bpp)
         *p_bpp = GE2D_BPP_8;
         is_one_plane = 0;
         break;
+        case  PIXEL_FORMAT_ALPHA8:
+        *pge2d_format = GE2D_FORMAT_S8_A;
+        *p_bpp = GE2D_BPP_8;
+        is_one_plane = 1;
+        break;
         default:
         E_GE2D("Image format %d not supported!", *img_format);
         *pge2d_format = 0xffffffff;
@@ -188,6 +193,23 @@ static int is_no_alpha(int format)
         return 0;
 }
 
+/* for example, append alpha for nv12:
+ * nv12 + alpha -> rgba
+ */
+static int is_not_append_alpha(aml_ge2d_info_t *pge2dinfo)
+{
+    if (pge2dinfo->src_info[0].format == PIXEL_FORMAT_ALPHA8 ||
+        pge2dinfo->src_info[1].format == PIXEL_FORMAT_ALPHA8)
+        return 0;
+    else
+        return 1;
+}
+
+static int is_append_alpha(aml_ge2d_info_t *pge2dinfo)
+{
+    return !is_not_append_alpha(pge2dinfo);
+}
+
 static int is_need_swap_src2(int format,buffer_info_t *src2, buffer_info_t *dst,
                              int cap_attr)
 {
@@ -249,6 +271,7 @@ static int get_dst_op_number(aml_ge2d_info_t *pge2dinfo)
     case PIXEL_FORMAT_YCbCr_420_SP_NV12:
     case PIXEL_FORMAT_YCbCr_422_UYVY:
     case PIXEL_FORMAT_BGR_888:
+    case PIXEL_FORMAT_ALPHA8:
         op_number = 1;
         break;
     case PIXEL_FORMAT_YV12:
@@ -368,7 +391,8 @@ static int ge2d_fillrectangle_config_ex_ion(int fd,aml_ge2d_info_t *pge2dinfo)
                 ge2d_config_ex.dst_planes[1].w = d_canvas_w;
                 ge2d_config_ex.dst_planes[1].h = d_canvas_h/2;
             }
-        }  else if (output_buffer_info->format == PIXEL_FORMAT_Y8) {
+        }  else if (output_buffer_info->format == PIXEL_FORMAT_Y8 ||
+                    output_buffer_info->format == PIXEL_FORMAT_ALPHA8) {
             ge2d_config_ex.dst_planes[0].addr = output_buffer_info->offset[0];
             ge2d_config_ex.dst_planes[0].shared_fd = output_buffer_info->shared_fd[0];
             ge2d_config_ex.dst_planes[0].w = d_canvas_w;
@@ -592,7 +616,8 @@ static int ge2d_blit_config_ex_ion(int fd,aml_ge2d_info_t *pge2dinfo)
                 ge2d_config_ex.src_planes[1].w = s_canvas_w;
                 ge2d_config_ex.src_planes[1].h = s_canvas_h/2;
             }
-        } else if (input_buffer_info->format == PIXEL_FORMAT_Y8) {
+        } else if (input_buffer_info->format == PIXEL_FORMAT_Y8 ||
+                   input_buffer_info->format == PIXEL_FORMAT_ALPHA8) {
             ge2d_config_ex.src_planes[0].addr = input_buffer_info->offset[0];
             ge2d_config_ex.src_planes[0].shared_fd = input_buffer_info->shared_fd[0];
             ge2d_config_ex.src_planes[0].w = s_canvas_w;
@@ -670,6 +695,7 @@ static int ge2d_blit_config_ex_ion(int fd,aml_ge2d_info_t *pge2dinfo)
         case PIXEL_FORMAT_YCbCr_422_UYVY:
         case PIXEL_FORMAT_BGRA_8888:
         case PIXEL_FORMAT_Y8:
+        case PIXEL_FORMAT_ALPHA8:
             if (pge2dinfo->dst_op_cnt == 0) {
                 ge2d_config_ex.dst_planes[0].addr = output_buffer_info->offset[0];
                 ge2d_config_ex.dst_planes[0].shared_fd = output_buffer_info->shared_fd[0];
@@ -1025,7 +1051,8 @@ static int ge2d_blend_config_ex_ion(int fd,aml_ge2d_info_t *pge2dinfo)
                 ge2d_config_ex.src_planes[1].w = s_canvas_w;
                 ge2d_config_ex.src_planes[1].h = s_canvas_h/2;
             }
-        } else if (input_buffer_info->format == PIXEL_FORMAT_Y8) {
+        } else if (input_buffer_info->format == PIXEL_FORMAT_Y8 ||
+                   input_buffer_info->format == PIXEL_FORMAT_ALPHA8) {
             ge2d_config_ex.src_planes[0].addr = input_buffer_info->offset[0];
             ge2d_config_ex.src_planes[0].shared_fd = input_buffer_info->shared_fd[0];
             ge2d_config_ex.src_planes[0].w = s_canvas_w;
@@ -1119,7 +1146,8 @@ static int ge2d_blend_config_ex_ion(int fd,aml_ge2d_info_t *pge2dinfo)
                 ge2d_config_ex.src2_planes[1].w = s2_canvas_w;
                 ge2d_config_ex.src2_planes[1].h = s2_canvas_h/2;
             }
-        } else if (input2_buffer_info->format == PIXEL_FORMAT_Y8) {
+        } else if (input2_buffer_info->format == PIXEL_FORMAT_Y8 ||
+                   input2_buffer_info->format == PIXEL_FORMAT_ALPHA8) {
             ge2d_config_ex.src2_planes[0].addr = input2_buffer_info->offset[0];
             ge2d_config_ex.src2_planes[0].shared_fd = input2_buffer_info->shared_fd[0];
             ge2d_config_ex.src2_planes[0].w = s2_canvas_w;
@@ -1212,7 +1240,8 @@ static int ge2d_blend_config_ex_ion(int fd,aml_ge2d_info_t *pge2dinfo)
                 ge2d_config_ex.dst_planes[1].w = d_canvas_w;
                 ge2d_config_ex.dst_planes[1].h = d_canvas_h/2;
             }
-        }  else if (output_buffer_info->format == PIXEL_FORMAT_Y8) {
+        }  else if (output_buffer_info->format == PIXEL_FORMAT_Y8 ||
+                    output_buffer_info->format == PIXEL_FORMAT_ALPHA8) {
             ge2d_config_ex.dst_planes[0].addr = output_buffer_info->offset[0];
             ge2d_config_ex.dst_planes[0].shared_fd = output_buffer_info->shared_fd[0];
             ge2d_config_ex.dst_planes[0].w = d_canvas_w;
@@ -1444,7 +1473,8 @@ static int ge2d_fillrectangle_config_ex(int fd,aml_ge2d_info_t *pge2dinfo)
                 ge2d_config_ex->dst_planes[1].w = d_canvas_w;
                 ge2d_config_ex->dst_planes[1].h = d_canvas_h/2;
             }
-        }  else if (output_buffer_info->format == PIXEL_FORMAT_Y8) {
+        }  else if (output_buffer_info->format == PIXEL_FORMAT_Y8 ||
+                    output_buffer_info->format == PIXEL_FORMAT_ALPHA8) {
             ge2d_config_ex->dst_planes[0].addr = output_buffer_info->offset[0];
             ge2d_config_ex->dst_planes[0].shared_fd = output_buffer_info->shared_fd[0];
             ge2d_config_ex->dst_planes[0].w = d_canvas_w;
@@ -1690,7 +1720,8 @@ static int ge2d_blit_config_ex(int fd,aml_ge2d_info_t *pge2dinfo)
                 ge2d_config_ex->src_planes[1].w = s_canvas_w;
                 ge2d_config_ex->src_planes[1].h = s_canvas_h/2;
             }
-        } else if (input_buffer_info->format == PIXEL_FORMAT_Y8) {
+        } else if (input_buffer_info->format == PIXEL_FORMAT_Y8 ||
+                   input_buffer_info->format == PIXEL_FORMAT_ALPHA8) {
             ge2d_config_ex->src_planes[0].addr = input_buffer_info->offset[0];
             ge2d_config_ex->src_planes[0].shared_fd = input_buffer_info->shared_fd[0];
             ge2d_config_ex->src_planes[0].w = s_canvas_w;
@@ -1769,6 +1800,7 @@ static int ge2d_blit_config_ex(int fd,aml_ge2d_info_t *pge2dinfo)
         case PIXEL_FORMAT_YCbCr_422_UYVY:
         case PIXEL_FORMAT_BGRA_8888:
         case PIXEL_FORMAT_Y8:
+        case PIXEL_FORMAT_ALPHA8:
             if (pge2dinfo->dst_op_cnt == 0) {
                 ge2d_config_ex->dst_planes[0].addr = output_buffer_info->offset[0];
                 ge2d_config_ex->dst_planes[0].shared_fd = output_buffer_info->shared_fd[0];
@@ -2164,7 +2196,8 @@ static int ge2d_blend_config_ex(int fd,aml_ge2d_info_t *pge2dinfo)
                 ge2d_config_ex->src_planes[1].w = s_canvas_w;
                 ge2d_config_ex->src_planes[1].h = s_canvas_h/2;
             }
-        } else if (input_buffer_info->format == PIXEL_FORMAT_Y8) {
+        } else if (input_buffer_info->format == PIXEL_FORMAT_Y8 ||
+                   input_buffer_info->format == PIXEL_FORMAT_ALPHA8) {
             ge2d_config_ex->src_planes[0].addr = input_buffer_info->offset[0];
             ge2d_config_ex->src_planes[0].shared_fd = input_buffer_info->shared_fd[0];
             ge2d_config_ex->src_planes[0].w = s_canvas_w;
@@ -2261,7 +2294,8 @@ static int ge2d_blend_config_ex(int fd,aml_ge2d_info_t *pge2dinfo)
                 ge2d_config_ex->src2_planes[1].w = s2_canvas_w;
                 ge2d_config_ex->src2_planes[1].h = s2_canvas_h/2;
             }
-        } else if (input2_buffer_info->format == PIXEL_FORMAT_Y8) {
+        } else if (input2_buffer_info->format == PIXEL_FORMAT_Y8 ||
+                   input2_buffer_info->format == PIXEL_FORMAT_ALPHA8) {
             ge2d_config_ex->src2_planes[0].addr = input2_buffer_info->offset[0];
             ge2d_config_ex->src2_planes[0].shared_fd = input2_buffer_info->shared_fd[0];
             ge2d_config_ex->src2_planes[0].w = s2_canvas_w;
@@ -2359,7 +2393,8 @@ static int ge2d_blend_config_ex(int fd,aml_ge2d_info_t *pge2dinfo)
                 ge2d_config_ex->dst_planes[1].h = d_canvas_h/2;
 
             }
-        }  else if (output_buffer_info->format == PIXEL_FORMAT_Y8) {
+        }  else if (output_buffer_info->format == PIXEL_FORMAT_Y8 ||
+                    output_buffer_info->format == PIXEL_FORMAT_ALPHA8) {
             ge2d_config_ex->dst_planes[0].addr = output_buffer_info->offset[0];
             ge2d_config_ex->dst_planes[0].shared_fd = output_buffer_info->shared_fd[0];
             ge2d_config_ex->dst_planes[0].w = d_canvas_w;
@@ -2518,6 +2553,7 @@ static int ge2d_blit(int fd,aml_ge2d_info_t *pge2dinfo,rectangle_t *rect,unsigne
     case PIXEL_FORMAT_YCbCr_422_SP:
     case PIXEL_FORMAT_YCbCr_420_SP_NV12:
     case PIXEL_FORMAT_YCbCr_422_UYVY:
+    case PIXEL_FORMAT_ALPHA8:
         if (pge2dinfo->dst_op_cnt == 0) {
             op_ge2d_info.dst_rect.x = dx;
             op_ge2d_info.dst_rect.y = dy;
@@ -2584,6 +2620,7 @@ static int ge2d_blit_noalpha(int fd,aml_ge2d_info_t *pge2dinfo,rectangle_t *rect
     case PIXEL_FORMAT_YCbCr_422_SP:
     case PIXEL_FORMAT_YCbCr_420_SP_NV12:
     case PIXEL_FORMAT_YCbCr_422_UYVY:
+    case PIXEL_FORMAT_ALPHA8:
         if (pge2dinfo->dst_op_cnt == 0) {
             op_ge2d_info.dst_rect.x = dx;
             op_ge2d_info.dst_rect.y = dy;
@@ -2648,6 +2685,7 @@ static int ge2d_strechblit(int fd,aml_ge2d_info_t *pge2dinfo,rectangle_t *srect,
     case PIXEL_FORMAT_YCrCb_420_SP:
     case PIXEL_FORMAT_YCbCr_420_SP_NV12:
     case PIXEL_FORMAT_YCbCr_422_UYVY:
+    case PIXEL_FORMAT_ALPHA8:
         if (pge2dinfo->dst_op_cnt == 0) {
             op_ge2d_info.dst_rect.x = drect->x;
             op_ge2d_info.dst_rect.y = drect->y;
@@ -2712,6 +2750,7 @@ static int ge2d_strechblit_noalpha(int fd,aml_ge2d_info_t *pge2dinfo,rectangle_t
     case PIXEL_FORMAT_YCrCb_420_SP:
     case PIXEL_FORMAT_YCbCr_420_SP_NV12:
     case PIXEL_FORMAT_YCbCr_422_UYVY:
+    case PIXEL_FORMAT_ALPHA8:
         if (pge2dinfo->dst_op_cnt == 0) {
             op_ge2d_info.dst_rect.x = drect->x;
             op_ge2d_info.dst_rect.y = drect->y;
@@ -2824,16 +2863,29 @@ static int ge2d_blend(int fd, aml_ge2d_info_t *pge2dinfo,
             break;
         case BLEND_MODE_COVERAGE:
             if (pge2dinfo->b_src_swap) {
-                blend_op.color_blending_src_factor = COLOR_FACTOR_ONE_MINUS_DST_ALPHA;
-                blend_op.color_blending_dst_factor = COLOR_FACTOR_DST_ALPHA;
-                blend_op.alpha_blending_src_factor = ALPHA_FACTOR_ONE_MINUS_DST_ALPHA;
-                blend_op.alpha_blending_dst_factor = ALPHA_FACTOR_DST_ALPHA;
-            }
-            else {
-                blend_op.color_blending_src_factor = COLOR_FACTOR_SRC_ALPHA;
-                blend_op.color_blending_dst_factor = COLOR_FACTOR_ONE_MINUS_SRC_ALPHA;
-                blend_op.alpha_blending_src_factor = ALPHA_FACTOR_SRC_ALPHA;
-                blend_op.alpha_blending_dst_factor = ALPHA_FACTOR_ONE_MINUS_SRC_ALPHA;
+                if (is_append_alpha(pge2dinfo)) {
+                    blend_op.color_blending_src_factor = COLOR_FACTOR_ZERO;
+                    blend_op.color_blending_dst_factor = COLOR_FACTOR_ONE;
+                    blend_op.alpha_blending_src_factor = ALPHA_FACTOR_ONE;
+                    blend_op.alpha_blending_dst_factor = ALPHA_FACTOR_ZERO;
+                } else {
+                    blend_op.color_blending_src_factor = COLOR_FACTOR_ONE_MINUS_DST_ALPHA;
+                    blend_op.color_blending_dst_factor = COLOR_FACTOR_DST_ALPHA;
+                    blend_op.alpha_blending_src_factor = ALPHA_FACTOR_ONE_MINUS_DST_ALPHA;
+                    blend_op.alpha_blending_dst_factor = ALPHA_FACTOR_DST_ALPHA;
+                }
+            } else {
+                if (is_append_alpha(pge2dinfo)) {
+                    blend_op.color_blending_src_factor = COLOR_FACTOR_ONE;
+                    blend_op.color_blending_dst_factor = COLOR_FACTOR_ZERO;
+                    blend_op.alpha_blending_src_factor = ALPHA_FACTOR_ZERO;
+                    blend_op.alpha_blending_dst_factor = ALPHA_FACTOR_ONE;
+                } else {
+                    blend_op.color_blending_src_factor = COLOR_FACTOR_SRC_ALPHA;
+                    blend_op.color_blending_dst_factor = COLOR_FACTOR_ONE_MINUS_SRC_ALPHA;
+                    blend_op.alpha_blending_src_factor = ALPHA_FACTOR_SRC_ALPHA;
+                    blend_op.alpha_blending_dst_factor = ALPHA_FACTOR_ONE_MINUS_SRC_ALPHA;
+                }
             }
             break;
         case BLEND_MODE_INVALID:
@@ -3143,9 +3195,10 @@ int ge2d_process(int fd,aml_ge2d_info_t *pge2dinfo)
                 sync_src_dmabuf_to_device(pge2dinfo, 1);
             ret = ge2d_blend_config_ex(fd,pge2dinfo);
             if (ret == GE2D_SUCCESS) {
-                if ((is_no_alpha(pge2dinfo->src_info[0].format))
+                if (is_not_append_alpha(pge2dinfo)
+                    && ((is_no_alpha(pge2dinfo->src_info[0].format))
                     || (is_no_alpha(pge2dinfo->src_info[1].format))
-                    || (pge2dinfo->src_info[0].layer_mode == LAYER_MODE_NON)) {
+                    || (pge2dinfo->src_info[0].layer_mode == LAYER_MODE_NON))) {
                     if (pge2dinfo->b_src_swap) {
                         ret = ge2d_blend_noalpha(fd,pge2dinfo,&(pge2dinfo->src_info[1].rect),
                             &(pge2dinfo->src_info[0].rect),
@@ -3269,9 +3322,10 @@ int ge2d_process_ion(int fd,aml_ge2d_info_t *pge2dinfo)
             dst_rect.y = pge2dinfo->offset + pge2dinfo->dst_info.rect.y;
             ret = ge2d_blend_config_ex_ion(fd,pge2dinfo);
             if (ret == GE2D_SUCCESS) {
-                if ((is_no_alpha(pge2dinfo->src_info[0].format))
+                if (is_not_append_alpha(pge2dinfo)
+                    && ((is_no_alpha(pge2dinfo->src_info[0].format))
                     || (is_no_alpha(pge2dinfo->src_info[1].format))
-                    || (pge2dinfo->src_info[0].layer_mode == LAYER_MODE_NON)) {
+                    || (pge2dinfo->src_info[0].layer_mode == LAYER_MODE_NON))) {
                     if (pge2dinfo->b_src_swap)
                         ret = ge2d_blend_noalpha(fd,pge2dinfo,&(pge2dinfo->src_info[1].rect),
                             &(pge2dinfo->src_info[0].rect),
