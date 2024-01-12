@@ -18,13 +18,21 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.hardware.hdmi.HdmiControlManager;
+import android.hardware.hdmi.HdmiControlManager.VendorCommandListener;
+import android.hardware.hdmi.HdmiClient;
 import android.hardware.hdmi.HdmiPlaybackClient;
 import android.net.Uri;
 import android.provider.Settings;
+import android.provider.Settings.Global;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.UserHandle;
 import android.util.Log;
+import android.widget.Toast;
 
+import java.util.Arrays;
+
+import com.droidlogic.R;
 
 public class HdmiCecService extends Service {
     private static final String TAG = "HdmiCecService";
@@ -62,6 +70,9 @@ public class HdmiCecService extends Service {
 
     private final HdmiCecReceiver mHdmiCecReceiver = new HdmiCecReceiver();
 
+    private VendorCommandHandler mVendorCommandHandler;
+    private SettingsObserver mSettingsObserver;
+
     @Override
     public void onCreate() {
         Log.d(TAG, "onCreate");
@@ -69,6 +80,9 @@ public class HdmiCecService extends Service {
         if (null == mHdmiControlManager) {
             return;
         }
+        mVendorCommandHandler = new VendorCommandHandler(this);
+        mSettingsObserver = new SettingsObserver(mHandler);
+        registerObserver();
         mPlayback = mHdmiControlManager.getPlaybackClient();
         if (null == mPlayback) {
             Log.d(TAG, "It's none playback device");
@@ -162,6 +176,133 @@ public class HdmiCecService extends Service {
                     updateActiveState(false);
                     break;
             }
+        }
+    }
+
+    private void registerObserver() {
+        ContentResolver resolver = this.getContentResolver();
+        String[] settings = new String[] {
+            SettingsObserver.CEC_ENABLE_ADB
+        };
+        for (String s : settings) {
+            resolver.registerContentObserver(Global.getUriFor(s), false, mSettingsObserver,
+                    UserHandle.USER_ALL);
+        }
+
+        mVendorCommandHandler.registerVendorCommandListener();
+    }
+
+    private class SettingsObserver extends ContentObserver {
+    static final String CEC_ENABLE_ADB = "cec_enable_adb";
+
+        public SettingsObserver(Handler handler) {
+            super(handler);
+        }
+
+        // onChange is set up to run in service thread.
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            String option = uri.getLastPathSegment();
+            boolean enabled = Global.getInt(HdmiCecService.this.getContentResolver(), option, 0) == 1;
+            Log.d(TAG, "onChange " + option + " enabled:" + enabled);
+            switch (option) {
+                case CEC_ENABLE_ADB:
+                    if (enabled) {
+                        mVendorCommandHandler.sendEnableAdbVendorCommand();
+                    }
+                    break;
+            }
+        }
+    }
+
+    private class VendorCommandHandler {
+
+        static final byte VENDOR_CMD_ENABLE_ADB = 0x1;
+        static final byte VENDOR_PARAM_STATUS_ON = 0x1;
+        static final byte VENDOR_PARAM_STATUS_OFF = 0x0;
+        static final int VENDOR_ID_DEFAULT = 0x1CA410;
+
+        // 1c a4 10 01 01
+        static final int LENGTH_VENDOR_CMD_PARAMS = 5;
+
+        static final int[] LOGICAL_ADDRESS_PLAYBACK = {0x4, 0x8, 0xb};
+        static final byte[] VENDOR_PARAMS_ADB_ENABLED = {VENDOR_CMD_ENABLE_ADB, VENDOR_PARAM_STATUS_ON};
+
+        Context mContext;
+        HdmiControlManager mHcm;
+        HdmiClient mHdmiClient;
+        VendorCommandListener mListener;
+
+        public VendorCommandHandler(Context context) {
+            mContext = context;;
+            mHcm = (HdmiControlManager)context.getSystemService(Context.HDMI_CONTROL_SERVICE);
+            if (mHcm == null) {
+                return;
+            }
+            mHdmiClient = mHcm.getTvClient();
+            if (mHdmiClient == null) {
+                mHdmiClient = mHcm.getPlaybackClient();
+            }
+            if (mHdmiClient == null) {
+                Log.w(TAG, "Can't get any cec client!");
+                return;
+            }
+            mListener = new VendorCommandListener() {
+                public void onReceived(int srcAddress, int destAddress, byte[] params, boolean hasVendorId) {
+                    Log.d(TAG, "onReceived params:" + Arrays.toString(params) + " has vendor id:" + hasVendorId);
+                    if (!hasVendorId) {
+                        return;
+                    }
+                    if (params.length != LENGTH_VENDOR_CMD_PARAMS) {
+                        return;
+                    }
+                    int vendorId = threeBytesToInt(params);
+                    Log.d(TAG, "vendor command vendor id " + String.format("%x", vendorId));
+                    if (vendorId != VENDOR_ID_DEFAULT) {
+                        Log.w(TAG, "Not expected vendor id " + String.format("%x", VENDOR_ID_DEFAULT));
+                        return;
+                    }
+                    int code = (int)(params[LENGTH_VENDOR_CMD_PARAMS - 2] & 0xFF);
+                    int state = (int)(params[LENGTH_VENDOR_CMD_PARAMS - 1] & 0xFF);
+                    Log.d(TAG, "onReceived vendor command code:" + code + " state:" + state);
+                    switch (code) {
+                        case VENDOR_CMD_ENABLE_ADB:
+                            Log.d(TAG, "enable local usb debugging");
+                            mHandler.post(()->{
+                                Toast.makeText(mContext, R.string.adb_enabled, Toast.LENGTH_LONG).show();
+                            });
+                            Global.putInt(mContext.getContentResolver(), Global.ADB_ENABLED, state);
+                            break;
+                    }
+                }
+
+                public void onControlStateChanged(boolean enabled, int reason) {
+                }
+            };
+
+            Log.d(TAG, "VendorCommandHandler initialized");
+        }
+
+        public void registerVendorCommandListener() {
+            if (mHdmiClient == null) {
+                return;
+            }
+            Log.d(TAG, "registerVendorCommandListener");
+            mHdmiClient.setVendorCommandListener(mListener, VENDOR_ID_DEFAULT);
+        }
+
+        public void sendEnableAdbVendorCommand() {
+            Log.d(TAG, "sendEnableAdbVendorCommand");
+            if (mHdmiClient == null) {
+                return;
+            }
+            for (int address: LOGICAL_ADDRESS_PLAYBACK) {
+                mHdmiClient.sendVendorCommand(address, VENDOR_PARAMS_ADB_ENABLED, true);
+            }
+        }
+
+        private int threeBytesToInt(byte[] data) {
+            return ((data[0] & 0xFF) << 16) | ((data[1] & 0xFF) << 8) | (data[2] & 0xFF);
         }
     }
 }

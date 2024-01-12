@@ -29,5 +29,6 @@
     <string name="volume_control_hint">To adjust volume, enable CEC control(More Settings > HDMI CEC) or adjust the TV remote control. </string>
     <string name="config_globalButtonLaunch">com.google.android.apps.tv.launcherx/com.google.android.apps.tv.launcherx.globalbutton.GlobalButtonLaunch_Receiver</string>
     <string name="prepare">AI PQ invalid value...</string>
+    <string name="adb_enabled">adb is enabled</string>
     <string name="arc_port_warning">Audio system device is not connected to the ARC port!</string>
 </resources>
