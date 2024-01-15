@@ -856,7 +856,7 @@ HAL_STATUS_T AML_HAL_PQ_SetPQSrcTiming(aml_hal_pq_source_timing_e eSrcTiming)
 //LD
 HAL_STATUS_T AML_HAL_PQ_LD_SetLevelIdx(int iLevelIdx)
 {
-    if (ADAP_LD_SetLevelIdx(iLevelIdx) != true) {
+    if (ADAP_LD_SetLevelIdx(iLevelIdx) != ADAP_OK) {
         return API_NOT_OK;
     }
 
