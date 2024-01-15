@@ -10028,7 +10028,9 @@ int CPQControl::Set_PictureMode(vpp_picture_mode_t pq_mode, pq_src_param_t sourc
         ret |= Cpq_BlackStretch(pq_para.BlackStretch, mCurrentSourceInputInfo);
         ret |= Cpq_BlueStretch(pq_para.BlueStretch, mCurrentSourceInputInfo);
         ret |= Cpq_ChromaCoring(pq_para.ChromaCoring, mCurrentSourceInputInfo);
-        ret |= Cpq_SetMpegNr((vpp_pq_level_t)pq_para.MpegNr, mCurrentSourceInputInfo);
+        //ret |= Cpq_SetMpegNr((vpp_pq_level_t)pq_para.MpegNr, mCurrentSourceInputInfo);
+        ret |= Cpq_SetDeblockMode((di_deblock_mode_t)pq_para.Deblock, mCurrentSourceInputInfo);
+        ret |= Cpq_SetDemoSquitoMode((di_demosquito_mode_t)pq_para.Demosquito, mCurrentSourceInputInfo);
         ret |= Cpq_SetSmoothPlusMode((vpp_smooth_plus_mode_t)pq_para.SmoothPlus, mCurrentSourceInputInfo);
 
         //dobly mode
