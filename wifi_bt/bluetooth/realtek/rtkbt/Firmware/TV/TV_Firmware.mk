@@ -10,6 +10,8 @@ tv_firmware_files := \
 	vendor/amlogic/common/wifi_bt/bluetooth/realtek/rtkbt/Firmware/TV/rtl8723d_fw \
 	vendor/amlogic/common/wifi_bt/bluetooth/realtek/rtkbt/Firmware/TV/rtl8723ds_config \
 	vendor/amlogic/common/wifi_bt/bluetooth/realtek/rtkbt/Firmware/TV/rtl8723ds_fw \
+	vendor/amlogic/common/wifi_bt/bluetooth/realtek/rtkbt/Firmware/TV/rtl8733b_8723f_config \
+	vendor/amlogic/common/wifi_bt/bluetooth/realtek/rtkbt/Firmware/TV/rtl8733b_8723f_fw \
 	vendor/amlogic/common/wifi_bt/bluetooth/realtek/rtkbt/Firmware/TV/rtl8761a_config \
 	vendor/amlogic/common/wifi_bt/bluetooth/realtek/rtkbt/Firmware/TV/rtl8761a_fw \
 	vendor/amlogic/common/wifi_bt/bluetooth/realtek/rtkbt/Firmware/TV/rtl8761at_config \
