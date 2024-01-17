@@ -17,6 +17,7 @@
 #define LOG_TAG "ESConvertor"
 #include <utils/Log.h>
 #include "../ScreenControlDebug.h"
+#include "../ScreenControlH264.h"
 #include "esconvertor.h"
 
 namespace android {
@@ -159,7 +160,8 @@ void ESConvertor::onInputBufferAvailable(int64_t pts) {
 }
 void ESConvertor::onOutputBufferAvailable(void* const buffer, int32_t size, int32_t frame_type, int64_t pts) {
     ALOGI("onOutputBufferAvailable frame_type=%d,pts =%lld,size=%d",frame_type,pts,size);
-    if (!mStart) {
+    /* The encoder outputs PPS and PSP data too quickly, before actually starting coding */
+    if (!mStart && (frame_type != AVC_TYPE_FRAME_TYPE_SPS && frame_type != AVC_TYPE_FRAME_TYPE_PPS)) {
         ALOGE("[%s %d] the ESConvertor has been stopped!", __FUNCTION__, __LINE__);
         return;
     }
