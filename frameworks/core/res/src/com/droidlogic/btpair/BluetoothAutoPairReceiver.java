@@ -26,12 +26,18 @@ import java.util.Set;
 import android.text.TextUtils;
 import android.provider.Settings;
 import android.bluetooth.BluetoothClass;
+import android.os.Handler;
+import android.os.Message;
 
 public class BluetoothAutoPairReceiver extends BroadcastReceiver {
     private static final String TAG = "BluetoothAutoPairReceiver";
     private static final boolean DEBUG = true;
 
     private static String DEFAULT_REMOTE_TYPE = "IR_NONE";
+    private CheckBtStatusHandler mHandler;
+    private final int MESSAGE_UPDATE_BONDED_DEVICE = 0;
+    private int mCheckBondedDeviceTime = 0;
+    private Context mContext;
 
     private void Log(String msg) {
         if (DEBUG) {
@@ -52,19 +58,62 @@ public class BluetoothAutoPairReceiver extends BroadcastReceiver {
             } catch (Settings.SettingNotFoundException e) {
                 Log("!!!!SettingNotFoundException");
             }
+
+            mContext = context;
+            mHandler = new CheckBtStatusHandler();
             Log("isUserSetup:"+isUserSetup);
-             if (isUserSetup == 1 && isAutoPairNeeded()) {
-                Log("No boned bt remote, show droidlogic BT pairing screen!");
-                Intent BtSetupIntent = new Intent();
-                BtSetupIntent.setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.accessories.AddAccessoryActivity"));
-                BtSetupIntent.putExtra("no_input_mode", true);
-                BtSetupIntent.putExtra("show_remote_only", true);
-                BtSetupIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(BtSetupIntent);
+            if (isUserSetup == 1) {
+                mHandler.sendEmptyMessage(MESSAGE_UPDATE_BONDED_DEVICE);
             } else {
                 Log("No need to show BT pairing screen");
             }
         }
+    }
+
+    private class CheckBtStatusHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MESSAGE_UPDATE_BONDED_DEVICE:
+                   mCheckBondedDeviceTime++;
+                   if (!isBtTurnedOn()) {
+                       if (mCheckBondedDeviceTime > 20) {
+                           Log("waiting for opening bt timeout,exit!");
+                           return;
+                       }
+                       Log("BT is OFF,check it later in 500ms");
+                       mHandler.sendEmptyMessageDelayed(MESSAGE_UPDATE_BONDED_DEVICE, 500);
+                       return;
+                   }
+                   Log("BT is ON");
+                   if (isAutoPairNeeded()) {
+                       startBtPair();
+                   } else {
+                       Log("No need to show BT pairing screen");
+                   }
+                   break;
+                default:
+                       Log.d(TAG, "No handler case available for message: " + msg.what);
+            }
+        }
+    }
+
+    private void startBtPair() {
+        Intent BtSetupIntent = new Intent();
+        BtSetupIntent.setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.accessories.AddAccessoryActivity"));
+        BtSetupIntent.putExtra("no_input_mode", true);
+        BtSetupIntent.putExtra("show_remote_only", true);
+        BtSetupIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        mContext.startActivity(BtSetupIntent);
+    }
+
+    private boolean isBtTurnedOn() {
+         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+         if (btAdapter == null) {
+            Log.w(TAG, "Can't get BT adapter, return");
+            return false;
+        }
+         return btAdapter.isEnabled();
     }
 
     private boolean isAvilible( Context context, String packageName ){
