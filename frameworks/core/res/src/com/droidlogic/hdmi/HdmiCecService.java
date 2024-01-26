@@ -17,6 +17,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.ContentObserver;
+import android.media.AudioDeviceAttributes;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
 import android.hardware.hdmi.HdmiControlManager;
 import android.hardware.hdmi.HdmiControlManager.VendorCommandListener;
 import android.hardware.hdmi.HdmiClient;
@@ -26,6 +29,7 @@ import android.provider.Settings;
 import android.provider.Settings.Global;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.util.Log;
 import android.widget.Toast;
@@ -57,10 +61,13 @@ public class HdmiCecService extends Service {
     private static final String LANG_VENDOR_CALLBACK = "aml";
     // Netflix feature for stb device
     private static final String FEATURE_SOFTWARE_NETFLIX = "droidlogic.software.netflix";
+    // droidlogic first boot
+    private static final String DROIDLOGIC_FIRST_BOOT = "droidlogic_first_boot";
 
     private HdmiControlManager mHdmiControlManager;
     private HdmiPlaybackClient mPlayback;
     private HdmiCecAidlClient mHdmiCecAidlClient;
+    private AudioManager mAudioManager;
 
     private boolean mIsActive = true;
     private Handler mHandler = new Handler();
@@ -88,6 +95,19 @@ public class HdmiCecService extends Service {
             Log.d(TAG, "It's none playback device");
             return;
         }
+        mAudioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+        AudioDeviceAttributes device = new AudioDeviceAttributes(
+            AudioDeviceAttributes.ROLE_OUTPUT, AudioDeviceInfo.TYPE_HDMI, "");
+
+        if (Global.getInt(this.getContentResolver(), DROIDLOGIC_FIRST_BOOT, -1) == -1) {
+            Global.putInt(this.getContentResolver(), DROIDLOGIC_FIRST_BOOT, 1);
+            String volumeBehavior = SystemProperties.get("vendor.tv.hdmi.device_volume_behavior");
+            if ("0".equals(volumeBehavior)) {
+                int behavior = AudioManager.DEVICE_VOLUME_BEHAVIOR_VARIABLE;
+                mAudioManager.setDeviceVolumeBehavior(device, behavior);
+            }
+        }
+
         if (!getPackageManager().hasSystemFeature(FEATURE_SOFTWARE_NETFLIX) && (!DEBUG)) {
             Log.i(TAG, "Netflix feature is not supported");
             return;
