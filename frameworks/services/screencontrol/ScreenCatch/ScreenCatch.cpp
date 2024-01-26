@@ -27,6 +27,7 @@
 namespace android {
 
 #define PROP_KEYSTONE "persist.vendor.hwc.keystone"
+#define PROP_POSTPROCESSOR "vendor.hwc.postprocessor"
 
 //////////////////////////////  screen capture when use keystone  //////////////////////////////
 
@@ -98,7 +99,7 @@ ScreenCatch::~ScreenCatch() {
 bool ScreenCatch::start(std::unique_ptr<InputParmeter>& input) {
     std::lock_guard<std::mutex> lock(mLock);
     int32_t size = 0;
-    char keystone[256] = {0};
+    char postprocessor[256] = {0};
     if (mStart) {
         ALOGE("[%s %d] it has been started", __FUNCTION__, __LINE__);
         return false;
@@ -109,8 +110,11 @@ bool ScreenCatch::start(std::unique_ptr<InputParmeter>& input) {
     }
     ALOGI("[%s %d]  ScreenManager start finish source_type = %d (%d/%d)", __FUNCTION__, __LINE__,
                 input->source_type,input->size->width(),input->size->height());
-    if (property_get(PROP_KEYSTONE, keystone, "") > 0 && strlen(keystone) > 0 )
+    if (property_get(PROP_POSTPROCESSOR, postprocessor, "") > 0 &&
+        strlen(postprocessor) > 0 && !strcasecmp(postprocessor, "true")) {
+        ALOGI("[%s %d] postprocessor:%s", __FUNCTION__, __LINE__, postprocessor);
         return captureforKeystone()?true:false;
+    }
 
     mScreenManager = ScreenManager::getInstance();
     auto screenInput = std::make_unique<InputParmeter>();
