@@ -34,10 +34,12 @@ public class BluetoothAutoPairReceiver extends BroadcastReceiver {
     private static final boolean DEBUG = true;
 
     private static String DEFAULT_REMOTE_TYPE = "IR_NONE";
-    private CheckBtStatusHandler mHandler;
+    private CheckBtStatusHandler mHandler = null;
     private final int MESSAGE_UPDATE_BONDED_DEVICE = 0;
     private int mCheckBondedDeviceTime = 0;
     private Context mContext;
+
+    private boolean isInQuiescentMode = false;
 
     private void Log(String msg) {
         if (DEBUG) {
@@ -47,27 +49,49 @@ public class BluetoothAutoPairReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (!isUserSetupFinish()) {
+            Log("No need to show BT pairing screen");
+            return;
+        }
+        mContext = context;
+        if (mHandler == null)
+            mHandler = new CheckBtStatusHandler();
+
         String action = intent.getAction();
         if (Intent.ACTION_BOOT_COMPLETED.equals(action)) {
             Log("Received ACTION_BOOT_COMPLETED");
-            int isUserSetup = 0;
-            try {
-                //  Settings.Global.DEVICE_PROVISIONED & Settings.Secure.USER_SETUP_COMPLETE are set as 1 if setupwizard is done.
-                // They are always set as 1 on aosp .
-                isUserSetup = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.USER_SETUP_COMPLETE) ;
-            } catch (Settings.SettingNotFoundException e) {
-                Log("!!!!SettingNotFoundException");
-            }
 
-            mContext = context;
-            mHandler = new CheckBtStatusHandler();
-            Log("isUserSetup:"+isUserSetup);
-            if (isUserSetup == 1) {
+            isInQuiescentMode = SystemProperties.get("ro.boot.quiescent", "0").equals("1");
+            if (isInQuiescentMode) {
+                Log("It's in quiescent mode now,no need to show bt pairing screen");
+                return;
+            }
+            mHandler.sendEmptyMessage(MESSAGE_UPDATE_BONDED_DEVICE);
+
+        } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
+            if (isInQuiescentMode) {
+                Log("Received ACTION_SCREEN_ON,isInQuiescentMode:" + isInQuiescentMode);
+                isInQuiescentMode = false;
                 mHandler.sendEmptyMessage(MESSAGE_UPDATE_BONDED_DEVICE);
-            } else {
-                Log("No need to show BT pairing screen");
+                return;
             }
         }
+    }
+
+    private boolean isUserSetupFinish() {
+        int isUserSetup = 0;
+        try {
+            //  Settings.Global.DEVICE_PROVISIONED & Settings.Secure.USER_SETUP_COMPLETE are set as 1 if setupwizard is done.
+            // They are always set as 1 on aosp .
+            isUserSetup = Settings.Secure.getInt(mContext.getContentResolver(), Settings.Secure.USER_SETUP_COMPLETE) ;
+        } catch (Settings.SettingNotFoundException e) {
+            Log("!!!!SettingNotFoundException");
+        }
+
+        if (isUserSetup == 1)
+            return true;
+        else
+        return false;
     }
 
     private class CheckBtStatusHandler extends Handler {
