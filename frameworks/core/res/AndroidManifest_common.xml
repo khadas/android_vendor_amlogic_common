@@ -184,7 +184,8 @@
             android:name="com.droidlogic.btpair.BluetoothAutoPairReceiver"
             android:enabled="true" >
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                 <action android:name="android.intent.action.SCREEN_ON" />
             </intent-filter>
         </receiver>
 
