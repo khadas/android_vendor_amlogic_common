@@ -300,6 +300,8 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     Return<int32_t> setAipqEnable(int32_t isEnable) override;
     Return<int32_t> getAipqEnable() override;
     Return<void> readAiPqTable(readAiPqTable_cb _hidl_cb) override;
+    Return<int32_t> setAipqMode(int32_t mode, int32_t isSave) override;
+    Return<int32_t> getAipqMode(void) override;
     Return<int32_t> getBlueStretch(void) override;
     Return<int32_t> setBlueStretch(int32_t level, int32_t is_save) override;
     Return<int32_t> getLocalDimming(void) override;
@@ -312,6 +314,8 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     Return<Result> aisrContrl(bool on) override;
     Return<Result> hasAisrFunc() override;
     Return<Result> getAisr() override;
+    Return<int32_t> setAisrMode(int32_t mode, int32_t isSave) override;
+    Return<int32_t> getAisrMode(void) override;
     //aicolor
     Return<int32_t> setAiColor(int32_t value, int32_t isSave) override;
     Return<int32_t> getAiColor(void) override;

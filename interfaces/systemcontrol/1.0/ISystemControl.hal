@@ -759,6 +759,12 @@ interface ISystemControl {
   readAiPqTable()
       generates (Result result, string aiPqTable);
 
+  setAipqMode(int32_t mode, int32_t isSave)
+      generates (int32_t ret);
+
+  getAipqMode()
+      generates (int32_t ret);
+
   //aisr
   aisrContrl (bool on)
       generates (Result result);
@@ -766,6 +772,12 @@ interface ISystemControl {
       generates (Result result);
   getAisr ()
       generates (Result result);
+
+  setAisrMode(int32_t mode, int32_t isSave)
+      generates (int32_t ret);
+
+  getAisrMode()
+      generates (int32_t ret);
 
   //aicolor
   setAiColor(int32_t value, int32_t isSave)

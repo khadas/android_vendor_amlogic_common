@@ -86,6 +86,7 @@ cc_library_shared {
         "CDynamicBackLight.cpp",
         "CHlgToneMapping.cpp",
         "CDolbyVision.cpp",
+		"GammaOperation.cpp",
     ],
 
     export_include_dirs: [

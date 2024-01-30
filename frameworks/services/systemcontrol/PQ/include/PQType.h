@@ -185,6 +185,23 @@ typedef enum vpp_gamma_curve_e {
     VPP_GAMMA_CURVE_MAX,
 } vpp_gamma_curve_t;
 
+typedef enum vpp_gamma_mode_e {
+    VPP_GAMMA_MODE_DEFAULT = 0,
+    VPP_GAMMA_MODE_1_7,
+    VPP_GAMMA_MODE_1_8,
+    VPP_GAMMA_MODE_1_9,
+    VPP_GAMMA_MODE_2_0,
+    VPP_GAMMA_MODE_2_1,
+    VPP_GAMMA_MODE_2_2,
+    VPP_GAMMA_MODE_2_3,
+    VPP_GAMMA_MODE_2_4,
+    VPP_GAMMA_MODE_2_5,
+    VPP_GAMMA_MODE_2_6,
+    VPP_GAMMA_MODE_2_7,
+    VPP_GAMMA_MODE_BT1886,
+    VPP_GAMMA_MODE_MAX,
+} vpp_gamma_mode_t;
+
 typedef enum vpp_memc_mode_e {
     VPP_MEMC_MODE_OFF,
     VPP_MEMC_MODE_LOW,
@@ -1074,18 +1091,18 @@ typedef struct aml_lcd_ss_ctl_s {
     unsigned int mode;
 }aml_lcd_ss_ctl_t;
 
+typedef enum _aisr_mode_e {
+    AISR_MODE_OFF = 0,
+    AISR_MODE_LOW,
+    AISR_MODE_MID,
+    AISR_MODE_HIGH,
+    AISR_MODE_MAX,
+} aisr_mode_e;
+
 typedef enum _aipq_mode_e {
     AIPQ_MODE_OFF = 0,
     AIPQ_MODE_LOW,
     AIPQ_MODE_MID,
     AIPQ_MODE_MAX,
 } aipq_mode_e;
-
-typedef enum _aisr_mode_e {
-    AISR_MODE_OFF = 0,
-    AISR_MODE_LOW,
-    AISR_MODE_MID,
-    AISR_MODE_MAX,
-} aisr_mode_e;
-
 #endif

@@ -336,6 +336,7 @@ int SSMAction::SSMReadNTypes(int id, int data_len, int *data_buf, int offset)
 bool SSMAction::SSMRecovery()
 {
     bool ret = true;
+    SYS_LOGD("%s start\n", __FUNCTION__);
 
     EraseAllData();
 
@@ -347,6 +348,7 @@ bool SSMAction::SSMRecovery()
     }
 
     ret = mSSMHandler->SSMRecreateHeader();
+    SYS_LOGD("%s end\n", __FUNCTION__);
 
     return ret;
 }

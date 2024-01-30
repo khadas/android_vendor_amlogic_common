@@ -1595,6 +1595,13 @@ Return<void> SystemControlHal::readAiPqTable(readAiPqTable_cb _hidl_cb) {
     return Void();
 }
 
+Return<int32_t> SystemControlHal::setAipqMode(int32_t mode, int32_t isSave) {
+    return mSysControl->setAipqMode(mode, isSave);
+}
+
+Return<int32_t> SystemControlHal::getAipqMode(void) {
+    return mSysControl->getAipqMode();
+}
 
 Return<Result> SystemControlHal::aisrContrl(bool on) {
     if (mSysControl->aisrContrl(on)) {
@@ -1615,6 +1622,14 @@ Return<Result> SystemControlHal::getAisr() {
         return Result::OK;
     }
     return Result::FAIL;
+}
+
+Return<int32_t> SystemControlHal::setAisrMode(int32_t mode, int32_t isSave) {
+    return mSysControl->setAisrMode(mode, isSave);
+}
+
+Return<int32_t> SystemControlHal::getAisrMode(void) {
+    return mSysControl->getAisrMode();
 }
 
 Return<int32_t> SystemControlHal::setAiColor(int32_t value, int32_t isSave) {

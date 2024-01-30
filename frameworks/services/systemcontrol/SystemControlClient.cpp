@@ -1435,6 +1435,14 @@ bool SystemControlClient::readAiPqTable(std::string& aiPqTable) {
     return true;
 }
 
+int SystemControlClient::setAipqMode(int mode, int isSave) {
+    return mSysCtrl->setAipqMode(mode, isSave);
+}
+
+int SystemControlClient::getAipqMode(void) {
+    return mSysCtrl->getAipqMode();
+}
+
 bool SystemControlClient::aisrContrl(int isEnable) {
     return (mSysCtrl->aisrContrl(isEnable) == Result::OK);
 }
@@ -1445,6 +1453,14 @@ bool SystemControlClient::hasAisrFunc() {
 
 bool SystemControlClient::getAisr() {
     return (mSysCtrl->getAisr() == Result::OK);
+}
+
+int SystemControlClient::setAisrMode(int mode, int isSave) {
+    return mSysCtrl->setAisrMode(mode, isSave);
+}
+
+int SystemControlClient::getAisrMode(void) {
+    return mSysCtrl->getAisrMode();
 }
 
 int SystemControlClient::setAiColor(int value, int isSave) {

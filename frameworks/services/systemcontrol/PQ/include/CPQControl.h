@@ -27,6 +27,8 @@
 #include "SysWrite.h"
 #include "video_tunnel.h"
 
+#include "GammaOperation.h"
+
 #define LDIM_PATH                 "/dev/aml_ldim"
 #define VPP_DEV_PATH              "/dev/amvecm"
 #define DI_DEV_PATH               "/dev/di0"
@@ -132,6 +134,10 @@
 #define LCD_IOC_SET_TCON_DATA_INDEX_INFO          _IOW('C', 0x3, unsigned int)
 #define LCD_IOC_GET_TCON_BIN_PATH_INFO            _IOR('C', 0x4, struct aml_path_s)
 #define LCD_IOC_SET_TCON_BIN_DATA_INFO            _IOW('C', 0x5, struct am_pq_bin_param_s)
+
+//vdin
+#define VDIN_DEV_PATH               "/dev/vdin0"
+#define TVIN_IOC_G_SIG_INFO         _IOR('T', 0x07, struct tvin_info_s)
 
 //pqmode para
 #define MAX_PICTUREMODE_PARAM_SIZE                100
@@ -305,7 +311,7 @@ public:
     int SaveNoiseReductionMode(int nr_mode);
     int Cpq_SetNoiseReductionMode(vpp_noise_reduction_mode_t nr_mode, source_input_param_t source_input_param);
     //GammaValue
-    int SetGammaValue(vpp_gamma_curve_t gamma_curve, int is_save);
+    int SetGammaValue(vpp_gamma_mode_t gamma_curve, int is_save);
     int GetGammaValue();
     //Memc
     bool hasMemcFunc();
@@ -450,8 +456,9 @@ public:
     int Cpq_SetColorBaseMode(vpp_color_basemode_t basemode, source_input_param_t source_input_param);
     int Cpq_SetRGBOGO(const struct tcon_rgb_ogo_s *rgbogo);
     int Cpq_GetRGBOGO(const struct tcon_rgb_ogo_s *rgbogo);
-    int Cpq_LoadGamma(vpp_gamma_curve_t gamma_curve, vpp_color_temperature_mode_t colortemp_mode);
-    int DBGammaBlend(tcon_gamma_table_t *wb_gamma, GAMMA_TABLE *index_gamma, tcon_gamma_table_t *target_gamma);
+    int Cpq_LoadGamma(vpp_gamma_mode_t gamma_curve, vpp_color_temperature_mode_t colortemp_mode);
+    int DBGammaBlend(tcon_gamma_table_t *wb_gamma, unsigned int *index_gamma);
+    double GetGammaPower(vpp_gamma_mode_t mode);
     int Cpq_SetGammaTbl_R(unsigned short red[GAMMA_NUMBER]);
     int Cpq_SetGammaTbl_G(unsigned short green[GAMMA_NUMBER]);
     int Cpq_SetGammaTbl_B(unsigned short blue[GAMMA_NUMBER]);
@@ -529,19 +536,29 @@ public:
     int SetCurrentAspectRatioInfo(tvin_aspect_ratio_e aspectRatioInfo);
     int SetDtvKitSourceEnable(bool isEnable);
     //AI
-    bool hasAipqFunc(void);
+    void AipqInit();
+    bool hasAipqFunc();
     int SetAipqEnable(bool isEnable);
     int GetAipqEnable(void);
+    void enableAipq(bool isEnable);
     int SetAipqMode(aipq_mode_e mode, int is_save);
-    int GetAipqMode(void);
+    int GetAipqMode();
+    int SaveAipqMode(int mode);
+    int Cpq_SetAipqMode(aipq_mode_e mode, source_input_param_t source_input_param);
     int HasAiFace(void);
     int SetAiFaceEnable(bool isEnable);
     int GetAiFaceEnable(void);
-    bool hasAisrFunc(void);
+
+    //aisr
+    bool hasAisrFunc();
     int SetAiSrEnable(bool isEnable);
     int GetAiSrEnable(void);
+    int SaveAiSrEnable(bool enable);
+    int Cpq_SetAiSrEnable(bool enable);
     int SetAiSrMode(aisr_mode_e mode, int is_save);
-    int GetAiSrMode(void);
+    int GetAiSrMode();
+    int SaveAiSrMode(int mode);
+    int Cpq_SetAiSrMode(aisr_mode_e mode, source_input_param_t source_input_param);
 
     //aicolor
     int SetAiColor(int value, int is_save);
@@ -623,6 +640,9 @@ private:
     int LCDOpenModule(void);
     int LCDCloseModule(void);
     int LCDDeviceIOCtl(int request, ...);
+    int VDINOpenModule();
+    int VDINCloseModule();
+    int VDINDeviceIOCtl(int request, ...);
     tvin_sig_fmt_t getVideoResolutionToFmt();
     int Cpq_SetXVYCCMode(vpp_xvycc_mode_t xvycc_mode, source_input_param_t source_input_param);
     int pqWriteSys(ConstCharforSysNodeIndex index, const char *val);
@@ -644,22 +664,14 @@ private:
     int getSnowStatus();
     void InitPGammaBin();
     int getHdrPolicy();
-    bool mInitialized;
     bool getBootEnv(const char *name, char *value);
     //for new path set background color
     int OpenVideotunnel();
     int CloseVideotunnel();
     int SetVideotunnelSolidColor(video__color_Window window, video_color_frame cmd, video_color_frame_time cmd_data);
-
-    //AI
-    void AipqInit(void);
-    void enableAipq(bool isEnable);
-    int SaveAipqMode(int mode);
-    int Cpq_SetAipqMode(aipq_mode_e mode, source_input_param_t source_input_param);
-    int SaveAiSrEnable(bool enable);
-    int Cpq_SetAiSrEnable(bool enable);
-    int SaveAiSrMode(int mode);
-    int Cpq_SetAiSrMode(aisr_mode_e mode, source_input_param_t source_input_param);
+    int GetVideoVdProcState(void);
+    int GetCurrentFrameRate(tv_source_input_t src_input);
+    int SetSrTable_WorkArroundByEvent(void);
 
     //cfg
     bool mbCpqCfg_separate_db_enable;
@@ -699,18 +711,13 @@ private:
     bool mbCpqCfg_LocalDimming_enable;
     bool mbCpqCfg_new_picture_mode_enable;
 
-    CPQdb *mPQdb;
-    COverScandb *mpOverScandb;
-    SSMAction *mSSMAction;
-    SysWrite *pqSysWrite;
-    static CPQControl *mInstance;
-    sp<CDevicePollCheckThread> mCDevicePollCheckThread;
-    sp<CDynamicBackLight> mDynamicBackLight;
-    CConfigFile *mPQConfigFile;
+    bool mInitialized;
 
-    CHlgToneMapping *mHlgToneMapping;
-    sp<PqNotify> mNotifyListener;
-    CDolbyVision *mDolbyVision;
+    bool mbVideoIsPlaying = false;//video don't playing
+    bool screenColorEnable = false;
+    bool mCurrentHdrStatus;
+    bool mbDtvKitEnable;
+    bool mbDatabaseMatchChipStatus;
 
     int mAmvideoFd;
     int mDiFd;
@@ -718,24 +725,36 @@ private:
     int mMemcFd;
     int mLcdFd;
     int mVideoTunelFd;
+    int mVdin0DevFd;
+    int mCurrentNodeNumber;
+    int mSliceNum;
+    int mFrameRate;
+
+    unsigned int mHdmiHdrInfo = 0;
+
+    static CPQControl *mInstance;
+    CPQdb *mPQdb;
+    COverScandb *mpOverScandb;
+    SSMAction *mSSMAction;
+    CConfigFile *mPQConfigFile;
+    CHlgToneMapping *mHlgToneMapping;
+    CDolbyVision *mDolbyVision;
+
+    SysWrite *pqSysWrite;
+    sp<CDevicePollCheckThread> mCDevicePollCheckThread;
+    sp<CDynamicBackLight> mDynamicBackLight;
+    sp<PqNotify> mNotifyListener;
+
+    mutable Mutex mLock;
 
     tcon_rgb_ogo_t rgbfrompq[3];
     source_input_param_t mCurrentSourceInputInfo;
     tv_source_input_t mSourceInputForSaveParam;
     pq_src_param_t mCurrentPqSource;
-    bool mCurrentHdrStatus;
-    unsigned int mHdmiHdrInfo = 0;
-    bool mbDtvKitEnable;
-    bool mbDatabaseMatchChipStatus;
-    mutable Mutex mLock;
     output_type_t mCurrentOutputType;
     tvin_aspect_ratio_e mCurrentAfdInfo;
-    bool mbVideoIsPlaying = false;//video don't playing
     hdr_type_t mCurrentHdrType = HDR_TYPE_NONE;
-    bool screenColorEnable = false;
     vpp_picture_mode_t mLastPictureMode = VPP_PICTURE_MODE_STANDARD;
-
-    int mCurrentNodeNumber;
     bool mDisplayMode4k120 = false;
     bool mDisplayMode4k100 = false;
 };

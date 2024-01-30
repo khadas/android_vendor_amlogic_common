@@ -299,10 +299,14 @@ public:
     int getAipqEnable();
     bool hasAipqFunc();
     bool readAiPqTable(std::string *aiPqTable);
+    int setAipqMode(int mode, int isSave);
+    int getAipqMode(void);
     //aisr
     bool aisrContrl(bool on);
     bool hasAisrFunc();
     bool getAisr();
+    int setAisrMode(int mode, int isSave);
+    int getAisrMode(void);
     //aicolor
     int setAiColor(int value, int isSave);
     int getAiColor(void);

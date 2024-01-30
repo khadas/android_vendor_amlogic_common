@@ -104,7 +104,8 @@ int CPQdb::getRegValues(const char *table_name, am_regs_t *regs)
         return rval;
     }
 
-    if (mDbMatchType == MATCH_TYPE_MBOX_S5) {
+    if (mDbMatchType == MATCH_TYPE_MBOX_S5 ||
+        mDbMatchType == MATCH_TYPE_MBOX_T3X) {
         char table_name_copy[40] = {0};
         char *table_name_split = NULL;
         const char *delim = "_";
@@ -2171,20 +2172,17 @@ int CPQdb::PQ_GetPLLParams(source_input_param_t source_input_param, am_regs_t *r
 int CPQdb::PQ_GetAIParams(aipq_mode_e mode, source_input_param_t source_input_param, ai_pic_table_t *aiRegs)
 {
     CSqlite::Cursor c;
-    char sqlmaster[256];
     char buf[512];
     int ret = -1;
-
-    SYS_LOGD("%s: mode:%d\n", __FUNCTION__, mode);
 
     if (CheckHdrStatus("GeneralAITable")) {
         source_input_param.sig_fmt = TVIN_SIG_FMT_HDMI_HDR;
     }
 
     String8 TableName = GetTableName("GeneralAITable", source_input_param);
-    SYS_LOGD("%s: TableName:%s\n", __FUNCTION__, TableName.string());
+    SYS_LOGD("%s, TableName=%s\n", __FUNCTION__, TableName.string());
     if ((TableName.c_str() != NULL) && (TableName.length() != 0) ) {
-        char sqlmaster[256] = {0};
+        char sqlmaster[256];
         getSqlParams(
             __FUNCTION__,
             sqlmaster,
@@ -2193,12 +2191,20 @@ int CPQdb::PQ_GetAIParams(aipq_mode_e mode, source_input_param_t source_input_pa
         if (c.moveToFirst()) {
             aiRegs->width = c.getInt(0);
             aiRegs->height = c.getInt(1);
-            SYS_LOGD("%s: aiRegs->width:%d aiRegs->height:%d\n", __FUNCTION__, aiRegs->width, aiRegs->height);
+            SYS_LOGD("%s, strlen(c.getString(2).c_str())=%d\n", __FUNCTION__, strlen(c.getString(2).c_str()));
             if (strlen(c.getString(2).c_str()) < sizeof(buf)/sizeof(char)) {
                 strncpy(buf, c.getString(2).c_str(), strlen(c.getString(2).c_str()));
+                strncpy((char *)aiRegs->table_ptr, c.getString(2).c_str(), strlen(c.getString(2).c_str()));
+
+                /*
+                for (int i = 0; i < strlen(c.getString(2).string()); i++) {
+                    SYS_LOGD("%s: ((char *)aiRegs->table_ptr)[%d]:%d(%c)\n", __FUNCTION__, i,
+                    ((char *)aiRegs->table_ptr)[i], ((char *)aiRegs->table_ptr)[i]);
+                }
+                */
+
+                ret = 0;
             }
-            aiRegs->table_ptr = buf;
-            ret = 0;
         } else {
             SYS_LOGE("%s: select action error!\n", __FUNCTION__);
         }
@@ -2822,7 +2828,7 @@ void CPQdb::PQ_GetPqDbMatchType(database_attribute_t *DbAttribute) {
     **                   ToolVer  ProVer             ChipVer   DbVer      Oem_model   Panel_Index   GeneTime
     **    //old project  xxx      20191113                                                          yyy
     **    //new project1 xxx      20221018           s928x     20221020                             yyy
-    **    //new project2 xxx      20221110           t962d4    20221115                             yyy
+    **    //new project2 xxx      20230822           T968D4    20230822                             yyy
     ** }
     */
 
@@ -2848,6 +2854,9 @@ void CPQdb::PQ_GetPqDbMatchType(database_attribute_t *DbAttribute) {
     if (chipVer == "s928x") {
         SYS_LOGD("%s this project is mbox s5(%s)\n", __FUNCTION__, chipVer.c_str());
         mDbMatchType = MATCH_TYPE_MBOX_S5;
+    } else if (chipVer == "T968D4") {
+        SYS_LOGD("%s this project is tv t3x(%s)\n", __FUNCTION__, chipVer.c_str());
+        mDbMatchType = MATCH_TYPE_MBOX_T3X;
     } else {
         SYS_LOGD("%s this project is others\n", __FUNCTION__);
     }
@@ -3066,6 +3075,7 @@ int CPQdb::PQ_GetGammaSpecialTable(vpp_gamma_curve_t gamma_curve, const char *f_
             gamma_value->data[index] = c.getInt(0);
             index++;
         } while (c.moveToNext());
+        Gamma_nodes = (index < 256) ? 256 : index;
     } else {
         SYS_LOGE("%s, select %s error!\n", __FUNCTION__, f_name);
         rval = -1;
@@ -3104,6 +3114,7 @@ int CPQdb::PQ_GetWhiteBalanceGammaSpecialTable(vpp_color_temperature_mode_t mode
             gamma_value->data[index] = c.getInt(0);
             index++;
         } while (c.moveToNext());
+        Gamma_nodes = (index < 256) ? 256 : index;
     } else {
         SYS_LOGE("%s, select %s error!\n", __FUNCTION__, f_name);
         rval = -1;
@@ -3267,7 +3278,8 @@ String8 CPQdb::GetTableName(const char *GeneralTableName, source_input_param_t s
         if ((strcmp(GeneralTableName, "GeneralSharpness0FixedTable") == 0)
             || (strcmp(GeneralTableName, "GeneralSharpness0VariableTable") == 0)
             || (strcmp(GeneralTableName, "GeneralSharpness1FixedTable") == 0)
-            || (strcmp(GeneralTableName, "GeneralSharpness1VariableTable") == 0)) {
+            || (strcmp(GeneralTableName, "GeneralSharpness1VariableTable") == 0)
+            || (strcmp(GeneralTableName, "GeneralNNSRTable") == 0)) {
             if (mOutPutType == OUTPUT_TYPE_LVDS) {//TV
                 getSqlParams(__FUNCTION__, sqlmaster, "select TableName from %s where "
                              "TVIN_PORT = %d and "
@@ -3302,6 +3314,27 @@ String8 CPQdb::GetTableName(const char *GeneralTableName, source_input_param_t s
             || (strcmp(GeneralTableName, "GeneralNNSRTable") == 0)) {
             getSqlParams(__FUNCTION__, sqlmaster, "select TableName from %s where "
                          "TVOUT_CVBS = %d ;", GeneralTableName, mOutPutType);
+        } else {
+            getSqlParams(__FUNCTION__, sqlmaster, "select TableName from %s where "
+                         "TVIN_PORT = %d and "
+                         "TVIN_SIG_FMT = %d and "
+                         "TVIN_TRANS_FMT = %d and "
+                         "TVOUT_CVBS = %d ;", GeneralTableName, source_input_param.source_input,
+                         source_input_param.sig_fmt, source_input_param.trans_fmt, OUTPUT_TYPE_LVDS);
+        }
+        ret = 0;
+        break;
+    case MATCH_TYPE_MBOX_T3X:
+        if ((strcmp(GeneralTableName, "GeneralSharpness0FixedTable") == 0)
+            || (strcmp(GeneralTableName, "GeneralSharpness0VariableTable") == 0)
+            || (strcmp(GeneralTableName, "GeneralSharpness1FixedTable") == 0)
+            || (strcmp(GeneralTableName, "GeneralSharpness1VariableTable") == 0)) {
+            getSqlParams(__FUNCTION__, sqlmaster, "select TableName from %s where "
+                         "TVIN_PORT = %d and "
+                         "TVIN_SIG_FMT = %d and "
+                         "TVIN_TRANS_FMT = %d and "
+                         "TVOUT_CVBS = %d ;", GeneralTableName, source_input_param.source_input,
+                         source_input_param.sig_fmt, source_input_param.trans_fmt, mOutPutType);
         } else {
             getSqlParams(__FUNCTION__, sqlmaster, "select TableName from %s where "
                          "TVIN_PORT = %d and "

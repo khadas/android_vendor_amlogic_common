@@ -303,10 +303,14 @@ public:
     int setAipqEnable(int isEnable);
     int getAipqEnable();
     bool readAiPqTable(std::string& aiPqTable);
+    int setAipqMode(int mode, int isSave);
+    int getAipqMode(void);
     //aisr
     bool aisrContrl(int isEnable);
     bool hasAisrFunc();
     bool getAisr();
+    int setAisrMode(int mode, int isSave);
+    int getAisrMode(void);
     //aicolor
     int setAiColor(int value, int isSave);
     int getAiColor(void);

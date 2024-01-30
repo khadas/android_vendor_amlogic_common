@@ -845,6 +845,7 @@ void SysWrite::initConstCharforSysNode() {
     mPathforSysNode[HDMI_CONTENT_TYPE]          = "/sys/class/amhdmitx/amhdmitx0/contenttype_mode";
     mPathforSysNode[DV_SUPPORT_INFO]            = "/sys/class/amdolby_vision/support_info";
     mPathforSysNode[VIDEO_AIFACE_ENABLE]        = "/sys/module/aml_media/parameters/uvm_open_aiface";
+    mPathforSysNode[VIDEO_VD_PROC_STATE]        = "/sys/class/video/video_vd_proc_state";
     mPathforSysNode[AICOLOR_PARAMETERS_UVM_OPEN] = "/sys/module/aml_media/parameters/uvm_open_aicolor";
     mPathforSysNode[PQ_MODULE_MEMC_DEMO_WIN] = "/sys/class/frc/param";
     mPathforSysNode[PQ_MODULE_AISR_DEMO_EN] = "/sys/class/video/aisr_demo_en";
