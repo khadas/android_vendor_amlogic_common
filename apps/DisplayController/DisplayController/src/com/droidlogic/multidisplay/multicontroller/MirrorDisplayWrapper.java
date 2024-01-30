@@ -24,6 +24,15 @@ public class MirrorDisplayWrapper {
         return ret;
     }
 
+    boolean isMirroring(int displayId) {
+        try {
+            return mStub.isMirroring(displayId);
+        } catch (RemoteException ex) {
+
+        }
+        return false;
+    }
+
     boolean isMirrored(int displayId) {
         try {
             return mStub.isMirrored(displayId);
@@ -36,6 +45,7 @@ public class MirrorDisplayWrapper {
     void stopMirror(int displayId) {
         try {
             mStub.stopMirror(displayId);
+            mCallback.updateUI();
         } catch (RemoteException ex) {
 
         }

@@ -9,7 +9,7 @@
  */
 
 #define LOG_NDEBUG 0
-#define LOG_TAG "MultiDisplay-jni"
+#define LOG_TAG "MM"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,7 +85,7 @@ namespace android
         ALOGE("mirror nativeSwitch %d %d",fromPort,toPort);
         PhysicalDisplayId fromPhysicalId, toPhysicalId;
         if (!getPhysicalDisplayIdFromPort(fromPort,fromPhysicalId) || !getPhysicalDisplayIdFromPort(toPort,toPhysicalId)) {
-			ALOGE("cannot get port");
+            ALOGE("cannot get port");
             return false;
         }
 
@@ -121,7 +121,7 @@ namespace android
     }
 
     static void nativeRelease(JNIEnv *env, jclass obj, jlong nativeObject) {
-        ALOGE("mirror test");
+        ALOGE("mirror nativeRelease");
         SurfaceControl* surfaceControl = reinterpret_cast<SurfaceControl*>(nativeObject);
         surfaceControl->decStrong((void*)mirrorNative);
         surfaceControl = nullptr;

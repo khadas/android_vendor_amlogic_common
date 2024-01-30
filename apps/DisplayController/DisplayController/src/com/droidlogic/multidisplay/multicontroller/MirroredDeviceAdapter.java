@@ -20,15 +20,15 @@ import java.util.List;
 
 public class MirroredDeviceAdapter extends BaseAdapter {
     private static final String TAG = "MM-C";
-    private final List<MirroredData> mData;
+    private List<MirroredData> mData;
     private final LayoutInflater mInflater;
     private final Context mContext;
+    private int mCurrentDisplayId;
     private MirrorDisplayWrapper mController = null;
     private OnCheckedChangeListener mListener;
 
-    public MirroredDeviceAdapter(Context context, List<MirroredData> data) {
+    public MirroredDeviceAdapter(Context context) {
         mContext = context;
-        mData = data;
         mInflater = LayoutInflater.from(context);
     }
 
@@ -40,9 +40,20 @@ public class MirroredDeviceAdapter extends BaseAdapter {
         mController = controller;
     }
 
+    public void setData(List<MirroredData> data) {
+        mData = data;
+    }
+    /*public void getData() {
+        return mData;
+    }*/
+
     @Override
     public int getCount() {
         return mData.size();
+    }
+    public void setDisplayId(int displayId) {
+        Log.d(TAG,"setDisplayId"+displayId);
+        mCurrentDisplayId = displayId;
     }
 
     @Override
@@ -67,26 +78,33 @@ public class MirroredDeviceAdapter extends BaseAdapter {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-
+        final TextView tvView = holder.dataTv;
         holder.dataSwitch.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 MirroredData data = (MirroredData) getItem(position);
                 if (isChecked) {
-                    Log.d(TAG, "startMirror");
-                    mController.startMirror(mContext.getDisplay().getDisplayId(), data.getDisplayId());
+                    Log.d(TAG, "startMirror"+mCurrentDisplayId+""+data.getDisplayId());
+                    mController.startMirror(mCurrentDisplayId, data.getDisplayId());
+                    tvView.setText(data.getName(true));
                 } else {
                     Log.d(TAG, "stopMirror");
                     mController.stopMirror(data.getDisplayId());
+                    tvView.setText(data.getName(false));
                 }
             }
         });
         MirroredData data = (MirroredData) getItem(position);
         boolean isMirrored = mController != null && mController.isMirrored(data.getDisplayId());
-        Log.d(TAG,"item "+data.getDisplayId()+" isMirrored"+isMirrored);
+        boolean enabled = true;
+        if (!isMirrored && mController != null && mController.isMirroring(data.getDisplayId())) {
+            enabled = false;
+        }
+        Log.d(TAG,"item "+data.getDisplayId()+" isMirrored"+isMirrored+" enabled"+enabled+" mCurrentDisplayId:"+mCurrentDisplayId);
+        holder.dataSwitch.setEnabled(enabled);
         holder.dataSwitch.setChecked(isMirrored);
-        holder.dataTv.setText(data.getName());
+        holder.dataTv.setText(data.getName(isMirrored));
         return convertView;
     }
 

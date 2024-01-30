@@ -21,11 +21,15 @@ import android.hardware.display.DisplayManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.DisplayAddress;
-
+import android.provider.Settings;
+import java.util.HashMap;
+import java.util.List;
 import java.util.ArrayList;
 
 public class MultiDisplayController implements DisplayManager.DisplayListener {
-    private static final String TAG = "MM";
+    private static final String TAG = "MM-Service";
+    private static final String MMC_CONTROL = "mmc_control";
+    private static final HashMap<Integer,Long> mSurfaceRecord = new HashMap<Integer,Long>();
 
     static {
         System.loadLibrary("displaycontroller");
@@ -43,6 +47,7 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
 
         mDisplayManager.registerDisplayListener(MultiDisplayController.this, null);
         initialDisplayMapping();
+        saveMirroringDataBase(mSurfaceRecord.size());
     }
 
     private static native long nativeMirror(int displayId, int toDisplayId);
@@ -58,7 +63,12 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
 
     @Override
     public void onDisplayRemoved(int displayId) {
+        if (mSurfaceRecord.get(displayId) != null) {
+            Log.d(TAG,"record release for displayId ");
+            nativeRelease(mSurfaceRecord.get(displayId));
+        }
         removeMapping(displayId);
+        saveMirroringDataBase(mSurfaceRecord.size());
     }
 
     @Override
@@ -105,20 +115,30 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
         long surfaceNativeObject = nativeMirror(fPort, tPort);
         Log.d(TAG, "MirroringDisplay "+fromDisplayId+" - "+toDisplayId+" "+Log.getStackTraceString(new Throwable()));
         if (surfaceNativeObject != 0) {
+            if (mSurfaceRecord.get(toDisplayId) != null) {
+                Log.d(TAG,"record release");
+                nativeRelease(mSurfaceRecord.get(toDisplayId));
+            }
+            mSurfaceRecord.put(toDisplayId, surfaceNativeObject);
             Log.d(TAG, "MirroringDisplay Info" + surfaceNativeObject);
             mirrorDisplay.mMirroringSurface = surfaceNativeObject;
             mirrorDisplay.mMirroredDisplayId = fromDisplayId;
         }
+        saveMirroringDataBase(mSurfaceRecord.size());
         Log.d(TAG, "updated info" + getMapping(fromDisplayId) + "::::" + getMapping(toDisplayId));
         return true;
     }
 
+    private void saveMirroringDataBase(int mirroing) {
+        Settings.Global.putInt(mContext.getContentResolver(),MMC_CONTROL,mirroing);
+    }
     public void stopMapping(int displayId) {
         if (!isMapping(displayId)) {
             Log.d(TAG, "stopMapping but not mirrored");
             return;
         }
         releaseMirrorDisplay(displayId);
+        saveMirroringDataBase(mSurfaceRecord.size());
     }
 
     public int findDisplay2phyPort(int displayId) {
@@ -137,6 +157,17 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
         boolean ret= (mapping.mMirroredDisplayId != mapping.mDisplay.getDisplayId()) || (mapping.mMirroringSurface != 0);
         Log.d(TAG,"isMapping "+displayId+" value:"+ret);
         return ret;
+    }
+
+    public boolean beMirroring(int displayId) {
+        Log.d(TAG,"beMirroring "+displayId);
+        for (DisplayMapping map : mDisplayMappings) {
+            Log.d(TAG,"map "+map.mMirroredDisplayId);
+            if (map.getMirroredDisplay() == displayId) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /*
@@ -160,8 +191,13 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
      * release Mirror Display which has Mirror.
      * */
     private void releaseMirrorDisplay(int displayId) {
+        Log.d(TAG,"releaseMirrorDisplay "+ displayId);
         DisplayMapping map = getMapping(displayId);
+        if (mSurfaceRecord.get(displayId) != null && map.mMirroringSurface != mSurfaceRecord.get(displayId)) {
+            nativeRelease(mSurfaceRecord.get(displayId));
+        }
         map.releaseMirror();
+        mSurfaceRecord.remove(displayId);
     }
 
 
@@ -176,7 +212,15 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
             mMirroringSurface = 0;
         }
 
+        public int getMirroredDisplay() {
+            if (isMapping()) {
+                return mMirroredDisplayId;
+            }
+            return -1;
+        }
+
         public void releaseMirror() {
+            Log.d(TAG,"releaseMirror "+ mMirroringSurface);
             if (mMirroringSurface != 0) {
                 nativeRelease(mMirroringSurface);
                 mMirroringSurface = 0;

@@ -71,7 +71,7 @@ public class MultiDisplayService extends Service {
 
         @Override
         public void stopMirror(int displayId) throws RemoteException {
-            Log.d(TAG,"stopMirror" + displayId);
+            Log.d(TAG,"stopMirror---" + displayId);
             mController.stopMapping(displayId);
         }
 
@@ -79,6 +79,12 @@ public class MultiDisplayService extends Service {
         public boolean swithDisplay(int displayId, int tDisplayId) throws RemoteException {
             Log.d(TAG,"swithDisplay"+displayId+" to"+tDisplayId);
             return mController.switchDisplay(displayId,tDisplayId);
+        }
+
+        @Override
+        public boolean isMirroring (int displayId)throws RemoteException {
+            Log.d(TAG,"isMirroring"+displayId);
+            return mController.beMirroring(displayId);
         }
     }
 }
