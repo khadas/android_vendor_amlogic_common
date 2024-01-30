@@ -166,13 +166,11 @@ public class DroidLogicBenchService extends Service {
                 mSCM.writeSysFs("/sys/class/thermal/thermal_zone0/mode", "disabled");
                 mSCM.writeSysFs("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", "performance");
                 mSCM.writeSysFs("/sys/class/devfreq/fe400000.valhall/governor", "performance");
-                mSCM.writeSysFs("/proc/sys/kernel/printk", "0");
                 mSCM.writeSysFs("/sys/class/mpgpu/scale_mode", "3");
             } else {
                 mSCM.writeSysFs("/sys/class/thermal/thermal_zone0/mode", "enable");
                 mSCM.writeSysFs("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", "schedutil");
                 mSCM.writeSysFs("/sys/class/devfreq/fe400000.valhall/governor", "simple_ondemand");
-                mSCM.writeSysFs("/proc/sys/kernel/printk", "4");
                 mSCM.writeSysFs("/sys/class/mpgpu/scale_mode", "1");
             }
         }
