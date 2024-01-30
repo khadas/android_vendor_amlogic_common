@@ -88,7 +88,7 @@ static const dongle_info dongle_registerd[]={\
     {"818b","0000","8192es","/vendor/lib/modules/8192es.ko","ifname=wlan0 if2name=ap0",no_base,"rtl8192es",0x0,""},\
     {"0000","0000","8188eu","/vendor/lib/modules/8188eu.ko","ifname=wlan0 if2name=ap0",no_base,"rtl8188eu",0x8179,""},\
     {"0000","0000","8188gtvu","/vendor/lib/modules/8188gtvu.ko","ifname=wlan0 if2name=ap0",no_base,"rtl8188gtv",0x018c,""},\
-    {"0000","0000","atbm602x_usb","/vendor/lib/modules/atbm602x_usb.ko","",no_base,"atbm602x",0x8888,""},\
+    {"0000","0000","atbm603x_comb_wifi_usb","/vendor/lib/modules/atbm603x_comb_wifi_usb.ko","",no_base,"atbm603x",0x8888,""},\
     {"0000","0000","8188eu","/vendor/lib/modules/8188eu.ko","ifname=wlan0 if2name=ap0",no_base,"rtl8188eu",0x0179,""},\
     {"0000","0000","mt7601usta","/vendor/lib/modules/mt7601usta.ko","",mtk760_base,"mtk7601",0x7601,""},\
     {"0000","0000","mt7603usta","/vendor/lib/modules/mt7603usta.ko","",mtk760_base,"mtk7603",0x7603,""},\
