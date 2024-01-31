@@ -1,3 +1,0 @@
-type logcatd_ext, domain;
-type logcatd_ext_exec, exec_type, file_type, system_file_type;
-

@@ -1,9 +1,0 @@
-
-service logpersist /system_ext/bin/logpersist
-    console
-    class late_start
-    #disabled
-    user root
-    group root system media_rw logd media bluetooth wifi audio 1046 1077
-    writepid /dev/cpuset/system-background/tasks
-    oom_score_adjust -600
