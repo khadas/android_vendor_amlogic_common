@@ -160,7 +160,9 @@ public class HdmiCecService extends Service {
                     if (vendorCmd == VENDOR_CMD_ACTIVENESS) {
                         final boolean active = value == ACTIVENESS_STATE_ON;
                         //Log.d(TAG, "Got new active state:" + active);
-                        updateActiveState(active);
+                        mCallbackHandler.post(()->{
+                            updateActiveState(active);
+                        });
                     }
                     break;
             }
