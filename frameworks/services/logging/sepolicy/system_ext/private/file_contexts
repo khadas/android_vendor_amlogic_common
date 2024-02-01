@@ -1,0 +1,7 @@
+
+/system_ext/bin/logpersist	--	u:object_r:logcatd_ext_exec:s0
+
+
+
+
+
