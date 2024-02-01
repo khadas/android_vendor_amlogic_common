@@ -134,6 +134,10 @@ bool SystemControlClient::writeSysfs(const std::string& path, const std::string&
     return false;
 }
 
+void SystemControlClient::dlgControl() {
+    mSysCtrl->dlgControl();
+}
+
 bool SystemControlClient::memcContrl(int isEnable) {
     return (mSysCtrl->memcContrl(isEnable) == Result::OK);
 }

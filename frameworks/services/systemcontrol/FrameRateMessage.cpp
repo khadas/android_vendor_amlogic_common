@@ -82,6 +82,8 @@ void MsgHandler::handleMessage(const Message& message){
         case MsgHandler::kWhatCheck:
         if (mFrameRate->getLastFrame() == 0) {
             mFrameRate->restoreEnv();
+        }else {
+            mFrameRate->delayControl(mFrameRate->getLastFrame());
         }
         break;
         case MsgHandler::kWhatReset:

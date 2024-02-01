@@ -44,7 +44,7 @@ FrameRateAutoAdaption::FrameRateAutoAdaption(Callback *cb): mVdinEventFd(-1), mH
     mLastFrameRate = 0;
     videoLayerOn = false;
     mPlayFlag = false;
-    mLastFromVdin = false;
+    mLastFromVdin = true;
     mFracDefaultValue = -1;
     mClock.tv_sec = 0;
     mClock.tv_usec = 0;
@@ -255,17 +255,27 @@ void FrameRateAutoAdaption::setVideoLayerOn(bool on) {
         //}
     }
 }
+void FrameRateAutoAdaption::policyControl(int frameRateValue) {
+#ifdef FRAMERATE_MODE
+    mTask->sendMessage(1);
+#else
+    delayControl(frameRateValue);
+#endif
+}
 
-void FrameRateAutoAdaption::policyControl(int frameRateValue){
+void FrameRateAutoAdaption::delayControl(int frameRateValue){
     char framerateMode[8] ={0};
     char curDisplayMode[MODE_LEN] = {0};
     char newDisplayMode[MODE_LEN] = {0};
     int outType = getOutputAdaptType();
     mSysWrite.readSysfs(HDMI_FRAME_RATE_AUTO, framerateMode);
     DisplayModeMgr::getInstance().getDisplayMode(curDisplayMode, MODE_LEN);
-    if (outType == OUTPUT_TYPE_CVBS) {
-        SYS_LOGD("cvbs mode do not need auto frame rate\n");
+    if (outType == OUTPUT_TYPE_CVBS || !videoLayerOn) {
+        SYS_LOGD("cvbs mode or !videoLayerOn do not need auto frame rate\n");
         return;
+    }if (frameRateValue == -1) {
+        frameRateValue = mLastFrameRate;
+        SYS_LOGD("DLG Control %d",frameRateValue);
     } else {
         if (NULL != strstr(curDisplayMode, "smpte")) {
             SYS_LOGD("smpte mode do not need auto frame rate\n");
@@ -286,9 +296,6 @@ void FrameRateAutoAdaption::policyControl(int frameRateValue){
             if (frameRateValue <= 0) return;
             modes = configMap[frameRateValue];
         }
-        if (modes.size() != 2) return;
-        int backVal1 = atoi(modes[0].c_str());
-        int backVal2 = atoi(modes[1].c_str());
         mPlayFlag = true;
 #ifdef FRAMERATE_MODE
         mTask->resetPlayFlag(seconds(60*5));
@@ -405,7 +412,7 @@ void FrameRateAutoAdaption::inputValidateAndParse(void* data, int inType) {
                         SYS_LOGD("read vdin fps: %d\n", fpsTemp);
                      if (fpsTemp == 48) {
                         fpsTemp = 24;
-                        mLastFromVdin = true;
+                        mLastFromVdin = false;
                      } else if (fpsTemp >= 100) {
                         fpsTemp = (fpsTemp/2);
                         mLastFromVdin = false;
@@ -423,7 +430,7 @@ void FrameRateAutoAdaption::inputValidateAndParse(void* data, int inType) {
                     SYS_LOGD("read vdin fps: %d\n", fpsTemp);
                     if (fpsTemp == 48) {
                         fpsTemp = 24;
-                        mLastFromVdin = true;
+                        mLastFromVdin = false;
                     }else if (fpsTemp >= 100) {
                         fpsTemp = (fpsTemp/2);
                         mLastFromVdin = false;
@@ -466,7 +473,7 @@ void FrameRateAutoAdaption::restoreEnv() {
         case OUTPUT_TYPE_HDMI_TX:
         break;
         case OUTPUT_TYPE_LCD_PANEL:
-        outputDispatch(NULL,OUTPUT_TYPE_LCD_PANEL,0,0,false);
+        outputDispatch(NULL,OUTPUT_TYPE_LCD_PANEL,0,0,true);
         break;
         default:
         break;
@@ -477,14 +484,32 @@ bool FrameRateAutoAdaption::enter4k1k(int framerate) {
     char curDisplayMode[MODE_LEN] = {0};
     DisplayModeMgr::getInstance().getDisplayMode(curDisplayMode, MODE_LEN);
     SYS_LOGD("FrameRateAutoAdaption::enter4k1k %d %d %s",framerate,videoLayerOn,curDisplayMode);
-    if (strstr(curDisplayMode,"3840x1080p") == NULL && videoLayerOn) {
+    if (videoLayerOn) {
          if (framerate == FRAME_RATE_DURATION_25 ||framerate == FRAME_RATE_DURATION_50 || framerate == FRAME_RATE_DURATION_125) {
-            mHdmiCallback->setDisplayModeinner("3840x1080p100hz");
-            //mHdmiCallback->setDisplayModeinner("3840x1080p120hz");
-            //DisplayModeMgr::getInstance().setFrameRate(100, "enter4k1k");
+            if (strstr(curDisplayMode,"3840x1080p") != NULL) {
+                DisplayModeMgr::getInstance().setFrameRate(100.f,
+                            "4k1k framerate only");
+            }else {
+                mHdmiCallback->setDisplayModeinner("3840x1080p100hz");
+            }
+            return true;
+        }else if (FRAME_RATE_DURATION_5994 == framerate || FRAME_RATE_DURATION_2397 == framerate
+                          ||FRAME_RATE_DURATION_2398 == framerate ||FRAME_RATE_DURATION_2997 == framerate
+                          ||FRAME_RATE_DURATION_5992 == framerate){
+            if (strstr(curDisplayMode,"3840x1080p") != NULL) {
+                DisplayModeMgr::getInstance().setFrameRate(119.f,
+                            "4k1k framerate only");
+            }else {
+                mHdmiCallback->setDisplayModeinner("3840x1080p119hz");
+            }
             return true;
         }else {
-            mHdmiCallback->setDisplayModeinner("3840x1080p120hz");
+            if (strstr(curDisplayMode,"3840x1080p") != NULL) {
+                DisplayModeMgr::getInstance().setFrameRate(120.f,
+                            "4k1k framerate only");
+            }else {
+                mHdmiCallback->setDisplayModeinner("3840x1080p120hz");
+            }
             return true;
         }
     }
@@ -497,9 +522,11 @@ bool FrameRateAutoAdaption::backFrom4k1k(int frameRate) {
     if (strstr(curDisplayMode,"3840x1080p") != NULL) {
         if (frameRate == FRAME_RATE_DURATION_25 ||frameRate == FRAME_RATE_DURATION_50 || frameRate == FRAME_RATE_DURATION_125) {
             mHdmiCallback->setDisplayModeinner("2160p50hz");
+            SYS_LOGD("setDisplayModeinner 2160p50hz");
             return true;
         }
         mHdmiCallback->setDisplayModeinner("2160p60hz");
+            SYS_LOGD("setDisplayModeinner 2160p60hz");
         return true;
     }
     return false;
@@ -517,12 +544,7 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
             break;
         }
         case OUTPUT_TYPE_LCD_PANEL: {
-            bool mode24p = false;
-            int ret = mSysWrite.getPropertyInt(VOUT_24P_PROP, 0);
-            if (ret == 1) {
-                SYS_LOGD("VOUT_24P_PROP is on");
-                mode24p = true;
-            }
+
             char newMode[MODE_LEN] = {0};
             char DisplayRange[MODE_LEN] = {0};
             bool doubleRate = false;
@@ -539,25 +561,14 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
                 }
             }
             if (frameRate == 0) {
-                //if (strcmp(PanelValue,"0")) {
-                SYS_LOGD("tv set outputmode frameRate 0");
-                DisplayModeMgr::getInstance().setFrameRate(0,
+                if (!backFrom4k1k(0)) {
+                    SYS_LOGD("tv set outputmode frameRate 0");
+                    DisplayModeMgr::getInstance().setFrameRate(0,
                             "tv set outputmode frameRate 0");
-                //}
+                }
                 return;
             }else {
-                const char* frameRateValue = doubleRate? "12000":"6000";//default 60hz
-                if (frameRate == FRAME_RATE_DURATION_1440) {
-                    frameRateValue = "14400";
-                }else if (frameRate == FRAME_RATE_DURATION_25 ||frameRate == FRAME_RATE_DURATION_50 || frameRate == FRAME_RATE_DURATION_125) {
-                    frameRateValue = doubleRate? "10000":"5000";
-                }else if (FRAME_RATE_DURATION_24 == frameRate ) {
-                    frameRateValue = doubleRate? "12000":(mode24p ? "4800" : "6000");
-                }else if (FRAME_RATE_DURATION_5994 == frameRate || FRAME_RATE_DURATION_2397 == frameRate
-                          ||FRAME_RATE_DURATION_2398 == frameRate ||FRAME_RATE_DURATION_2997 == frameRate
-                          ||FRAME_RATE_DURATION_5992 == frameRate){
-                    frameRateValue = doubleRate? "11988":"5994";
-                }
+                float fps =6000.f;
                 int dlgOn = isDLGOn();
 #ifdef FRAMERATE_MODE
                 if (pCPQControl != NULL) {
@@ -565,35 +576,30 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
                 }
                 //memc on+dlgOn 60->120hz
                 if ((dlgOn == 1) && (pCPQControl != NULL) && pCPQControl->GetMemcMode() > 0
-                    && pCPQControl->GetPQMode() != 6 && pCPQControl->GetPQMode() != 7) {
-                    enter4k1k(frameRate);
-                    SYS_LOGD("memc on,force enter4k1k");
+                    && pCPQControl->GetPQMode() != 6 && pCPQControl->GetPQMode() != 7 && enter4k1k(frameRate)) {
+                    SYS_LOGD("memc on,force enter4k1k ok");
                     return;
                 }
 #endif
+                /*dlg open, while pq is 6 or 7, then when vdin is 48 or more than 100 or decoder value, the
+                *the highest value in display range. when vdin is lower than 100 , back from dlg then
+                *set the value to 50/60.
+                */
                 SYS_LOGD("isDLGOn() %d frameRate %d videoLayerOn %d isVdinShrink %d",dlgOn,frameRate,videoLayerOn,isVdinShrink);
-                if ((dlgOn == 1) && !isVdinShrink && enter4k1k(frameRate)) {
-                    SYS_LOGD("Enter 4k1k");
+                if ((dlgOn == 1) && !isVdinShrink) {
+                    fps = getFrameRateValue(frameRate,true);
+                    SYS_LOGD("vdin shrink setframe %f",fps);
+                    DisplayModeMgr::getInstance().setFrameRate(fps / 100.f,
+                            "outputDispatch shrink");
                     return;
                 }else if ((dlgOn == 1) && isVdinShrink){
                     SYS_LOGD("system freq is %d",doubleRate);
                     if (doubleRate) {
                         backFrom4k1k(frameRate);
                     }
-                    frameRateValue = "6000";
-                    if (frameRate == FRAME_RATE_DURATION_1440) {
-                        frameRateValue = "14400";
-                    }else if (frameRate == FRAME_RATE_DURATION_25 ||frameRate == FRAME_RATE_DURATION_50 || frameRate == FRAME_RATE_DURATION_125) {
-                        frameRateValue = "5000";
-                    }else if (FRAME_RATE_DURATION_24 == frameRate ) {
-                        frameRateValue = (mode24p ? "4800" : "6000");
-                    }else if (FRAME_RATE_DURATION_5994 == frameRate || FRAME_RATE_DURATION_2397 == frameRate
-                          ||FRAME_RATE_DURATION_2398 == frameRate ||FRAME_RATE_DURATION_2997 == frameRate
-                          ||FRAME_RATE_DURATION_5992 == frameRate){
-                        frameRateValue = "5994";
-                    }
-                    SYS_LOGD("leave 4k1k inner %s",frameRateValue);
-                    DisplayModeMgr::getInstance().setFrameRate(atof(frameRateValue) / 100.f,
+                    fps = getFrameRateValue(frameRate,false);
+                    SYS_LOGD("leave 4k1k inner %f",fps);
+                    DisplayModeMgr::getInstance().setFrameRate(fps/ 100.f,
                             "outputDispatch 111");
                     return;
                 }
@@ -601,8 +607,9 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
                     SYS_LOGD("leave 4k1k");
                     return;
                 }
-                SYS_LOGD("afr output final %s", frameRateValue);
-                DisplayModeMgr::getInstance().setFrameRate(atof(frameRateValue) / 100.f,
+                fps = getFrameRateValue(frameRate,doubleRate);
+                SYS_LOGD("afr output final %f", fps);
+                DisplayModeMgr::getInstance().setFrameRate(fps / 100.f,
                             "outputDispatch 222");
             }
             break;
@@ -613,6 +620,31 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
             break;
     }
 }
+
+float FrameRateAutoAdaption::getFrameRateValue(int frameRate, bool doubleRate) {
+    bool mode24p = false;
+    int ret = mSysWrite.getPropertyInt(VOUT_24P_PROP, 0);
+    if (ret == 1) {
+        SYS_LOGD("VOUT_24P_PROP is on");
+        mode24p = true;
+    }
+    const char* frameRateValue = doubleRate? "12000":"6000";//default 60hz
+    if (frameRate == FRAME_RATE_DURATION_1440) {
+        frameRateValue = "14400";
+    }else if (frameRate == FRAME_RATE_DURATION_25 ||frameRate == FRAME_RATE_DURATION_50 || frameRate == FRAME_RATE_DURATION_125) {
+        frameRateValue = doubleRate? "10000":"5000";
+    }else if (FRAME_RATE_DURATION_24 == frameRate ) {
+        frameRateValue = doubleRate? "12000":(mode24p ? "4800" : "6000");
+    }else if (frameRate == FRAME_RATE_DURATION_1440) {
+        frameRateValue = doubleRate? "14400":"7200";
+    }else if (FRAME_RATE_DURATION_5994 == frameRate || FRAME_RATE_DURATION_2397 == frameRate
+              ||FRAME_RATE_DURATION_2398 == frameRate ||FRAME_RATE_DURATION_2997 == frameRate
+              ||FRAME_RATE_DURATION_5992 == frameRate){
+        frameRateValue = doubleRate? "11988":"5994";
+    }
+    return atof(frameRateValue);
+}
+
 int FrameRateAutoAdaption::getOutputAdaptType() {
     int type = -1;
     char vinfo[MAX_STR_LEN] = {0};

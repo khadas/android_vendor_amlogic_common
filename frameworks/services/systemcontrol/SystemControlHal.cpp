@@ -137,6 +137,12 @@ void SystemControlHal::onSetDisplayMode(int mode) {
     }
 }
 
+Return<void> SystemControlHal::dlgControl() {
+    ALOGI("SystemControlHal dlgControl");
+    mSysControl->dlgControl();
+    return Void();
+}
+
 void SystemControlHal::onHdrInfoChange(int newHdrInfo) {
     AutoMutex _l(mLock);
     //ALOGI("%s: newHdrInfo is %d", __FUNCTION__ , newHdrInfo);

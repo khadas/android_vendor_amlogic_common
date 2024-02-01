@@ -597,6 +597,7 @@ public:
     void setALLMMode(int state);
     bool isTvSupportALLM();
     bool frameRateDisplay(bool on);
+    void dlgControl();
 
     void sendHDMIContentType(int state);
     bool getGameContentTypeSupport();

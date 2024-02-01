@@ -346,6 +346,7 @@ public:
     bool syncDensity(int displayid, int width, int height);
     void setListener(const sp<SysCtrlListener> &listener);
     static SystemControlClient * getInstance();
+    void dlgControl();
 
  private:
      class SystemControlHidlCallback : public ISystemControlCallback {

@@ -93,6 +93,7 @@ public:
     bool refreshHdcpKey();
     //Provision key end
 
+    void dlgControl();
     bool updataLogoBmp(const std::string& path);
     bool getModeSupportDeepColorAttr(const std::string& mode,const std::string& color);
     //set or get uboot env

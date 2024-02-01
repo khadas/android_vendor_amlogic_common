@@ -112,6 +112,12 @@ SystemControlService::~SystemControlService() {
     mNotifyListener  = NULL;
 }
 
+void SystemControlService::dlgControl() {
+     if (pDisplayMode != NULL) {
+        pDisplayMode->dlgControl();
+    }
+}
+
 void SystemControlService::initDelay() {
     ALOGI("init_delay");
     pDisplayMode->init();

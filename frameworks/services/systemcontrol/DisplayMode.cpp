@@ -3328,6 +3328,10 @@ void DisplayMode::onDispModeSyncEvent (const char* outputmode, int state) {
     setSourceOutputMode(outputmode);
 }
 
+void DisplayMode::dlgControl() {
+    pFrameRateAutoAdaption->policyControl(-1);
+}
+
 //for debug
 void DisplayMode::hdcpSwitch() {
     SYS_LOGI("hdcpSwitch for debug hdcp authenticate\n");

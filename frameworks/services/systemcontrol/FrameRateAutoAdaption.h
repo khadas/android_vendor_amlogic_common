@@ -115,6 +115,7 @@ public:
     void inputValidateAndParse(void* data, int inType = 0);
     void outputDispatch(char* outputMode, int outType, int state, int frameRate, bool isVdin);
     void policyControl(int frameRateValue);
+    void delayControl(int frameRate);
     void onTxUeventReceived(uevent_data_t* ueventData);
     void readSinkEdid(char *edid);
     int getOutputAdaptType();
@@ -129,6 +130,7 @@ public:
     int mFracDefaultValue;
 private:
     int findNearlyFrame(int frameRate);
+    float getFrameRateValue(int fps, bool doubleRate);
     bool frameRateChange(const char* curDisplayMode, const char* newDisplayMode,int frameRateValue,int outType);
     bool currentDisplayIsFloat(int outputType);
     bool frameRateIsFloat(int framerate);
