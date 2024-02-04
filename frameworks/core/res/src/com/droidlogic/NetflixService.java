@@ -42,6 +42,8 @@ import android.content.ContentResolver;
 import android.provider.DeviceConfig;
 import org.json.JSONObject;
 import android.hardware.display.DisplayManager;
+import android.hardware.display.HdrConversionMode;
+
 import android.view.Display;
 import android.os.Handler;
 
@@ -89,6 +91,7 @@ public class NetflixService extends Service {
      // Power State Change on Active Source Lost Settings values
     private static final String LOST_NONE = "none";
     private static final String LOST_STANDBY_NOW = "standby_now";
+    private static final String TEMP_HDR = "temp_hdr";
     private final String NDRP_CEC_STATUS = "nrdp_video_platform_capabilities";
 
     private static final String STR_ALWAYS = "0";
@@ -120,6 +123,8 @@ public class NetflixService extends Service {
     private DeviceConfigListener mDeviceConfigListener = null;
     private  Handler mMsgHandler;
     private String mOriginalPowerStateChangeValue;
+    private HdrConversionMode mHdrConversionMode;
+
 
     private class SettingsObserver extends ContentObserver {
         public SettingsObserver(Handler handler) {
@@ -284,6 +289,7 @@ public class NetflixService extends Service {
                 }
             }
         };
+        resetHdrPolicy();
     }
 
     @Override
@@ -695,6 +701,41 @@ public class NetflixService extends Service {
                 +mOutputModeManager.getHdrStrategy().startsWith(STR_ADAPTIVE)+mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).isHdr());
     }
 
+
+    private void setHDRConversionMode(boolean NetflixIsForeground) {
+        boolean isPassThroughHdr = mDisplayManager.getHdrConversionModeSetting().equals(new HdrConversionMode(
+                            HdrConversionMode.HDR_CONVERSION_PASSTHROUGH));
+        Log.d(TAG,"NetflixIsForeground = " + NetflixIsForeground
+                +" ,isPassThroughHdr = " + isPassThroughHdr
+                + ", is display support hdr = " + mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).isHdr());
+        if (tempHDR && (!NetflixIsForeground)) {
+            Log.i(TAG, "setHdrStrategy adaptive default");
+            mHdrConversionMode =new HdrConversionMode(HdrConversionMode.HDR_CONVERSION_PASSTHROUGH);
+            mDisplayManager.setHdrConversionMode(mHdrConversionMode);
+            tempHDR = false;
+            Settings.Global.putInt(mContext.getContentResolver(), TEMP_HDR, 0);
+            return;
+        }
+        if (NetflixIsForeground && isPassThroughHdr &&
+                                mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).isHdr()) {
+            Log.i(TAG, "setHdrStrategy  always");
+            mHdrConversionMode = new HdrConversionMode(HdrConversionMode.HDR_CONVERSION_SYSTEM);
+            mDisplayManager.setHdrConversionMode(mHdrConversionMode);
+            tempHDR = true;
+            Settings.Global.putInt(mContext.getContentResolver(), TEMP_HDR, 1);
+        }
+    }
+
+    private void resetHdrPolicy() {
+        int hdrpolicy = Settings.Global.getInt(mContext.getContentResolver(), TEMP_HDR, 0);
+        if (hdrpolicy == 1) {
+            Log.i(TAG, "reset HdrStrategy adaptive default");
+            mHdrConversionMode =new HdrConversionMode(HdrConversionMode.HDR_CONVERSION_PASSTHROUGH);
+            mDisplayManager.setHdrConversionMode(mHdrConversionMode);
+            Settings.Global.putInt(mContext.getContentResolver(), TEMP_HDR, 0);
+        }
+    }
+
     private void netflixFGStateUpdate() {
         synchronized (mLock) {
             boolean fg = isTopTask(NETFLIX_PKG_NAME);
@@ -719,13 +760,13 @@ public class NetflixService extends Service {
 
                 mAudioManager.setParameters("continuous_audio_mode=" + (fg ? "1" : "0"));
                 mSCM.setProperty("vendor.netflix.state", fg ? "fg" : "bg");
-
                 if (fg) {
                     mOriginalPowerStateChangeValue = mHdmiControlManager.getPowerStateChangeOnActiveSourceLost();
                     mHdmiControlManager.setPowerStateChangeOnActiveSourceLost(LOST_NONE);
                 } else {
                     mHdmiControlManager.setPowerStateChangeOnActiveSourceLost(mOriginalPowerStateChangeValue);
                 }
+                setHDRConversionMode(fg);
             }
 
             boolean fgYoutube = isTopTask(YOUTUBE_PKG_NAME);
