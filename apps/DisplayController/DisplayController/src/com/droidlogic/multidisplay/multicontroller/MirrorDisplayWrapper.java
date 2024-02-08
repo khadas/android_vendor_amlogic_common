@@ -13,10 +13,10 @@ public class MirrorDisplayWrapper {
         mCallback = callback;
     }
 
-    boolean startMirror(int displayId, int tDisplayId) {
+    boolean startMirror(int displayId, int tDisplayId, boolean control) {
         boolean ret = false;
         try {
-            ret = mStub.startMirror(displayId, tDisplayId);
+            ret = mStub.startMirror(displayId, tDisplayId, control);
             if (ret) mCallback.updateUI();
         } catch (RemoteException ex) {
 
@@ -42,6 +42,15 @@ public class MirrorDisplayWrapper {
         return false;
     }
 
+    boolean isControlled(int displayId) {
+        try {
+            return mStub.isControlled(displayId);
+        } catch (RemoteException ex) {
+
+        }
+        return false;
+    }
+
     void stopMirror(int displayId) {
         try {
             mStub.stopMirror(displayId);
@@ -49,6 +58,22 @@ public class MirrorDisplayWrapper {
         } catch (RemoteException ex) {
 
         }
+    }
+
+    int getMirroredId(int displayId) {
+        try {
+            return mStub.getMirroredId(displayId);
+        } catch (RemoteException ex) {
+
+        }return 0;
+    }
+
+    int getPhyPort(int displayId) {
+        try {
+            return mStub.getPhyPort(displayId);
+        } catch (RemoteException ex) {
+
+        }return 0;
     }
 
     boolean swithDisplay(int displayId, int toDisplayId) {

@@ -9,4 +9,9 @@
     <string name="display_device">"当前设备名称:"</string>
     <string name="mirroring">"是否在镜像:"</string>
     <string name ="switch_display">"实验性功能--屏幕互切--1分钟后自动恢复”</string>
+    <string name ="disable_info">"当前系统不允许屏幕控制”</string>
+    <string name="monitor_display" translatable="false">"DISPLAY CONTROL"</string>
+    <string name="control_title" translatable="false">"操作权限"</string>
+    <string name="is_mirror" translatable="false">"正在镜像"</string>
+    <string name="mirror_to" translatable="false">"镜像到"</string>
 </resources>

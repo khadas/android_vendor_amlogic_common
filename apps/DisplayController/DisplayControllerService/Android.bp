@@ -44,5 +44,7 @@ android_app {
     optimize: {
         enabled: false,
     },
-
+    dex_preopt: {
+        enabled: false,
+    },
 }

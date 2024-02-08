@@ -19,6 +19,13 @@ package {
     //   SPDX-license-identifier-Apache-2.0
     default_applicable_licenses: ["vendor_amlogic_common_license"],
 }
+prebuilt_etc {
+    name: "DisplayController_permissions",
+    vendor: true,
+    sub_dir: "permissions",
+    src: "displaycontrol-hiddenapi-whitelist.xml",
+    filename_from_src: true,
+}
 android_app {
     name: "DisplayController",
 
@@ -29,7 +36,7 @@ android_app {
     ],
 
     vendor: true,
-
+    certificate: "platform",
     sdk_version: "system_current",
     optimize: {
         enabled: false,
@@ -39,6 +46,9 @@ android_app {
     dex_preopt: {
         enabled: false,
     },
+    required: [
+        "DisplayController_permissions",
+    ],
 }
 
 

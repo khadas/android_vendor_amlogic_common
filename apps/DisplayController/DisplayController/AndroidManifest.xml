@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.droidlogic.multidisplay.multicontroller">
     <permission android:name="com.droidlogic.displaycontrolpermission" />
+    <uses-permission android:name="android.permission.READ_FRAME_BUFFER"/>
     <uses-permission android:name="com.droidlogic.displaycontrolpermission" />
 	<uses-permission android:name="android.permission.ROTATE_SURFACE_FLINGER" />
 	<uses-permission android:name="android.permission.INTERNAL_SYSTEM_WINDOW" />
@@ -24,6 +25,9 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name=".MainDisplayActivity" android:theme="@style/Theme.MultiController.Control"
+            android:exported="true">
         </activity>
     </application>
 
