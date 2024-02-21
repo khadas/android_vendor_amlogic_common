@@ -21,6 +21,7 @@ cc_library_shared {
     "ScreenControlH264.cpp",
     "ScreenManager.cpp",
     "ScreenControlDebug.cpp",
+    "FormatCovert.cpp",
   ],
   include_dirs: [
     "frameworks/native/headers/media_plugin/media/hardware",
@@ -29,6 +30,7 @@ cc_library_shared {
     "frameworks/av/include",
     "frameworks/native/libs/gui/include",
     "hardware/amlogic/gralloc/amlogic",
+    "vendor/amlogic/common/system/libge2d/v2/include",
   ],
   local_include_dirs: [
       "include",
@@ -50,6 +52,8 @@ cc_library_shared {
     "libamgralloc_ext",
     "libmeson_display_adapter_remote",
     "libyuv",
+    "libge2d-2.0",
+    "libion"
   ],
 }
 
