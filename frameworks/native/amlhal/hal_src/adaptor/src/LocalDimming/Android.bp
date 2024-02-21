@@ -21,14 +21,12 @@ package {
 // See: http://go/android-license-faq
 
 cc_library_shared {
-    name: "libadap_pq",
+    name: "libadap_ld",
     proprietary: true,
 
 
     srcs: [
-        "adap_di.cpp",
-        "adap_memc.cpp",
-        "adap_pq.cpp",
+        "adap_ld.cpp",
     ],
 
     include_dirs: [

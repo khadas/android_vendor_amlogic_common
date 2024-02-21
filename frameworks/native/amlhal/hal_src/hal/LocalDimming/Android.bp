@@ -21,23 +21,24 @@ package {
 // See: http://go/android-license-faq
 
 cc_library_shared {
-    name: "libadap_pq",
+    name: "libaml_hal_ld",
     proprietary: true,
 
-
     srcs: [
-        "adap_di.cpp",
-        "adap_memc.cpp",
-        "adap_pq.cpp",
+        "aml_hal_ld.cpp",
     ],
 
     include_dirs: [
+        "vendor/amlogic/common/frameworks/native/amlhal/hal_inc",
         "vendor/amlogic/common/frameworks/native/amlhal/hal_src/adaptor/inc",
+        "vendor/amlogic/common/frameworks/native/amlhal/hal_src/libs/pq/LibTableLD",
     ],
-
+	
 	shared_libs: [
         "liblog",
         "liblog_cout",
+		"libPQTableLD",
+	    "libadap_ld",
     ],
 
     cflags: [

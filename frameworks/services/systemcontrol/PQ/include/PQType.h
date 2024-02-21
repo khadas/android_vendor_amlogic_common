@@ -626,6 +626,28 @@ typedef enum tv_source_input_e {
     SOURCE_MAX,
 } tv_source_input_t;
 
+typedef enum pq_source_input_e {
+    PQ_SRC_DEFAULT = 0,
+    PQ_SRC_TV,
+    PQ_SRC_AV1,
+    PQ_SRC_AV2,
+    PQ_SRC_YPBPR1,
+    PQ_SRC_YPBPR2,
+    PQ_SRC_HDMI1,
+    PQ_SRC_HDMI2,
+    PQ_SRC_HDMI3,
+    PQ_SRC_HDMI4,
+    PQ_SRC_VGA,
+    PQ_SRC_MPEG,
+    PQ_SRC_DTV,
+    PQ_SRC_SVIDEO,
+    PQ_SRC_IPTV,
+    PQ_SRC_DUMMY,
+    PQ_SRC_SPDIF,
+    PQ_SRC_ADTV,
+    PQ_SRC_MAX,
+} pq_source_input_t;
+
 typedef enum pq_sig_fmt_e {
     PQ_FMT_DEFAULT = 0,
     PQ_FMT_SDR,

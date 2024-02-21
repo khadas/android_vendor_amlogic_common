@@ -298,11 +298,16 @@ public:
     int GetSharpness(void);
     int SaveSharpness(int value);
     int Cpq_SetSharpness(int value, source_input_param_t source_input_param);
+    int Cpq_SetSharpness0Level(int value, source_input_param_t source_input_param);
+    int Cpq_SetSharpness1Level(int value, source_input_param_t source_input_param);
+    int Cpq_SetSharpnessPiLevel(int value, source_input_param_t source_input_param);
+
     int Cpq_SetSharpness0FixedParam(source_input_param_t source_input_param);
-    int Cpq_SetSharpness0VariableParam(source_input_param_t source_input_param);
     int Cpq_SetSharpness1FixedParam(source_input_param_t source_input_param);
-    int Cpq_SetSharpness1VariableParam(source_input_param_t source_input_param);
     int Cpq_SetSharpnessPiFixedParam(source_input_param_t source_input_param);
+
+    int Cpq_SetSharpness0VariableParam(source_input_param_t source_input_param);
+    int Cpq_SetSharpness1VariableParam(source_input_param_t source_input_param);
     int Cpq_SetSharpnessPiVariableParam(source_input_param_t source_input_param);
     //NoiseReductionMode
     void InitAutoNr(void);
@@ -315,7 +320,6 @@ public:
     int GetGammaValue();
     //Memc
     bool hasMemcFunc();
-    int initMemc(void);
     int Memc_enable(int enable);
     int SetMemcMode(int memc_mode, int is_save);
     int GetMemcMode(void);
@@ -536,15 +540,16 @@ public:
     int SetCurrentAspectRatioInfo(tvin_aspect_ratio_e aspectRatioInfo);
     int SetDtvKitSourceEnable(bool isEnable);
     //AI
-    void AipqInit();
     bool hasAipqFunc();
     int SetAipqEnable(bool isEnable);
     int GetAipqEnable(void);
     void enableAipq(bool isEnable);
+
     int SetAipqMode(aipq_mode_e mode, int is_save);
     int GetAipqMode();
     int SaveAipqMode(int mode);
     int Cpq_SetAipqMode(aipq_mode_e mode, source_input_param_t source_input_param);
+
     int HasAiFace(void);
     int SetAiFaceEnable(bool isEnable);
     int GetAiFaceEnable(void);
@@ -555,6 +560,7 @@ public:
     int GetAiSrEnable(void);
     int SaveAiSrEnable(bool enable);
     int Cpq_SetAiSrEnable(bool enable);
+
     int SetAiSrMode(aisr_mode_e mode, int is_save);
     int GetAiSrMode();
     int SaveAiSrMode(int mode);
@@ -575,10 +581,10 @@ public:
     //HDR tone mapping
     int SetHDRTMData(int *reGain);
     //HDR TMO
-    int Cpq_SetHDRTMOParams(const hdr_tmo_sw_s *phdrtmo);
     int SetHDRTMOMode(hdr_tmo_t mode, int is_save);
     int GetHDRTMOMode();
     int SaveHDRTMOMode(hdr_tmo_t mode);
+    int Cpq_SetHDRTMOMode(int mode);
     //PQ Diff
     char* CalculateFileSha1(const char* filePath);
     int GenerateTargetPQ();
@@ -601,27 +607,18 @@ public:
 
     int SetLocalDimming(int level, int is_save);
     int GetLocalDimming(void);
-    int Cpq_LocalDimming(vpp_pq_level_t level);
+    int SaveLocalDimming(int level);
+    int Cpq_SetLocalDimming(vpp_pq_level_t level);
 
     int SetDolbyDarkDetail(int mode, int is_save);
     int GetDolbyDarkDetail(void);
     int SaveDolbyDarkDetail(int value);
     int Cpq_SetDolbyDarkDetail(int mode);
+    int Cpq_SetAmDolbyPQMode(int mode);
 
     void InitTconGamma(void);
-    void InitLocalDimmingBin(void);
-    int LoadLdBin(LD_bin_table_index_t index);
     void InitTconlessBin(void);
     int LoadTconlessBin(unsigned int index);
-
-    //AMHAL
-    int AMHal_VPQ_Get_LDBinPath(char *path, LD_bin_table_index_t index);
-    int AMHal_VPQ_Set_LDBinData(am_pq_bin_param_s *buff, LD_bin_table_index_t index);
-
-    int AMHal_VPQ_Get_TconlessBinMax(unsigned int *cnt);
-    int AMHal_VPQ_Get_TconlessBinPath(aml_path_t *param);
-    int AMHal_VPQ_Set_TconlessBinIndex(unsigned int index);
-    int AMHal_VPQ_Set_TconlessBinData(am_pq_bin_param_t *param);
 
 private:
     int VPPOpenModule(void);
@@ -672,90 +669,95 @@ private:
     int GetVideoVdProcState(void);
     int GetCurrentFrameRate(tv_source_input_t src_input);
     int SetSrTable_WorkArroundByEvent(void);
+    bool IsDisableAllPQ(void);
 
     //cfg
-    bool mbCpqCfg_separate_db_enable;
-    bool mbCpqCfg_amvecm_basic_enable;
-    bool mbCpqCfg_amvecm_basic_withOSD_enable;
-    bool mbCpqCfg_contrast_rgb_enable;
-    bool mbCpqCfg_contrast_rgb_withOSD_enable;
-    bool mbCpqCfg_blackextension_enable;
-    bool mbCpqCfg_sharpness0_enable;
-    bool mbCpqCfg_sharpness1_enable;
-    bool mbCpqCfg_sharpnesspi_enable;
-    bool mbCpqCfg_di_enable;
-    bool mbCpqCfg_mcdi_enable;
-    bool mbCpqCfg_deblock_enable;
-    bool mbCpqCfg_nr_enable;
-    bool mbCpqCfg_demoSquito_enable;
-    bool mbCpqCfg_gamma_enable;
-    bool mbCpqCfg_cm2_enable;
-    bool mbCpqCfg_whitebalance_enable;
-    bool mbCpqCfg_dnlp_enable;
-    bool mbCpqCfg_xvycc_enable;
-    bool mbCpqCfg_display_overscan_enable;
-    bool mbCpqCfg_local_contrast_enable;
-    bool mbCpqCfg_hdmi_out_with_fbc_enable;
-    bool mbCpqCfg_pq_param_check_source_enable;
-    bool mbCpqCfg_ai_enable;
-    bool mbCpqCfg_aisr_enable;
-    bool mbCpqCfg_aicolor_enable;
-    bool mbCpqCfg_aad_enable;
-    bool mbCpqCfg_cabc_enable;
-    bool mbCpqCfg_smoothplus_enable;
-    bool mbCpqCfg_hdrtmo_enable;
-    bool mbCpqCfg_memc_enable;
-    bool mbCpqCfg_separate_black_blue_chorma_db_enable;
-    bool mbCpqCfg_bluestretch_enable;
-    bool mbCpqCfg_chroma_coring_enable;
-    bool mbCpqCfg_LocalDimming_enable;
-    bool mbCpqCfg_new_picture_mode_enable;
+    bool mbCpqCfg_separate_db_enable                    = false;
+    bool mbCpqCfg_amvecm_basic_enable                   = false;
+    bool mbCpqCfg_amvecm_basic_withOSD_enable           = false;
+    bool mbCpqCfg_contrast_rgb_enable                   = false;
+    bool mbCpqCfg_contrast_rgb_withOSD_enable           = false;
+    bool mbCpqCfg_blackextension_enable                 = false;
+    bool mbCpqCfg_sharpness0_enable                     = false;
+    bool mbCpqCfg_sharpness1_enable                     = false;
+    bool mbCpqCfg_sharpnesspi_enable                    = false;
+    bool mbCpqCfg_di_enable                             = false;
+    bool mbCpqCfg_mcdi_enable                           = false;
+    bool mbCpqCfg_deblock_enable                        = false;
+    bool mbCpqCfg_nr_enable                             = false;
+    bool mbCpqCfg_demoSquito_enable                     = false;
+    bool mbCpqCfg_gamma_enable                          = false;
+    bool mbCpqCfg_cm2_enable                            = false;
+    bool mbCpqCfg_whitebalance_enable                   = false;
+    bool mbCpqCfg_dnlp_enable                           = false;
+    bool mbCpqCfg_xvycc_enable                          = false;
+    bool mbCpqCfg_display_overscan_enable               = false;
+    bool mbCpqCfg_local_contrast_enable                 = false;
+    bool mbCpqCfg_hdmi_out_with_fbc_enable              = false;
+    bool mbCpqCfg_pq_param_check_source_enable          = false;
+    bool mbCpqCfg_ai_enable                             = false;
+    bool mbCpqCfg_aisr_enable                           = false;
+    bool mbCpqCfg_aicolor_enable                        = false;
+    bool mbCpqCfg_aad_enable                            = false;
+    bool mbCpqCfg_cabc_enable                           = false;
+    bool mbCpqCfg_smoothplus_enable                     = false;
+    bool mbCpqCfg_hdrtmo_enable                         = false;
+    bool mbCpqCfg_memc_enable                           = false;
+    bool mbCpqCfg_separate_black_blue_chorma_db_enable  = false;
+    bool mbCpqCfg_bluestretch_enable                    = false;
+    bool mbCpqCfg_chroma_coring_enable                  = false;
+    bool mbCpqCfg_LocalDimming_enable                   = false;
+    bool mbCpqCfg_new_picture_mode_enable               = false;
 
-    bool mInitialized;
+    bool mInitialized                                   = false;
 
-    bool mbVideoIsPlaying = false;//video don't playing
-    bool screenColorEnable = false;
-    bool mCurrentHdrStatus;
-    bool mbDtvKitEnable;
-    bool mbDatabaseMatchChipStatus;
+    bool mbVideoIsPlaying                               = false;//video don't playing
+    bool screenColorEnable                              = false;
+    bool mCurrentHdrStatus                              = false;
+    bool mbDtvKitEnable                                 = false;
+    bool mbDatabaseMatchChipStatus                      = false;
 
-    int mAmvideoFd;
-    int mDiFd;
-    int mLdFd;
-    int mMemcFd;
-    int mLcdFd;
-    int mVideoTunelFd;
-    int mVdin0DevFd;
-    int mCurrentNodeNumber;
-    int mSliceNum;
-    int mFrameRate;
+    bool mDisplayMode4k120                              = false;
+    bool mDisplayMode4k100                              = false;
 
-    unsigned int mHdmiHdrInfo = 0;
+    int mAmvideoFd                                      = -1;
+    int mDiFd                                           = -1;
+    int mLdFd                                           = -1;
+    int mMemcFd                                         = -1;
+    int mLcdFd                                          = -1;
+    int mVideoTunelFd                                   = -1;
+    int mVdin0DevFd                                     = -1;
+    int mCurrentNodeNumber                              = 0;
+    int mSliceNum                                       = 1;
+    int mFrameRate                                      = 60;
+
+    unsigned int mHdmiHdrInfo                           = 0;
+
+    CPQdb *mPQdb                                        = NULL;
+    COverScandb *mpOverScandb                           = NULL;
+    SSMAction *mSSMAction                               = NULL;
+    CConfigFile *mPQConfigFile                          = NULL;
+    CHlgToneMapping *mHlgToneMapping                    = NULL;
+    CDolbyVision *mDolbyVision                          = NULL;
+    SysWrite *pqSysWrite                                = NULL;
 
     static CPQControl *mInstance;
-    CPQdb *mPQdb;
-    COverScandb *mpOverScandb;
-    SSMAction *mSSMAction;
-    CConfigFile *mPQConfigFile;
-    CHlgToneMapping *mHlgToneMapping;
-    CDolbyVision *mDolbyVision;
-
-    SysWrite *pqSysWrite;
     sp<CDevicePollCheckThread> mCDevicePollCheckThread;
     sp<CDynamicBackLight> mDynamicBackLight;
     sp<PqNotify> mNotifyListener;
 
-    mutable Mutex mLock;
-
     tcon_rgb_ogo_t rgbfrompq[3];
     source_input_param_t mCurrentSourceInputInfo;
-    tv_source_input_t mSourceInputForSaveParam;
     pq_src_param_t mCurrentPqSource;
-    output_type_t mCurrentOutputType;
-    tvin_aspect_ratio_e mCurrentAfdInfo;
-    hdr_type_t mCurrentHdrType = HDR_TYPE_NONE;
-    vpp_picture_mode_t mLastPictureMode = VPP_PICTURE_MODE_STANDARD;
-    bool mDisplayMode4k120 = false;
-    bool mDisplayMode4k100 = false;
+
+    tv_source_input_t mSourceInputForSaveParam         = SOURCE_MPEG;
+    output_type_t mCurrentOutputType                   = OUTPUT_TYPE_LVDS;
+    tvin_aspect_ratio_e mCurrentAfdInfo                = TVIN_ASPECT_NULL;
+    hdr_type_t mCurrentHdrType                         = HDR_TYPE_NONE;
+    vpp_picture_mode_t mLastPictureMode                = VPP_PICTURE_MODE_STANDARD;
+    pq_source_input_t CurSource                        = PQ_SRC_MPEG;
+    pq_sig_fmt_t CurTimming                            = PQ_FMT_SDR;
+
+    mutable Mutex mLock;
 };
 #endif

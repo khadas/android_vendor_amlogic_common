@@ -38,7 +38,7 @@ cc_library_shared {
 	shared_libs: [
         "liblog",
         "liblog_cout",
-	    "libadap_pq",
+	    "libadap_ld",
     ],
 
     cflags: [

@@ -207,6 +207,28 @@ typedef enum ssm_source_input_e {
     SSM_SOURCE_MAX,
 } ssm_source_input_t;
 
+typedef enum pq_ssm_source_input_e {
+    PQ_SSM_SOURCE_DEFAULT = 0,
+    PQ_SSM_SOURCE_TV,
+    PQ_SSM_SOURCE_AV1,
+    PQ_SSM_SOURCE_AV2,
+    PQ_SSM_SOURCE_YPBPR1,
+    PQ_SSM_SOURCE_YPBPR2,
+    PQ_SSM_SOURCE_HDMI1,
+    PQ_SSM_SOURCE_HDMI2,
+    PQ_SSM_SOURCE_HDMI3,
+    PQ_SSM_SOURCE_HDMI4,
+    PQ_SSM_SOURCE_VGA,
+    PQ_SSM_SOURCE_MPEG,
+    PQ_SSM_SOURCE_DTV,
+    PQ_SSM_SOURCE_SVIDEO,
+    PQ_SSM_SOURCE_IPTV,
+    PQ_SSM_SOURCE_DUMMY,
+    PQ_SSM_SOURCE_SPDIF,
+    PQ_SSM_SOURCE_ADTV,
+    PQ_SSM_SOURCE_MAX,
+} pq_ssm_source_input_t;
+
 typedef enum ssm_sig_fmt_e {
     SSM_FMT_DEFAULT = 0,
     SSM_FMT_SDR,
