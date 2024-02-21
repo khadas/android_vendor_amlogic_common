@@ -30,7 +30,7 @@ namespace android {
 #define SCREENCONTROL_DEBUG_MORE_LOG_PROP "ro.vendor.screencontrol.debug"
 #define SCREENCONTROL_DEBUG_DUMP_YUV_PROP "ro.vendor.screencontrol.dump.yuv"
 #define SCREENCONTROL_DEBUG_DUMP_ES_PROP "ro.vendor.screencontrol.dump.es"
-
+#define SCREENCONTROL_FORMATCOBERT_PROP "ro.vendor.screencontrol.hardware.covert"
 ScreenControlDebug::ScreenControlDebug() {
 }
 
@@ -40,6 +40,7 @@ ScreenControlDebug::~ScreenControlDebug() {
 bool ScreenControlDebug::mPrintMoreInfo = false;
 bool ScreenControlDebug::mNeedDumpYuv = false;
 bool ScreenControlDebug::mNeedDumpEs = false;
+bool ScreenControlDebug::mUseHardwareCovert = false;
 
 bool ScreenControlDebug::initDebug() {
 
@@ -90,6 +91,21 @@ bool ScreenControlDebug::initDebug() {
         }
         mNeedDumpEs = result;
     }
+    if (property_get(SCREENCONTROL_FORMATCOBERT_PROP, prop, "0") > 0) {
+        bool result = false;
+        ALOGD("Prop [%s]=%s", SCREENCONTROL_FORMATCOBERT_PROP, prop);
+        if (!strcasecmp(prop, "true")) {
+            result = true;
+        } else {
+            // try convert to number value
+            char *tmp = NULL;
+            long int propValue = strtol(prop, &tmp, 0);
+            if (LONG_MIN != propValue && LONG_MAX != propValue && 0 != propValue) {
+                result = true;
+            }
+        }
+        mUseHardwareCovert = result;
+    }
     return true;
 }
 
@@ -101,6 +117,10 @@ bool ScreenControlDebug::isNeedDumpYuv() {
 }
 bool ScreenControlDebug::isNeedDumpEs() {
     return mNeedDumpEs;
+}
+
+bool ScreenControlDebug::isUseHardwareCover() {
+    return mUseHardwareCovert;
 }
 
 

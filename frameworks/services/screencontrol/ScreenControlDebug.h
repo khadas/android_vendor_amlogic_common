@@ -28,10 +28,12 @@ public:
     static bool isNeedMoreInfo();
     static bool isNeedDumpYuv();
     static bool isNeedDumpEs();
+    static bool isUseHardwareCover();
 private:
     static bool mPrintMoreInfo;
     static bool mNeedDumpYuv;
     static bool mNeedDumpEs;
+    static bool mUseHardwareCovert;
 
 };
 

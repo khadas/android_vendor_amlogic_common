@@ -123,9 +123,6 @@ private:
     virtual ~ScreenManager();
     bool startMoreClient(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client,int32_t *id);
     bool setFormat2Device();
-    // get the new buffer by changing format.
-    bool getBufferWithFormat(uint8_t *src ,int32_t src_size, uint8_t *dst,std::unique_ptr<InputParmeter>& src_parmeter,
-                                                                        std::unique_ptr<MultiClientInfo>& dst_parmeter );
     int32_t getBufferSize(std::unique_ptr<Size>& size,aml_screencontrol_format format);
     bool isSupportFormat();
     bool setVideoRotation(int32_t degree);

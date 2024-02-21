@@ -20,10 +20,8 @@
 #include <utils/Log.h>
 #include <cutils/properties.h>
 #include <linux/videodev2.h>
-#include "libyuv/scale_argb.h"
-#include "libyuv/convert_argb.h"
-
 #include <ScreenManager.h>
+#include "FormatCovert.h"
 
 
 
@@ -45,59 +43,6 @@ static void VdinDataCallBack(void *user, aml_screen_buffer_info_t *buffer){
     source->dataCallBack(buffer);
     return;
 }
-void argb_scale(uint8_t *src, uint8_t* dst, int width, int height, int dWidth, int dHeight)
-{
-    if (dWidth == 0 || dHeight == 0 || width == 0 || height == 0) {
-        return;
-    }
-    libyuv::ARGBScale((uint8_t*)src, width * 4, width, height, (uint8_t*)dst, dWidth * 4, dWidth, dHeight, libyuv::kFilterNone);
-}
-
-static void yuv_to_rgb32(uint8_t y,uint8_t u,uint8_t v,uint8_t *rgb)
-{
-    int r,g,b;
-
-    r = (1192 * (y - 16) + 1634 * (v - 128) ) >> 10;
-    g = (1192 * (y - 16) - 833 * (v - 128) - 400 * (u -128) ) >> 10;
-    b = (1192 * (y - 16) + 2066 * (u - 128) ) >> 10;
-
-    r = r > 255 ? 255 : r < 0 ? 0 : r;
-    g = g > 255 ? 255 : g < 0 ? 0 : g;
-    b = b > 255 ? 255 : b < 0 ? 0 : b;
-
-    /*ARGB*/
-    *rgb = (uint8_t)r;
-    rgb++;
-    *rgb = (uint8_t)g;
-    rgb++;
-    *rgb = (uint8_t)b;
-    rgb++;
-    *rgb = 0xff;
-}
-
-static void nv21_to_rgb32(uint8_t *buf, uint8_t *rgb, int width, int height)
-{
-    int x,y,z=0;
-    int h,w;
-    int blocks;
-    uint8_t Y1, Y2, U, V;
-
-    blocks = (width * height) * 2;
-    for (h=0, z=0; h< height; h+=2) {
-        for (y = 0; y < width*2; y+=2) {
-            Y1 = buf[ h*width + y + 0];
-            V = buf[ blocks/2 + h*width/2 + y%width + 0 ];
-            Y2 = buf[ h*width + y + 1];
-            U = buf[ blocks/2 + h*width/2 + y%width + 1 ];
-            yuv_to_rgb32(Y1, U, V, &rgb[z]);
-            yuv_to_rgb32(Y2, U, V, &rgb[z + 4]);
-            z+=8;
-        }
-    }
-}
-
-
-
 
 static int32_t getRotationDegree(){
     char prop[PROPERTY_VALUE_MAX];
@@ -283,32 +228,6 @@ bool ScreenManager::isSupportFormat(){
 
 }
 
-bool ScreenManager::getBufferWithFormat(uint8_t *src ,int32_t src_size, uint8_t *dst,
-                                    std::unique_ptr<InputParmeter>& src_parmeter,
-                                    std::unique_ptr<MultiClientInfo>& dst_parmeter ) {
-    ALOGI("[%s %d] src_size =%d,src=%p ", __FUNCTION__, __LINE__,src_size,src);
-    if (!src || src_size <= 0)
-        return false;
-    if (src_parmeter->format == SCREENCONTROL_PIX_FMT_NV21 && dst_parmeter->format == SCREENCONTROL_PIX_FMT_RGBA888) {
-        if (src_parmeter->size->width() == dst_parmeter->size->width() && src_parmeter->size->height() == dst_parmeter->size->height()) {
-            nv21_to_rgb32(src, dst , dst_parmeter->size->width(), dst_parmeter->size->height());
-            ALOGI("[%s %d] nv21_to_rgb32 finish", __FUNCTION__, __LINE__);
-        }else {
-            int32_t temp_size = src_parmeter->size->width() * src_parmeter->size->height() * 4;
-            uint8_t* temp = new uint8_t[temp_size];
-            nv21_to_rgb32(src, temp , src_parmeter->size->width(), src_parmeter->size->height());
-            argb_scale(temp, dst, src_parmeter->size->width(), src_parmeter->size->height(), dst_parmeter->size->width(), dst_parmeter->size->height());
-            ALOGI("[%s %d] argb_scale finish ", __FUNCTION__, __LINE__);
-            delete []temp;
-        }
-    } else {
-        ALOGE("[%s %d] don't support from %d to %d ", __FUNCTION__, __LINE__,src_parmeter->format,dst_parmeter->format);
-        return false;
-        //TODO
-    }
-    return true;
-}
-
 int32_t ScreenManager::getBufferSize(std::unique_ptr<Size>& size,aml_screencontrol_format format) {
     int32_t buffer_size = 0;
     int32_t width = size->width();
@@ -406,11 +325,18 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
         for (auto it = mMultiClientMap.begin(); it != mMultiClientMap.end(); it++) {
             int32_t size = getBufferSize(it->second->size,it->second->format);
             uint8_t* dst = new uint8_t[size];
-            if (getBufferWithFormat((uint8_t*)buffer->buffer_mem,mBufferSize,dst,mInputParmeter,it->second) && dst && size > 0) {
+            std::shared_ptr<FormatCovert> covert;
+            if (ScreenControlDebug::isUseHardwareCover()) {
+                covert = std::make_shared<HardWareFormatCovert>();
+            } else {
+                covert = std::make_shared<SoftWareFormatCovert>();
+            }
+            if (covert->covert((const char*)buffer->buffer_mem,mInputParmeter->format,mInputParmeter->size->width() ,mInputParmeter->size->height(),
+                    (char*) dst, it->second->format, it->second->size->width(), it->second->size->height())) {
                 const OutputRecord record(buffer->index, size,tv_usec, dst, canvas_buffer,it->second->format);
                 it->second->cb->PictureReady(record);
                 /* coverity[leaked_storage] */
-            }else
+            } else
                 delete []dst;
         }
     }
