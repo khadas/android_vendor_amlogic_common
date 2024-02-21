@@ -180,6 +180,8 @@ static const dev_info bt_dev_pci[] = {
 static const dev_info bt_dev_sdio[] = {
     // broadcom sdio modules
     {{0x02D0, 0x4359}, "ap6398s",      BCM_VND_LIB,   "",                POWER_EVENT_RESET},
+    // realtek sdio modules
+    {{0x024C, 0xC822}, "rtl8822cs",    RTK_VND_LIB,   "",                POWER_EVENT_RESET},
     // mediatek sdio modules
     {{0x0e8d, 0x7608}, "mtk7668s",     MTK_VND_LIB,   "btmtksdio",       POWER_EVENT_EN},
     {{0x0e8d, 0x7603}, "mtk7661s",     MTK_VND_LIB,   "btmtksdio",       POWER_EVENT_EN},
@@ -217,6 +219,7 @@ static const dev_info bt_dev_usb[] = {
     {{0x0bda, 0x0821}, "rtl8821au",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
     {{0x0bda, 0x885c}, "rtl8852au",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
     {{0x0bda, 0x885a}, "rtl8852au",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0xa85b}, "rtl8852bu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
     {{0x0bda, 0xB733}, "rtl8733bu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
     {{0x0bda, 0xC82C}, "rtl88x2cu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
     {{0x0bda, 0xB761}, "rtl8761u",     RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_RESET},
@@ -1742,8 +1745,6 @@ static bool distinguish_bt_module(void)
     PR_DBG();
 
     while(cnt < 2) {
-        cnt ++;
-
         if (distinguish_dev_name_specify()) {
             goto exit;
         }
@@ -1760,10 +1761,13 @@ static bool distinguish_bt_module(void)
             goto exit;
         }
 
-        if (distinguish_bt_module_uart()) {
-            goto exit;
+        if (cnt > 0) { // uart recognition takes too long, ignore it first when unsure if bt is en
+            if (distinguish_bt_module_uart()) {
+                goto exit;
+            }
         }
 
+        cnt ++;
         upio_set_bluetooth_power(UPIO_BT_POWER_ON);
         PR_INFO("retry cnt: %u", cnt);
     }
