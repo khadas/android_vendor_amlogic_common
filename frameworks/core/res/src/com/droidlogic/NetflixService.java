@@ -53,6 +53,7 @@ import java.lang.StringBuffer;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import android.os.SystemProperties;
@@ -98,6 +99,7 @@ public class NetflixService extends Service {
     private static final String STR_ADAPTIVE = "1";
     private static final int WAKEUP_REASON_CUSTOM = 9;
     private static final int MSG_UPDATA = 1;
+    private static final int MSG_UPDATA_DISPLAY = 2;
     private static final int UI_AUDIO_DELAY_OFFSET_TV_NON_DOLBY = 60;
     private static final int UI_AUDIO_DELAY_OFFSET_TV_MS12 = 110;
     private static final int UI_AUDIO_DELAY_OFFSET_OTT_DOLBY = 70;
@@ -228,6 +230,9 @@ public class NetflixService extends Service {
         public void onReceive(Context context, Intent intent) {
             boolean isConnected = intent.getBooleanExtra("state", false);
             refreshAudioCapabilities(isConnected);
+            if (isConnected) {
+                mMsgHandler.sendEmptyMessageDelayed(MSG_UPDATA_DISPLAY,2000);
+            }
         }
     };
 
@@ -284,6 +289,10 @@ public class NetflixService extends Service {
                         Log.d(TAG, "handleMessage");
                         netflixFGStateUpdate();
                         break;
+                    case MSG_UPDATA_DISPLAY:
+                        Log.d(TAG, "handleMessage display");
+                        resetDisplayConversionMode();
+                        break;
                     default:
                         Log.d(TAG, "No handler case available for message: " + msg.what);
                 }
@@ -314,6 +323,27 @@ public class NetflixService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+
+    private void resetDisplayConversionMode(){
+         if (mDisplayManager.getHdrConversionMode().getConversionMode() != HdrConversionMode.HDR_CONVERSION_SYSTEM)
+             return;
+
+        int preferredHdrFormat = mDisplayManager.getHdrConversionMode().getPreferredHdrOutputType();
+        Log.d(TAG, "now preferredHdrFormat = " + preferredHdrFormat);
+        if (preferredHdrFormat != -1
+                && !isHdrFormatSupported(mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).getMode(), preferredHdrFormat)) {
+            HdrConversionMode systemHdrConversionMode = new HdrConversionMode(
+                    HdrConversionMode.HDR_CONVERSION_SYSTEM);
+            mDisplayManager.setHdrConversionMode(systemHdrConversionMode);
+            Log.d(TAG, "reset HDR_CONVERSION_SYSTEM to right preferredHdrFormat");
+        }
+    }
+
+    private boolean isHdrFormatSupported(Display.Mode mode, int hdrFormat) {
+        return Arrays.stream(mode.getSupportedHdrTypes()).anyMatch(
+        hdr -> hdr == hdrFormat);
+   }
 
     private void initNrdpCapabilities() {
         String buildDate = PlatformAPI.getStringProperty("ro.build.version.incremental", "");
