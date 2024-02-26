@@ -8184,8 +8184,6 @@ int CPQControl::GetAipqEnable()
 void CPQControl::enableAipq(bool isEnable)
 {
     SYS_LOGI("%s, enableAipq\n", __FUNCTION__);
-    pqWriteSys(DECODER_COMMON_PARAMETERS_DEBUG_VDETECT, isEnable ? "1" : "0");
-    pqWriteSys(VDETECT_AIPQ_ENABLE, isEnable ? "1" : "0");
     pqWriteSys(AIPQ_PARAMETERS_UVM_OPEN, isEnable ? "1" : "0");
 }
 
