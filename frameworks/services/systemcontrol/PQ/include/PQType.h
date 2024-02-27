@@ -1125,6 +1125,7 @@ typedef enum _aipq_mode_e {
     AIPQ_MODE_OFF = 0,
     AIPQ_MODE_LOW,
     AIPQ_MODE_MID,
+    AIPQ_MODE_HIGH,
     AIPQ_MODE_MAX,
 } aipq_mode_e;
 #endif

@@ -711,7 +711,7 @@ int CPQControl::LoadPQSettings()
          ret |= Cpq_SetAiSrEnable(false);
      } else {
          ret |= Cpq_SetMemcMode((vpp_memc_mode_t)GetMemcMode(), mCurrentSourceInputInfo);
-         ret |= Cpq_SetAiSrEnable((GetAiSrEnable() > 0) ? true : false);
+         //ret |= Cpq_SetAiSrEnable((GetAiSrEnable() > 0) ? true : false);
          ret |= Cpq_SetAiSrMode((aisr_mode_e)GetAiSrMode(), mCurrentSourceInputInfo);
          ret |= Cpq_SetAipqMode((aipq_mode_e)GetAipqMode(), mCurrentSourceInputInfo);
          ret |= Cpq_SetAiColor(GetAiColor());
@@ -758,7 +758,7 @@ int CPQControl::LoadPQTableSettings()
         ret |= Cpq_SetAiSrEnable(false);
     } else {
         ret |= Cpq_SetMemcMode((vpp_memc_mode_t)GetMemcMode(), mCurrentSourceInputInfo);
-        ret |= Cpq_SetAiSrEnable((GetAiSrEnable() > 0) ? true : false);
+        //ret |= Cpq_SetAiSrEnable((GetAiSrEnable() > 0) ? true : false);
         ret |= Cpq_SetAiSrMode((aisr_mode_e)GetAiSrMode(), mCurrentSourceInputInfo);
         ret |= Cpq_SetAipqMode((aipq_mode_e)GetAipqMode(), mCurrentSourceInputInfo);
         ret |= Cpq_SetAiColor(GetAiColor());
@@ -8383,6 +8383,8 @@ int CPQControl::Cpq_SetAiSrMode(aisr_mode_e mode, source_input_param_t source_in
         SYS_LOGD("%s: AiSr disabled!\n", __FUNCTION__);
         return 0;
     }
+
+    SetAiSrEnable((mode > AISR_MODE_OFF) ? true : false);
 
     am_regs_t regs;
     memset(&regs, 0, sizeof(am_regs_t));
