@@ -64,14 +64,10 @@ Return<void> ScreenControlHal::startScreenCapBuffer(int32_t left, int32_t top, i
             ret = mScreenControl->startScreenCapBuffer(left, top, right, bottom,
                                                  width, height, sourceType, data, &bufSize);
             memory->commit();
-            if (android::OK == ret) {
-                _cb(Result::OK, mem);
-            } else {
-                _cb(Result::FAIL, mem);
-            }
+            _cb(ret,mem);
         } else {
             ALOGI("alloc memory Fail");
-            _cb(Result::FAIL, mem);
+            _cb(android::AML_ERROR_CODE_OTHER, mem);
         }
     });
     return Void();

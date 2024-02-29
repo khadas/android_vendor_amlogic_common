@@ -28,6 +28,13 @@
 
 namespace android {
 
+enum aml_screencontrol_error_code {
+    AML_ERROR_CODE_HDCP_LIMIT = 1,
+    AML_ERROR_CODE_TIMEOUT = 2,
+    AML_ERROR_CODE_OTHER = 3,
+};
+
+
 class ScreenControlNotify : virtual public RefBase
 {
 public:
@@ -68,6 +75,8 @@ public:
     void onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts);
 
     void PictureReady(const OutputRecord &output);
+
+    void EventNotify(int32_t event);
 
 private:
     mutable Mutex mLock;

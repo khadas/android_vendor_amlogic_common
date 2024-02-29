@@ -95,23 +95,54 @@ static void ConnectScreenControl(JNIEnv *env __unused, jclass clazz __unused)
 
 
 
-static jbyteArray ScreenControlCapScreenBuffer(JNIEnv *env, jobject, jint left,
-    jint top, jint right, jint bottom, jint width, jint height, jint sourceType)
-{
-    sp<ScreenControlClient>& scc = getScreenControlClient();
-    if (scc != NULL) {
-        jbyte *buffer = NULL;
-        int bufferSize = 0;
-        int ret = NO_ERROR;
+extern "C"  {
+    JNIEXPORT jobject JNICALL
+        Java_com_droidlogic_app_ScreenControlManager_native_1ScreenCapBuffer(JNIEnv *env, jobject, jint left,
+            jint top, jint right, jint bottom, jint width, jint height, jint sourceType) {
+        sp<ScreenControlClient>& scc = getScreenControlClient();
+        if (!scc)
+            return NULL;
+        jclass clazz = env->FindClass("com/droidlogic/app/ScreenControlManager$CaptureResult");
+        if (clazz == NULL) {
+            ALOGE("Can't find class : com/droidlogic/app/ScreenControlManager$CaptureResult");
+            return NULL;
+        }
+        jmethodID constructor = env->GetMethodID(clazz, "<init>", "()V");
+        if (constructor == NULL) {
+            ALOGE("get the constructor fail");
+            return NULL;
+        }
+        jobject obj = env->NewObject(clazz, constructor);
+        if (obj == NULL) {
+            ALOGE("ne object fail");
+            return NULL;
+        }
+        jmethodID method_set_result =  env->GetMethodID(clazz,"setResult","(I)V");
+        if (method_set_result == NULL) {
+            ALOGE("get the setResult mthod fail");
+            return NULL;
+        }
 
-        ret = scc->startScreenCapBuffer(left, top, right, bottom, width,
-                    height, sourceType, (void **)&buffer, &bufferSize);
-        jbyteArray arr = env->NewByteArray(bufferSize);
-        env->SetByteArrayRegion(arr, 0, bufferSize, (jbyte *)buffer);
-        delete [] buffer;
-        return arr;
-    } else
-        return NULL;
+        jmethodID method_set_data =  env->GetMethodID(clazz,"setData","([B)V");
+        if (method_set_data == NULL) {
+            ALOGE("get the setResult mthod fail");
+            return NULL;
+        }
+        jbyte *buffer = NULL;
+        jbyteArray arr = NULL;
+        int bufferSize = 0;
+        int  ret = scc->startScreenCapBuffer(left, top, right, bottom, width,
+                        height, sourceType, (void **)&buffer, &bufferSize);
+        if (ret == 0) {
+            arr = env->NewByteArray(bufferSize);
+            env->SetByteArrayRegion(arr, 0, bufferSize, (jbyte *)buffer);
+            delete [] buffer;
+        }
+        env->CallObjectMethod(obj,method_set_result, ret);
+        env->CallObjectMethod(obj,method_set_data, arr);
+        return obj;
+
+    }
 }
 
 static jint ScreenControlRecordScreen(JNIEnv *env, jobject, jint left,
@@ -188,7 +219,6 @@ static void ScreenControlForceStop(JNIEnv *, jobject)
 
 static JNINativeMethod ScreenControl_Methods[] = {
     {"native_ConnectScreenControl", "()V", (void *) ConnectScreenControl },
-    {"native_ScreenCapBuffer", "(IIIIIII)[B", (void *) ScreenControlCapScreenBuffer},
     {"native_ScreenRecord", "(IIIIIIIIIILjava/lang/String;)I", (void *) ScreenControlRecordScreen},
     {"native_StartReceiver", "(Ljava/lang/ref/WeakReference;)V", (void *) ScreenControlStartReceiver },
     {"native_startAvcRecord", "(IIIIIIIII)I", (void *) ScreenControlStartAvcRecord},

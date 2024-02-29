@@ -86,7 +86,8 @@ ScreenCatch::ScreenCatch():
             mScreenManager(nullptr),
             mStart(false),
             mRawBufferSize(0),
-            mClientId(-1) {
+            mClientId(-1),
+            mErrorEvent(0) {
     ALOGI("[%s %d] Construct", __FUNCTION__, __LINE__);
     ScreenControlDebug::initDebug();
     mOutputQueue.clear();
@@ -184,6 +185,10 @@ bool ScreenCatch::readBuffer(uint8_t* buffer, int32_t* size) {
     return true;
 }
 
+int32_t ScreenCatch::getErrorEvent() {
+    return mErrorEvent;
+}
+
 bool ScreenCatch::captureforKeystone() {
     const native_handle_t *outBufferHandle = nullptr;
     native_handle_t *bufferHandle = nullptr;
@@ -236,6 +241,10 @@ void ScreenCatch::PictureReady(const OutputRecord &output) {
     auto info = std::make_unique<OutputInfo>(output.raw_buffer,output.index);
 
     mOutputQueue.push_back(std::move(info));
+}
+
+void ScreenCatch::EventNotify(int32_t event) {
+    mErrorEvent = event;
 }
 
 };

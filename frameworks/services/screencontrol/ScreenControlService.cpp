@@ -149,21 +149,31 @@ int32_t ScreenControlService::startScreenCapBuffer(int32_t left, int32_t top, in
     parmeter->size = std::move(size);
     parmeter->area = std::move(area);
     parmeter->source_type = sourceType;
-    if (!screen_catch->start(parmeter)|| !dstBuffer) {
+    int result = 0;
+    if (!dstBuffer || !screen_catch->start(parmeter)) {
         ALOGE("[%s %d] ScreenCatch start fail !! dstBuffer=%p", __FUNCTION__, __LINE__,dstBuffer);
-        return !OK;
+        return AML_ERROR_CODE_OTHER;
     }
     int64_t firsetNowUs = getNowTimesUs();;
     while (!screen_catch->readBuffer((uint8_t*)dstBuffer,dstBufferSize)) {
-        int64_t nowUs = getNowTimesUs();;
+        int64_t nowUs = getNowTimesUs();
+        int32_t event = screen_catch->getErrorEvent();
+        if (event == AML_ENEVENT_HDCP_LIMIT) {
+            result = AML_ERROR_CODE_HDCP_LIMIT;
+            goto exit;
+        }
+
         if ((nowUs - firsetNowUs) >= TIMEOUT_VAL) {
             ALOGE("[%s %d] no data !!!! break,firsetNowUs=%lld,nowUs=%lld", __FUNCTION__, __LINE__,firsetNowUs,nowUs);
-            return screen_catch->stop()?OK:!OK;
+            result = AML_ERROR_CODE_TIMEOUT;
+            goto exit;
         }
         usleep(5 *1000);
     }
     ALOGI("[%s %d] readed buffer size = %d", __FUNCTION__, __LINE__,*dstBufferSize);
-    return screen_catch->stop()?OK:!OK;
+exit:
+    screen_catch->stop();
+    return result;
 }
 
 int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
@@ -307,6 +317,10 @@ void ScreenControlService::PictureReady(const OutputRecord &output) {
     }else
         delete []output.raw_buffer;
 
+
+}
+
+void ScreenControlService::EventNotify(int32_t event) {
 
 }
 

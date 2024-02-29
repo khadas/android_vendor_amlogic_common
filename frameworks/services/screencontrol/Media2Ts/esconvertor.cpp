@@ -137,6 +137,10 @@ void ESConvertor::PictureReady(const OutputRecord &output) {
     mWorkingInfoQueue.push_back(std::move(info));
 
 }
+
+void ESConvertor::EventNotify(int32_t event) {
+
+}
 void ESConvertor::onInputBufferAvailable(int64_t pts) {
     if (pts <= 0 || !mStart)
         return;

@@ -90,6 +90,7 @@ public:
         ScreenMangerCallback() = default;
         virtual ~ScreenMangerCallback() = default;
         virtual void PictureReady(const OutputRecord &output) = 0;
+        virtual void EventNotify(int32_t event) = 0;
 
     };
     /* if other client want to use the screen manger at the same time,
@@ -109,11 +110,15 @@ public:
         return &value;
     }
     bool start(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client,int32_t *id,bool multi_acquire = true);
+
     void stop(int32_t client_id);
+
     bool realseBuffer(int32_t client_id,int32_t index);
+
     // the callback from screen source
     int32_t dataCallBack(aml_screen_buffer_info_t *buffer);
 
+    void onEvent(int32_t event);
 
 
 private:

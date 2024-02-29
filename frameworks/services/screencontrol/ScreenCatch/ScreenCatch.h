@@ -38,7 +38,9 @@ public:
     bool stop();
     void setVideoRotation(int degree);
     void PictureReady(const OutputRecord &output);
+    void EventNotify(int32_t event);
     bool readBuffer(uint8_t* buffer, int32_t* size);
+    int32_t getErrorEvent();
 
 private:
     bool captureforKeystone();
@@ -48,8 +50,7 @@ private:
     std::list<std::unique_ptr<OutputInfo>> mOutputQueue;
     int32_t mRawBufferSize;
     int32_t mClientId;
-
-
+    int32_t mErrorEvent;
 };
 
 };

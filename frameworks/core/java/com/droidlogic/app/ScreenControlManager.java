@@ -50,6 +50,10 @@ public class ScreenControlManager {
     static final int MSG_DATA_TYPE_YUV = 0;
     static final int MSG_DATA_TYPE_AVC = 1;
 
+    public static final int AML_ERROR_CODE_HDCP_LIMIT           = 1;
+    public static final int AML_ERROR_CODE_TIMEOUT              = 2;
+    public static final int AML_ERROR_CODE_OTHER                = 3;
+
     // Mutex for all mutable shared state.
     private final Object mLock = new Object();
 
@@ -58,8 +62,7 @@ public class ScreenControlManager {
     }
 
     private native void native_ConnectScreenControl();
-    private native int native_ScreenCap(int left, int top, int right, int bottom, int width, int height, int sourceType, String filename);
-    private native byte[] native_ScreenCapBuffer(int left, int top, int right, int bottom, int width, int height, int sourceType);
+    private native CaptureResult native_ScreenCapBuffer(int left, int top, int right, int bottom, int width, int height, int sourceType);
     private native int native_ScreenRecord(int left, int top, int right, int bottom, int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename);
     private native void native_StartReceiver(WeakReference<ScreenControlManager> wo);
     //avc
@@ -131,6 +134,25 @@ public class ScreenControlManager {
 
     }
 
+    public class CaptureResult {
+        private int result;
+        private byte[] data;
+        public CaptureResult() {
+        }
+        public void setResult(int r) {
+            result = r;
+        }
+        public int getResult() {
+            return result;
+        }
+        public void setData(byte[] d) {
+            data = d;
+        }
+        public byte[] getData() {
+            return data;
+        }
+    }
+
 
     public static ScreenControlManager getInstance() {
          if (null == mInstance) mInstance = new ScreenControlManager();
@@ -196,16 +218,15 @@ public class ScreenControlManager {
 
     public int startScreenCap(int left, int top, int right, int bottom, int width, int height, int sourceType, String filename) {
         Log.d(TAG, "startScreenCap left:" + left + ",top:"+ top + ",right:" + right + ",bottom:" + bottom + ",width:" + width + ",height:" + height + ",sourceType:" + sourceType + ",filename:" + filename);
-        int result = 0;
+        int result = -1;
         synchronized (mLock) {
-            byte[] byteArr = startScreenCapBuffer(left, top, right, bottom, width, height, sourceType);
-            if (byteArr != null) {
+            CaptureResult cr = startScreenCapBuffer1(left, top, right, bottom, width, height, sourceType);
+            if (cr != null && cr.getResult() == 0 && cr.getData() != null) {
                 Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(byteArr));
+                bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(cr.getData()));
                 saveBitmapAsPicture(bitmap, new File(filename));
-            } else {
-                result = REMOTE_EXCEPTION;
             }
+            result = cr.getResult();
         }
         return result;
     }
@@ -214,6 +235,21 @@ public class ScreenControlManager {
         Log.d(TAG, "startScreenCapBuffer left:" + left + ",top:"+ top + ",right:" + right + ",bottom:" + bottom + ",width:" + width + ",height:" + height + ",sourceType:" + sourceType);
         ByteBuffer byteBuffer;
         byte[] byteArray = null;
+        synchronized (mLock) {
+            try {
+                CaptureResult cr = startScreenCapBuffer1(left, top, right, bottom, width, height, sourceType);
+                if (cr != null && cr.getResult() == 0 && cr.getData() != null) {
+                    return cr.getData();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "startScreenCapBuffer: ScreenControlService is dead!:" + e);
+            }
+        }
+        return null;
+    }
+
+    public CaptureResult startScreenCapBuffer1(int left, int top, int right, int bottom, int width, int height, int sourceType) {
+        Log.d(TAG, "startScreenCapBuffer1 left:" + left + ",top:"+ top + ",right:" + right + ",bottom:" + bottom + ",width:" + width + ",height:" + height + ",sourceType:" + sourceType);
         synchronized (mLock) {
             try {
                 return native_ScreenCapBuffer(left, top, right, bottom, width, height, sourceType);
