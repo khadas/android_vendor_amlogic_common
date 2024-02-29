@@ -52,6 +52,7 @@ public:
     bool start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertorCallback *client);
     bool stop();
     void PictureReady(const OutputRecord &output);
+    void EventNotify(int32_t event);
     void onInputBufferAvailable(int64_t pts);
     void onOutputBufferAvailable(void* const buffer, int32_t size, int32_t frame_type, int64_t pts);
 

@@ -78,15 +78,15 @@ int ScreenControlClient::startScreenCapBuffer(int32_t left, int32_t top, int32_t
     ALOGI("enter %s,left=%d,top=%d,right=%d,bottom=%d,width=%d,height=%d,srctype=%d",
             __func__, left, top, right, bottom, width, height, sourceType);
     mScreenCtrl->startScreenCapBuffer(left, top, right, bottom, width, height, sourceType,
-        [&](const Result &ret, const hidl_memory &mem){
-            if (Result::OK == ret) {
+        [&](const int32_t &ret, const hidl_memory &mem){
+            if (ret == 0) {
                 sp<IMemory> memory = mapMemory(mem);
                 *bufSize = memory->getSize();
                 *buffer = new uint8_t[*bufSize];
                 memcpy(*buffer, memory->getPointer(), *bufSize);
                 ALOGI("get memory, size=%d", *bufSize);
-                result = 0;
             }
+            result = ret;
         });
 
     return result;
