@@ -162,10 +162,14 @@ public class BluetoothAutoPairReceiver extends BroadcastReceiver {
 
         String remote_type = SystemProperties.get("sys.vendor.remote.type", DEFAULT_REMOTE_TYPE);
         if (!remote_type.contains("BT")) {
-            Log.d(TAG, "Do not show bt pairing screen in aosp");
+            Log.d(TAG, "Do not show bt pairing screen if remote is ir only ");
             return false;
         }
 
+        if (remote_type.contains("IR")) {
+            Log.i(TAG, "Do not show bt pairing screen if the remote has ir mode");
+            return false;
+        }
 
          BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 
