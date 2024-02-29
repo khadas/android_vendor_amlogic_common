@@ -796,7 +796,6 @@ public class NetflixService extends Service {
                 } else {
                     mHdmiControlManager.setPowerStateChangeOnActiveSourceLost(mOriginalPowerStateChangeValue);
                 }
-                setHDRConversionMode(fg);
             }
 
             boolean fgYoutube = isTopTask(YOUTUBE_PKG_NAME);
