@@ -120,6 +120,7 @@ void ScreenControlService::setListener(const sp<ScreenControlNotify>& listener) 
 }
 
 void ScreenControlService::forceStop() {
+    Mutex::Autolock autoLock(mScreenMangerLock);
     ALOGI("forceStop()");
     mStart = false;
     if (mMicroWidth > 0)
@@ -301,6 +302,11 @@ int32_t ScreenControlService::startMicroDim(int32_t width, int32_t height) {
 }
 
 void ScreenControlService::PictureReady(const OutputRecord &output) {
+    Mutex::Autolock autoLock(mScreenMangerLock);
+    if (mStart) {
+        ALOGE("[%s %d] it has been stopped,so drop it !! index = %d", __FUNCTION__, __LINE__, output.index);
+        return;
+    }
     sp<ScreenControlNotify> cb = mNotifyListener.promote();
     if (cb) {
         VDLog("PictureReady mNotifyListener\n");

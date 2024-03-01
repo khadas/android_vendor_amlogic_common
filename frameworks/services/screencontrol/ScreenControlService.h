@@ -80,6 +80,7 @@ public:
 
 private:
     mutable Mutex mLock;
+    mutable Mutex mScreenMangerLock;
     bool mStart;
     int32_t mMicroWidth;
     int32_t mMicroHeight;
