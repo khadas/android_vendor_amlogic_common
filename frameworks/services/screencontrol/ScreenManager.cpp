@@ -279,6 +279,7 @@ bool ScreenManager::setVideoRotation(int32_t degree)
 
 
 bool ScreenManager::realseBuffer(int32_t client_id, int32_t index) {
+    ALOGI("[%s %d] begin client_id:%d,index:%d,pts:%lld", __FUNCTION__, __LINE__, client_id,index);
     std::lock_guard<std::mutex> lock(mLock);
     if (index < 0 || mOutputRecordQueue.size() == 0 || client_id > 0) {
         ALOGE("realseBuffer failed, index %d, mOutputRecordQueue size %d client_id =%d\n",
@@ -356,10 +357,12 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
         }
     }
     lg.unlock();
+    VDLog("[%s %d] unlock out ", __FUNCTION__, __LINE__);
     if (mScreenMangerCallback) {
         mScreenMangerCallback->PictureReady(picture);
-    }else
+    } else
         realseBuffer(0,picture.index);
+    ALOGI("[%s %d] finish", __FUNCTION__, __LINE__);
     return 0;
 }
 
