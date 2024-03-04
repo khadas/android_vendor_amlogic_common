@@ -136,6 +136,7 @@ private:
     aml_screen_module_t* mScreenModule;
     aml_screen_device_t* mScreenDev;
     std::mutex mLock;
+    std::mutex mCallbackLock;
     std::list<std::unique_ptr<OutputRecord>> mOutputRecordQueue;
     std::map<int32_t,std::unique_ptr<MultiClientInfo>> mMultiClientMap;
     int32_t mBufferSize;
