@@ -96,6 +96,7 @@ ScreenManager::~ScreenManager() {
 
 
 bool ScreenManager::start(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client, int32_t *id, bool multi_acquire) {
+    std::lock_guard<std::mutex> alock(mCallbackLock);
     std::lock_guard<std::mutex> lock(mLock);
     if (mStart && (!mIsMultiAcquire || (input->source_type != mInputParmeter->source_type))) {
         ALOGE("[%s %d] the module has been opened and the user is not multi acquire! %d:%d", __FUNCTION__, __LINE__,mStart,mIsMultiAcquire);
@@ -280,6 +281,7 @@ bool ScreenManager::setVideoRotation(int32_t degree)
 
 bool ScreenManager::realseBuffer(int32_t client_id, int32_t index) {
     ALOGI("[%s %d] begin client_id:%d,index:%d,pts:%lld", __FUNCTION__, __LINE__, client_id,index);
+    std::lock_guard<std::mutex> alock(mCallbackLock);
     std::lock_guard<std::mutex> lock(mLock);
     if (index < 0 || mOutputRecordQueue.size() == 0 || client_id > 0) {
         ALOGE("realseBuffer failed, index %d, mOutputRecordQueue size %d client_id =%d\n",
@@ -308,13 +310,9 @@ void ScreenManager::onEvent(int32_t event) {
 }
 
 int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
-    std::unique_lock<std::mutex> lg(mLock);
+    std::lock_guard<std::mutex> lock(mCallbackLock);
     int64_t tv_usec = 0;
     long* canvas_buffer = nullptr;
-    if (!mStart) {
-        ALOGE("the modules has been not started");
-        return 0;
-    }
     auto output = std::make_unique<OutputRecord>();
     output->index = buffer->index;
     output->tv_usec = getNowTimesUs();
@@ -325,9 +323,6 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
     buff_info[1] = (long)buffer->buffer_mem;
     buff_info[2] = buffer->buffer_canvas;
     canvas_buffer = (long*)output->canvas_buffer;
-
-    const OutputRecord picture(output->index, mBufferSize,output->tv_usec, output->raw_buffer, output->canvas_buffer,mInputParmeter->format);
-    mOutputRecordQueue.push_back(std::move(output));
     if (ScreenControlDebug::isNeedDumpYuv()) {
         static int32_t count = 0;
         char filename[64] = {0};
@@ -347,8 +342,9 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
             } else {
                 covert = std::make_shared<SoftWareFormatCovert>();
             }
-            if (covert->covert((const char*)buffer->buffer_mem,mInputParmeter->format,mInputParmeter->size->width() ,mInputParmeter->size->height(),
-                    (char*) dst, it->second->format, it->second->size->width(), it->second->size->height())) {
+            if (covert->covert((const char*)buffer->buffer_mem,mInputParmeter->format,mInputParmeter->size->width() ,
+                mInputParmeter->size->height(),(char*) dst, it->second->format, it->second->size->width(),
+                it->second->size->height())) {
                 const OutputRecord record(buffer->index, size,tv_usec, dst, canvas_buffer,it->second->format);
                 it->second->cb->PictureReady(record);
                 /* coverity[leaked_storage] */
@@ -356,12 +352,13 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
                 delete []dst;
         }
     }
-    lg.unlock();
-    VDLog("[%s %d] unlock out ", __FUNCTION__, __LINE__);
     if (mScreenMangerCallback) {
+        const OutputRecord picture(output->index, mBufferSize,output->tv_usec, output->raw_buffer, output->canvas_buffer,mInputParmeter->format);
+        mOutputRecordQueue.push_back(std::move(output));
         mScreenMangerCallback->PictureReady(picture);
-    } else
-        realseBuffer(0,picture.index);
+    } else {
+        mScreenDev->ops.release_buffer(mScreenDev, buffer->buffer_mem);
+    }
     ALOGI("[%s %d] finish", __FUNCTION__, __LINE__);
     return 0;
 }
