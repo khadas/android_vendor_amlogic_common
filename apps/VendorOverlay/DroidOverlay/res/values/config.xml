@@ -52,6 +52,9 @@
     <bool name="config_cecPowerControlModeTvAndAudioSystem_default">false</bool>
     <bool name="config_cecPowerControlModeBroadcast_default">true</bool>
 
+    <bool name="config_cecRoutingControlEnabled_default">true</bool>
+    <bool name="config_cecRoutingControlDisabled_default">false</bool>
+
     <!-- Comatibility Cec Configuration -->
     <bool name="config_cecUseAndroidVolumeBar">false</bool>
     <bool name="config_cecSendStandbyNoneActive">false</bool>
@@ -59,8 +62,12 @@
     <bool name="config_cecBootOneTouchPlay">true</bool>
     <bool name="config_cecSuspendedByAutoDeviceOff">false</bool>
     <bool name="config_cec_hdmiFullVolume">false</bool>
+    <bool name="config_cec_sendMuteKey">true</bool>
     <bool name="config_cec_showPassthroughWarningAlways">false</bool>
     <integer name="config_cec_passthroughMode">2</integer>
+    <!-- Soundbar device could override separately -->
+    <bool name="config_cecSoundbarModeEnabled_default">false</bool>
+    <bool name="config_cecSoundbarModeDisabled_default">true</bool>
 
     <!-- Which Short Audio Descriptors a TV should query via CEC -->
     <bool name="config_cecQuerySadLpcmEnabled_default">false</bool>
