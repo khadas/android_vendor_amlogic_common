@@ -27,6 +27,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
+import android.car.media.CarAudioManager;
+import android.car.Car;
+import android.media.AudioAttributes;
+import android.media.AudioDeviceAttributes;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
+
 public class MultiDisplayController implements DisplayManager.DisplayListener {
     private static final String TAG = "MM-Service";
     private static final String MMC_CONTROL = "mmc_control";
@@ -135,9 +142,58 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
         }
         saveMirroringDataBase(mSurfaceRecord.size());
         Log.d(TAG, "updated info" + getMapping(fromDisplayId) + "::::" + getMapping(toDisplayId));
+
+        mirrorAudio(fromDisplayId, toDisplayId);
         return true;
     }
 
+
+    private void mirrorAudio(int srcDisplayId, int dstDisplayId) {
+        Log.i(TAG, "mirrorAudio from display " + srcDisplayId + " to display " + dstDisplayId);
+        Car.createCar(mContext,null,Car.CAR_WAIT_TIMEOUT_WAIT_FOREVER,(car, ready) -> {
+            if (!ready) {
+                return;
+            }
+            CarAudioManager carAudioManager = (CarAudioManager) car.getCarManager(Car.AUDIO_SERVICE);
+            int dst_zoneId = carAudioManager.getZoneIdByDisplayId(dstDisplayId);
+            int src_zoneId = carAudioManager.getZoneIdByDisplayId(srcDisplayId);
+
+            Log.d(TAG, "   des_zoneId:" + dst_zoneId + ",src_zoneId:" + src_zoneId);
+            AudioDeviceInfo dst_deviceInfo = carAudioManager.getOutputDeviceForUsage(dst_zoneId, AudioAttributes.USAGE_MEDIA);
+            String addr_dest = dst_deviceInfo.getAddress();
+            AudioDeviceInfo src_deviceInfo = carAudioManager.getOutputDeviceForUsage(src_zoneId, AudioAttributes.USAGE_MEDIA);
+            String addr_src = src_deviceInfo.getAddress();
+            Log.d(TAG, "   addr_dest:" + addr_dest + ",addr_src:" + addr_src);
+
+            String command = "mirroring_src=bus_" + addr_src.substring(3,4) + ";mirroring_dest=bus_" + addr_src.substring(3,4) + ",bus_"+ addr_dest.substring(3,4);
+            Log.i(TAG, " command:" + command);
+            AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+            audioManager.setParameters(command);
+        });
+    }
+
+    private void stopMirrorAudio(int dstDisplayId) {
+        Log.d(TAG, "stopMirrorAudio to display " + dstDisplayId);
+        DisplayMapping mapping = getMapping(dstDisplayId);
+        if (mapping == null)
+            return;
+        int srcDisplayId = mapping.mMirroredDisplayId;
+
+        Car.createCar(mContext,null,Car.CAR_WAIT_TIMEOUT_WAIT_FOREVER,(car, ready) -> {
+            if (!ready) {
+                return;
+            }
+            CarAudioManager carAudioManager = (CarAudioManager) car.getCarManager(Car.AUDIO_SERVICE);
+            int src_zoneId = carAudioManager.getZoneIdByDisplayId(srcDisplayId);
+            AudioDeviceInfo src_deviceInfo = carAudioManager.getOutputDeviceForUsage(src_zoneId, AudioAttributes.USAGE_MEDIA);
+            String addr_src = src_deviceInfo.getAddress();
+            Log.d(TAG, "   src_zoneId:" + src_zoneId + ",addr_src:" + addr_src);
+            String command = "mirroring_src=bus_" + addr_src.substring(3,4) + ";mirroring=off";
+            Log.d(TAG, "command:" + command);
+            AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+            audioManager.setParameters(command);
+        });
+    }
     private void saveMirroringDataBase(int mirroring) {
         Settings.Global.putInt(mContext.getContentResolver(), MMC_CONTROL, mirroring);
     }
@@ -147,6 +203,7 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
             Log.d(TAG, "stopMapping but not mirrored");
             return;
         }
+        stopMirrorAudio(displayId);
         releaseMirrorDisplay(displayId);
         saveMirroringDataBase(mSurfaceRecord.size());
     }
@@ -180,7 +237,7 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
     public boolean isMapping(int displayId) {
         DisplayMapping mapping = getMapping(displayId);
         if (mapping == null) return false;
-        Log.d(TAG, "mapping current DisplayId" + displayId + "Mirrored displayId" + mapping.mMirroredDisplayId + " mapping.mMirroringSurface" + mapping.mMirroringSurface);
+        Log.d(TAG, "mapping current DisplayId:" + displayId + ",Mirrored displayId:" + mapping.mMirroredDisplayId + " mapping.mMirroringSurface" + mapping.mMirroringSurface);
         boolean ret = (mapping.mMirroredDisplayId != -1 && mapping.mMirroredDisplayId != mapping.mDisplay.getDisplayId()) || (mapping.mMirroringSurface != 0);
         Log.d(TAG, "isMapping " + displayId + " value:" + ret);
         return ret;

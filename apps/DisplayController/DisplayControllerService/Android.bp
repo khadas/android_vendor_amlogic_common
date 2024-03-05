@@ -40,7 +40,9 @@ android_app {
         "droidlogic_controller_permissions.xml",
         "libdisplaycontroller",
     ],
-
+    static_libs: [
+        "android.car",
+    ],
     optimize: {
         enabled: false,
     },
