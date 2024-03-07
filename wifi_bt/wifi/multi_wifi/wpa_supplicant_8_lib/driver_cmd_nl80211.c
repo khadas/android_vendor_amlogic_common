@@ -535,6 +535,7 @@ int wpa_driver_nl80211_driver_cmd(void *priv, char *cmd, char *buf,
 	if (os_strncasecmp(cmd, "SET_AP_WPS_P2P_IE", 17) == 0) {
 		if ((os_strncasecmp(wifi_status, "mtk", 3) == 0) ||
 			(os_strncasecmp(wifi_status, "rtl8852bs", 9) == 0) ||
+			(os_strncasecmp(wifi_status, "rtl8822cs", 9) == 0) ||
 			(os_strncasecmp(wifi_status, "uwe", 3) ==0 )) {
 			return 0;
 		}
