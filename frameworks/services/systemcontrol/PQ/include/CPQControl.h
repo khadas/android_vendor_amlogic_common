@@ -582,9 +582,9 @@ public:
     int SetHDRTMData(int *reGain);
     //HDR TMO
     int SetHDRTMOMode(hdr_tmo_t mode, int is_save);
-    int GetHDRTMOMode();
+    int GetHDRTMOMode(void);
     int SaveHDRTMOMode(hdr_tmo_t mode);
-    int Cpq_SetHDRTMOMode(int mode);
+    int Cpq_SetHDRTMOMode(hdr_tmo_t mode);
     //PQ Diff
     char* CalculateFileSha1(const char* filePath);
     int GenerateTargetPQ();

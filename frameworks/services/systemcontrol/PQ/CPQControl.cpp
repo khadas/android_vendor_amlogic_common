@@ -702,9 +702,7 @@ int CPQControl::LoadPQSettings()
 
      ret |= SetDisplayMode((vpp_display_mode_t)GetDisplayMode(), 1);
 
-     //load hdr tmo
-     //int HdrTmoMode = GetHDRTMOMode();
-     ret |= Cpq_SetHDRTMOMode(HDR_TMO_DYNAMIC);
+     ret |= Cpq_SetHDRTMOMode((hdr_tmo_t)GetHDRTMOMode());
 
      if (isGameMode()) {
          ret |= Cpq_SetMemcMode(VPP_MEMC_MODE_OFF, mCurrentSourceInputInfo);
@@ -746,12 +744,9 @@ int CPQControl::LoadPQTableSettings()
 
     ret |= Cpq_SetColorBaseMode((vpp_color_basemode_t)GetColorBaseMode(), mCurrentSourceInputInfo);
 
-    //display
     ret |= SetDisplayMode((vpp_display_mode_t)GetDisplayMode(), 1);
 
-    //load hdr tmo
-    //int HdrTmoMode = GetHDRTMOMode();
-    ret |= Cpq_SetHDRTMOMode(HDR_TMO_DYNAMIC);
+    ret |= Cpq_SetHDRTMOMode((hdr_tmo_t)GetHDRTMOMode());
 
     if (isGameMode()) {
         ret |= Cpq_SetMemcMode(VPP_MEMC_MODE_OFF, mCurrentSourceInputInfo);
@@ -8767,31 +8762,11 @@ int CPQControl::SetHDRTMData(int *reGain)
 int CPQControl::SetHDRTMOMode(hdr_tmo_t mode, int is_save)
 {
     SYS_LOGI("%s, source: %d, mode = %d\n", __FUNCTION__, mSourceInputForSaveParam, mode);
-    if (Cpq_SetHDRTMOMode((int)mode) < 0) {
-        SYS_LOGE("%s failed\n",__FUNCTION__);
-        return -1;
+    int ret = Cpq_SetHDRTMOMode(mode);
+
+    if ((ret == 0) && (is_save == 1)) {
+        ret = SaveHDRTMOMode(mode);
     }
-
-    SYS_LOGI("%s success\n",__FUNCTION__);
-    return 0;
-}
-
-int CPQControl::GetHDRTMOMode()
-{
-    int data = HDR_TMO_DYNAMIC;
-    mSSMAction->SSMReadHdrTmoVal(mSourceInputForSaveParam, &data);
-
-    if (data < HDR_TMO_OFF || data > HDR_TMO_STATIC) {
-        data = HDR_TMO_DYNAMIC;
-    }
-
-    SYS_LOGI("%s, source: %d, value = %d\n", __FUNCTION__, mSourceInputForSaveParam, data);
-    return data;
-}
-
-int CPQControl::SaveHDRTMOMode(hdr_tmo_t mode)
-{
-    int ret = mSSMAction->SSMSaveHdrTmoVal(mSourceInputForSaveParam, mode);
 
     if (ret < 0) {
         SYS_LOGE("%s failed!\n",__FUNCTION__);
@@ -8802,15 +8777,68 @@ int CPQControl::SaveHDRTMOMode(hdr_tmo_t mode)
     return ret;
 }
 
-int CPQControl::Cpq_SetHDRTMOMode(int mode)
+int CPQControl::GetHDRTMOMode(void)
+{
+    int mode = HDR_TMO_DYNAMIC;
+
+    if (mbCpqCfg_new_picture_mode_enable) {
+        vpp_picture_mode_t pq_mode = (vpp_picture_mode_t)GetPQMode();
+        vpp_pictur_mode_para_t para;
+        if (GetPictureModeData(mCurrentPqSource, pq_mode, &para) == 0) {
+            mode = para.HdrTmo;
+        }
+    } else {
+        mSSMAction->SSMReadHdrTmoVal(mSourceInputForSaveParam, &mode);
+    }
+
+    if (mode < HDR_TMO_OFF || mode > HDR_TMO_STATIC) {
+        mode = HDR_TMO_DYNAMIC;
+    }
+
+    SYS_LOGI("%s, source: %d, value = %d\n", __FUNCTION__, mSourceInputForSaveParam, mode);
+    return mode;
+}
+
+int CPQControl::SaveHDRTMOMode(hdr_tmo_t mode)
+{
+    int ret = -1;
+
+    if (mbCpqCfg_new_picture_mode_enable) {
+        vpp_pictur_mode_para_t para;
+        vpp_picture_mode_t pq_mode = (vpp_picture_mode_t)GetPQMode();
+        if (GetPictureModeData(mCurrentPqSource, pq_mode, &para) == 0) {
+            para.HdrTmo = (int)mode;
+            ret = SetPictureModeData(mCurrentPqSource, pq_mode, &para);
+        }
+    } else {
+        ret = mSSMAction->SSMSaveHdrTmoVal(mSourceInputForSaveParam, mode);
+    }
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed!\n",__FUNCTION__);
+    } else {
+        SYS_LOGI("%s success!\n",__FUNCTION__);
+    }
+
+    return ret;
+}
+
+int CPQControl::Cpq_SetHDRTMOMode(hdr_tmo_t mode)
 {
     if (!mbCpqCfg_hdrtmo_enable) {
-        SYS_LOGD("HDRTMO disable!\n");
+        SYS_LOGD("%s HDRTMO disable!\n", __FUNCTION__);
         return 0;
     }
 
+    //patch start: for chips that no "HdrTmo" in PM5 XML, but use HDR_TMO_DYNAMIC as default
+    if (mPQdb->mDbMatchType != MATCH_TYPE_MBOX_T3X) {
+        mode = HDR_TMO_DYNAMIC;
+    }
+    SYS_LOGI("%s, mode = %d\n", __FUNCTION__, mode);
+    //patch end
+
     hdr_tmo_sw_s hdrtmo_param;
-    if (mPQdb->PQ_GetHDRTMOParams(mCurrentSourceInputInfo, (hdr_tmo_t)mode, &hdrtmo_param) < 0) {
+    if (mPQdb->PQ_GetHDRTMOParams(mCurrentSourceInputInfo, mode, &hdrtmo_param) < 0) {
         SYS_LOGE("mPQdb->PQ_GetHDRTMOParams failed!\n");
         return -1;
     }
@@ -10034,6 +10062,7 @@ int CPQControl::Set_PictureMode(vpp_picture_mode_t pq_mode, pq_src_param_t sourc
         ret |= Cpq_SetSmoothPlusMode((vpp_smooth_plus_mode_t)pq_para.SmoothPlus, mCurrentSourceInputInfo);
         ret |= Cpq_SetAmDolbyPQMode(pq_para.DvMode);
         ret |= Cpq_SetDolbyDarkDetail(pq_para.DvDarkDetail);
+        ret |= Cpq_SetHDRTMOMode((hdr_tmo_t)pq_para.HdrTmo);
 
         //colortemp
         Cpq_CheckColorTemperatureParamAlldata(mCurrentSourceInputInfo);
