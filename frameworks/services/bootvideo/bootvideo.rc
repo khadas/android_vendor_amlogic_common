@@ -1,0 +1,54 @@
+on init
+    chmod 0666 /dev/dvb0.demux0
+    chmod 0666 /dev/dvb0.dvr0
+    chmod 0666 /dev/v4lvideo
+    chmod 0666 /dev/amvideo
+    chmod 0666 /dev/video30
+    chown media system /dev/dvb0.demux0
+    chown media system /dev/dvb0.dvr0
+    start vendor.tee_supplicant
+    start vendor.tee_preload_fw
+
+on fs
+    start vendor.gralloc-v2
+    start surfaceflinger
+
+on late-fs
+    mkdir  /mnt/vendor/param/pq
+    mkdir  /mnt/vendor/param/logo
+    chmod 0755 /mnt/vendor/param/pq
+    chmod 0755 /mnt/vendor/param/logo
+    start vendor.hwcomposer-3
+
+on post-fs-data
+    chmod 0666 /sys/class/stb/source
+    chmod 0666 /sys/class/stb/demux0_source
+    start boot_video
+
+#bootvideo -h
+#-i | --in           Ts file path, default /system/etc/bootvideo.ts
+#-t | --tstype       demod:0, memory:1[default]
+#-y | --avsync       amaster:0[default], vmaster:1, pcrmaster:2, nosync:3
+#-c | --vtrick       none:0[default], pause:1, pause next:2, Ionly:3
+#-v | --vcodec       unknown:0, mpeg1:1, mpeg2:2, h264:3[default], h265:4, vp9:5 avs:6 mpeg4:7
+#-a | --acodec       unknown:0, mp2:1, mp3:2, ac3:3, eac3:4, dts:5, aac:6[default], latm:7, pcm:8
+#-V | --vpid         video pid,default:0x100
+#-A | --apid         audio pid,default:0x101
+#-p | --playback     disable:0[default], enable:1
+#or use property to set default value:
+# persist.bootvideo.path
+# persist.bootvideo.vcodec
+# persist.bootvideo.acodec
+# persist.bootvideo.vpid
+# persist.bootvideo.apid
+# persist.bootvideo.playback    play bootvideo repeatedly
+# persist.bootvideo.waitfinish  exit bootvideo until bootvideo play finish
+
+
+service boot_video /system/bin/bootvideo
+    class core animation
+    user graphics
+    group graphics audio input
+    oneshot
+    ioprio rt 0
+    task_profiles MaxPerformance
