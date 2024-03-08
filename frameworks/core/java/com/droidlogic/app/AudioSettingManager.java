@@ -153,9 +153,6 @@ public class AudioSettingManager {
 
     public void initSystemAudioSetting() {
         Log.d(TAG, "initParameterAfterBoot");
-        if (mOutputModeManager.isHDMIPlugged()) {
-            setWiredDeviceConnectionState(SystemControlEvent.DEVICE_OUT_AUX_DIGITAL, 1, "", "");
-        }
         /*setThisValue for dts scale*/
         mOutputModeManager.setDtsDrcScaleSysfs();
 
@@ -228,25 +225,6 @@ public class AudioSettingManager {
     public int getARCLatency() {
         return Settings.Global.getInt(mResolver, OutputModeManager.TV_ARC_LATENCY,
                 OutputModeManager.TV_ARC_LATENCY_DEFAULT);
-    }
-
-    private void setWiredDeviceConnectionState(int type, int state, String address, String name) {
-        try {
-            Class<?> audioManager = Class.forName("android.media.AudioManager");
-            Method setwireState = audioManager.getMethod("setWiredDeviceConnectionState",
-                                    int.class, int.class, String.class, String.class);
-            setwireState.invoke(mAudioManager, type, state, address, name);
-        } catch(ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException ex) {
-            ex.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
     }
 
     public boolean isTunerAudio() {

@@ -83,8 +83,6 @@ public class SystemControlEvent extends ISystemControlCallback.Stub {
             boolean  plugged = (event - EVENT_HDMI_PLUG_OUT) ==1 ? true : false;
             intent.putExtra(EXTRA_HDMI_PLUGGED_STATE, plugged);
         } else if (event == EVENT_HDMI_AUDIO_OUT || event == EVENT_HDMI_AUDIO_IN) {
-            setWiredDeviceConnectionState(DEVICE_OUT_AUX_DIGITAL, (event - EVENT_HDMI_AUDIO_OUT), "", "");
-            //mAudioManager.setWiredDeviceConnectionState(AudioManager.DEVICE_OUT_HDMI, (event - EVENT_HDMI_AUDIO_OUT), "", "");
             return;
         }  else {
             intent = new Intent(ACTION_SYSTEM_CONTROL_EVENT);
@@ -183,28 +181,6 @@ public class SystemControlEvent extends ISystemControlCallback.Stub {
 
     public void notifyDensityChange(int displayId, int width, int height) {
         //no used
-    }
-
-    private void setWiredDeviceConnectionState(int type, int state, String address, String name) {
-        try {
-            Class<?> audioManager = Class.forName("android.media.AudioManager");
-            Method setwireState = audioManager.getMethod("setWiredDeviceConnectionState",
-                                    int.class, int.class, String.class, String.class);
-            Log.d(TAG,"setWireDeviceConnectionState "+setwireState);
-
-            setwireState.invoke(mAudioManager, type, state, address, name);
-
-        } catch(ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException ex) {
-            ex.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
     }
 
     private void setAudioStateWhenDisplayModeChanged() {
