@@ -313,11 +313,12 @@ public class MainActivity extends Activity implements DisplayManager.DisplayList
         checkEnable();
     }
 
-    private void checkEnable() {
+    private boolean checkEnable() {
         int result = SystemProperties.getInt(RVC_PROP, 0);
         Log.d(TAG, "check rvc " + result);
         boolean enable = result == 0;
         hideViews(enable);
+        return enable;
     }
 
     @Override
@@ -350,7 +351,10 @@ public class MainActivity extends Activity implements DisplayManager.DisplayList
         updateMirroredData();
         //updateViews();
     }
-
+    @Override
+    public boolean checkDisplay() {
+        return checkEnable();
+    }
     private void setButtonClicked() {
         int formDisplayid = -1;
         int toDisplayid = -1;

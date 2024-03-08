@@ -14,6 +14,9 @@ public class MirrorDisplayWrapper {
     }
 
     boolean startMirror(int displayId, int tDisplayId, boolean control) {
+        if (!mCallback.checkDisplay()) {
+            return false;
+        }
         boolean ret = false;
         try {
             ret = mStub.startMirror(displayId, tDisplayId, control);
@@ -77,6 +80,9 @@ public class MirrorDisplayWrapper {
     }
 
     boolean swithDisplay(int displayId, int toDisplayId) {
+        if (!mCallback.checkDisplay()) {
+            return false;
+        }
         try {
             return mStub.swithDisplay(displayId, toDisplayId);
         } catch (RemoteException ex) {
@@ -87,5 +93,6 @@ public class MirrorDisplayWrapper {
 
     public interface UICallback {
         void updateUI();
+        boolean checkDisplay();
     }
 }
