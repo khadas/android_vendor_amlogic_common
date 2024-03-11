@@ -1597,6 +1597,13 @@ Return<void> SystemControlClient::SystemControlHidlCallback::notifyCallback(cons
     return Void();
 }
 
+Return<void> SystemControlClient::SystemControlHidlCallback::notifyChangeActiveMode(int param1, int param2, int param3) {
+    ALOGI("SystemControlClient::SystemControlHidlCallback::notifyChangeActiveMode");
+
+
+    return Void();
+}
+
 Return<void> SystemControlClient::SystemControlHidlCallback::notifyFBCUpgradeCallback(int state, int param) {
     ALOGI("notifyFBCUpgradeCallback state:%d, param:%d", state, param);
     sp<SysCtrlListener> listener;

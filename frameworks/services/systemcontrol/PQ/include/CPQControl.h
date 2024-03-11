@@ -620,6 +620,7 @@ public:
     void InitTconlessBin(void);
     int LoadTconlessBin(unsigned int index);
 
+    bool isBootvideoStopped();
 private:
     int VPPOpenModule(void);
     int VPPCloseModule(void );
@@ -655,7 +656,6 @@ private:
     bool isPqDatabaseMachChip();
     int Cpq_GetInputVideoFrameHeight(tv_source_input_t source_input);
     int Cpq_SetVadjEnableStatus(int isvadj1Enable, int isvadj2Enable);
-    bool isBootvideoStopped();
     int SetVideoLayerColor(video_layer_color_t signalColor, video_layer_color_t nosignalColor);
     int setVideoScreenColor (int vdin_blending_mask, int y, int u, int v );
     int getSnowStatus();

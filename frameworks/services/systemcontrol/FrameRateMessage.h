@@ -48,8 +48,8 @@ class MessageTask : public Thread {
     FrameRateAutoAdaption* mFrameRate;
 public:
     explicit MessageTask(FrameRateAutoAdaption *f);
+    void sendMessageDlg(nsecs_t time);
     void sendMessage(nsecs_t time);
-    void resetPlayFlag(nsecs_t time);
     void cancelTask();
     void requestStop();
 protected:

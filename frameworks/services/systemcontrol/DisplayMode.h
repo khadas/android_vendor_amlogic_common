@@ -601,6 +601,7 @@ public:
 
     void sendHDMIContentType(int state);
     bool getGameContentTypeSupport();
+    void setActiveModeRemote(int width,int height, int framerate);
 
     bool getSupportALLMContentTypeList(std::vector<std::string> *supportModes);
 
@@ -630,6 +631,7 @@ public:
     void setHdrPriority(const char* type);
     void gethdrforcemode(char* value);
     bool memcContrl(bool on);
+    bool enter4k1kByDLG(bool on);
 private:
 
     bool getBootEnv(const char* key, char* value);

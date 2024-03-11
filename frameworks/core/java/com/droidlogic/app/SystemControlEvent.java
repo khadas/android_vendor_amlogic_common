@@ -52,6 +52,7 @@ public class SystemControlEvent extends ISystemControlCallback.Stub {
     private DisplayModeListener     mDisplayModeListener     = null;
     private AudioEventListener      mAudioListener           = null;
     private HdrInfoListener         mHdrInfoListener         = null;
+    private ActiveModeChangeListener mActiveModeListener     = null;
     public static SystemControlEvent mInstance;
 
     private SystemControlEvent(Context context) {
@@ -138,6 +139,15 @@ public class SystemControlEvent extends ISystemControlCallback.Stub {
         }
     }
 
+    public void notifyChangeActiveMode(int param1, int param2, int param3) {
+        Log.i(TAG, "mActiveModeListener: : " + param1 + "x" + param2+" f:"+param3);
+        if (mActiveModeListener != null) {
+            mActiveModeListener.changeActiveMode(param1, param2, param3);
+        } else {
+            Log.e(TAG, "mActiveModeListener is null");
+        }
+    }
+
     public void notifyAudioCallback(int param1, int param2, int param3, int param4) {
         Log.d(TAG, "notify audio callback param1:" + param1 + "param2:" + param2 + "param3:" + param3 + "param4:" + param4);
         if (mAudioListener != null) {
@@ -161,12 +171,20 @@ public class SystemControlEvent extends ISystemControlCallback.Stub {
         Log.d(TAG, "SetFBCUpgradeEventListener");
         mFBCUpgradeEventListener  = l;
     }
-    public void notifyDensityChange(int displayId, int width, int height) {
-        if (DisplayDensityManager.Enabled()) {
-            DisplayDensityManager mDisplayManager = DisplayDensityManager.getInstance(mContext);
-            mDisplayManager.adjustDisplayDensityByMode(displayId,width,height);
-        }
+
+    public interface ActiveModeChangeListener {
+        void changeActiveMode(int width, int height, int framerate);
     }
+
+    public void SetActiveModeChangeListener (ActiveModeChangeListener l) {
+        Log.d(TAG, "SetActiveModeChangeListener");
+        mActiveModeListener = l;
+    }
+
+    public void notifyDensityChange(int displayId, int width, int height) {
+        //no used
+    }
+
     private void setWiredDeviceConnectionState(int type, int state, String address, String name) {
         try {
             Class<?> audioManager = Class.forName("android.media.AudioManager");

@@ -75,7 +75,8 @@ public:
 
     bool setDvMode(std::string dv_mode);
     bool setDvMode(std::string dv_mode, ConnectorType display);
-
+    bool getSupportDisplayModes(std::map<int, std::string>& displayModeList,std::string nameFilter);
+    bool getModeDetail(std::string name, int& width, int& height);
 private:
     bool init();
     bool initConnectType();

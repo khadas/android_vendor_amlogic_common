@@ -1238,7 +1238,11 @@ int SystemControlService::getGammaValue()
 int SystemControlService::setDLGEnable(int enable, int is_save)
 {
     if (pCPQControl != NULL) {
-        return pCPQControl->SetDLGEnable(enable, is_save);
+        int ret = pCPQControl->SetDLGEnable(enable, is_save);
+        if (ret == 0 && pDisplayMode != NULL) {
+            pDisplayMode->enter4k1kByDLG(enable == 1);
+        }
+        return ret;
     } else {
         return -1;
     }

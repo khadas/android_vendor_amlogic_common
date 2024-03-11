@@ -177,6 +177,23 @@ void SystemControlHal::onAudioEvent(int32_t param1, int32_t param2, int32_t para
     }
 }
 
+void SystemControlHal::setActiveModeRemote(int32_t param1, int32_t param2, int32_t param3) {
+    ALOGE("SystemControlHal::setActiveModeRemote");
+    AutoMutex _l(mLock);
+    for (auto it = mClients.begin(); it != mClients.end();) {
+        if (it->second == nullptr) {
+            it = mClients.erase(it);
+            continue;
+        }
+        auto ret = (it->second)->notifyChangeActiveMode(param1, param2, param3);
+        if (!ret.isOk() && ret.isDeadObject()) {
+            it = mClients.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 void SystemControlHal::onScreenColorChange(int32_t newColor) {
     AutoMutex _l(mLock);
     ALOGD("onScreenColorChange newColor:%d.", newColor);

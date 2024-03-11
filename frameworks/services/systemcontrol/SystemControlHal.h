@@ -358,6 +358,7 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     virtual void onHdrInfoChange(int32_t newHdrInfo);
     virtual void onDensityChange(int32_t param1,int32_t param2, int32_t param3);
     virtual void onAudioEvent(int32_t param1, int32_t param2, int32_t param3, int32_t param4);
+    virtual void setActiveModeRemote(int32_t param1,int32_t param2, int32_t param3);
     Return<void> setAudioParam(int32_t param1, int32_t param2, int32_t param3, int32_t param4, setAudioParam_cb _hidl_cb);
     virtual void onScreenColorChange(int32_t newColor);
 

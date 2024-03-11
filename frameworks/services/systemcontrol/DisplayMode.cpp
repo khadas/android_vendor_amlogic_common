@@ -3318,6 +3318,9 @@ void DisplayMode::onTxEvent (char* switchName, char* hpdstate, int outputState) 
     setSourceDisplay((output_mode_state)outputState);
 }
 
+bool DisplayMode::enter4k1kByDLG(bool on) {
+    return pFrameRateAutoAdaption->enter4k1kByUI(on);
+}
 bool DisplayMode::frameRateDisplay(bool on) {
     pFrameRateAutoAdaption->setVideoLayerOn(on);
     return true;
@@ -3537,6 +3540,17 @@ bool DisplayMode::memcContrl(bool on) {
 
 }
 
+/**
+*usage: this api is for java change active mode by droid-res apk
+*this api is need by realmode for afr change dlg mode
+*/
+void DisplayMode::setActiveModeRemote(int width,int height, int framerate) {
+#ifndef RECOVERY_MODE
+    if (mNotifyListener != NULL) {
+        mNotifyListener->setActiveModeRemote(width, height, framerate);
+    }
+#endif
+}
 void DisplayMode::resetMemc() {
     int memDev = open(DISPLAY_MEMC_SYSFS, O_WRONLY);
     if (memDev < 0) {

@@ -48,7 +48,7 @@
 #define SYSFS_DLG_PROP                          "persist.vendor.sys.display.dlg"
 #define VENDOR_BOOT_COMPLETE                    "vendor.sys.display.boot_complete"
 #define HDMI_TX_FRAMERATE_POLICY                 "/sys/class/amhdmitx/amhdmitx0/frac_rate_policy"
-#define FRAME_RATE_POLIY_CONFIG                  "/vendor/etc/framerate.cfg"
+#define FRAME_RATE_POLICY_CONFIG                  "/vendor/etc/framerate.cfg"
 #define PANEL_FRAME_RATE                        "/sys/class/lcd/frame_rate"
 #define HDMI_FRAME_RATE_AUTO                    "/sys/class/display/fr_policy"
 //sysfs of panel framerate change
@@ -72,8 +72,13 @@
 #define FRAME_RATE_DURATION_5994                1601
 #define FRAME_RATE_DURATION_5992                1602
 #define FRAME_RATE_DURATION_60                  1600
-#define FRAME_RATE_DURATION_1440                1333
-#define FRAME_RATE_DURATION_125                 7860
+#define FRAME_RATE_DURATION_72                  1333
+#define FRAME_RATE_DURATION_144                 666
+#define FRAME_RATE_DURATION_125                 7680
+#define FRAME_RATE_DURATION_48                  2000
+#define FRAME_RATE_DURATION_120                 800
+#define FRAME_RATE_DURATION_100                 960
+#define FRAME_RATE_DURATION_119                 806
 typedef void (*fun_t)(bool, bool, const char*);
 
 struct vdin_event_info {
@@ -106,6 +111,7 @@ public:
 
         virtual void onDispModeSyncEvent (const char* outputmode, int state) = 0;
         virtual void setDisplayModeinner(const char* outputmode) = 0;
+        virtual void setActiveModeRemote(int width, int height, int framerate) = 0;
     };
 
     FrameRateAutoAdaption(Callback *cb);
@@ -121,36 +127,40 @@ public:
     int getOutputAdaptType();
     void restoreEnv();
     void setVideoLayerOn(bool on);
-    void setPlayFlag(bool play);
     bool isFrameRateOn();
     int getLastFrame();
+    bool getVideoLayerOn();
+    bool enter4k1kByUI(bool on);
+    void enter4k1korBack();
 #ifdef FRAMERATE_MODE
     void setPQHandle(CPQControl* handle);
 #endif
     int mFracDefaultValue;
 private:
     int findNearlyFrame(int frameRate);
-    float getFrameRateValue(int fps, bool doubleRate);
+    bool afrOnly(int frameRate);
+    bool freesyncFrame(int frameRate);
     bool frameRateChange(const char* curDisplayMode, const char* newDisplayMode,int frameRateValue,int outType);
     bool currentDisplayIsFloat(int outputType);
     bool frameRateIsFloat(int framerate);
-    bool backFrom4k1k(int frameRate);
+    bool afrInDLG(std::string customStr, int frameValue,bool frameOnly);
     bool enter4k1k(int framerate);
+    bool backFrom4k1k(int frameRate);
     int mVdinEventFd;
     Callback *mHdmiCallback;
     void initialDefaultValue();
     int isDLGOn();
     int mLastFrameRate;
+    bool mLastFromVdin;
     bool videoLayerOn;
+    bool mPictureMode;
     //Callback *mNonHdmiCallback;
     SysWrite mSysWrite;
     char mLastVideoMode[MODE_LEN] = {0};
     std::map<int, std::vector<std::string>> configMap;
 
-    bool mPlayFlag;
-    bool mLastFromVdin;
     struct timeval mClock;
-    std::vector<double> mFramerateList;
+    std::vector<int> mFramerateList;
 #ifdef FRAMERATE_MODE
     CPQControl *pCPQControl = NULL;
     sp<MessageTask> mTask;

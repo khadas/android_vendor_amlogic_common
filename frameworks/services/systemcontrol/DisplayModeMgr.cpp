@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "SystemControl-FRA"
+#define LOG_NDEBUG 0
 #include <cutils/properties.h>
 #include <DisplayModeMgr.h>
 
@@ -132,6 +133,46 @@ bool DisplayModeMgr::initConnectType() {
     return status;
 }
 
+bool DisplayModeMgr::getModeDetail(std::string name, int& width, int& height) {
+    bool ret = false;
+    std::vector<meson::DisplayModeInfo> displayModeList;
+    ret = mDisplayAdapter->getSupportDisplayModes(displayModeList, ConnectorType::CONN_TYPE_PANEL);
+    if (!ret) return false;
+    for (auto mode : displayModeList) {
+        if (mode.name.compare(name) == 0) {
+            width = mode.pixelW;
+            height = mode.pixelH;
+            return true;
+        }
+    }
+    return false;
+}
+bool DisplayModeMgr::getSupportDisplayModes(std::map<int,std::string>& list,std::string nameFilter) {
+    bool ret = false;
+    std::vector<meson::DisplayModeInfo> displayModeList;
+    std::string curMode = "null";
+    ret = mDisplayAdapter->getSupportDisplayModes(displayModeList, ConnectorType::CONN_TYPE_PANEL);
+    //SYS_LOGD("getSupportDisplayModes %d %s %zu",ret, nameFilter.c_str(), nameFilter.empty());
+    if (!ret) return false;
+    for (auto mode : displayModeList) {
+        bool found = true;
+        if (!nameFilter.empty()) {
+            found = false;
+            auto pos = mode.name.find(nameFilter);
+            if (pos != std::string::npos) {
+                found = true;
+            }
+            SYS_LOGD(" namefilter is not empty %s  %zu %s",nameFilter.c_str(), pos,mode.name.c_str());
+        }else {
+            found = true;
+        }
+        if (found) {
+            list.insert(std::pair<int, std::string>((int)(mode.refreshRate*100), mode.name));
+        }
+        SYS_LOGD("%s %u %u %u %u %f \n", mode.name.c_str(), mode.dpiX, mode.dpiY, mode.pixelW, mode.pixelH, mode.refreshRate);
+    }
+    return ret;
+}
 bool DisplayModeMgr::getDisplayMode(char *mode, int len) {
     bool ret = false;
     std::string curMode = "null";

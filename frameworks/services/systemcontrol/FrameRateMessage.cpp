@@ -19,7 +19,7 @@
  *  - 1 write property or sysfs in daemon
  */
 
-#define LOG_TAG "SystemControl"
+#define LOG_TAG "FRA"
 #define LOG_NDEBUG 0
 #include <unistd.h>
 #include <stdio.h>
@@ -43,13 +43,21 @@ MessageTask::MessageTask(FrameRateAutoAdaption* framerate) {
 void MessageTask::sendMessage(nsecs_t time) {
     if (mLooper != NULL) {
         mLooper->removeMessages(mMsgHandler);
+        if (time > 0) {
         mLooper->sendMessageDelayed(time,mMsgHandler,Message(MsgHandler::kWhatCheck));
+        } else {
+            mLooper->sendMessage(mMsgHandler,Message(MsgHandler::kWhatCheck));
+        }
     }
 }
-void MessageTask::resetPlayFlag(nsecs_t time) {
+void MessageTask::sendMessageDlg(nsecs_t time) {
     if (mLooper != NULL) {
         mLooper->removeMessages(mMsgHandler);
+        if (time > 0) {
         mLooper->sendMessageDelayed(time,mMsgHandler,Message(MsgHandler::kWhatReset));
+        } else {
+            mLooper->sendMessage(mMsgHandler,Message(MsgHandler::kWhatReset));
+        }
     }
 }
 void MessageTask::requestStop() {
@@ -80,16 +88,16 @@ void MsgHandler::handleMessage(const Message& message){
     ALOGD("really getLastFrame %d %d\n",mFrameRate->getLastFrame(),message.what);
     switch (message.what) {
         case MsgHandler::kWhatCheck:
-        if (mFrameRate->getLastFrame() == 0) {
+        ALOGD("MsgHandler::kWhatCheck");
+        if (mFrameRate->getLastFrame() <= 0 && !mFrameRate->getVideoLayerOn()) {
             mFrameRate->restoreEnv();
-        }else {
+        }else if (mFrameRate->getLastFrame() > 0 && mFrameRate->getVideoLayerOn()) {
             mFrameRate->delayControl(mFrameRate->getLastFrame());
         }
         break;
         case MsgHandler::kWhatReset:
-        if (mFrameRate->getLastFrame() > 0) {
-            mFrameRate->setPlayFlag(false);
-        }
+        ALOGD("dlg message recv");
+        mFrameRate->enter4k1korBack();
         break;
     }
 
