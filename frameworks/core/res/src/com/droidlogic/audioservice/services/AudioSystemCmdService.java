@@ -276,14 +276,15 @@ public class AudioSystemCmdService extends Service {
                 if (!mStartStatus.isEmpty() && mStartStatus.get(mDemuxIds.indexOf(mDtvDemuxIdCurrentWork)) != 0) {
                     if (mNotImptTvHardwareInputService)
                         handleAudioSinkUpdated();
-                    reStartAdecDecoderIfPossible();
+                    if (!mDemuxIds.isEmpty())
+                        reStartAdecDecoderIfPossible();
                 }
             }
         }
     };
 
     private void updateAudioPatch() {
-        if (!updateAudioSinkLocked()) {
+        if (!handleAudioSinkLocked()) {
             Slog.i(TAG, "updateAudioPatch cur sink does not change.");
             return;
         }
@@ -548,6 +549,9 @@ public class AudioSystemCmdService extends Service {
                 mAudioManager.setParameters("hal_param_dtv_patch_cmd=" + cmd);
                 break;
             case AudioSystemCmdManager.AUDIO_SERVICE_CMD_STOP_DECODE:
+                if (mDemuxIds.size() > 1 || (mDemuxIds.isEmpty()   || mMuteStatus.isEmpty() || mVolume.isEmpty())) {
+                    break;
+                }
                 mHasReceivedStartDecoderCmd = false;
                 mAudioManager.setParameters("hal_param_dtv_patch_cmd=" + cmd);
                 mStartStatus.set(mDemuxIds.indexOf(param3), 0);
@@ -713,7 +717,7 @@ public class AudioSystemCmdService extends Service {
                 break;
             case AudioSystemCmdManager.AUDIO_SERVICE_CMD_CLOSE_DECODER://
                 mAudioManager.setParameters("hal_param_dtv_patch_cmd=" + cmd);
-                if (DroidLogicUtils.getAudioDebugEnable()) {
+                if (DroidLogicUtils.getAudioDebugEnable() && !mDemuxIds.isEmpty()) {
                     Log.d(TAG, "now start close the decoder");
                     Log.d(TAG, "CLOSE_DECODER_2("+param3+") audio path count: " + mDemuxIds.size()+",mDemuxIds="+mDemuxIds+",mAudioFormat="+mAudioFormat+",mAudioPid="+mAudioPid+",,mStartStatus="+mStartStatus+",mOpenStatus"+mOpenStatus+",mMuteStatus"+mMuteStatus);
                     Log.d(TAG, "CLOSE_DECODER_2("+param3+")+maudiopatch  "+ mAudioPatch+"demuxid="+param3+",mOpenStatus="+mOpenStatus.get(mDemuxIds.indexOf(param3))+",mStartStatus="+mStartStatus.get(mDemuxIds.indexOf(param3))+",mMuteStatus="+mMuteStatus.get(mDemuxIds.indexOf(param3))+",mDemuxIds count="+mDemuxIds.size());
@@ -847,33 +851,16 @@ public class AudioSystemCmdService extends Service {
 
     private void setAudioPortGain() {
         mCurrentIndex = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-        updateAudioSourceAndAudioSink();
-        int curInputSrcDev = AudioManager.DEVICE_NONE;
-        if (SOURCE_TYPE_ADTV == mCurSourceType ||
-                SOURCE_TYPE_ATV == mCurSourceType ||
-                SOURCE_TYPE_DTV == mCurSourceType) {
-            curInputSrcDev = AudioManager.DEVICE_IN_TV_TUNER;
-        } else if (SOURCE_TYPE_AV1 == mCurSourceType || SOURCE_TYPE_AV2 == mCurSourceType) {
-            curInputSrcDev = AudioManager.DEVICE_IN_LINE;
-        } else if (mCurSourceType >= SOURCE_TYPE_HDMI1 && mCurSourceType <= SOURCE_TYPE_HDMI4) {
-            curInputSrcDev = AudioManager.DEVICE_IN_HDMI;
-        } else {
-            if (mNotImptTvHardwareInputService) {
-                 Log.i(TAG,"NON TV setAudioPortGain force DEVICE_IN_TV_TUNER");
-                 curInputSrcDev = AudioManager.DEVICE_IN_TV_TUNER;
-            } else {
-                return;
-            }
+        if (mAudioSource.type() != AudioSystem.DEVICE_IN_TV_TUNER || mAudioPatch == null) {
+            return;
         }
-        mAudioSource = findAudioDevicePort(curInputSrcDev, "");
         if (mAudioSource != null && mAudioSource.gains().length > 0) {
             AudioGain sourceGain = mAudioSource.gains()[0];
             int gainValueMb = (int)(100 * AudioSystem.getStreamVolumeDB(AudioManager.STREAM_MUSIC, mCurrentIndex, AudioManager.DEVICE_OUT_SPEAKER));
             int[] gainValues = new int[]{gainValueMb};
             AudioGainConfig sourceGainConfig = sourceGain.buildConfig(AudioGain.MODE_JOINT, 0, gainValues, 0);
             if (DroidLogicUtils.getAudioDebugEnable()) {
-                Log.i(TAG, "setAudioPortGain gainValueMb:" + gainValueMb + ", mCurSourceType:" +
-                        sourceTypeToString(mCurSourceType) + ", curInputSrcDev:" + Integer.toHexString(curInputSrcDev));
+                Log.i(TAG, "setAudioPortGain gainValueMb:" + gainValueMb);
             }
             mAudioManager.setAudioPortGain(mAudioSource, sourceGainConfig);
         }
@@ -959,6 +946,11 @@ public class AudioSystemCmdService extends Service {
                 Slog.w(TAG, "handleVolumeChange action:" + action + ", Unrecognized intent: " + intent);
                 return;
         }
+        synchronized (mLock) {
+           if (mNotImptTvHardwareInputService) {
+               setAudioPortGain();
+           }
+        }
     }
 
     private boolean mShowingPassthroughHint = false;
@@ -1006,6 +998,12 @@ public class AudioSystemCmdService extends Service {
         }
     }
 
+    private boolean handleAudioSinkLocked() {
+        synchronized (mLock) {
+            return updateAudioSinkLocked();
+        }
+    }
+
     private boolean updateAudioSinkLocked() {
         List<AudioDevicePort> previousSink = mAudioSink;
         mAudioSink = new ArrayList<>();
@@ -1038,7 +1036,8 @@ public class AudioSystemCmdService extends Service {
     private void findAudioSinkFromAudioPolicy(List<AudioDevicePort> sinks) {
         sinks.clear();
         ArrayList<AudioPort> audioPorts = new ArrayList<>();
-        if (AudioManager.listAudioPorts(audioPorts) != AudioManager.SUCCESS) {
+        int[] audioPortsGe = new int[1];
+        if (AudioSystem.listAudioPorts(audioPorts, audioPortsGe) != AudioManager.SUCCESS) {
             Log.w(TAG, "findAudioSinkFromAudioPolicy listAudioPorts failed");
             return;
         }
@@ -1059,7 +1058,8 @@ public class AudioSystemCmdService extends Service {
             return null;
         }
         ArrayList<AudioPort> audioPorts = new ArrayList<>();
-        if (AudioManager.listAudioPorts(audioPorts) != AudioManager.SUCCESS) {
+        int[] audioPortsGe = new int[1];
+        if (AudioSystem.listAudioPorts(audioPorts, audioPortsGe) != AudioManager.SUCCESS) {
             Log.w(TAG, "findAudioDevicePort listAudioPorts failed");
             return null;
         }
