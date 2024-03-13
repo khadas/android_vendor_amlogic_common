@@ -310,7 +310,7 @@ void ScreenManager::onEvent(int32_t event) {
 }
 
 int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
-    std::lock_guard<std::mutex> lock(mCallbackLock);
+    std::unique_lock<std::mutex> cl(mCallbackLock);
     int64_t tv_usec = 0;
     long* canvas_buffer = nullptr;
     auto output = std::make_unique<OutputRecord>();
@@ -355,7 +355,9 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
     if (mScreenMangerCallback) {
         const OutputRecord picture(output->index, mBufferSize,output->tv_usec, output->raw_buffer, output->canvas_buffer,mInputParmeter->format);
         mOutputRecordQueue.push_back(std::move(output));
+        cl.unlock();
         mScreenMangerCallback->PictureReady(picture);
+        cl.lock();
     } else {
         mScreenDev->ops.release_buffer(mScreenDev, buffer->buffer_mem);
     }
