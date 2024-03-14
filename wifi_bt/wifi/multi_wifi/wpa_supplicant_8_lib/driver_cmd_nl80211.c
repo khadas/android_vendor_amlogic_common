@@ -491,7 +491,7 @@ int wpa_driver_nl80211_driver_cmd(void *priv, char *cmd, char *buf,
 		}
 	} while(0);
 
-	if (os_strncasecmp(cmd, "COUNTRY", 7) == 0 && os_strncasecmp(wifi_status, "qca", 3) != 0) {
+	if (os_strncasecmp(cmd, "COUNTRY", 7) == 0 && os_strncasecmp(wifi_status, "qca", 3) != 0 && os_strncasecmp(wifi_status, "rtl", 3) != 0) {
 		char alpha2[3];
 		struct nl_msg *msg;
 		msg = nlmsg_alloc();
