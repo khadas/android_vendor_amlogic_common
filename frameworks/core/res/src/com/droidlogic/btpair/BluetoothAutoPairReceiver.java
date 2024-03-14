@@ -49,11 +49,11 @@ public class BluetoothAutoPairReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        mContext = context;
         if (!isUserSetupFinish()) {
             Log("No need to show BT pairing screen");
             return;
         }
-        mContext = context;
         if (mHandler == null)
             mHandler = new CheckBtStatusHandler();
 
