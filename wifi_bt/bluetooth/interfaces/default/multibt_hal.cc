@@ -230,8 +230,8 @@ static const dev_info bt_dev_usb[] = {
     // amlogic usb modules
     {{0x1B8E, 0x4C55}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_RESET},
     {{0x1B8E, 0x0541}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0601}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0641}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x0601}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_EN},
+    {{0x1B8E, 0x0641}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_EN},
 };
 
 /******************************************************************************
@@ -631,8 +631,9 @@ static void rmmod_aml_drv(void)
 
     if (get_aml_bt_module(mod_name)) {
         PR_INFO("aml modules need rmmod wifi_comm");
-        rmmod("wifi_comm");
-        usleep(100000);
+        if (!rmmod("wifi_comm")) {
+            usleep(100000);
+        }
     }
 }
 
@@ -1740,11 +1741,13 @@ static bool distinguish_bt_module_uart(void)
 
 static bool distinguish_bt_module(void)
 {
+    unsigned int retry_cnt = 1;
     unsigned int cnt = 0;
+    unsigned int retry_cnt_usb = 0;
 
     PR_DBG();
 
-    while(cnt < 2) {
+    while (cnt <= retry_cnt) {
         if (distinguish_dev_name_specify()) {
             goto exit;
         }
@@ -1765,11 +1768,25 @@ static bool distinguish_bt_module(void)
             if (distinguish_bt_module_uart()) {
                 goto exit;
             }
+
+            while (retry_cnt_usb <= 20) {  // usb distinguish retry maximum delay 400ms
+                usleep(20000);
+                retry_cnt_usb ++;
+                PR_INFO("usb distinguish retry_cnt_usb:%u", retry_cnt_usb);
+                if (distinguish_bt_module_usb()) {
+                    goto exit;
+                } else {
+                    continue;
+                }
+            }
         }
 
         cnt ++;
-        upio_set_bluetooth_power(UPIO_BT_POWER_ON);
-        PR_INFO("retry cnt: %u", cnt);
+
+        if (cnt <= retry_cnt) {
+            upio_set_bluetooth_power(UPIO_BT_POWER_ON);
+            PR_INFO("retry cnt:%u", cnt);
+        }
     }
 
     return false;
