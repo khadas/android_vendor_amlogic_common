@@ -1042,7 +1042,7 @@ int CPQControl::SetPQMode(int pq_mode, int is_save , int is_autoswitch)
         ret = Cpq_SetPQMode((vpp_picture_mode_t)pq_mode, mCurrentSourceInputInfo, (pq_mode_switch_type_t)is_autoswitch);
     }
 
-    if ((ret == 0) && (is_save == 1)) {
+    if (is_save == 1) {
         if ((mCurrentSourceInputInfo.source_input >= SOURCE_HDMI1) &&
             (mCurrentSourceInputInfo.source_input <= SOURCE_HDMI4)) {
             vpp_display_mode_t display_mode = (vpp_display_mode_t)GetDisplayMode();
@@ -7304,21 +7304,21 @@ int CPQControl::SetFlagByCfg(void)
     memset(&pqControlVal, 0x0, sizeof(pq_ctrl_t));
     const char *config_value;
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_BIG_SMALL_DB_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_BIG_SMALL_DB_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_separate_db_enable = true;
     } else {
         mbCpqCfg_separate_db_enable = false;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_DI_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_DI_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_di_enable = true;
     } else {
         mbCpqCfg_di_enable = false;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_MCDI_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_MCDI_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_mcdi_enable = true;
         pqWriteSys(DI_PARAMETERS_MCEN_MODE, "1");
@@ -7327,7 +7327,7 @@ int CPQControl::SetFlagByCfg(void)
         pqWriteSys(DI_PARAMETERS_MCEN_MODE, "0");
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_DEBLOCK_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_DEBLOCK_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_deblock_enable = true;
         pqWriteSys(DI_PARAMETERS_DNR_EN, "13");//bit2~bit3
@@ -7336,7 +7336,7 @@ int CPQControl::SetFlagByCfg(void)
         pqWriteSys(DI_PARAMETERS_DNR_EN, "1");
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_DEMOSQUITO_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_DEMOSQUITO_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_demoSquito_enable = true;
         pqWriteSys(DI_PARAMETERS_DNR_DM_EN, "1");//bit0
@@ -7345,7 +7345,7 @@ int CPQControl::SetFlagByCfg(void)
         pqWriteSys(DI_PARAMETERS_DNR_DM_EN, "0");
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_NOISEREDUCTION_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_NOISEREDUCTION_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_nr_enable = true;
         pqWriteSys(DI_PARAMETERS_NR2_EN, "1");
@@ -7381,7 +7381,7 @@ int CPQControl::SetFlagByCfg(void)
         //pqControlVal.sharpnesspi_en = 0;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_DNLP_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_DNLP_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_dnlp_enable = true;
         pqControlVal.dnlp_en = 1;
@@ -7390,7 +7390,7 @@ int CPQControl::SetFlagByCfg(void)
         pqControlVal.dnlp_en = 0;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_CM2_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_CM2_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_cm2_enable = true;
         pqControlVal.cm_en = 1;
@@ -7399,7 +7399,7 @@ int CPQControl::SetFlagByCfg(void)
         pqControlVal.cm_en = 0;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_AMVECM_BASCI_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_AMVECM_BASCI_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_amvecm_basic_enable = true;
         pqControlVal.vadj1_en = 1;
@@ -7408,7 +7408,7 @@ int CPQControl::SetFlagByCfg(void)
         pqControlVal.vadj1_en = 0;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_AMVECM_BASCI_WITHOSD_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_AMVECM_BASCI_WITHOSD_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_amvecm_basic_withOSD_enable = true;
         pqControlVal.vadj2_en = 1;
@@ -7417,7 +7417,7 @@ int CPQControl::SetFlagByCfg(void)
         pqControlVal.vadj2_en = 0;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_CONTRAST_RGB_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_CONTRAST_RGB_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_contrast_rgb_enable = true;
         pqControlVal.vd1_ctrst_en = 1;
@@ -7426,7 +7426,7 @@ int CPQControl::SetFlagByCfg(void)
         pqControlVal.vd1_ctrst_en = 0;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_CONTRAST_RGB_WITHOSD_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_CONTRAST_RGB_WITHOSD_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_contrast_rgb_withOSD_enable = true;
         pqControlVal.post_ctrst_en = 1;
@@ -7435,7 +7435,7 @@ int CPQControl::SetFlagByCfg(void)
         pqControlVal.post_ctrst_en = 0;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_WHITEBALANCE_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_WHITEBALANCE_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_whitebalance_enable = true;
         pqControlVal.wb_en = 1;
@@ -7444,7 +7444,7 @@ int CPQControl::SetFlagByCfg(void)
         pqControlVal.wb_en = 0;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_GAMMA_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_GAMMA_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_gamma_enable = true;
         pqControlVal.gamma_en = 1;
@@ -7453,7 +7453,7 @@ int CPQControl::SetFlagByCfg(void)
         pqControlVal.gamma_en = 0;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_LOCAL_CONTRAST_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_LOCAL_CONTRAST_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_local_contrast_enable = true;
         pqControlVal.lc_en = 1;
@@ -7462,7 +7462,7 @@ int CPQControl::SetFlagByCfg(void)
         pqControlVal.lc_en = 0;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_BLACKEXTENSION_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_BLACKEXTENSION_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_blackextension_enable = true;
         pqControlVal.black_ext_en = 1;
@@ -7478,7 +7478,7 @@ int CPQControl::SetFlagByCfg(void)
         mbCpqCfg_xvycc_enable = false;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_DISPLAY_OVERSCAN_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_DISPLAY_OVERSCAN_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_display_overscan_enable = true;
     } else {
@@ -7492,7 +7492,7 @@ int CPQControl::SetFlagByCfg(void)
         mbCpqCfg_hdmi_out_with_fbc_enable = false;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_PQ_PARAM_CHECK_SOURCE_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_PQ_PARAM_CHECK_SOURCE_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_pq_param_check_source_enable = true;
     } else {
@@ -7520,7 +7520,7 @@ int CPQControl::SetFlagByCfg(void)
         mbCpqCfg_hdrtmo_enable = false;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_MEMC_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_MEMC_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_memc_enable = true;
     } else {
@@ -7541,21 +7541,21 @@ int CPQControl::SetFlagByCfg(void)
         mbCpqCfg_cabc_enable = false;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_BLACK_BLUE_CHROMA_DB_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_BLACK_BLUE_CHROMA_DB_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_separate_black_blue_chorma_db_enable = true;
     } else {
         mbCpqCfg_separate_black_blue_chorma_db_enable = false;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_BLUESTRETCH_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_BLUESTRETCH_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_bluestretch_enable = true;
     } else {
         mbCpqCfg_bluestretch_enable = false;
     }
 
-    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_CHROMACORING_ENABLE, "enable");
+    config_value = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_CHROMACORING_ENABLE, "disable");
     if (strcmp(config_value, "enable") == 0) {
         mbCpqCfg_chroma_coring_enable = true;
     } else {
