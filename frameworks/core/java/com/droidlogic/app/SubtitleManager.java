@@ -311,6 +311,7 @@ public class SubtitleManager {
     private native int nativeGetSubType();
     private native String nativeGetSubLanguage(int idx);
     private native void nativeSetSubLanguage(String lang);
+    private native void nativeSetStartTimeStamp(int startTime);
     private native String nativeGetCurName();
     private native int nativeGetSubTypeDetail();
     private native int nativeTtControl(int teletxtEvent, int magazine, int page, int regionId);
@@ -1253,6 +1254,10 @@ public class SubtitleManager {
 
     public void setSubLanguage(String lang) {
         nativeSetSubLanguage(lang);
+    }
+
+    public void setStartTimeStamp(int startTime) {
+        nativeSetStartTimeStamp(startTime);
     }
 
     public String getCurName() {
