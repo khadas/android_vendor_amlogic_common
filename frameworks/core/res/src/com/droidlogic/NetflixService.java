@@ -543,13 +543,14 @@ public class NetflixService extends Service {
                 }
                 ComponentName componentInfo = info.topActivity;
                 if (componentInfo.getPackageName().equals(pkgName)) {
-                    Log.d(TAG,pkgName + " is top activity!");
+                    Log.d(TAG, componentInfo.getPackageName() + " is top activity!");
                     return true;
                 }else{
-                    Log.d(TAG,pkgName + " is not top activity.");
-                    return false;
+                    Log.d(TAG,componentInfo.getPackageName() + " is visible.");
+                    continue;
                 }
             }
+            Log.d(TAG,pkgName + " is not top activity.");
         }catch (RemoteException e) {
             Log.e(TAG, "Cannot getTasks", e);
         }
