@@ -2135,7 +2135,9 @@ public class SystemControlManager {
         GAMMA_CURVE_8(8),
         GAMMA_CURVE_9(9),
         GAMMA_CURVE_10(10),
-        GAMMA_CURVE_11(11);
+        GAMMA_CURVE_11(11),
+        GAMMA_CURVE_BT1886(12),
+        GAMMA_CURVE_MAX(13);
 
         private int val;
 
@@ -2178,6 +2180,78 @@ public class SystemControlManager {
                 return mProxy.getGammaValue();
             } catch (RemoteException e) {
                 Log.e(TAG, "GetGammaValue:" + e);
+            }
+        }
+        return -1;
+
+    }
+
+    /**
+     * @Function: SetWhitebalanceGamma
+     * @Description: Set 11 white balance to gamma
+     * @Param: channel refer to R/G/B, point refer to position, offset refer to gamma offset
+     * @Return: 0 success, -1 fail
+     */
+    public int SetWhitebalanceGamma(int channel, int point, int offset) {
+          synchronized (mLock) {
+            try {
+                return mProxy.SetWhitebalanceGamma(channel, point, offset);
+            } catch (RemoteException e) {
+                Log.e(TAG, "SetWhitebalanceGamma:" + e);
+            }
+        }
+        return -1;
+
+    }
+
+    /**
+     * @Function: GetWhitebalanceGamma
+     * @Description: Get 11 white balance of gamma
+     * @Param: channel refer to R/G/B, point refer to position
+     * @Return: gamma offset
+     */
+    public int GetWhitebalanceGamma(int channel, int point) {
+          synchronized (mLock) {
+            try {
+                return mProxy.GetWhitebalanceGamma(channel, point);
+            } catch (RemoteException e) {
+                Log.e(TAG, "GetWhitebalanceGamma:" + e);
+            }
+        }
+        return -1;
+
+    }
+
+    /**
+     * @Function: FactorySetWhitebalanceGamma
+     * @Description: Set factory default value
+     * @Param: colortemp refer to enum color_temperature, channel refer to R/G/B, point refer to position, offset refer to gamma offset
+     * @Return: 0 success, -1 fail
+     */
+    public int FactorySetWhitebalanceGamma(int colortemp, int channel, int point, int offset) {
+          synchronized (mLock) {
+            try {
+                return mProxy.FactorySetWhitebalanceGamma(colortemp, channel, point, offset);
+            } catch (RemoteException e) {
+                Log.e(TAG, "FactorySetWhitebalanceGamma:" + e);
+            }
+        }
+        return -1;
+
+    }
+
+    /**
+     * @Function: FactoryGetWhitebalanceGamma
+     * @Description: Get factory default value
+     * @Param: colortemp refer to enum color_temperature, channel refer to R/G/B, point refer to position
+     * @Return: gamma offset
+     */
+    public int FactoryGetWhitebalanceGamma(int colortemp, int channel, int point) {
+          synchronized (mLock) {
+            try {
+                return mProxy.FactoryGetWhitebalanceGamma(colortemp, channel, point);
+            } catch (RemoteException e) {
+                Log.e(TAG, "FactoryGetWhitebalanceGamma:" + e);
             }
         }
         return -1;

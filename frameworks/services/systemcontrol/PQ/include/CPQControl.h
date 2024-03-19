@@ -323,8 +323,19 @@ public:
     int SaveNoiseReductionMode(int nr_mode);
     int Cpq_SetNoiseReductionMode(vpp_noise_reduction_mode_t nr_mode, source_input_param_t source_input_param);
     //GammaValue
-    int SetGammaValue(vpp_gamma_mode_t gamma_curve, int is_save);
+    int SetGammaValue(vpp_gamma_curve_t gamma_curve, int is_save);
     int GetGammaValue();
+    int SaveGammaValue(int gamma_curve);
+    //WhiteBalance
+    int SetWhitebalanceGamma(int channel, int point, int offset);
+    int GetWhitebalanceGamma(int channel, int point);
+    int FactorySetWhitebalanceGamma(int colortemp, int channel, int point, int offset);
+    int FactoryGetWhitebalanceGamma(int colortemp, int channel, int point);
+    bool SetWhitebalanceGammaData(WB_GAMMA_TABLE *params, int level);
+    bool GetWhitebalanceGammaData(WB_GAMMA_TABLE *params, int level);
+    bool FactoryGetWhitebalanceGammaData(WB_GAMMA_TABLE *pData, int level);
+    bool FactorySetWhitebalanceGammaData(WB_GAMMA_TABLE *pData, int level);
+    bool CheckCriDataWhitebalanceGammaData(void);
     //Memc
     bool hasMemcFunc();
     int Memc_enable(int enable);
@@ -467,9 +478,13 @@ public:
     int Cpq_SetColorBaseMode(vpp_color_basemode_t basemode, source_input_param_t source_input_param);
     int Cpq_SetRGBOGO(const struct tcon_rgb_ogo_s *rgbogo);
     int Cpq_GetRGBOGO(const struct tcon_rgb_ogo_s *rgbogo);
-    int Cpq_LoadGamma(vpp_gamma_mode_t gamma_curve, vpp_color_temperature_mode_t colortemp_mode);
+    int Cpq_LoadGamma(vpp_gamma_curve_t gamma_curve, vpp_color_temperature_mode_t colortemp_mode);
+    int GetBaseGammaData(int level, GAMMA_TABLE *pData);
+    int GetGammaPowerData(int level, GAMMA_TABLE *pData);
+    int GetWBGammaData(int level, GAMMA_TABLE *pData);
+    int CubeInterpolationProcess(interpolation_info_t output, unsigned short *gamma, int num_points);
     int DBGammaBlend(tcon_gamma_table_t *wb_gamma, unsigned int *index_gamma);
-    double GetGammaPower(vpp_gamma_mode_t mode);
+    double GetGammaPower(vpp_gamma_curve_t mode);
     int Cpq_SetGammaTbl_R(unsigned short red[GAMMA_NUMBER]);
     int Cpq_SetGammaTbl_G(unsigned short green[GAMMA_NUMBER]);
     int Cpq_SetGammaTbl_B(unsigned short blue[GAMMA_NUMBER]);

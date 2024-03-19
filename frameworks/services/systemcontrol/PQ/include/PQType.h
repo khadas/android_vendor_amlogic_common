@@ -18,6 +18,15 @@
 // ***************************************************************************
 // *** enum definitions *********************************************
 // ***************************************************************************
+#define MAX_PQ_SRC_INDEX                  (18) //(PQ_SRC_MAX)
+#define MAX_PQ_TIMMING_INDEX              (6)  //(PQ_FMT_MAX)
+
+#define MAX_COLORTEMP_INDEX               (6)  //(VPP_COLOR_TEMPERATURE_MODE_MAX)
+
+#define MAX_WB_GAMMA_POINT                (11)
+
+#define MAX_WB_GAMMA_PARAM_SIZE           ((MAX_WB_GAMMA_POINT * 3 * 4) + 4) // > (sizeof(WB_GAMMA_TABLE) + sizeof(int))
+
 typedef union tag_suc {
     short s;
     unsigned char c[2];
@@ -160,6 +169,7 @@ typedef struct vpp_pictur_mode_para_s {
     int SmoothPlus;
     int HdrTmo;
     int AMDvLightSensor;
+    int GammaMidLuminance;
 
     //PM5 XML not has config
     int Deblock;
@@ -200,6 +210,7 @@ typedef enum vpp_gamma_curve_e {
     VPP_GAMMA_CURVE_9,
     VPP_GAMMA_CURVE_10,
     VPP_GAMMA_CURVE_11,
+    VPP_GAMMA_CURVE_BT1886,
     VPP_GAMMA_CURVE_MAX,
 } vpp_gamma_curve_t;
 
@@ -1158,5 +1169,18 @@ typedef enum frc_fpp_state_e {
     FPP_MEMC_24PFILM,    // 24P Film mode, 32 Pulldown out 48fps
     FPP_MEMC_MAX,
 }frc_fpp_state_t;
+
+typedef struct _WB_GAMMA_TABLE {
+    int R_OFFSET[MAX_WB_GAMMA_POINT];
+    int G_OFFSET[MAX_WB_GAMMA_POINT];
+    int B_OFFSET[MAX_WB_GAMMA_POINT];
+} WB_GAMMA_TABLE;
+
+typedef enum _CHANNEL_TYPE {
+    RED_CH = 0,
+    GREEN_CH,
+    BLUE_CH,
+    MAX_CH,
+} CHANNEL_TYPE;
 
 #endif

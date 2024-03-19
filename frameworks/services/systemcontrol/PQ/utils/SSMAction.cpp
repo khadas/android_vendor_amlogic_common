@@ -402,6 +402,98 @@ int SSMAction::SSMReadColorTemperature(int offset, int *rw_val)
     return ret;
 }
 
+bool SSMAction::SetWhitebalanceGammaData(WB_GAMMA_TABLE *pData, int src, int timming, int level)
+{
+    if (MAX_WB_GAMMA_PARAM_SIZE < (sizeof(WB_GAMMA_TABLE) + sizeof(int))) {
+        return false;
+    }
+
+    int offset = (src * MAX_PQ_TIMMING_INDEX * MAX_COLORTEMP_INDEX + timming * MAX_COLORTEMP_INDEX + level) * MAX_WB_GAMMA_PARAM_SIZE;
+    int flag_offset = offset + sizeof(WB_GAMMA_TABLE);
+
+    if (SSMWriteNTypes(VPP_DATA_POS_WB_GAMMA_PARAM_START, sizeof(WB_GAMMA_TABLE), (int *)pData, offset) < 0) {
+        return false;
+    }
+
+    int Flag = 1;
+    if (SSMWriteNTypes(VPP_DATA_POS_WB_GAMMA_PARAM_START, sizeof(int), (int *)&Flag, flag_offset) < 0) {
+        return false;
+    }
+
+    return true;
+}
+
+bool SSMAction::GetWhitebalanceGammaData(WB_GAMMA_TABLE *pData, int src, int timming, int level)
+{
+    if (MAX_WB_GAMMA_PARAM_SIZE < (sizeof(WB_GAMMA_TABLE) + sizeof(int))) {
+        return false;
+    }
+
+    int offset = (src * MAX_PQ_TIMMING_INDEX * MAX_COLORTEMP_INDEX + timming * MAX_COLORTEMP_INDEX + level) * MAX_WB_GAMMA_PARAM_SIZE;
+    int flag_offset = offset + sizeof(WB_GAMMA_TABLE);
+
+    int Flag = 0;
+    if (SSMReadNTypes(VPP_DATA_POS_WB_GAMMA_PARAM_START, sizeof(int), (int *)&Flag, flag_offset) < 0) {
+        return false;
+    }
+
+    if (Flag != 1) {
+        return false;
+    }
+
+    if (SSMReadNTypes(VPP_DATA_POS_WB_GAMMA_PARAM_START, sizeof(WB_GAMMA_TABLE), (int *)pData, offset) < 0) {
+        return false;
+    }
+
+    return true;
+}
+
+bool SSMAction::CriDataGetWhitebalanceGammaData(WB_GAMMA_TABLE *pData, int level)
+{
+    USUC usuc;
+    USUC ret;
+
+    usuc.c[0] = 0x55;
+    usuc.c[1] = 0xAA;
+
+    int tmp_off =  (CRI_DATA_WB_GAMMA_OFFSET + (CRI_DATE_WB_GAMMA_LEN * level));
+    int Label_offset = tmp_off + CRI_DATE_WB_GAMMA_LEN - 2;
+
+    if (ReadDataFromFile(mWhiteBalanceFilePath, Label_offset, 2, ret.c) < 0) {
+        return false;
+    }
+
+    if ((usuc.c[0] != ret.c[0]) || (usuc.c[1] != ret.c[1])) {
+        return false;
+    }
+
+    if (ReadDataFromFile(mWhiteBalanceFilePath, tmp_off, sizeof(WB_GAMMA_TABLE), (unsigned char *)pData) < 0) {
+        return false;
+    }
+
+    return true;
+}
+
+bool SSMAction::CriDataSetWhitebalanceGammaData(WB_GAMMA_TABLE *pData, int level)
+{
+    USUC ret;
+    ret.c[0] = 0x55;
+    ret.c[1] = 0xAA;
+
+    int tmp_off =  (CRI_DATA_WB_GAMMA_OFFSET + (CRI_DATE_WB_GAMMA_LEN * level));
+    int Label_offset = tmp_off + CRI_DATE_WB_GAMMA_LEN - 2;
+
+    if (SaveDataToFile(mWhiteBalanceFilePath, tmp_off, sizeof(WB_GAMMA_TABLE), (unsigned char *)pData) < 0) {
+        return false;
+    }
+
+    if (SaveDataToFile(mWhiteBalanceFilePath, Label_offset, 2, ret.c) < 0) {
+        return false;
+    }
+
+    return true;
+}
+
 int SSMAction::SSMSaveColorDemoMode(unsigned char rw_val)
 {
     int tmp_val = rw_val;
@@ -610,7 +702,8 @@ int SSMAction::ReadDataFromFile(const char *file_name, int offset, int nsize, un
         return -1;
     }
 
-    device_fd = open(file_name, O_RDONLY);
+    //device_fd = open(file_name, O_RDONLY);
+    device_fd = open(file_name, O_RDWR | O_SYNC | O_CREAT, S_IRUSR | S_IWUSR);
     if (device_fd < 0) {
         SYS_LOGE("open file \"%s\" error(%s).\n", file_name, strerror(errno));
         return -1;

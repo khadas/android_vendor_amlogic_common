@@ -3020,6 +3020,8 @@ int CPQdb::PQ_GetPictureModeParams(pq_src_param_t source_input, vpp_picture_mode
                     params->HdrTmo = c.getInt(1);
                 } else if (!strcmp(type, "DvLightSensor")) {
                     params->AMDvLightSensor = c.getInt(1);
+                } else if (!strcmp(type, "GammaMidLuminance")) {
+                    params->GammaMidLuminance = c.getInt(1);
                 }
             } while (c.moveToNext());
         } else {
@@ -3060,7 +3062,7 @@ int CPQdb::PQ_GetTconGammaTable(int gamma_curve, gm_tbl_t *gamma_value)
 }
 
 int CPQdb::PQ_GetGammaSpecialTable(vpp_gamma_curve_t gamma_curve, const char *f_name,
-                                     GAMMA_TABLE *gamma_value)
+                                     tcon_gamma_table_t *gamma_value)
 {
     CSqlite::Cursor c;
     char sqlmaster[256] = {0};

@@ -185,6 +185,10 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     Return<int32_t> getEyeProtectionMode(int32_t inputSrc) override;
     Return<int32_t> setGammaValue(int32_t gamma_curve, int32_t isSave) override;
     Return<int32_t> getGammaValue(void) override;
+    Return<int32_t> SetWhitebalanceGamma(int32_t channel, int32_t point, int32_t offset) override;
+    Return<int32_t> GetWhitebalanceGamma(int32_t channel, int32_t point) override;
+    Return<int32_t> FactorySetWhitebalanceGamma(int32_t colortemp, int32_t channel, int32_t point, int32_t offset) override;
+    Return<int32_t> FactoryGetWhitebalanceGamma(int32_t colortemp, int32_t channel, int32_t point) override;
     Return<Result> hasMemcFunc() override;
     Return<int32_t> setMemcMode(int32_t memc_mode, int32_t isSave) override;
     Return<int32_t> getMemcMode(void) override;

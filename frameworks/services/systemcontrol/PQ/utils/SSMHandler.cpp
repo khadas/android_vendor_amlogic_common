@@ -12,6 +12,7 @@
 
 #include "CPQLog.h"
 #include "SSMHandler.h"
+#include "PQType.h"
 
 android::Mutex SSMHandler::sLock;
 SSMHandler* SSMHandler::mSSMHandler = NULL;
@@ -203,7 +204,7 @@ struct SSMHeader_section2_t gSSMHeader_section2[] = {
     {.id =VPP_DATA_RGB_START, .addr = 0, .size = 18, .valid = 0, .rsv = {0}},
     {.id =VPP_DATA_COLOR_SPACE_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =VPP_DATA_USER_NATURE_SWITCH_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
-    {.id =VPP_DATA_GAMMA_VALUE_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
+    {.id =VPP_DATA_GAMMA_VALUE_START, .addr = 0, .size = SSM_SOURCE_MAX, .valid = 0, .rsv = {0}},
     {.id =VPP_DATA_DBC_BACKLIGHT_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =VPP_DATA_DBC_STANDARD_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =VPP_DATA_DBC_ENABLE_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
@@ -334,6 +335,7 @@ struct SSMHeader_section2_t gSSMHeader_section2[] = {
     {.id =VPP_DATA_POS_AICOLOR_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =VPP_DATA_PQMODULE_DEMO_STATE_START, .addr = 0, .size = SSM_PQ_DEMO_MAX, .valid = 0, .rsv = {0}},
     {.id =VPP_DATA_POS_AMDVAPO_PICTURE_PARAM_START, .addr = 0, .size = SSM_AMDV_APOO_TYPE_MAX * SSM_MAX_AMDVIQAPOPICTURE_PARAM_SIZE, .valid = 0, .rsv = {0}},
+    {.id =VPP_DATA_POS_WB_GAMMA_PARAM_START, .addr = 0, .size = MAX_PQ_SRC_INDEX * MAX_PQ_TIMMING_INDEX * MAX_WB_GAMMA_PARAM_SIZE, .valid = 0, .rsv = {0}},
 };
 
 struct SSMHeader_section1_t gSSMHeader_section1 =

@@ -880,6 +880,24 @@ int SystemControlClient::getGammaValue(void) {
     return mSysCtrl->getGammaValue();
 }
 
+int SystemControlClient::SetWhitebalanceGamma(int channel, int point, int offset) {
+    return mSysCtrl->SetWhitebalanceGamma(channel, point, offset);
+}
+
+int SystemControlClient::GetWhitebalanceGamma(int channel, int point) {
+    return mSysCtrl->GetWhitebalanceGamma(channel, point);
+}
+
+int SystemControlClient::FactorySetWhitebalanceGamma(int colortemp, int channel, int point, int offset)
+{
+    return mSysCtrl->FactorySetWhitebalanceGamma(colortemp, channel, point, offset);
+}
+
+int SystemControlClient::FactoryGetWhitebalanceGamma(int colortemp, int channel, int point)
+{
+    return mSysCtrl->FactoryGetWhitebalanceGamma(colortemp, channel, point);
+}
+
 bool SystemControlClient::hasMemcFunc() {
     return (mSysCtrl->hasMemcFunc() == Result::OK);
 }

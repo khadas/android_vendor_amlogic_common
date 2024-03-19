@@ -65,6 +65,10 @@ cc_library_static {
         "include",
     ],
 
+    include_dirs: [
+        "vendor/amlogic/common/frameworks/services/systemcontrol/PQ/include/"
+    ],
+	
     shared_libs: [
         "libutils",
         "liblog",

@@ -11,15 +11,21 @@
 #define __SSM_ACTION_H__
 
 #include "SSMHandler.h"
+#include "PQType.h"
 
 #define SSM_RGBOGO_FILE_OFFSET    (0)
+#define CRI_DATE_RGBOGO_LEN                         (42) //sizeof(tcon_rgb_ogo_t) + 2
+#define CRI_DATE_RGBOGO_INDEX_MAX                   (8)
 
 #define SSM_CR_RGBOGO_LEN                           (256)
 #define SSM_CR_RGBOGO_CHKSUM_LEN                    (2)
 #define DEFAULT_BACKLIGHT_BRIGHTNESS                (10)
 
-#define CRI_DATE_GAMMA_OFFSET                       (512)
-#define CRI_DATE_GAMMA_RGB_SIZE                     (257)
+#define CRI_DATA_WB_GAMMA_OFFSET                    (SSM_RGBOGO_FILE_OFFSET + (CRI_DATE_RGBOGO_LEN * CRI_DATE_RGBOGO_INDEX_MAX))
+#define CRI_DATE_WB_GAMMA_LEN                       ((MAX_WB_GAMMA_POINT * 3 * 4) + 2) //sizeof(WB_GAMMA_TABLE) + 2
+
+//#define CRI_DATE_GAMMA_OFFSET                       (512)
+//#define CRI_DATE_GAMMA_RGB_SIZE                     (257)
 #define CRI_DATE_GAMMA_R_index                      (1)
 #define CRI_DATE_GAMMA_G_index                      (2)
 #define CRI_DATE_GAMMA_B_index                      (3)
@@ -108,6 +114,11 @@ public:
     //Gamma
     int SSMSaveGammaValue(int offset, int rw_val);
     int SSMReadGammaValue(int offset, int *rw_val);
+    //WhiteBalance
+    bool SetWhitebalanceGammaData(WB_GAMMA_TABLE *pData, int src, int timming, int level);
+    bool GetWhitebalanceGammaData(WB_GAMMA_TABLE *pData, int src, int timming, int level);
+    bool CriDataGetWhitebalanceGammaData(WB_GAMMA_TABLE *pData, int level);
+    bool CriDataSetWhitebalanceGammaData(WB_GAMMA_TABLE *pData, int level);
     //PQModuleDemoState
     int SSMSavePQModuleDemoState(int offset, int rw_val);
     int SSMReadPQModuleDemoState(int offset, int *rw_val);

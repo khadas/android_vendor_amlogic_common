@@ -186,6 +186,10 @@ public:
     int getEyeProtectionMode(int source_input);
     int setGammaValue(int gamma_curve, int isSave);
     int getGammaValue(void);
+    int SetWhitebalanceGamma(int channel, int point, int offset);
+    int GetWhitebalanceGamma(int channel, int point);
+    int FactorySetWhitebalanceGamma(int colortemp, int channel, int point, int offset);
+    int FactoryGetWhitebalanceGamma(int colortemp, int channel, int point);
     bool hasMemcFunc();
     int setMemcMode(int memc_mode, int isSave);
     int getMemcMode(void);
