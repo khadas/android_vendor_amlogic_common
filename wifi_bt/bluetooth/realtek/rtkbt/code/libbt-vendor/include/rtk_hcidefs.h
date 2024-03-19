@@ -21,7 +21,7 @@
 #define HCI_PROTO_VERSION     0x01      /* Version for BT spec 1.1          */
 #define HCI_PROTO_VERSION_1_2 0x02      /* Version for BT spec 1.2          */
 #define HCI_PROTO_VERSION_2_0 0x03      /* Version for BT spec 2.0          */
-#define HCI_PROTO_VERSION_2_1 0x04      /* Version for BT spec 2.1 [Lisbon] */
+#define HCI_PROTO_VERSION_2_1 0x04      /* Version for BT spec 2.1          */
 #define HCI_PROTO_VERSION_3_0 0x05      /* Version for BT spec 3.0          */
 #define HCI_PROTO_VERSION_4_0 0x06      /* Version for BT spec 4.0          */
 #define HCI_PROTO_VERSION_4_1 0x07      /* Version for BT spec 4.1          */
@@ -210,30 +210,6 @@
 #define HCI_ENHANCED_FLUSH              (0x005F | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
 #define HCI_SEND_KEYPRESS_NOTIF         (0x0060 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
 
-
-/* AMP HCI */
-#define HCI_READ_LOGICAL_LINK_ACCEPT_TIMEOUT  (0x0061 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_WRITE_LOGICAL_LINK_ACCEPT_TIMEOUT (0x0062 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_SET_EVENT_MASK_PAGE_2             (0x0063 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_READ_LOCATION_DATA                (0x0064 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_WRITE_LOCATION_DATA               (0x0065 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_READ_FLOW_CONTROL_MODE            (0x0066 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_WRITE_FLOW_CONTROL_MODE           (0x0067 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_READ_BE_FLUSH_TOUT                (0x0069 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_WRITE_BE_FLUSH_TOUT               (0x006A | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_SHORT_RANGE_MODE                  (0x006B | HCI_GRP_HOST_CONT_BASEBAND_CMDS) /* 802.11 only */
-#define HCI_READ_LE_HOST_SUPPORT              (0x006C | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_WRITE_LE_HOST_SUPPORT             (0x006D | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-
-
-/* MWS coexistence */
-#define HCI_SET_MWS_CHANNEL_PARAMETERS          (0x006E | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_SET_EXTERNAL_FRAME_CONFIGURATION    (0x006F | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_SET_MWS_SIGNALING                   (0x0070 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_SET_MWS_TRANSPORT_LAYER             (0x0071 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_SET_MWS_SCAN_FREQUENCY_TABLE        (0x0072 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_SET_MWS_PATTERN_CONFIGURATION       (0x0073 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-
 /* Connectionless Broadcast */
 #define HCI_SET_RESERVED_LT_ADDR                (0x0074 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
 #define HCI_DELETE_RESERVED_LT_ADDR             (0x0075 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
@@ -261,7 +237,6 @@
 #define HCI_INFORMATIONAL_CMDS_FIRST    HCI_READ_LOCAL_VERSION_INFO
 #define HCI_INFORMATIONAL_CMDS_LAST     HCI_READ_LOCAL_SUPPORTED_CODECS
 
-
 /* Commands of HCI_GRP_STATUS_PARAMS group */
 #define HCI_READ_FAILED_CONTACT_COUNT   (0x0001 | HCI_GRP_STATUS_PARAMS)
 #define HCI_RESET_FAILED_CONTACT_COUNT  (0x0002 | HCI_GRP_STATUS_PARAMS)
@@ -271,11 +246,6 @@
 #define HCI_READ_CLOCK                  (0x0007 | HCI_GRP_STATUS_PARAMS)
 #define HCI_READ_ENCR_KEY_SIZE          (0x0008 | HCI_GRP_STATUS_PARAMS)
 
-/* AMP HCI */
-#define HCI_READ_LOCAL_AMP_INFO         (0x0009 | HCI_GRP_STATUS_PARAMS)
-#define HCI_READ_LOCAL_AMP_ASSOC        (0x000A | HCI_GRP_STATUS_PARAMS)
-#define HCI_WRITE_REMOTE_AMP_ASSOC      (0x000B | HCI_GRP_STATUS_PARAMS)
-
 #define HCI_STATUS_PARAMS_CMDS_FIRST    HCI_READ_FAILED_CONTACT_COUNT
 #define HCI_STATUS_PARAMS_CMDS_LAST     HCI_WRITE_REMOTE_AMP_ASSOC
 
@@ -284,14 +254,6 @@
 #define HCI_WRITE_LOOPBACK_MODE         (0x0002 | HCI_GRP_TESTING_CMDS)
 #define HCI_ENABLE_DEV_UNDER_TEST_MODE  (0x0003 | HCI_GRP_TESTING_CMDS)
 #define HCI_WRITE_SIMP_PAIR_DEBUG_MODE  (0x0004 | HCI_GRP_TESTING_CMDS)
-
-/* AMP HCI */
-#define HCI_ENABLE_AMP_RCVR_REPORTS     (0x0007 | HCI_GRP_TESTING_CMDS)
-#define HCI_AMP_TEST_END                (0x0008 | HCI_GRP_TESTING_CMDS)
-#define HCI_AMP_TEST                    (0x0009 | HCI_GRP_TESTING_CMDS)
-
-#define HCI_TESTING_CMDS_FIRST          HCI_READ_LOOPBACK_MODE
-#define HCI_TESTING_CMDS_LAST           HCI_AMP_TEST
 
 #define HCI_VENDOR_CMDS_FIRST           0x0001
 #define HCI_VENDOR_CMDS_LAST            0xFFFF
@@ -336,7 +298,7 @@
 
 #define HCI_VENDOR_READ_ISO_HANDLE_RANGE  (0xFDAB)
 
-                            /*0x001D, 0x001E and 0x001F are reserved*/
+/*0x001D, 0x001E and 0x001F are reserved*/
 #define HCI_BLE_RECEIVER_TEST           (0x001D | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_TRANSMITTER_TEST        (0x001E | HCI_GRP_BLE_CMDS)
 /* BLE TEST COMMANDS */
@@ -369,7 +331,7 @@
 #define HCI_LE_SET_EXT_ADVERTISING_ENABLE   (0x39 | HCI_GRP_BLE_CMDS)
 #define HCI_LE_READ_MAXIMUM_ADVERTISING_DATA_LENGTH (0x003A | HCI_GRP_BLE_CMDS)
 #define HCI_LE_READ_NUMBER_OF_SUPPORTED_ADVERTISING_SETS \
-  (0x003B | HCI_GRP_BLE_CMDS)
+    (0x003B | HCI_GRP_BLE_CMDS)
 #define HCI_LE_REMOVE_ADVERTISING_SET       (0x003C | HCI_GRP_BLE_CMDS)
 #define HCI_LE_CLEAR_ADVERTISING_SETS       (0x003D | HCI_GRP_BLE_CMDS)
 #define HCI_LE_SET_PERIODIC_ADVERTISING_PARAM (0x003E | HCI_GRP_BLE_CMDS)
@@ -380,21 +342,21 @@
 #define HCI_LE_EXTENDED_CREATE_CONNECTION   (0x0043 | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_PERIODIC_ADVERTISING_CREATE_SYNC (0x0044 | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_PERIODIC_ADVERTISING_CREATE_SYNC_CANCEL \
-  (0x0045 | HCI_GRP_BLE_CMDS)
+    (0x0045 | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_PERIODIC_ADVERTISING_TERMINATE_SYNC \
-  (0x0046 | HCI_GRP_BLE_CMDS)
+    (0x0046 | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_ADD_DEVICE_TO_PERIODIC_ADVERTISING_LIST \
-  (0x0047 | HCI_GRP_BLE_CMDS)
+    (0x0047 | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_RM_DEVICE_FROM_PERIODIC_ADVERTISING_LIST \
-  (0x0048 | HCI_GRP_BLE_CMDS)
+    (0x0048 | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_CLEAR_PERIODIC_ADVERTISING_LIST (0x0049 | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_READ_PERIODIC_ADVERTISING_LIST_SIZE (0x004A | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_READ_TRANSMIT_POWER         (0x004B | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_READ_RF_COMPENS_POWER       (0x004C | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_WRITE_RF_COMPENS_POWER      (0x004D | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_SET_PRIVACY_MODE            (0x004E | HCI_GRP_BLE_CMDS)
-
-#define HCI_LE_SET_CIG_PARAMS (0x0062 | HCI_GRP_BLE_CMDS)
+#define HCI_LE_SET_CIG_PARAMS               (0x0062 | HCI_GRP_BLE_CMDS)
+#define HCI_LE_CREATE_BIG                   (0x0068 | HCI_GRP_BLE_CMDS)
 
 #define HCI_VENDOR_SET_LOG_ENABLE_OCF     (0x0027 | HCI_GRP_VENDOR_SPECIFIC)
 
@@ -421,6 +383,7 @@
 
 /* Controller debug info OCF */
 #define HCI_CONTROLLER_DEBUG_INFO_OCF     (0x015B | HCI_GRP_VENDOR_SPECIFIC)
+#define HCI_VENDOR_BLE_WAKE_UP_DEV_ADD     (0x01B4 | HCI_GRP_VENDOR_SPECIFIC)
 
 /* subcode for multi adv feature */
 #define BTM_BLE_MULTI_ADV_SET_PARAM                     0x01
@@ -762,11 +725,12 @@
 #define HCI_BLE_DATA_LENGTH_CHANGE_EVT      0x07
 #define HCI_BLE_ENHANCED_CONN_COMPLETE_EVT  0x0a
 #define HCI_BLE_DIRECT_ADV_EVT              0x0b
+#define HCI_LE_EXTENDED_ADVERTISING_REPORT_EVT 0x0d
+#define HCI_LE_ADVERTISING_SET_TERMINATED_EVT 0x12
 
 #define HCI_BLE_CIS_EST_EVT                 0x19
 #define HCI_BLE_CREATE_BIG_CPL_EVT          0x1b
 #define HCI_BLE_TERM_BIG_CPL_EVT            0x1c
-#define HCI_BLE_EXTENDED_ADV_RPT_EVT        0x0d
 
 /* Definitions for LE Channel Map */
 #define HCI_BLE_CHNL_MAP_SIZE               5
@@ -982,9 +946,9 @@
 
 /* Packet type should be one of valid but at least one should be specified */
 #define HCI_VALID_SCO_PKT_TYPE(t) (((((t) & ~(HCI_PKT_TYPES_MASK_HV1       \
-                                           |  HCI_PKT_TYPES_MASK_HV2       \
-                                           |  HCI_PKT_TYPES_MASK_HV3)) == 0)) \
-                                    && ((t) != 0))
+                                              |  HCI_PKT_TYPES_MASK_HV2       \
+                                              |  HCI_PKT_TYPES_MASK_HV3)) == 0)) \
+                                   && ((t) != 0))
 
 
 
@@ -992,23 +956,23 @@
 
 /* Packet type should not be invalid and at least one should be specified */
 #define HCI_VALID_ACL_PKT_TYPE(t) (((((t) & ~(HCI_PKT_TYPES_MASK_DM1        \
-                                           |  HCI_PKT_TYPES_MASK_DH1        \
-                                           |  HCI_PKT_TYPES_MASK_DM3        \
-                                           |  HCI_PKT_TYPES_MASK_DH3        \
-                                           |  HCI_PKT_TYPES_MASK_DM5        \
-                                           |  HCI_PKT_TYPES_MASK_DH5        \
-                                           |  HCI_PKT_TYPES_MASK_NO_2_DH1   \
-                                           |  HCI_PKT_TYPES_MASK_NO_3_DH1   \
-                                           |  HCI_PKT_TYPES_MASK_NO_2_DH3   \
-                                           |  HCI_PKT_TYPES_MASK_NO_3_DH3   \
-                                           |  HCI_PKT_TYPES_MASK_NO_2_DH5   \
-                                           |  HCI_PKT_TYPES_MASK_NO_3_DH5  )) == 0)) \
-                                    && (((t) &  (HCI_PKT_TYPES_MASK_DM1        \
                                               |  HCI_PKT_TYPES_MASK_DH1        \
                                               |  HCI_PKT_TYPES_MASK_DM3        \
                                               |  HCI_PKT_TYPES_MASK_DH3        \
                                               |  HCI_PKT_TYPES_MASK_DM5        \
-                                              |  HCI_PKT_TYPES_MASK_DH5)) != 0))
+                                              |  HCI_PKT_TYPES_MASK_DH5        \
+                                              |  HCI_PKT_TYPES_MASK_NO_2_DH1   \
+                                              |  HCI_PKT_TYPES_MASK_NO_3_DH1   \
+                                              |  HCI_PKT_TYPES_MASK_NO_2_DH3   \
+                                              |  HCI_PKT_TYPES_MASK_NO_3_DH3   \
+                                              |  HCI_PKT_TYPES_MASK_NO_2_DH5   \
+                                              |  HCI_PKT_TYPES_MASK_NO_3_DH5  )) == 0)) \
+                                   && (((t) &  (HCI_PKT_TYPES_MASK_DM1        \
+                                                |  HCI_PKT_TYPES_MASK_DH1        \
+                                                |  HCI_PKT_TYPES_MASK_DM3        \
+                                                |  HCI_PKT_TYPES_MASK_DH3        \
+                                                |  HCI_PKT_TYPES_MASK_DM5        \
+                                                |  HCI_PKT_TYPES_MASK_DH5)) != 0))
 
 /*
 ** Definitions for eSCO packet type masks (BT1.2 and BT2.0 definitions)
@@ -1026,22 +990,22 @@
 
 /* Packet type should be one of valid but at least one should be specified for 1.2 */
 #define HCI_VALID_ESCO_PKT_TYPE(t) (((((t) & ~(HCI_ESCO_PKT_TYPES_MASK_EV3       \
-                                           |   HCI_ESCO_PKT_TYPES_MASK_EV4       \
-                                           |   HCI_ESCO_PKT_TYPES_MASK_EV5)) == 0)) \
+                                               |   HCI_ESCO_PKT_TYPES_MASK_EV4       \
+                                               |   HCI_ESCO_PKT_TYPES_MASK_EV5)) == 0)) \
                                     && ((t) != 0))/* Packet type should be one of valid but at least one should be specified */
 
 #define HCI_VALID_ESCO_SCOPKT_TYPE(t) (((((t) & ~(HCI_ESCO_PKT_TYPES_MASK_HV1       \
-                                           |      HCI_ESCO_PKT_TYPES_MASK_HV2       \
-                                           |      HCI_ESCO_PKT_TYPES_MASK_HV3)) == 0)) \
-                                    && ((t) != 0))
+                                                  |      HCI_ESCO_PKT_TYPES_MASK_HV2       \
+                                                  |      HCI_ESCO_PKT_TYPES_MASK_HV3)) == 0)) \
+                                       && ((t) != 0))
 
 #define HCI_VALID_SCO_ALL_PKT_TYPE(t) (((((t) & ~(HCI_ESCO_PKT_TYPES_MASK_HV1       \
-                                           |      HCI_ESCO_PKT_TYPES_MASK_HV2       \
-                                           |      HCI_ESCO_PKT_TYPES_MASK_HV3       \
-                                           |      HCI_ESCO_PKT_TYPES_MASK_EV3       \
-                                           |      HCI_ESCO_PKT_TYPES_MASK_EV4       \
-                                           |      HCI_ESCO_PKT_TYPES_MASK_EV5)) == 0)) \
-                                    && ((t) != 0))
+                                                  |      HCI_ESCO_PKT_TYPES_MASK_HV2       \
+                                                  |      HCI_ESCO_PKT_TYPES_MASK_HV3       \
+                                                  |      HCI_ESCO_PKT_TYPES_MASK_EV3       \
+                                                  |      HCI_ESCO_PKT_TYPES_MASK_EV4       \
+                                                  |      HCI_ESCO_PKT_TYPES_MASK_EV5)) == 0)) \
+                                       && ((t) != 0))
 
 /*
 ** Define parameters to allow role switch during create connection
@@ -1287,9 +1251,9 @@
 
 /* default                                        0001100000 */
 #define HCI_DEFAULT_VOICE_SETTINGS    (HCI_INP_CODING_LINEAR \
-                                     | HCI_INP_DATA_FMT_2S_COMPLEMENT \
-                                     | HCI_INP_SAMPLE_SIZE_16BIT \
-                                     | HCI_AIR_CODING_FORMAT_CVSD)
+                                       | HCI_INP_DATA_FMT_2S_COMPLEMENT \
+                                       | HCI_INP_SAMPLE_SIZE_16BIT \
+                                       | HCI_AIR_CODING_FORMAT_CVSD)
 
 #define HCI_CVSD_SUPPORTED(x)       (((x) & HCI_AIR_CODING_FORMAT_MASK) == HCI_AIR_CODING_FORMAT_CVSD)
 #define HCI_U_LAW_SUPPORTED(x)      (((x) & HCI_AIR_CODING_FORMAT_MASK) == HCI_AIR_CODING_FORMAT_U_LAW)
@@ -1396,19 +1360,6 @@
 
 #define HCI_MAX_AMP_STATUS_TYPES        7
 
-
-/* Define the extended flow specification fields used by AMP */
-typedef struct
-{
-    uint8_t       id;
-    uint8_t       stype;
-    uint16_t      max_sdu_size;
-    uint32_t      sdu_inter_time;
-    uint32_t      access_latency;
-    uint32_t      flush_timeout;
-} tHCI_EXT_FLOW_SPEC;
-
-
 /* HCI message type definitions (for H4 messages) */
 #define HCIT_TYPE_COMMAND   1
 #define HCIT_TYPE_ACL_DATA  2
@@ -1446,13 +1397,15 @@ typedef struct
 #define LMP_TESTCTL_HOPMOD_HOP_FRANCE   3
 #define LMP_TESTCTL_HOPMOD_HOP_SPAIN    4
 #define LMP_TESTCTL_HOPMOD_REDUCED_HOP  5
-#define HCI_ENABLE_FW_LOG           		(0x0027 | HCI_GRP_VENDOR_SPECIFIC)
 
 #define LMP_TESTCTL_POWCTL_FIXEDTX_OP   0
 #define LMP_TESTCTL_POWCTL_ADAPTIVE     1
 
 // TODO(zachoverflow): remove this once broadcom specific hacks are removed
 #define LMP_COMPID_BROADCOM             15
+
+#define HCI_ENABLE_FW_LOG                   (0x0027 | HCI_GRP_VENDOR_SPECIFIC)
+#define HCI_PWRON_WHITE_LST                 (0x007b | HCI_GRP_VENDOR_SPECIFIC)
 
 /*
 ** Define the packet types in the packet header, and a couple extra
@@ -2682,13 +2635,13 @@ typedef struct
 
 #define RTK_GET_BOUNDARY_FLAG(handle) (((handle) >> 12) & 0x0003)
 
-    // 2 bytes for opcode, 1 byte for parameter length (Volume 2, Part E, 5.4.1)
+// 2 bytes for opcode, 1 byte for parameter length (Volume 2, Part E, 5.4.1)
 #define COMMAND_PREAMBLE_SIZE 3
-    // 2 bytes for handle, 2 bytes for data length (Volume 2, Part E, 5.4.2)
+// 2 bytes for handle, 2 bytes for data length (Volume 2, Part E, 5.4.2)
 #define ACL_PREAMBLE_SIZE 4
-    // 2 bytes for handle, 1 byte for data length (Volume 2, Part E, 5.4.3)
+// 2 bytes for handle, 1 byte for data length (Volume 2, Part E, 5.4.3)
 #define SCO_PREAMBLE_SIZE 3
-    // 1 byte for event code, 1 byte for parameter length (Volume 2, Part E, 5.4.4)
+// 1 byte for event code, 1 byte for parameter length (Volume 2, Part E, 5.4.4)
 #define EVENT_PREAMBLE_SIZE 2
 #define ISO_PREAMBLE_SIZE 4
 
@@ -2707,24 +2660,27 @@ typedef struct
 #define HCI_CMD_VNDR_AUTOPAIR       0xfc77
 
 
-typedef struct {
-  uint8_t hci_version;
-  uint16_t hci_revision;
-  uint8_t lmp_version;
-  uint16_t manufacturer;
-  uint16_t lmp_subversion;
+typedef struct
+{
+    uint8_t hci_version;
+    uint16_t hci_revision;
+    uint8_t lmp_version;
+    uint16_t manufacturer;
+    uint16_t lmp_subversion;
 } rtkbt_version_t;
 
-typedef struct {
-  uint8_t adverting_type;
-  bool    adverting_enable;
-  bool    adverting_start;
-  bool    connetion_enable;
+typedef struct
+{
+    uint8_t adverting_type;
+    bool    adverting_enable;
+    bool    adverting_start;
+    bool    connetion_enable;
 } rtkbt_lescn_t;
 
-typedef struct {
-  uint8_t addr[6];
-  volatile bool finded;
+typedef struct
+{
+    uint8_t addr[6];
+    volatile bool finded;
 } rtkbt_cts_info_t;
 
 #endif

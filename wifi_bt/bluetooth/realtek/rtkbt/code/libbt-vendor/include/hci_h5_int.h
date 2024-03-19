@@ -15,8 +15,6 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
-
 #ifndef RTK_HCI_H5_INT_H
 #define RTK_HCI_H5_INT_H
 
@@ -49,35 +47,62 @@
 #define HCI_READ_LMP_VERSION            0x1001
 #define HCI_VENDOR_RESET                0x0C03
 #define HCI_VENDOR_FORCE_RESET_AND_PATCHABLE 0xFC66
+#define HCI_VENDOR_WRITE                0xFC62
+#define HCI_VENDOR_CHECK_FW_UPDATE      0xFDBB
 
-void ms_delay (uint32_t timeout);
+
+// HCI data types //
+#define H5_RELIABLE_PKT         0x01
+#define H5_UNRELIABLE_PKT       0x00
+#define H5_ACK_PKT              0x00
+#define H5_VDRSPEC_PKT          0x0E
+#define H5_LINK_CTL_PKT         0x0F
+
+#define H5_HDR_SEQ(hdr)         ((hdr)[0] & 0x07)
+#define H5_HDR_ACK(hdr)         (((hdr)[0] >> 3) & 0x07)
+#define H5_HDR_CRC(hdr)         (((hdr)[0] >> 6) & 0x01)
+#define H5_HDR_RELIABLE(hdr)    (((hdr)[0] >> 7) & 0x01)
+#define H5_HDR_PKT_TYPE(hdr)    ((hdr)[1] & 0x0f)
+#define H5_HDR_LEN(hdr)         ((((hdr)[1] >> 4) & 0xff) + ((hdr)[2] << 4))
+#define H5_HDR_SIZE             4
+
+#define H5_CFG_SLID_WIN(cfg)    ((cfg) & 0x07)
+#define H5_CFG_OOF_CNTRL(cfg)   (((cfg) >> 3) & 0x01)
+#define H5_CFG_DIC_TYPE(cfg)    (((cfg) >> 4) & 0x01)
+#define H5_CFG_VER_NUM(cfg)     (((cfg) >> 5) & 0x07)
+#define H5_CFG_SIZE             1
+
+void ms_delay(uint32_t timeout);
 
 
-typedef enum {
-  DATA_TYPE_COMMAND = 1,
-  DATA_TYPE_ACL     = 2,
-  DATA_TYPE_SCO     = 3,
-  DATA_TYPE_EVENT   = 4,
-  DATA_TYPE_ISO     = 5
+typedef enum
+{
+    DATA_TYPE_COMMAND = 1,
+    DATA_TYPE_ACL     = 2,
+    DATA_TYPE_SCO     = 3,
+    DATA_TYPE_EVENT   = 4,
+    DATA_TYPE_ISO     = 5,
 } serial_data_type_t;
 #define DATA_TYPE_START  DATA_TYPE_COMMAND
 #define DATA_TYPE_END  DATA_TYPE_ISO
 
 
-typedef struct hci_h5_callbacks_t{
-    uint16_t    (*h5_int_transmit_data_cb)(serial_data_type_t type, uint8_t *data, uint16_t length);
-    void        (*h5_data_ready_cb)(serial_data_type_t type, unsigned int total_length);
+typedef struct hci_h5_callbacks_t
+{
+    uint16_t (*h5_int_transmit_data_cb)(serial_data_type_t type, uint8_t *data, uint16_t length);
+    void (*h5_data_ready_cb)(serial_data_type_t type, unsigned int total_length);
 } hci_h5_callbacks_t;
 
-typedef struct hci_h5_t {
-     void     (*h5_int_init)(hci_h5_callbacks_t *h5_callbacks);
-     void     (*h5_int_cleanup)(void);
-     uint16_t (*h5_send_cmd)(serial_data_type_t type, uint8_t *data, uint16_t length);
-     uint8_t  (*h5_send_sync_cmd)(uint16_t opcode, uint8_t *data, uint16_t length);
-     uint16_t (*h5_send_acl_data)(serial_data_type_t type, uint8_t *data, uint16_t length);
-     uint16_t (*h5_send_sco_data)(serial_data_type_t type, uint8_t *data, uint16_t length);
-     bool     (*h5_recv_msg)(uint8_t *byte, uint16_t length);
-     size_t   (*h5_int_read_data)(uint8_t *data_buffer, size_t max_size);
+typedef struct hci_h5_t
+{
+    void (*h5_int_init)(hci_h5_callbacks_t *h5_callbacks);
+    void (*h5_int_cleanup)(void);
+    uint16_t (*h5_send_cmd)(serial_data_type_t type, uint8_t *data, uint16_t length);
+    uint8_t (*h5_send_sync_cmd)(uint16_t opcode, uint8_t *data, uint16_t length);
+    uint16_t (*h5_send_acl_data)(serial_data_type_t type, uint8_t *data, uint16_t length);
+    uint16_t (*h5_send_sco_data)(serial_data_type_t type, uint8_t *data, uint16_t length);
+    bool (*h5_recv_msg)(uint8_t *byte, uint16_t length);
+    size_t (*h5_int_read_data)(uint8_t *data_buffer, size_t max_size);
 } hci_h5_t;
 
 const hci_h5_t *hci_get_h5_int_interface(void);

@@ -35,7 +35,8 @@
 #define UPIO_BT_POWER_ON  1
 
 /* UPIO signals */
-enum {
+enum
+{
     UPIO_BT_WAKE = 0,
     UPIO_HOST_WAKE,
     UPIO_LPM_MODE,
@@ -43,7 +44,8 @@ enum {
 };
 
 /* UPIO assertion/deassertion */
-enum {
+enum
+{
     UPIO_UNKNOWN = 0,
     UPIO_DEASSERT,
     UPIO_ASSERT

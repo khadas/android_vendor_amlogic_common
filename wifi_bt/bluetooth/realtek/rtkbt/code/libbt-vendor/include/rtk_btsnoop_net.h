@@ -57,5 +57,5 @@ void rtk_btsnoop_net_write(serial_data_type_t type, uint8_t *data, bool is_recei
 
 void hci_close_firmware_log_file(int fd);
 int hci_open_firmware_log_file_rtk(uint8_t seg);
-void hci_log_firmware_debug_packet_rtk(int fd, HC_BT_HDR* p_buf);
+void hci_log_firmware_debug_packet_rtk(int fd, HC_BT_HDR *p_buf, serial_data_type_t type);
 #endif

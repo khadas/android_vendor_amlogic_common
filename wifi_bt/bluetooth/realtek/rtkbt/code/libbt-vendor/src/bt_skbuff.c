@@ -17,20 +17,20 @@
  ******************************************************************************/
 /******************************************************************************
 *
-*	Module Name:
-*	    bt_skbuff.c
+*   Module Name:
+*       bt_skbuff.c
 *
-*	Abstract:
-*	    Data buffer managerment through whole bluetooth stack.
+*   Abstract:
+*       Data buffer managerment through whole bluetooth stack.
 *
-*	Major Change History:
-*	      When             Who       What
-*	    --------------------------------------------------------------
-*	    2010-06-11       W.Bi    Created.
+*   Major Change History:
+*         When             Who       What
+*       --------------------------------------------------------------
+*       2010-06-11       W.Bi    Created.
 *
-*	Notes:
-*		  To reduce memory copy when pass data buffer to other layers,
-*      	RTK_BUFFER is designed referring to linux socket buffer.
+*   Notes:
+*         To reduce memory copy when pass data buffer to other layers,
+*       RTK_BUFFER is designed referring to linux socket buffer.
 *       But I still wonder its effect, since RTK_BUFFER is much bigger
 *       than original data buffer.RTK_BUFFER will reduce its member if
 *       it would not reach what i had expected.
@@ -72,12 +72,13 @@
 //****************************************************************************
 // STRUCTURE DEFINITION
 //****************************************************************************
-typedef struct _RTB_QUEUE_HEAD{
+typedef struct _RTB_QUEUE_HEAD
+{
     RT_LIST_HEAD List;
     uint32_t  QueueLen;
     pthread_mutex_t Lock;
     uint8_t   Id[RTB_QUEUE_ID_LENGTH];
-}*PRTB_QUEUE_HEAD;
+} *PRTB_QUEUE_HEAD;
 
 //****************************************************************************
 // FUNCTION
@@ -89,7 +90,7 @@ typedef struct _RTB_QUEUE_HEAD{
 */
 bool
 RtbQueueIsEmpty(
-   IN RTB_QUEUE_HEAD* RtkQueueHead
+    IN RTB_QUEUE_HEAD *RtkQueueHead
 )
 {
     //return ListIsEmpty(&RtkQueueHead->List);
@@ -103,26 +104,26 @@ RtbQueueIsEmpty(
     \param [IN]     HeadRoom     <uint32_t>         : if caller knows reserved head space, set it; otherwise set 0 to use default value
     \return pointer to RTK_BUFFER if succeed, null otherwise
 */
-RTK_BUFFER*
+RTK_BUFFER *
 RtbAllocate(
     uint32_t Length,
     uint32_t HeadRoom
-    )
+)
 {
-    RTK_BUFFER* Rtb = NULL;
+    RTK_BUFFER *Rtb = NULL;
     ///Rtb buffer length:
     ///     RTK_BUFFER   48
     ///     HeadRoom      HeadRomm or 12
     ///     Length
     ///memory size: 48 + Length + 12(default) + 8*2(header for each memory) ---> a multiple of 8
     ///example:       (48 + 8)+ (300 + 12 + 8) = 372
-    Rtb = malloc( sizeof(RTK_BUFFER) );
-    if(Rtb)
+    Rtb = malloc(sizeof(RTK_BUFFER));
+    if (Rtb)
     {
         uint32_t BufferLen = HeadRoom ? (Length + HeadRoom) : (Length + DEFAULT_HEADER_SIZE);
         BufferLen = RTB_DATA_ALIGN(BufferLen);
         Rtb->Head = malloc(BufferLen);
-        if(Rtb->Head)
+        if (Rtb->Head)
         {
             Rtb->HeadRoom = HeadRoom ? HeadRoom : DEFAULT_HEADER_SIZE;
             Rtb->Data = Rtb->Head + Rtb->HeadRoom;
@@ -131,6 +132,9 @@ RtbAllocate(
             Rtb->Length = 0;
             ListInitializeHeader(&Rtb->List);
             Rtb->RefCount = 1;
+            Rtb->Flag = 0;
+            Rtb->BtVendorCmdFlag = 0;
+            Rtb->Pcback = NULL;
             return Rtb;
         }
     }
@@ -154,10 +158,10 @@ RtbAllocate(
 */
 void
 RtbFree(
-    RTK_BUFFER* RtkBuffer
+    RTK_BUFFER *RtkBuffer
 )
 {
-    if(RtkBuffer)
+    if (RtkBuffer)
     {
         free(RtkBuffer->Head);
         free(RtkBuffer);
@@ -172,11 +176,11 @@ RtbFree(
     \param [IN]            Length                <uint32_t>                 : header length
     \return  Pointer to the first byte of the extra data is returned
 */
-uint8_t*
+uint8_t *
 RtbAddHead(
-    RTK_BUFFER* RtkBuffer,
+    RTK_BUFFER *RtkBuffer,
     uint32_t                 Length
-    )
+)
 {
 
     if ((uint32_t)(RtkBuffer->Data - RtkBuffer->Head) >= Length)
@@ -198,9 +202,9 @@ RtbAddHead(
 */
 unsigned char
 RtbRemoveHead(
-    RTK_BUFFER* RtkBuffer,
+    RTK_BUFFER *RtkBuffer,
     uint32_t                 Length
-    )
+)
 {
 
     if (RtkBuffer->Length >= Length)
@@ -221,16 +225,16 @@ RtbRemoveHead(
     \param [IN]            Length                <uint32_t>                 : header length
     \return  Pointer to the first byte of the extra data is returned
 */
-uint8_t*
+uint8_t *
 RtbAddTail(
-    RTK_BUFFER* RtkBuffer,
+    RTK_BUFFER *RtkBuffer,
     uint32_t                 Length
-    )
+)
 {
 
     if ((uint32_t)(RtkBuffer->Tail - RtkBuffer->End) >= Length)
     {
-        uint8_t* Tmp = RtkBuffer->End;
+        uint8_t *Tmp = RtkBuffer->End;
         RtkBuffer->End += Length;
         RtkBuffer->Length += Length;
         return Tmp;
@@ -241,7 +245,7 @@ RtbAddTail(
 
 unsigned char
 RtbRemoveTail(
-    IN OUT RTK_BUFFER * RtkBuffer,
+    IN OUT RTK_BUFFER *RtkBuffer,
     IN     uint32_t       Length
 )
 {
@@ -262,20 +266,21 @@ RtbRemoveTail(
     Initialize a rtb queue.
     \return  Initilized rtb queue if succeed, otherwise NULL
 */
-RTB_QUEUE_HEAD*
+RTB_QUEUE_HEAD *
 RtbQueueInit(
 )
 {
-    RTB_QUEUE_HEAD* RtbQueue = NULL;
+    RTB_QUEUE_HEAD *RtbQueue = NULL;
     int ret = 0;
     RtbQueue = malloc(sizeof(RTB_QUEUE_HEAD));
-    if(RtbQueue)
+    if (RtbQueue)
     {
         ret = pthread_mutex_init(&RtbQueue->Lock, NULL);
-        if(!ret) {
-          ListInitializeHeader(&RtbQueue->List);
-          RtbQueue->QueueLen = 0;
-          return RtbQueue;
+        if (!ret)
+        {
+            ListInitializeHeader(&RtbQueue->List);
+            RtbQueue->QueueLen = 0;
+            return RtbQueue;
         }
     }
 
@@ -294,8 +299,8 @@ RtbQueueInit(
 */
 void
 RtbQueueFree(
-    RTB_QUEUE_HEAD* RtkQueueHead
-    )
+    RTB_QUEUE_HEAD *RtkQueueHead
+)
 {
     if (RtkQueueHead)
     {
@@ -314,9 +319,9 @@ RtbQueueFree(
 */
 void
 RtbQueueTail(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER*                 RtkBuffer
-    )
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER                 *RtkBuffer
+)
 {
     pthread_mutex_lock(&RtkQueueHead->Lock);
     ListAddToTail(&RtkBuffer->List, &RtkQueueHead->List);
@@ -331,9 +336,9 @@ RtbQueueTail(
 */
 void
 RtbQueueHead(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER*                 RtkBuffer
-    )
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER                 *RtkBuffer
+)
 {
     pthread_mutex_lock(&RtkQueueHead->Lock);
     ListAddToHead(&RtkBuffer->List, &RtkQueueHead->List);
@@ -350,9 +355,9 @@ RtbQueueHead(
 */
 void
 RtbInsertBefore(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER*  pOldRtkBuffer,
-    IN RTK_BUFFER*  pNewRtkBuffer
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER  *pOldRtkBuffer,
+    IN RTK_BUFFER  *pNewRtkBuffer
 )
 {
     pthread_mutex_lock(&RtkQueueHead->Lock);
@@ -366,15 +371,15 @@ RtbInsertBefore(
 */
 unsigned char
 RtbNodeIsLast(
-    IN RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER*                 pRtkBuffer
+    IN RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER                 *pRtkBuffer
 )
 {
-    RTK_BUFFER* pBuf;
+    RTK_BUFFER *pBuf;
     pthread_mutex_lock(&RtkQueueHead->Lock);
 
-    pBuf = (RTK_BUFFER*)RtkQueueHead->List.Prev;
-    if(pBuf == pRtkBuffer)
+    pBuf = (RTK_BUFFER *)RtkQueueHead->List.Prev;
+    if (pBuf == pRtkBuffer)
     {
         pthread_mutex_unlock(&RtkQueueHead->Lock);
         return true;
@@ -390,21 +395,21 @@ RtbNodeIsLast(
     \param [IN]     RtkBuffer        <RTK_BUFFER*>        : Rtk buffer
     \return node after the specified buffer
 */
-RTK_BUFFER*
+RTK_BUFFER *
 RtbQueueNextNode(
-    IN RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER*                 pRtkBuffer
+    IN RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER                 *pRtkBuffer
 )
 {
-    RTK_BUFFER* pBuf;
+    RTK_BUFFER *pBuf;
     pthread_mutex_lock(&RtkQueueHead->Lock);
-    pBuf = (RTK_BUFFER*)RtkQueueHead->List.Prev;
-    if(pBuf == pRtkBuffer)
+    pBuf = (RTK_BUFFER *)RtkQueueHead->List.Prev;
+    if (pBuf == pRtkBuffer)
     {
         pthread_mutex_unlock(&RtkQueueHead->Lock);
         return NULL;    ///< if it is already the last node in the queue , return NULL
     }
-    pBuf = (RTK_BUFFER*)pRtkBuffer->List.Next;
+    pBuf = (RTK_BUFFER *)pRtkBuffer->List.Next;
     pthread_mutex_unlock(&RtkQueueHead->Lock);
     return pBuf;    ///< return next node after this node
 }
@@ -417,8 +422,8 @@ RtbQueueNextNode(
 */
 void
 RtbRemoveNode(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER*                 RtkBuffer
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER                 *RtkBuffer
 )
 {
     RtkQueueHead->QueueLen--;
@@ -431,12 +436,12 @@ RtbRemoveNode(
     \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
     \return head of the RtkQueue , otherwise NULL
 */
-RTK_BUFFER*
+RTK_BUFFER *
 RtbTopQueue(
-    IN RTB_QUEUE_HEAD* RtkQueueHead
+    IN RTB_QUEUE_HEAD *RtkQueueHead
 )
 {
-    RTK_BUFFER* Rtb = NULL;
+    RTK_BUFFER *Rtb = NULL;
     pthread_mutex_lock(&RtkQueueHead->Lock);
 
     if (RtbQueueIsEmpty(RtkQueueHead))
@@ -445,7 +450,7 @@ RtbTopQueue(
         return NULL;
     }
 
-    Rtb = (RTK_BUFFER*)RtkQueueHead->List.Next;
+    Rtb = (RTK_BUFFER *)RtkQueueHead->List.Next;
     pthread_mutex_unlock(&RtkQueueHead->Lock);
 
     return Rtb;
@@ -456,20 +461,20 @@ RtbTopQueue(
     \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
     \return    removed rtkbuffer if succeed, otherwise NULL
 */
-RTK_BUFFER*
+RTK_BUFFER *
 RtbDequeueTail(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead
 )
 {
-    RTK_BUFFER* Rtb = NULL;
+    RTK_BUFFER *Rtb = NULL;
 
     pthread_mutex_lock(&RtkQueueHead->Lock);
     if (RtbQueueIsEmpty(RtkQueueHead))
     {
-         pthread_mutex_unlock(&RtkQueueHead->Lock);
-         return NULL;
+        pthread_mutex_unlock(&RtkQueueHead->Lock);
+        return NULL;
     }
-    Rtb = (RTK_BUFFER*)RtkQueueHead->List.Prev;
+    Rtb = (RTK_BUFFER *)RtkQueueHead->List.Prev;
     RtbRemoveNode(RtkQueueHead, Rtb);
     pthread_mutex_unlock(&RtkQueueHead->Lock);
 
@@ -481,20 +486,20 @@ RtbDequeueTail(
     \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
     \return    removed rtkbuffer if succeed, otherwise NULL
 */
-RTK_BUFFER*
+RTK_BUFFER *
 RtbDequeueHead(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead
-    )
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead
+)
 {
-    RTK_BUFFER* Rtb = NULL;
+    RTK_BUFFER *Rtb = NULL;
     pthread_mutex_lock(&RtkQueueHead->Lock);
 
-     if (RtbQueueIsEmpty(RtkQueueHead))
-     {
-         pthread_mutex_unlock(&RtkQueueHead->Lock);
-         return NULL;
-     }
-    Rtb = (RTK_BUFFER*)RtkQueueHead->List.Next;
+    if (RtbQueueIsEmpty(RtkQueueHead))
+    {
+        pthread_mutex_unlock(&RtkQueueHead->Lock);
+        return NULL;
+    }
+    Rtb = (RTK_BUFFER *)RtkQueueHead->List.Next;
     RtbRemoveNode(RtkQueueHead, Rtb);
     pthread_mutex_unlock(&RtkQueueHead->Lock);
     return Rtb;
@@ -506,8 +511,8 @@ RtbDequeueHead(
     \return    current queue's length
 */
 signed long RtbGetQueueLen(
-    IN RTB_QUEUE_HEAD* RtkQueueHead
-    )
+    IN RTB_QUEUE_HEAD *RtkQueueHead
+)
 {
     return RtkQueueHead->QueueLen;
 }
@@ -518,15 +523,15 @@ signed long RtbGetQueueLen(
 */
 void
 RtbEmptyQueue(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead
-    )
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead
+)
 {
-    RTK_BUFFER* Rtb = NULL;
+    RTK_BUFFER *Rtb = NULL;
     pthread_mutex_lock(&RtkQueueHead->Lock);
 
-    while( !RtbQueueIsEmpty(RtkQueueHead))
+    while (!RtbQueueIsEmpty(RtkQueueHead))
     {
-        Rtb = (RTK_BUFFER*)RtkQueueHead->List.Next;
+        Rtb = (RTK_BUFFER *)RtkQueueHead->List.Next;
         RtbRemoveNode(RtkQueueHead, Rtb);
         RtbFree(Rtb);
     }
@@ -538,7 +543,7 @@ RtbEmptyQueue(
 
 ///Annie_tmp
 unsigned char
-RtbCheckQueueLen(IN RTB_QUEUE_HEAD* RtkQueueHead, IN uint8_t Len)
+RtbCheckQueueLen(IN RTB_QUEUE_HEAD *RtkQueueHead, IN uint8_t Len)
 {
     return RtkQueueHead->QueueLen < Len ? true : false;
 }
@@ -548,21 +553,23 @@ RtbCheckQueueLen(IN RTB_QUEUE_HEAD* RtkQueueHead, IN uint8_t Len)
     \param <RTK_BUFFER* pDataBuffer: original buffer
     \return cloned buffer
 */
-RTK_BUFFER*
+RTK_BUFFER *
 RtbCloneBuffer(
-    IN RTK_BUFFER* pDataBuffer
+    IN RTK_BUFFER *pDataBuffer
 )
 {
-    RTK_BUFFER* pNewBuffer = NULL;
-    if(pDataBuffer)
+    RTK_BUFFER *pNewBuffer = NULL;
+    if (pDataBuffer)
     {
-        pNewBuffer = RtbAllocate(pDataBuffer->Length,0);
-        if(!pNewBuffer)
+        pNewBuffer = RtbAllocate(pDataBuffer->Length, 0);
+        if (!pNewBuffer)
         {
             return NULL;
         }
-        if(pDataBuffer && pDataBuffer->Data)
+        if (pDataBuffer && pDataBuffer->Data)
+        {
             memcpy(pNewBuffer->Data, pDataBuffer->Data, pDataBuffer->Length);
+        }
         else
         {
             RtbFree(pNewBuffer);

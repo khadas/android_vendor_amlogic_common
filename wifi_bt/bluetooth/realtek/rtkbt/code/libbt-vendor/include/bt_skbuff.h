@@ -17,19 +17,19 @@
  ******************************************************************************/
 /******************************************************************************
 *
-*	Module Name:
-*	    bt_skbuff.h
+*   Module Name:
+*       bt_skbuff.h
 *
-*	Abstract:
-*	    Data buffer managerment through whole bluetooth stack.
+*   Abstract:
+*       Data buffer managerment through whole bluetooth stack.
 *
-*	Major Change History:
-*	      When             Who       What
-*	    --------------------------------------------------------------
-*	    2010-06-11       W.Bi     Created.
+*   Major Change History:
+*         When             Who       What
+*       --------------------------------------------------------------
+*       2010-06-11       W.Bi     Created.
 *
-*	Notes:
-*	      To reduce memory copy when pass data buffer to other layers,
+*   Notes:
+*         To reduce memory copy when pass data buffer to other layers,
 *       RTK_BUFFER is designed referring to linux socket buffer.
 *       But I still wonder its effect, since RTK_BUFFER is much bigger
 *       than original data buffer.RTK_BUFFER will reduce its member if
@@ -81,6 +81,8 @@
     \param Priv            : Reserved for multi-device support. Record Hci pointer which will handles this packet
     \param Contest      : Control buffer, put private variables here.
 */
+typedef void (*tINT_CMD_CBACK)(void *p_mem);
+
 typedef struct _RTK_BUFFER
 {
     RT_LIST_ENTRY List;
@@ -92,10 +94,13 @@ typedef struct _RTK_BUFFER
     uint32_t HeadRoom;
 //    RT_U16 TailRoom;
     signed char   RefCount;
+    uint8_t  Flag;
+    uint8_t BtVendorCmdFlag;
 
-    void* Priv;
+    void *Priv;
+    tINT_CMD_CBACK  Pcback;
     uint8_t Context[RTK_CONTEXT_SIZE];
-}RTK_BUFFER, *PRTK_BUFFER;
+} RTK_BUFFER, *PRTK_BUFFER;
 
 /**
     RTK_BUFFER Control Buffer Context
@@ -105,7 +110,8 @@ typedef struct _RTK_BUFFER
     \param  Retries            : Current packet retransmission times
     \param  Sar                 : L2cap control field segmentation and reassembly bits
 */
-struct BT_RTB_CONTEXT{
+struct BT_RTB_CONTEXT
+{
     uint8_t   PacketType;
     uint16_t Handle;
 };
@@ -127,11 +133,11 @@ typedef struct _RTB_QUEUE_HEAD  RTB_QUEUE_HEAD;
     \param [IN]     HeadRoom     <uint32_t>         : if caller knows reserved head space, set it; otherwise set 0 to use default value
     \return pointer to RTK_BUFFER if succeed, null otherwise
 */
-RTK_BUFFER*
+RTK_BUFFER *
 RtbAllocate(
     IN uint32_t Length,
     IN uint32_t HeadRoom
-    );
+);
 
 /**
     Free specified Rtk_buffer
@@ -139,15 +145,15 @@ RtbAllocate(
 */
 void
 RtbFree(
-    IN RTK_BUFFER* RtkBuffer
-    );
+    IN RTK_BUFFER *RtkBuffer
+);
 
 /**
     increament reference count
 */
 void
 RtbIncreaseRefCount(
-    IN RTK_BUFFER* RtkBuffer
+    IN RTK_BUFFER *RtkBuffer
 );
 
 /**
@@ -170,11 +176,11 @@ RtbCheckRecycle(
     \param [IN]            Length                <uint32_t>                 : header length
     \return  Pointer to the first byte of the extra data is returned
 */
-uint8_t*
+uint8_t *
 RtbAddHead(
-    IN OUT RTK_BUFFER* RtkBuffer,
+    IN OUT RTK_BUFFER *RtkBuffer,
     IN uint32_t                 Length
-    );
+);
 
 /**
     Remove a specified length data from the start of data buffer hold by specified rtk_buffer.
@@ -185,9 +191,9 @@ RtbAddHead(
 */
 unsigned char
 RtbRemoveHead(
-    IN OUT RTK_BUFFER* RtkBuffer,
+    IN OUT RTK_BUFFER *RtkBuffer,
     IN uint32_t                 Length
-    );
+);
 
 /**
     Add a specified length protocal header to the end of data buffer hold by specified rtk_buffer.
@@ -196,18 +202,18 @@ RtbRemoveHead(
     \param [IN]            Length                <uint32_t>                 : header length
     \return  Pointer to the first byte of the extra data is returned
 */
-EXTERN uint8_t*
+EXTERN uint8_t *
 RtbAddTail(
-    IN OUT RTK_BUFFER* RtkBuffer,
+    IN OUT RTK_BUFFER *RtkBuffer,
     IN uint32_t                 Length
-    );
+);
 
 /**
     Remove a specified length data from the end of data buffer hold by specified rtk_buffer.
 */
 EXTERN unsigned char
 RtbRemoveTail(
-    IN OUT RTK_BUFFER * RtkBuffer,
+    IN OUT RTK_BUFFER *RtkBuffer,
     IN     uint32_t       Length
 );
 
@@ -215,9 +221,9 @@ RtbRemoveTail(
     Initialize a rtb queue.
     \return  Initilized rtb queue if succeed, otherwise NULL
 */
-EXTERN RTB_QUEUE_HEAD*
+EXTERN RTB_QUEUE_HEAD *
 RtbQueueInit(
-    );
+);
 
 /**
     Free a rtb queue.
@@ -225,8 +231,8 @@ RtbQueueInit(
 */
 EXTERN void
 RtbQueueFree(
-    RTB_QUEUE_HEAD* RtkQueueHead
-    );
+    RTB_QUEUE_HEAD *RtkQueueHead
+);
 /**
     Queue specified RtkBuffer into a RtkQueue at list tail.
     \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
@@ -234,9 +240,9 @@ RtbQueueFree(
 */
 EXTERN void
 RtbQueueTail(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER*                 RtkBuffer
-    );
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER                 *RtkBuffer
+);
 
 /**
     Queue specified RtkBuffer into a RtkQueue at list Head.
@@ -245,29 +251,29 @@ RtbQueueTail(
 */
 EXTERN void
 RtbQueueHead(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER*                 RtkBuffer
-    );
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER                 *RtkBuffer
+);
 
 /**
     Remove a RtkBuffer from specified rtkqueue at list tail.
     \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
     \return    removed rtkbuffer if succeed, otherwise NULL
 */
-EXTERN RTK_BUFFER*
+EXTERN RTK_BUFFER *
 RtbDequeueTail(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead
-    );
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead
+);
 
 /**
     Remove a RtkBuffer from specified rtkqueue at list head.
     \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
     \return    removed rtkbuffer if succeed, otherwise NULL
 */
-EXTERN RTK_BUFFER*
+EXTERN RTK_BUFFER *
 RtbDequeueHead(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead
-    );
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead
+);
 
 /**
     Get current rtb queue's length.
@@ -276,8 +282,8 @@ RtbDequeueHead(
 */
 EXTERN signed long
 RtbGetQueueLen(
-    IN RTB_QUEUE_HEAD* RtkQueueHead
-    );
+    IN RTB_QUEUE_HEAD *RtkQueueHead
+);
 
 /**
     Empty the rtkqueue.
@@ -285,17 +291,17 @@ RtbGetQueueLen(
 */
 EXTERN void
 RtbEmptyQueue(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead
-    );
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead
+);
 
 /**
     Get the RtkBuffer which is the head of a RtkQueue
     \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
     \return head of the RtkQueue , otherwise NULL
 */
-EXTERN RTK_BUFFER*
+EXTERN RTK_BUFFER *
 RtbTopQueue(
-    IN RTB_QUEUE_HEAD* RtkQueueHead
+    IN RTB_QUEUE_HEAD *RtkQueueHead
 );
 
 /**
@@ -306,9 +312,9 @@ RtbTopQueue(
 */
 EXTERN void
 RtbInsertBefore(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER* pOldRtkBuffer,
-    IN RTK_BUFFER* pNewRtkBuffer
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER *pOldRtkBuffer,
+    IN RTK_BUFFER *pNewRtkBuffer
 );
 
 /**
@@ -316,8 +322,8 @@ RtbInsertBefore(
 */
 EXTERN unsigned char
 RtbNodeIsLast(
-    IN RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER*                 pRtkBuffer
+    IN RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER                 *pRtkBuffer
 );
 
 /**
@@ -327,10 +333,10 @@ RtbNodeIsLast(
     \param [IN]     RtkBuffer        <RTK_BUFFER*>        : Rtk buffer
     \return node after the specified buffer
 */
-EXTERN RTK_BUFFER*
+EXTERN RTK_BUFFER *
 RtbQueueNextNode(
-    IN RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER*                 pRtkBuffer
+    IN RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER                 *pRtkBuffer
 );
 
 /**
@@ -338,25 +344,25 @@ RtbQueueNextNode(
 */
 EXTERN bool
 RtbQueueIsEmpty(
-   IN RTB_QUEUE_HEAD* RtkQueueHead
+    IN RTB_QUEUE_HEAD *RtkQueueHead
 );
 
 //annie_tmp
 EXTERN unsigned char
 RtbCheckQueueLen(
-   IN RTB_QUEUE_HEAD* RtkQueueHead,
-   IN uint8_t Len
+    IN RTB_QUEUE_HEAD *RtkQueueHead,
+    IN uint8_t Len
 );
 
 EXTERN void
 RtbRemoveNode(
-    IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
-    IN RTK_BUFFER*         RtkBuffer
+    IN OUT RTB_QUEUE_HEAD *RtkQueueHead,
+    IN RTK_BUFFER         *RtkBuffer
 );
 
-EXTERN RTK_BUFFER*
-    RtbCloneBuffer(
-    IN RTK_BUFFER* pDataBuffer
-    );
+EXTERN RTK_BUFFER *
+RtbCloneBuffer(
+    IN RTK_BUFFER *pDataBuffer
+);
 
 #endif /*BT_SKBUFF_H*/

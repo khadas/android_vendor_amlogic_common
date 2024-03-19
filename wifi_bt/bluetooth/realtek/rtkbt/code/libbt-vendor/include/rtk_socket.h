@@ -42,7 +42,8 @@
 #define SCO_CTRL_PATH "/data/misc/bluedroid/.sco_ctrl"
 #define SCO_DATA_PATH "/data/misc/bluedroid/.sco_data"
 
-typedef enum {
+typedef enum
+{
     SCO_CTRL_CMD_NONE,
     SCO_CTRL_CMD_CHECK_READY,
     SCO_CTRL_CMD_OUT_START,
@@ -65,8 +66,7 @@ typedef enum {
 /******************************************************************************
 **  Constants & Macros
 ******************************************************************************/
-
-uint32_t Skt_Read(int fd, uint8_t *p_buf, uint32_t len, bool* condition);
+uint32_t Skt_Read(int fd, uint8_t *p_buf, uint32_t len, bool *condition);
 int Skt_Read_noblock(int fd, uint8_t *p_buf, uint32_t len);
 bool Skt_Send(int fd, uint8_t *p_buf, uint16_t msglen);
 int Skt_Send_noblock(int fd, uint8_t *p_buf, uint16_t msglen);

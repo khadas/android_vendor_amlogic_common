@@ -37,7 +37,7 @@ typedef struct Rtk_Socket_Data
     unsigned char           opcodeh;
     unsigned char           parameter_len;
     unsigned char           parameter[0];
-}Rtk_Socket_Data;
+} Rtk_Socket_Data;
 
 /*typedef struct
 {
@@ -49,7 +49,8 @@ typedef struct Rtk_Socket_Data
 } HC_BT_HDR;
 */
 const char shortOptions[] = "f:r:h";
-const struct option longOptions[] = {
+const struct option longOptions[] =
+{
     {"fullhcicmd",  required_argument,      NULL,   'f'},
     {"read",        required_argument,      NULL,   'r'},
     {"help",        no_argument,            NULL,   'h'},
@@ -59,73 +60,85 @@ const struct option longOptions[] = {
 static void usage(void)
 {
     fprintf(stderr, "Usage: rtkcmd [options]\n\n"
-         "Options:\n"
-         "-f | --fullhcicmd [opcode,parameter_len,parameter]    send hci cmd\n"
-         "-r | --read       [address]                           read register address \n"
-         "-h | --help                                           Print this message\n\n");
+            "Options:\n"
+            "-f | --fullhcicmd [opcode,parameter_len,parameter]    send hci cmd\n"
+            "-r | --read       [address]                           read register address \n"
+            "-h | --help                                           Print this message\n\n");
 }
 
-int Rtkbt_Sendcmd(int socketfd,char *p)
+int Rtkbt_Sendcmd(int socketfd, char *p)
 {
     char *token = NULL;
-    int i=0;
+    int i = 0;
     unsigned short OpCode = 0;
     unsigned char ParamLen = 0;
     unsigned char ParamLen_1 = 0;
     int sendlen = 0;
-    int params_count=0;
-    int ret=0;
+    int params_count = 0;
+    int ret = 0;
     Rtk_Socket_Data *p_buf = NULL;
 
-    token = strtok(p,",");
-    if (token != NULL) {
+    token = strtok(p, ",");
+    if (token != NULL)
+    {
         OpCode = strtol(token, NULL, 0);
         //printf("OpCode = %x\n",OpCode);
         params_count++;
-    } else {
+    }
+    else
+    {
         //ret = FUNCTION_PARAMETER_ERROR;
         printf("parameter error\n");
         return -1;
     }
 
     token = strtok(NULL, ",");
-    if (token != NULL) {
+    if (token != NULL)
+    {
         ParamLen = strtol(token, NULL, 0);
         //printf("ParamLen = %d\n",ParamLen);
         params_count++;
-    } else {
+    }
+    else
+    {
         printf("parameter error\n");
         return -1;
     }
 
-    p_buf=(Rtk_Socket_Data *)malloc(sizeof(Rtk_Socket_Data) + sizeof(char)*ParamLen);
+    p_buf = (Rtk_Socket_Data *)malloc(sizeof(Rtk_Socket_Data) + sizeof(char) * ParamLen);
     p_buf->type = 0x01;
-    p_buf->opcodeh = OpCode>>8;
-    p_buf->opcodel = OpCode&0xff;
+    p_buf->opcodeh = OpCode >> 8;
+    p_buf->opcodel = OpCode & 0xff;
     p_buf->parameter_len = ParamLen;
 
     ParamLen_1 = ParamLen;
-    while (ParamLen_1--) {
+    while (ParamLen_1--)
+    {
         token = strtok(NULL, ",");
-        if (token != NULL) {
+        if (token != NULL)
+        {
             p_buf->parameter[i++] = strtol(token, NULL, 0);
             params_count++;
-        } else {
+        }
+        else
+        {
             printf("parameter error\n");
             free(p_buf);
             return -1;
         }
     }
 
-    if (params_count != ParamLen + 2) {
+    if (params_count != ParamLen + 2)
+    {
         printf("parameter error\n");
         free(p_buf);
         return -1;
     }
 
-    sendlen=sizeof(Rtk_Socket_Data)+sizeof(char)*p_buf->parameter_len;
-    ret=write(socketfd,p_buf,sendlen);
-    if(ret!=sendlen){
+    sendlen = sizeof(Rtk_Socket_Data) + sizeof(char) * p_buf->parameter_len;
+    ret = write(socketfd, p_buf, sendlen);
+    if (ret != sendlen)
+    {
         free(p_buf);
         return -1;
     }
@@ -142,35 +155,44 @@ int Rtkbt_Getevent(int sock_fd)
     unsigned char len = 0;
     unsigned char *recvbuf = NULL;
     unsigned char tot_len = 0;
-    int ret=0;
+    int ret = 0;
     int i;
 
     ret = read(sock_fd, &type, 1);
-    if(ret <= 0)
+    if (ret <= 0)
+    {
         return -1;
+    }
 
     ret = read(sock_fd, &event, 1);
-    if(ret <= 0)
+    if (ret <= 0)
+    {
         return -1;
+    }
 
     ret = read(sock_fd, &len, 1);
-    if(ret <= 0)
+    if (ret <= 0)
+    {
         return -1;
+    }
 
     tot_len = len + 2;
-    recvbuf=(unsigned char *)malloc(sizeof(char)*tot_len);
+    recvbuf = (unsigned char *)malloc(sizeof(char) * tot_len);
     recvbuf[0] = event;
     recvbuf[1] = len;
-    ret = read(sock_fd,recvbuf+2,len);
-    if(ret < len){
+    ret = read(sock_fd, recvbuf + 2, len);
+    if (ret < len)
+    {
         free(recvbuf);
         return -1;
     }
 
     printf("Event: ");
-    for(i=0;i<tot_len-1;i++)
-        printf("0x%02x ",recvbuf[i]);
-    printf("0x%02x\n",recvbuf[tot_len-1]);
+    for (i = 0; i < tot_len - 1; i++)
+    {
+        printf("0x%02x ", recvbuf[i]);
+    }
+    printf("0x%02x\n", recvbuf[tot_len - 1]);
 
     free(recvbuf);
     return 0;
@@ -184,18 +206,18 @@ int socketinit()
     memset(&un, 0, sizeof(un));            /* fill socket address structure with our address */
     un.sun_family = AF_UNIX;
     strcpy(un.sun_path, UNIX_DOMAIN);
-    un.sun_path[0]=0;
+    un.sun_path[0] = 0;
     len = offsetof(struct sockaddr_un, sun_path) + strlen(UNIX_DOMAIN);
 
-    sock_fd= socket(AF_UNIX, SOCK_STREAM, 0);
-    if(sock_fd<0)
+    sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sock_fd < 0)
     {
-        printf("socket failed %s\n",strerror(errno));
+        printf("socket failed %s\n", strerror(errno));
         return -1;
     }
-    if(connect(sock_fd,(struct sockaddr *)&un, len)<0)
+    if (connect(sock_fd, (struct sockaddr *)&un, len) < 0)
     {
-        printf("connect failed %s\n",strerror(errno));
+        printf("connect failed %s\n", strerror(errno));
         close(sock_fd);
         return -1;
     }
@@ -203,7 +225,7 @@ int socketinit()
     return sock_fd;
 }
 
-int main(int argc , char* argv[])
+int main(int argc, char *argv[])
 {
     int index;
     int c;
@@ -211,7 +233,7 @@ int main(int argc , char* argv[])
     int socketfd;
 
     socketfd = socketinit();
-    if(socketfd<0)
+    if (socketfd < 0)
     {
         printf("socketinit failed\n");
         exit(0);
@@ -219,32 +241,34 @@ int main(int argc , char* argv[])
 
     c = getopt_long(argc, argv, shortOptions, longOptions, &index);
 
-    if(c==-1)
+    if (c == -1)
     {
         usage();
     }
     else
     {
-        switch(c)
+        switch (c)
         {
-            case 'f':
+        case 'f':
             {
-                printf("Hcicmd %s\n",optarg);
-                ret = Rtkbt_Sendcmd(socketfd,optarg);
-                if(ret>=0)
+                printf("Hcicmd %s\n", optarg);
+                ret = Rtkbt_Sendcmd(socketfd, optarg);
+                if (ret >= 0)
                 {
-                    if(Rtkbt_Getevent(socketfd)<0)
+                    if (Rtkbt_Getevent(socketfd) < 0)
+                    {
                         printf("Getevent fail\n");
+                    }
                 }
                 break;
             }
-            case 'r':
+        case 'r':
             {
-                printf("read register %s\n",optarg);
+                printf("read register %s\n", optarg);
                 //Rtkbt_Readreg(socketfd,optarg);
                 break;
             }
-            case 'h':
+        case 'h':
             {
                 usage();
                 break;
