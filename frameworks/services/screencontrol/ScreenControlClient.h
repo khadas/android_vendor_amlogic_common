@@ -160,6 +160,8 @@ public:
 
     int32_t startMicroDim(int32_t width, int32_t height);
 
+    void setExtraInt32Config(const std::map<std::string, int32_t>& config);
+
     Return<void> onAvcDataArouse(const hidl_memory &mem,int32_t size, int32_t frame_type,int64_t pts);
 
     Return<void> onYuvDataArouse(const hidl_memory &mem,int32_t size);

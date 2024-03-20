@@ -74,10 +74,10 @@ TSPacker::~TSPacker() {
     }
 }
 
-bool TSPacker::start(std::unique_ptr<ESConvertorParmeter>& input) {
+bool TSPacker::start(std::unique_ptr<ESConvertorParmeter>& input, AMediaFormat *format) {
     std::lock_guard<std::mutex> lock(mLock);
     mConvertor = std::make_unique<ESConvertor>();
-    if (!mConvertor->start(input,this)) {
+    if (!mConvertor->start(input,this,format)) {
         ALOGE("[%s %d] ESConvertor start fail", __FUNCTION__, __LINE__);
         return false;
     }

@@ -33,6 +33,7 @@ namespace implementation {
     using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControlCallback;
     using ::vendor::amlogic::hardware::screencontrol::V1_0::Result;
     using ::android::hardware::hidl_string;
+    using ::android::hardware::hidl_vec;
     using ::android::hardware::Return;
     using ::android::hardware::Void;
     using ::android::sp;
@@ -55,6 +56,9 @@ public:
     Return<Result> startAvcRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
                                         int32_t frameRate, int32_t bitRate, int32_t sourceType) override;
     Return<void> forceStop();
+
+    Return<void> setExtraInt32Config(const hidl_vec<hidl_string>& keys,const hidl_vec<int32_t>& values);
+
     //avc record callback
     void onEsBufferAvailable(void*data, int32_t size, int32_t frame_type, int64_t pts);
 
@@ -86,6 +90,7 @@ private:
             sp<ScreenControlHal> mScreenControlHal;
     };
     sp<DeathRecipient> mDeathRecipient;
+    AMediaFormat* mEncoderFormat;
 };//ScreenControl
 } //namespace implementation
 }//namespace V1_0

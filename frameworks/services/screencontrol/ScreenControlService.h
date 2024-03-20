@@ -51,7 +51,6 @@ class ScreenControlService : public ESConvertor::ESConvertorCallback,
                              public ScreenManager::ScreenMangerCallback {
 
 public:
-    static void instantiate();
     static ScreenControlService* getInstance();
     ScreenControlService();
     virtual ~ScreenControlService();
@@ -72,6 +71,8 @@ public:
 
     int32_t startMicroDim(int32_t width, int32_t height);
 
+    void setExtreConfig(AMediaFormat *format);
+
     void onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts);
 
     void PictureReady(const OutputRecord &output);
@@ -88,6 +89,7 @@ private:
     wp<ScreenControlNotify> mNotifyListener;
     std::unique_ptr<ESConvertor> mConvertor;
     ScreenManager* mScreenManager;
+    AMediaFormat* mEncoderFormat;
 };
 
 // ----------------------------------------------------------------------------

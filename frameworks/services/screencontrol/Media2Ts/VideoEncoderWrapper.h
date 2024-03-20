@@ -51,7 +51,7 @@ public:
     };
     VideoEncoderWrapper(VideoEncoderWrapperCallback * client);
     virtual ~VideoEncoderWrapper();
-    bool init(int32_t width, int32_t height, int32_t bit_rate, int32_t frame_rate, int32_t i_frame_interval = 0);
+    bool init(AMediaFormat* format);
     bool encodec(void* data,const int32_t size,const int64_t pts);
     bool stop();
     bool isSoftwareEncoder() { return mIsSoftwareEncoder;}

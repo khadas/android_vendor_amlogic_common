@@ -38,4 +38,6 @@ interface IScreenControl {
 
     forceStop();
 
+    setExtraInt32Config(vec<string> keys, vec<int32_t> values);
+
 };
