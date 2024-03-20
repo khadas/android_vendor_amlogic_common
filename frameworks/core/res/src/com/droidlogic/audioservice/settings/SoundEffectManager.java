@@ -512,7 +512,12 @@ public class SoundEffectManager {
 
     public boolean isDtsVXValid() {
         File fl = new File("/vendor/lib/soundfx/libvx.so");
-        return fl.exists();
+        if (fl.exists()) {
+            return true;
+        }
+
+        File flv = new File("/vendor/lib/soundfx/libvxv4.so");
+        return flv.exists();
     }
 
     public void setDtsVirtualXMode(int virtualXMode) {
