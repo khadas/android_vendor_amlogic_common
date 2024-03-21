@@ -94,6 +94,7 @@ public class NetflixService extends Service {
     private static final String LOST_STANDBY_NOW = "standby_now";
     private static final String TEMP_HDR = "temp_hdr";
     private final String NDRP_CEC_STATUS = "nrdp_video_platform_capabilities";
+    private final String HDR_COVERSION_MODE = "hdr_conversion_mode";
 
     private static final String STR_ALWAYS = "0";
     private static final String STR_ADAPTIVE = "1";
@@ -118,6 +119,7 @@ public class NetflixService extends Service {
     private DisplayManager mDisplayManager;
     private SettingsObserver mSettingsObserver;
     private CecStatusObserver mCecStatusObserver;
+    private HdrStatusObserver mHdrStatusObserver;
     private OutputModeManager mOutputModeManager = null;
     private final Object mLock = new Object();
     private IActivityManager mIActivityManager;
@@ -182,6 +184,17 @@ public class NetflixService extends Service {
             cr.notifyChange(Settings.Global.getUriFor(settingsNote), null,
                 ContentResolver.NOTIFY_NO_DELAY);
             Log.i(TAG,"notify activeness changes without delay");
+        }
+    }
+
+    private class HdrStatusObserver extends ContentObserver {
+        public HdrStatusObserver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri, int flags) {
+            updateHdrSettings();
         }
     }
 
@@ -256,6 +269,7 @@ public class NetflixService extends Service {
         registerReceiver(mHPReceiver, filter, mContext.RECEIVER_EXPORTED);
         refreshAudioCapabilities(true);
 
+        updateHdrSettings();
         mSettingsObserver = new SettingsObserver(new Handler());
         getContentResolver().registerContentObserver(Settings.Global.getUriFor(OutputModeManager.DIGITAL_AUDIO_FORMAT),
                 false, mSettingsObserver);
@@ -264,6 +278,10 @@ public class NetflixService extends Service {
         mCecStatusObserver = new CecStatusObserver(new Handler());
         getContentResolver().registerContentObserver(Settings.Global.getUriFor(NDRP_CEC_STATUS),
                 false, mCecStatusObserver);
+
+        mHdrStatusObserver = new HdrStatusObserver(new Handler());
+        getContentResolver().registerContentObserver(Settings.Global.getUriFor(HDR_COVERSION_MODE),
+                false, mHdrStatusObserver);
 
         startNetflixIfNeed();
 
@@ -323,7 +341,13 @@ public class NetflixService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-
+    private void updateHdrSettings() {
+        if (mDisplayManager.getHdrConversionMode().getConversionMode() == HdrConversionMode.HDR_CONVERSION_PASSTHROUGH) {
+            setHDRSettingspolicy("playback");
+        } else {
+            setHDRSettingspolicy("always");
+        }
+    }
 
     private void resetDisplayConversionMode(){
          if (mDisplayManager.getHdrConversionMode().getConversionMode() != HdrConversionMode.HDR_CONVERSION_SYSTEM)
@@ -602,6 +626,23 @@ public class NetflixService extends Service {
                 atmosObject.put("enabled", enabled);
                 Settings.Global.putString(getContentResolver(), NRDP_AUDIO_PLATFORM_CAP, rootObject.toString());
             }
+        } catch (org.json.JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setHDRSettingspolicy(String hdrOutputType) {
+        // Refer to /vendor/etc/nrdp_platform_capabilities.json
+        String platformCap = Settings.Global.getString(getContentResolver(), NRDP_PLATFORM_CAP);
+        if (platformCap == null)
+            return;
+
+        try {
+            JSONObject rootObject = new JSONObject(platformCap);
+            Log.i(TAG, "set hdrOutputType to "+ hdrOutputType);
+            rootObject.put("hdrOutputType", hdrOutputType);
+            Settings.Global.putString(getContentResolver(), NRDP_PLATFORM_CAP, rootObject.toString());
+
         } catch (org.json.JSONException e) {
             e.printStackTrace();
         }
