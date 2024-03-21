@@ -57,6 +57,8 @@ Ubootenv::~Ubootenv() {
         pTmp = pAttr;
         pAttr = pAttr->next;
         free(pTmp);
+        free(pTmp->key);
+        free(pTmp->value);
     }
 }
 
@@ -156,6 +158,8 @@ int Ubootenv::reInit() {
        pTmp = pAttr;
        pAttr = pAttr->next;
        free(pTmp);
+       free(pTmp->key);
+       free(pTmp->value);
    }
    init();
 
@@ -317,24 +321,50 @@ exit:
 env_attribute* Ubootenv::parseAttribute() {
     char *proc = mEnvData.data;
     char *nextProc;
+    char *value_tmp;
     env_attribute *attr = &mEnvAttrHeader;
 
     memset(attr, 0, sizeof(env_attribute));
 
     do {
         nextProc = proc + strlen(proc) + sizeof(char);
-        //SYS_LOGV("process %s\n",proc);
+        SYS_LOGV("parseAttribute: %s\n", proc);
         char *key = strchr(proc, (int)'=');
         if (key != NULL) {
             *key=0;
-            strcpy(attr->key, proc);
-            strcpy(attr->value, key + sizeof(char));
+            attr->key = (char *)malloc(strlen(proc) + sizeof(char)*3);
+            if (attr->key == NULL) {
+                SYS_LOGE("[ubootenv] value malloc error \n");
+                if (!(*nextProc)) {
+                    break;
+                }
+                proc = nextProc;
+                continue;
+            } else {
+                memset(attr->key, 0, strlen(proc) + sizeof(char)*3);
+                strcpy(attr->key, proc);
+            }
+
+            value_tmp = key + sizeof(char);
+            attr->value = (char *)malloc(strlen(value_tmp) + sizeof(char)*3);
+            if (attr->value == NULL) {
+                SYS_LOGE("[ubootenv] key malloc error \n");
+                if (!(*nextProc)) {
+                    break;
+                }
+                proc = nextProc;
+                continue;
+            } else {
+                memset(attr->value, 0, strlen(value_tmp) + sizeof(char)*3);
+                strcpy(attr->value, key + sizeof(char));
+            }
+
+            SYS_LOGV("parseAttribute: key:%s value:%s\n", attr->key, attr->value);
         } else {
             SYS_LOGE("[ubootenv] error need '=' skip this value\n");
         }
 
         if (!(*nextProc)) {
-            //SYS_LOGV("process end \n");
             break;
         }
         proc = nextProc;
@@ -387,11 +417,34 @@ int Ubootenv::set(const char * key,  const char * value, bool createNew) {
         SYS_LOGV("[ubootenv] ubootenv.var.%s not found, create it.\n", key);
 
         attr = (env_attribute *)malloc(sizeof(env_attribute));
-        last->next = attr;
-        memset(attr, 0, sizeof(env_attribute));
-        strcpy(attr->key, key);
-        strcpy(attr->value, value);
-        return 1;
+        if (attr != NULL) {
+            memset(attr, 0, sizeof(env_attribute));
+            attr->key = (char *)malloc(strlen(key) + sizeof(char)*3);
+            if (attr->key != NULL) {
+                memset(attr->key, 0, strlen(key) + sizeof(char)*3);
+                strcpy(attr->key, key);
+            } else {
+                free(attr);
+                SYS_LOGE("[ubootenv] set key malloc error \n");
+                return 0;
+            }
+
+            attr->value = (char *)malloc(strlen(value) + sizeof(char)*3);
+            if (attr->value != NULL) {
+                memset(attr->value, 0, strlen(value) + sizeof(char)*3);
+                strcpy(attr->value, value);
+            } else {
+                free(attr);
+                free(attr->key);
+                SYS_LOGE("[ubootenv] set value malloc error \n");
+                return 0;
+            }
+
+            last->next = attr;
+            return 1;
+        } else {
+            SYS_LOGE("[ubootenv] set malloc error \n");
+        }
     }
     return 0;
 }
