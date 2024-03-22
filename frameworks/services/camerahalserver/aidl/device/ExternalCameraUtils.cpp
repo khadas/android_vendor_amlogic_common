@@ -62,7 +62,7 @@ aidl::android::hardware::camera::common::Status importBufferImpl(
 
         if (importedBuf == nullptr) {
             ALOGE("%s: output buffer for stream %d is invalid!", __FUNCTION__, streamId);
-            return Status::INTERNAL_ERROR;
+            return Status::ILLEGAL_ARGUMENT;
         } else {
             cbs[bufId] = importedBuf;
         }

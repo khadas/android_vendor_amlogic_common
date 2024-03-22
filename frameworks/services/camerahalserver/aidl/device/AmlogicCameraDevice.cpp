@@ -76,6 +76,7 @@ Status AmlogicCameraDevice::initStatus() const {
 }
 
 Status AmlogicCameraDevice::getAidlStatus(int status) {
+
     switch (status) {
         case 0: return Status::OK;
         case -ENOSYS: return Status::OPERATION_NOT_SUPPORTED;
@@ -170,8 +171,36 @@ ndk::ScopedAStatus AmlogicCameraDevice::getResourceCost(CameraResourceCost* _aid
 ndk::ScopedAStatus AmlogicCameraDevice::isStreamCombinationSupported(
         const StreamConfiguration& in_streams, bool* _aidl_return) {
     ALOGE("%d", in_streams.streamConfigCounter);
-    *_aidl_return = false;
-    return fromStatus(Status::OPERATION_NOT_SUPPORTED);
+    Status status;
+    status_t res;
+    camera_stream_combination_t streamComb{};
+    streamComb.operation_mode = static_cast<uint32_t> (in_streams.operationMode);
+    streamComb.num_streams = in_streams.streams.size();
+    camera_stream_t *streamBuffer  = new camera_stream_t[streamComb.num_streams];
+    size_t i = 0;
+    for (const auto &it : in_streams.streams) {
+
+        if (it.useCase != aidl::android::hardware::camera::metadata::ScalerAvailableStreamUseCases::ANDROID_SCALER_AVAILABLE_STREAM_USE_CASES_DEFAULT) {
+            *_aidl_return = false;
+            return fromStatus(Status::OK);
+        }
+
+        streamBuffer[i].stream_type = static_cast<int> (it.streamType);
+        streamBuffer[i].width = it.width;
+        streamBuffer[i].height = it.height;
+        streamBuffer[i].format = static_cast<int> (it.format);
+        streamBuffer[i].data_space = static_cast<android_dataspace_t> (it.dataSpace);
+        streamBuffer[i].usage = static_cast<uint32_t> (it.usage);
+        streamBuffer[i].physical_camera_id = it.physicalCameraId.c_str();
+        streamBuffer[i++].rotation = static_cast<int> (it.rotation);
+    }
+    streamComb.streams = streamBuffer;
+    res = mModule->isStreamCombinationSupported(mCameraIdInt, &streamComb);
+
+    status = getAidlStatus(res);
+    delete [] streamBuffer;
+    *_aidl_return = status == Status::OK;
+    return fromStatus(Status::OK);
 }
 
 ndk::ScopedAStatus AmlogicCameraDevice::open(
