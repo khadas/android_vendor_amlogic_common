@@ -187,10 +187,13 @@ static const dev_info bt_dev_sdio[] = {
     {{0x0e8d, 0x7603}, "mtk7661s",     MTK_VND_LIB,   "btmtksdio",       POWER_EVENT_EN},
     // amlogic sdio modules
     {{0x8888, 0x8888}, "aml_w1",       AML_VND_LIB,   "",                POWER_EVENT_EN},
-    {{0x1B8E, 0x0500}, "aml_w1u_s",    AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0540}, "aml_w1u_s",    AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0600}, "aml_w2_s",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0640}, "aml_w2_s",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x0500}, "aml_w1u_s",    AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0540}, "aml_w1u_s",    AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0600}, "aml_w2_s",     AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0640}, "aml_w2_s",     AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0800}, "aml_w2l_s",    AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0810}, "aml_w2l_s",    AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0808}, "aml_w2l_s",    AML_VND_LIB,   "",                POWER_EVENT_DEF},
     // nxp sdio modules
     {{0x02DF, 0x9149}, "nxp8987",      NXP_VND_LIB,   "",                POWER_EVENT_RESET},
     {{0x02DF, 0x9141}, "nxp8997",      NXP_VND_LIB,   "",                POWER_EVENT_RESET},
