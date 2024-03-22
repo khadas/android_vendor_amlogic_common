@@ -529,19 +529,18 @@ bool FrameRateAutoAdaption::afrInDLG(std::string customStr, int frameValue, bool
     for (iter = modelist.begin(); iter != modelist.end(); iter++) {
         SYS_LOGD("afrInDLG frameRate %d mode %d %s",frameValue,iter->first,iter->second.c_str());
         if ((int)(iter->first/100) % (int)(VIDEORATE/frameValue) == 0) {
+            DisplayModeMgr::getInstance().getModeDetail(iter->second.c_str(),width,height);
             if (frameOnly) {
                 if (isRestore) {
                     SYS_LOGD("restore framerate");
                     DisplayModeMgr::getInstance().setFrameRate(0,
                             "outputDispatch afrInDLG");
-            }else {
-                    SYS_LOGD("framerateOnly %d %s",iter->first,iter->second.c_str());
-                    DisplayModeMgr::getInstance().setFrameRate((iter->first)/100.0f,
-                            "outputDispatch afrInDLG");
-            }
+                }else {
+                        SYS_LOGD("framerateOnly %d %s",iter->first,iter->second.c_str());
+                        switch144Special(width, height, (int)((iter->first)));
+                }
             }else {
                 SYS_LOGD("setDisplayMode %d %s and restore %d",iter->first,iter->second.c_str(),isRestore);
-                DisplayModeMgr::getInstance().getModeDetail(iter->second.c_str(),width,height);
                 SYS_LOGD("mgr update name to size %dx%d",width,height);
                 if (width >0 && height >0) {
                     if (height == 1080) width = width/2;
@@ -557,6 +556,24 @@ bool FrameRateAutoAdaption::afrInDLG(std::string customStr, int frameValue, bool
     }
     return false;
 }
+
+bool FrameRateAutoAdaption::switch144Special(int width, int height, int framerate) {
+    SYS_LOGD("switch144Special update name to size %dx%dp%dhz",width,height,framerate);
+    char curDisplayMode[MODE_LEN] = {0};
+    DisplayModeMgr::getInstance().getDisplayMode(curDisplayMode, MODE_LEN);
+    bool currentIs144 = false;
+    if ((strstr(curDisplayMode,"144") != NULL) || (strstr(curDisplayMode,"288") != NULL)) {
+        currentIs144 = true;
+    }
+    if ((!currentIs144 && ((framerate/100) %144 == 0)) || (currentIs144 && ((framerate/100) %144 != 0))) {
+        mHdmiCallback->setActiveModeRemote(width,height,framerate);
+    }else {
+        DisplayModeMgr::getInstance().setFrameRate(framerate/100.0f,
+                            "outputDispatch switch144Special");
+    }
+    return true;
+}
+
 bool FrameRateAutoAdaption::enter4k1k(int framerate) {
     char curDisplayMode[MODE_LEN] = {0};
     DisplayModeMgr::getInstance().getDisplayMode(curDisplayMode, MODE_LEN);
@@ -593,18 +610,19 @@ bool FrameRateAutoAdaption::freesyncFrame(int frameRate) {
     int width = 0;
     int height = 0;
     for (iter = modelist.begin(); iter != modelist.end(); iter++) {
+        DisplayModeMgr::getInstance().getModeDetail(iter->second.c_str(),width,height);
         SYS_LOGD("freesyncFrame modelist  %s, iter->first %d",iter->second.c_str(),iter->first);
         if ((int)(iter->first/100) == (int)(VIDEORATE/frameRate) && iter->second.find(str) == std::string::npos) {
             SYS_LOGD("freesyncFrame change display mode %s",iter->second.c_str());
-            DisplayModeMgr::getInstance().getModeDetail(iter->second.c_str(),width,height);
             if (width >0 && height >0) {
                 mHdmiCallback->setActiveModeRemote(width,height,(int)(iter->first));
             }
             return true;
         }else  if ((int)(iter->first/100) == (int)(VIDEORATE/frameRate)) {
             SYS_LOGD("freesyncFrame set rate only %s",iter->second.c_str());
-            DisplayModeMgr::getInstance().setFrameRate((iter->first)/100.0f,
-                            "outputDispatch freesync");
+            switch144Special(width, height, (int)((iter->first)));
+           // DisplayModeMgr::getInstance().setFrameRate((iter->first)/100.0f,
+            //                "outputDispatch freesync");
     return false;
         }
     }
@@ -703,11 +721,15 @@ bool FrameRateAutoAdaption::afrOnly(int frameValue) {
         modelist.insert(vt(p->first, p->second));
     }
     std::multimap<int, std::string, std::greater<int>>::iterator iter;
+    int width = 0;
+    int height = 0;
     for (iter = modelist.begin(); iter != modelist.end(); iter++) {
         if (((int)(iter->first/100) % (int)(VIDEORATE/frameValue) ==0) ) {
             SYS_LOGD("afr only change set framerate %s %d",iter->second.c_str(),iter->first);
-            DisplayModeMgr::getInstance().setFrameRate((iter->first)/100.0f,
-                            "outputDispatch afr only");
+           // DisplayModeMgr::getInstance().setFrameRate((iter->first)/100.0f,
+            //                "outputDispatch afr only");
+            DisplayModeMgr::getInstance().getModeDetail(iter->second.c_str(),width,height);
+            switch144Special(width,height,(int)((iter->first)));
             return true;
         }
     }

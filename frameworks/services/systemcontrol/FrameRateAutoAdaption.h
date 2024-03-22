@@ -145,6 +145,7 @@ private:
     bool frameRateIsFloat(int framerate);
     bool afrInDLG(std::string customStr, int frameValue,bool frameOnly);
     bool enter4k1k(int framerate);
+    bool switch144Special(int width, int height, int framerate);
     bool backFrom4k1k(int frameRate);
     int mVdinEventFd;
     Callback *mHdmiCallback;
