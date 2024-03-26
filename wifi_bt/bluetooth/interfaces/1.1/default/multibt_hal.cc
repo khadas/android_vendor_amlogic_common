@@ -180,6 +180,7 @@ static const dev_info bt_dev_pci[] = {
 static const dev_info bt_dev_sdio[] = {
     // broadcom sdio modules
     {{0x02D0, 0x4359}, "ap6398s",      BCM_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x02D0, 0xaaec}, "ap6276s",      BCM_VND_LIB,   "",                POWER_EVENT_RESET},
     // realtek sdio modules
     {{0x024C, 0xC822}, "rtl8822cs",    RTK_VND_LIB,   "",                POWER_EVENT_RESET},
     // mediatek sdio modules
@@ -231,10 +232,13 @@ static const dev_info bt_dev_usb[] = {
     {{0x0e8d, 0x7668}, "mtk7668u",     MTK_VND_LIB,   "btmtk_usb",       POWER_EVENT_EN},
     {{0x0e8d, 0x7961}, "mtk7920u",     MT792_VND_LIB, "btmtk_usb_unify", POWER_EVENT_RESET},
     // amlogic usb modules
-    {{0x1B8E, 0x4C55}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0541}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x4C55}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_EN},
+    {{0x1B8E, 0x0541}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_EN},
     {{0x1B8E, 0x0601}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_EN},
     {{0x1B8E, 0x0641}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_EN},
+    {{0x1B8E, 0x0801}, "aml_w2l_u",    AML_VND_LIB,   "",                POWER_EVENT_EN},
+    {{0x1B8E, 0x0809}, "aml_w2l_u",    AML_VND_LIB,   "",                POWER_EVENT_EN},
+    {{0x1B8E, 0x0811}, "aml_w2l_u",    AML_VND_LIB,   "",                POWER_EVENT_EN},
 };
 
 /******************************************************************************
