@@ -208,6 +208,7 @@ typedef enum vpp_memc_mode_e {
     VPP_MEMC_MODE_LOW,
     VPP_MEMC_MODE_MID,
     VPP_MEMC_MODE_HIGH,
+    VPP_MEMC_MODE_USER,
     VPP_MEMC_MODE_MAX,
 } vpp_memc_mode_t;
 
