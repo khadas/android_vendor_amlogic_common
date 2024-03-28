@@ -23,14 +23,12 @@
 #include <hidl/HidlBinderSupport.h>
 #include "ScreenControlService.h"
 
-#include "ScreenControlHal.h"
 
 #define TIMEOUT_VAL  2 * 1000 * 1000 //2s
 
 
 
-using android::hardware::LazyServiceRegistrar;
-using ::vendor::amlogic::hardware::screencontrol::V1_0::implementation::ScreenControlHal;
+
 using ::android::hidl::base::V1_0::IBase;
 
 namespace android {
@@ -90,11 +88,16 @@ ScreenControlService::ScreenControlService():
                     mMicroHeight(0),
                     mYuvRecordId(-1),
                     mConvertor(nullptr),
-                    mScreenManager(nullptr) {
+                    mScreenManager(nullptr),
+                    mEncoderFormat(nullptr) {
 }
 
 ScreenControlService::~ScreenControlService() {
     ALOGI("~ScreenControlService");
+    if (mEncoderFormat) {
+        AMediaFormat_delete(mEncoderFormat);
+        mEncoderFormat = nullptr;
+    }
 }
 
 ScreenControlService* ScreenControlService::getInstance() {
@@ -103,17 +106,6 @@ ScreenControlService* ScreenControlService::getInstance() {
 }
 
 
-
-void ScreenControlService::instantiate() {
-    android::status_t ret;
-    ret = LazyServiceRegistrar::getInstance().registerService(
-        new ScreenControlHal(ScreenControlService::getInstance()), "default");
-    if (ret != android::OK) {
-        ALOGE("Couldn't register screen_control service!");
-    }
-    ALOGI("instantiate add service result:%d", ret);
-
-}
 void ScreenControlService::setListener(const sp<ScreenControlNotify>& listener) {
     ALOGI("setListener ");
     mNotifyListener = listener;
@@ -184,6 +176,7 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
     Mutex::Autolock autoLock(mLock);
     int32_t video_dump_size = 0;
     int64_t mFirstPts = 0;
+    bool ret = false;
     int32_t fd = open(filename, O_CREAT | O_RDWR, 0666);
     if (fd < 0 ) {
         ALOGE("[%s %d] the file : %s can't open  reason:%s", __FUNCTION__, __LINE__,filename,strerror(errno));
@@ -196,7 +189,10 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
     parmeter->source_type = sourceType;
     parmeter->frame_rate = frameRate;
     parmeter->bit_rate_ = bitRate;
-    if (!tspacker->start(parmeter)) {
+    ret =  tspacker->start(parmeter,mEncoderFormat);
+    AMediaFormat_delete(mEncoderFormat);
+    mEncoderFormat = nullptr;
+    if (!ret) {
         ALOGE("[%s %d] TSPacker start fail !!", __FUNCTION__, __LINE__);
         close(fd);
         return !OK;
@@ -207,7 +203,7 @@ int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32
         uint8_t * buffer = nullptr;
         int32_t size = 0;
         int64_t pts = 0;
-        bool ret = tspacker->readBuffer(&buffer,&size,&pts);
+        ret = tspacker->readBuffer(&buffer,&size,&pts);
         if (!ret || !buffer || size <= 0 || pts <= 0) {
             int64_t nowUs = getNowTimesUs();
             int64_t diff = nowUs -firsetNowUs;
@@ -243,6 +239,7 @@ int32_t ScreenControlService::startAvcRecord(int32_t left, int32_t top, int32_t 
     ALOGI("[%s] left:%d, top:%d, right:%d, bottom:%d, width:%d, height:%d, sourceType:%d,frameRate=%d,bitRate=%d",
                 __func__, left, top, right, bottom, width, height, sourceType,frameRate,bitRate);
     Mutex::Autolock autoLock(mLock);
+    int32_t ret = OK;
     mConvertor = std::make_unique<ESConvertor>();
     auto parmeter = std::make_unique<ESConvertorParmeter>();
     parmeter->size = std::make_unique<Size>(width,height);
@@ -250,12 +247,13 @@ int32_t ScreenControlService::startAvcRecord(int32_t left, int32_t top, int32_t 
     parmeter->source_type = sourceType;
     parmeter->frame_rate = frameRate;
     parmeter->bit_rate_ = bitRate;
-    if (!mConvertor->start(parmeter,this)) {
+    if (!mConvertor->start(parmeter,this,mEncoderFormat)) {
         ALOGE("[%s %d] ESConvertor start fail", __FUNCTION__, __LINE__);
-        return !OK;
+        ret = !OK;
     }
-
-    return OK;
+    AMediaFormat_delete(mEncoderFormat);
+    mEncoderFormat = nullptr;
+    return ret;
 }
 
 void ScreenControlService::onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts) {
@@ -299,6 +297,18 @@ int32_t ScreenControlService::startMicroDim(int32_t width, int32_t height) {
     mMicroWidth = width;
     mMicroHeight = height;
     return OK;
+}
+
+void ScreenControlService::setExtreConfig(AMediaFormat *format) {
+    Mutex::Autolock autoLock(mLock);
+    if (!format)
+        return;
+    if (mEncoderFormat) {
+        AMediaFormat_delete(mEncoderFormat);
+        mEncoderFormat = nullptr;
+    }
+    mEncoderFormat = format;
+    ALOGD("[%s %d] mEncoderFormat: %s", __FUNCTION__, __LINE__, AMediaFormat_toString(mEncoderFormat));
 }
 
 void ScreenControlService::PictureReady(const OutputRecord &output) {

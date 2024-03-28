@@ -98,6 +98,14 @@
 #endif
 #endif // (BT_WAKE_VIA_USERIAL_IOCTL==TRUE)
 
+#define BLE_SCAN_SLOW_INT_1     144  /* 90 ms = 144 * 0.625 */
+#define BLE_SCAN_SLOW_WIN_1     16   /* 10 ms = 16 * 0.625 */
+
+#define BLE_CONN_INT_MIN_DEF    6   /* 7.5 ms = 6  * 1.25 */
+#define BLE_CONN_INT_MAX_DEF    12  /* 15 ms = 12 * 1.25 */
+
+#define PATCH_DATA_FIELD_MAX_SIZE       252
+
 /******************************************************************************
 **  Type definitions
 ******************************************************************************/
@@ -109,7 +117,56 @@ typedef struct
     uint8_t hw_fctrl; /*hardware flowcontrol*/
 } tUSERIAL_CFG;
 
-typedef enum {
+typedef struct
+{
+    uint8_t start_filter_idx;
+    uint8_t nm_filter_idx;
+    uint8_t rtkbt_apcf_wp_en;
+    uint8_t rtkbt_apcf_wp_wd[32];
+    uint32_t rtkbt_apcf_wp_wf[32];
+    uint8_t rtkbt_apcf_wp_tm[32];
+} tPOWERON_CFG;
+
+typedef struct
+{
+    char *local_name;
+    int local_name_len;
+    char *service_uuid;//16bit 32bit 128bit
+    int service_uuid_len;
+    char *service_data;
+    int service_data_len;
+    char *service_data_mask;
+    int service_data_mask_len;
+    char *company_id;
+    int company_id_len;
+    char *company_id_mask;
+    int company_id_mask_len;
+    char *manu_data;
+    int manu_data_len;
+    char *manu_data_mask;
+    int manu_data_mask_len;
+    char *bd;
+    int bd_len;
+    char *ad_type;
+    int ad_type_len;
+    char *ad_data;
+    int ad_data_len;
+    char *ad_data_mask;
+    int ad_data_mask_len;
+    char *vd_data;
+    int vd_data_len;
+} tAPCF_CFG;
+
+typedef struct
+{
+    uint8_t idx;
+    uint8_t wd;
+    uint16_t wf;
+    tAPCF_CFG *apcf_cfg;
+} tIDX_POWERON_CFG;
+
+typedef enum
+{
 #if (BT_WAKE_VIA_USERIAL_IOCTL==TRUE)
     USERIAL_OP_ASSERT_BT_WAKE,
     USERIAL_OP_DEASSERT_BT_WAKE,
@@ -118,13 +175,24 @@ typedef enum {
     USERIAL_OP_NOP,
 } userial_vendor_ioctl_op_t;
 
-enum {
+enum
+{
     RTKBT_PACKET_IDLE,
     RTKBT_PACKET_TYPE,
     RTKBT_PACKET_HEADER,
     RTKBT_PACKET_CONTENT,
     RTKBT_PACKET_END
 };
+
+typedef struct
+{
+    bool thread_ota_dl_patch_running;
+    pthread_t thread_ota_dl_patch_id;
+    pthread_mutex_t ota_mutex;
+    pthread_cond_t ota_cond;
+    uint32_t ota_patch_len;
+    uint8_t *p_ota_patch;
+} ota_patch_t;
 
 /******************************************************************************
 **  Extern variables and functions
@@ -193,13 +261,14 @@ void userial_vendor_set_hw_fctrl(uint8_t hw_fctrl);
 
 int userial_socket_open(void);
 
-int userial_vendor_usb_ioctl(int operation, void* param);
+int userial_vendor_usb_ioctl(int operation, void *param);
 
 int userial_vendor_usb_open(void);
 
 void userial_recv_rawdata_hook(unsigned char *buffer, unsigned int total_length);
 
 void userial_set_bt_interface_state(int bt_on);
+
 #define RTK_HANDLE_EVENT
 #define RTK_HANDLE_CMD
 #ifdef VENDOR_MESH_RTK

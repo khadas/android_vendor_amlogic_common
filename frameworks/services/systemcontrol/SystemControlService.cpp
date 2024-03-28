@@ -112,6 +112,12 @@ SystemControlService::~SystemControlService() {
     mNotifyListener  = NULL;
 }
 
+void SystemControlService::dlgControl() {
+     if (pDisplayMode != NULL) {
+        pDisplayMode->dlgControl();
+    }
+}
+
 void SystemControlService::initDelay() {
     ALOGI("init_delay");
     pDisplayMode->init();
@@ -1213,7 +1219,7 @@ int SystemControlService::getEyeProtectionMode(int source_input)
 int SystemControlService::setGammaValue(int gamma_curve, int is_save)
 {
     if (pCPQControl != NULL) {
-        return pCPQControl->SetGammaValue((vpp_gamma_curve_t)gamma_curve, is_save);
+        return pCPQControl->SetGammaValue((vpp_gamma_mode_t)gamma_curve, is_save);
     } else {
         return -1;
     }
@@ -1232,7 +1238,11 @@ int SystemControlService::getGammaValue()
 int SystemControlService::setDLGEnable(int enable, int is_save)
 {
     if (pCPQControl != NULL) {
-        return pCPQControl->SetDLGEnable(enable, is_save);
+        int ret = pCPQControl->SetDLGEnable(enable, is_save);
+        if (ret == 0 && pDisplayMode != NULL) {
+            pDisplayMode->enter4k1kByDLG(enable == 1);
+        }
+        return ret;
     } else {
         return -1;
     }
@@ -2008,6 +2018,24 @@ bool SystemControlService::readAiPqTable(std::string *aiPqTable) {
     return status;
 }
 
+int SystemControlService::setAipqMode(int mode, int is_save)
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->SetAipqMode((aipq_mode_e)mode, is_save);
+    } else {
+        return -1;
+    }
+}
+
+int SystemControlService::getAipqMode()
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->GetAipqMode();
+    } else {
+        return -1;
+    }
+}
+
 bool SystemControlService::aisrContrl(bool on)
 {
     int ret = -1;
@@ -2041,6 +2069,24 @@ bool SystemControlService::getAisr()
         }
     } else {
             return -1;
+    }
+}
+
+int SystemControlService::setAisrMode(int mode, int is_save)
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->SetAiSrMode((aisr_mode_e)mode, is_save);
+    } else {
+        return -1;
+    }
+}
+
+int SystemControlService::getAisrMode()
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->GetAiSrMode();
+    } else {
+        return -1;
     }
 }
 
@@ -2690,6 +2736,9 @@ int SystemControlService::getStaticFrameEnable()
 int SystemControlService::setScreenColorForSignalChange(int screenColor, int isSave)
 {
     if (pCPQControl != NULL) {
+        if (mNotifyListener != NULL) {
+        mNotifyListener->onScreenColorChange(screenColor);
+        }
         return pCPQControl->SetScreenColorForSignalChange(screenColor, isSave);
     }
     return -1;

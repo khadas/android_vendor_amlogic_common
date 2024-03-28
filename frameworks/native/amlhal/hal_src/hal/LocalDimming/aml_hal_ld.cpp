@@ -14,18 +14,18 @@ extern "C"
 {
 #endif
 
-
 HAL_STATUS_T AML_HAL_LD_INIT(void)
 {
     AML_LOG_INFO(LOG_LD, "%s Start \n", __FUNCTION__);
+
     if (ADAP_LD_INIT() != ADAP_OK) {
         AML_LOG_ERROR(LOG_LD, "ADAP_LD_INIT Fail at Function %s\n", __FUNCTION__);
         return API_NOT_OK;
     } else {
         PQTableLD::GetInstance()->Init();
     }
-    AML_LOG_INFO(LOG_LD, "%s Done\n", __FUNCTION__);
 
+    AML_LOG_INFO(LOG_LD, "%s Done\n", __FUNCTION__);
     return API_OK;
 }
 

@@ -21,6 +21,7 @@
         <permission name="android.permission.CHANGE_CONFIGURATION" />
         <permission name="android.permission.MODIFY_AUDIO_ROUTING"/>
         <permission name="android.permission.FORCE_STOP_PACKAGES"/>
+        <permission name="android.car.permission.CAR_CONTROL_AUDIO_SETTINGS" />
     </privapp-permissions>
 </permissions>
 

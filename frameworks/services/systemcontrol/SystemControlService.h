@@ -93,6 +93,7 @@ public:
     bool refreshHdcpKey();
     //Provision key end
 
+    void dlgControl();
     bool updataLogoBmp(const std::string& path);
     bool getModeSupportDeepColorAttr(const std::string& mode,const std::string& color);
     //set or get uboot env
@@ -299,10 +300,14 @@ public:
     int getAipqEnable();
     bool hasAipqFunc();
     bool readAiPqTable(std::string *aiPqTable);
+    int setAipqMode(int mode, int isSave);
+    int getAipqMode(void);
     //aisr
     bool aisrContrl(bool on);
     bool hasAisrFunc();
     bool getAisr();
+    int setAisrMode(int mode, int isSave);
+    int getAisrMode(void);
     //aicolor
     int setAiColor(int value, int isSave);
     int getAiColor(void);

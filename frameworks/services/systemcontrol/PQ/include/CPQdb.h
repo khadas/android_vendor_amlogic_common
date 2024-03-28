@@ -105,6 +105,7 @@ typedef enum code_db_match_type_e {
     MATCH_TYPE_MATCH,
     MATCH_TYPE_OLDCODE_NEWDB,
     MATCH_TYPE_MBOX_S5, //s928x
+    MATCH_TYPE_MBOX_T3X, //t968d4
     MATCH_TYPE_MAX,
 } code_db_match_type_t;
 
@@ -274,5 +275,6 @@ public:
     output_type_t mOutPutType = OUTPUT_TYPE_LVDS;
     code_db_match_type_t mDbMatchType = MATCH_TYPE_MATCH;
     int node_number = 0;
+    int Gamma_nodes = 256;
 };
 #endif

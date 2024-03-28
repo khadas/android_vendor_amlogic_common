@@ -986,6 +986,7 @@ void DisplayMode::applyDisplaySetting(hdmi_output_info_t* output_info) {
     // 5. check dolby vision
     int  dv_type    = DOLBY_VISION_SET_DISABLE;
     bool dv_change  = false;
+    bool dvmode_change = false;
 
     dv_type   = output_info->dv_type;
     dv_change = checkDolbyVisionStatusChanged(dv_type);
@@ -996,15 +997,18 @@ void DisplayMode::applyDisplaySetting(hdmi_output_info_t* output_info) {
             && (strstr(hdr_policy, HDR_POLICY_SINK))) {
             pSysWrite->writeSysfs(DISPLAY_HDMI_AVMUTE_SYSFS, "1");
         }
-        //5.2 set dummy_l mode when dv change at UI switch
-        if ((OUTPUT_MODE_STATE_SWITCH == output_info->reason) && dv_change) {
-            setDisplayMode("dummy_l");
-        }
-        //5.3 enable or disable dolby vision core
-        if (DOLBY_VISION_SET_DISABLE != dv_type) {
-            enableDolbyVision(dv_type);
-        } else {
-            disableDolbyVision(dv_type);
+        //5.2 Set dv_type by scene
+        //5.2.1 set dvmode_change to true when dv change at UI switch
+        //set avmute-close phy>-set hdr/dv policy>set mode-clear avmute ---enable hdcp
+        if (OUTPUT_MODE_STATE_SWITCH == output_info->reason) {
+            dvmode_change = true;
+        }  else {
+            //5.2.2 In other scenarios, set DV directly
+            if (DOLBY_VISION_SET_DISABLE != dv_type) {//enable or disable dolby vision core
+                enableDolbyVision(dv_type);
+            } else {
+                disableDolbyVision(dv_type);
+            }
         }
 
         SYS_LOGI("isDolbyVisionEnable [%d] dolby vision type:%d", isDolbyVisionEnable(), getDolbyVisionType());
@@ -1030,7 +1034,7 @@ void DisplayMode::applyDisplaySetting(hdmi_output_info_t* output_info) {
     //7. check any change
     bool isNeedChange = false;
 
-    if (modeChange || attr_change || frac_rate_policy_change || hdr_policy_change || hdr_priority_change) {
+    if (modeChange || attr_change || frac_rate_policy_change || hdr_policy_change || hdr_priority_change || dvmode_change) {
         isNeedChange = true;
     } else {
         SYS_LOGI("nothing need to be changed\n");
@@ -1107,6 +1111,16 @@ void DisplayMode::applyDisplaySetting(hdmi_output_info_t* output_info) {
         //apply hdr priority to driver sysfs
         if (hdr_priority_change) {
             DisplayModeMgr::getInstance().setDisplayAttribute(DISPLAY_HDR_PRIORITY, HDR_PRIORITY_TYPE[hdr_priority], ConnectorType::CONN_TYPE_HDMI);
+        }
+
+        //apply enable or disable dolby vision core
+        if (dvmode_change) {
+            if (DOLBY_VISION_SET_DISABLE != dv_type) {
+                enableDolbyVision(dv_type);
+            } else {
+                disableDolbyVision(dv_type);
+            }
+            SYS_LOGI("isDolbyVisionEnable [%d] dolby vision type:%d", isDolbyVisionEnable(), getDolbyVisionType());
         }
 
         //set hdmi mode
@@ -3318,6 +3332,9 @@ void DisplayMode::onTxEvent (char* switchName, char* hpdstate, int outputState) 
     setSourceDisplay((output_mode_state)outputState);
 }
 
+bool DisplayMode::enter4k1kByDLG(bool on) {
+    return pFrameRateAutoAdaption->enter4k1kByUI(on);
+}
 bool DisplayMode::frameRateDisplay(bool on) {
     pFrameRateAutoAdaption->setVideoLayerOn(on);
     return true;
@@ -3326,6 +3343,10 @@ bool DisplayMode::frameRateDisplay(bool on) {
 void DisplayMode::onDispModeSyncEvent (const char* outputmode, int state) {
     SYS_LOGI("onDispModeSyncEvent outputmode:%s state: %d\n", outputmode, state);
     setSourceOutputMode(outputmode);
+}
+
+void DisplayMode::dlgControl() {
+    pFrameRateAutoAdaption->policyControl(-1);
 }
 
 //for debug
@@ -3533,6 +3554,17 @@ bool DisplayMode::memcContrl(bool on) {
 
 }
 
+/**
+*usage: this api is for java change active mode by droid-res apk
+*this api is need by realmode for afr change dlg mode
+*/
+void DisplayMode::setActiveModeRemote(int width,int height, int framerate) {
+#ifndef RECOVERY_MODE
+    if (mNotifyListener != NULL) {
+        mNotifyListener->setActiveModeRemote(width, height, framerate);
+    }
+#endif
+}
 void DisplayMode::resetMemc() {
     int memDev = open(DISPLAY_MEMC_SYSFS, O_WRONLY);
     if (memDev < 0) {

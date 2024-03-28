@@ -27,10 +27,13 @@
 #include <cutils/properties.h>
 #include <utils/Log.h>
 #include <hidl/HidlTransportSupport.h>
+#include <hidl/HidlLazyUtils.h>
+#include <hidl/HidlBinderSupport.h>
 #include "ScreenControlService.h"
 #include "ScreenControlHal.h"
 
 using namespace android;
+using android::hardware::LazyServiceRegistrar;
 using ::android::hardware::configureRpcThreadpool;
 using ::vendor::amlogic::hardware::screencontrol::V1_0::implementation::ScreenControlHal;
 using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControl;
@@ -58,7 +61,11 @@ int main()
             ALOGI("Treble IScreenControl service created.");
         }
     } else {
-        ScreenControlService::instantiate();
+        android::status_t ret = LazyServiceRegistrar::getInstance().registerService(
+        new ScreenControlHal(ScreenControlService::getInstance()), "default");
+        if (ret != android::OK) {
+            ALOGE("Couldn't register screen_control service!");
+        }
     }
     IPCThreadState::self()->joinThreadPool();
 }

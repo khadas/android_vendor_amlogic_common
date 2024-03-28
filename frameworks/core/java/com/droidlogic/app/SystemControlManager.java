@@ -4341,6 +4341,42 @@ public class SystemControlManager {
         return val;
     }
 
+    /**
+     * @Function: SetAipqMode
+     * @Description: Set aipq mode
+     * @Param: mode enum aipq_mode_e, isSave 1 to save
+     * @Return: 0 success, -1 fail
+     */
+    public int SetAipqMode(int mode, int isSave) {
+          synchronized (mLock) {
+            try {
+                return mProxy.setAipqMode(mode, isSave);
+            } catch (RemoteException e) {
+                Log.e(TAG, "setAipqMode:" + e);
+            }
+        }
+        return -1;
+
+    }
+
+    /**
+     * @Function: GetAipqMode
+     * @Description: Get current aipq mode
+     * @Param:
+     * @Return: aipq mode refer to enum aipq_mode_e
+     */
+    public int GetAipqMode() {
+          synchronized (mLock) {
+            try {
+                return mProxy.getAipqMode();
+            } catch (RemoteException e) {
+                Log.e(TAG, "getAipqMode:" + e);
+            }
+        }
+        return -1;
+
+    }
+
      public boolean aisrContrl(boolean on) {
          synchronized (mLock) {
              try {
@@ -4375,6 +4411,40 @@ public class SystemControlManager {
              }
          }
          return false;
+     }
+
+    /**
+     * @Function: SetAisrMode
+     * @Description: Set aisr mode
+     * @Param: mode enum aisr_mode_e, isSave 1 to save
+     * @Return: 0 success, -1 fail
+     */
+    public int SetAisrMode(int mode, int isSave) {
+          synchronized (mLock) {
+            try {
+                return mProxy.setAisrMode(mode, isSave);
+            } catch (RemoteException e) {
+                Log.e(TAG, "setAisrMode:" + e);
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * @Function: GetAisrMode
+     * @Description: Get current aisr mode
+     * @Param:
+     * @Return: aisr mode refer to enum aisr_mode_e
+     */
+    public int GetAisrMode() {
+          synchronized (mLock) {
+            try {
+                return mProxy.getAisrMode();
+            } catch (RemoteException e) {
+                Log.e(TAG, "getAisrMode:" + e);
+            }
+        }
+        return -1;
     }
 
     /**

@@ -54,7 +54,7 @@ void PQTableLD::PQLD_StructTable_Init(void)
     }
 
     am_pq_bin_param_t pData;
-    memset(&pData, 0x0,sizeof(am_pq_bin_param_t));
+    memset(&pData, 0x0, sizeof(am_pq_bin_param_t));
 
     pData.table_index  = 0;
     pData.table_len = sizeof(TABLE_STRUCT_PQ_LD);

@@ -137,6 +137,12 @@ void SystemControlHal::onSetDisplayMode(int mode) {
     }
 }
 
+Return<void> SystemControlHal::dlgControl() {
+    ALOGI("SystemControlHal dlgControl");
+    mSysControl->dlgControl();
+    return Void();
+}
+
 void SystemControlHal::onHdrInfoChange(int newHdrInfo) {
     AutoMutex _l(mLock);
     //ALOGI("%s: newHdrInfo is %d", __FUNCTION__ , newHdrInfo);
@@ -163,6 +169,40 @@ void SystemControlHal::onAudioEvent(int32_t param1, int32_t param2, int32_t para
             continue;
         }
         auto ret = (it->second)->notifyAudioCallback(param1, param2, param3, param4);
+        if (!ret.isOk() && ret.isDeadObject()) {
+            it = mClients.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void SystemControlHal::setActiveModeRemote(int32_t param1, int32_t param2, int32_t param3) {
+    ALOGE("SystemControlHal::setActiveModeRemote");
+    AutoMutex _l(mLock);
+    for (auto it = mClients.begin(); it != mClients.end();) {
+        if (it->second == nullptr) {
+            it = mClients.erase(it);
+            continue;
+        }
+        auto ret = (it->second)->notifyChangeActiveMode(param1, param2, param3);
+        if (!ret.isOk() && ret.isDeadObject()) {
+            it = mClients.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void SystemControlHal::onScreenColorChange(int32_t newColor) {
+    AutoMutex _l(mLock);
+    ALOGD("onScreenColorChange newColor:%d.", newColor);
+    for (auto it = mClients.begin(); it != mClients.end();) {
+        if (it->second == nullptr) {
+            it = mClients.erase(it);
+            continue;
+        }
+        auto ret = (it->second)->notifyScreenColorChange(newColor);
         if (!ret.isOk() && ret.isDeadObject()) {
             it = mClients.erase(it);
         } else {
@@ -798,7 +838,7 @@ Return<void> SystemControlHal::setCallback(const sp<ISystemControlCallback>& cal
         int clientSize = mClients.size();
         for (int i = 0; i < clientSize; i++) {
             if (mClients[i] == nullptr) {
-                SYS_LOGI("%s, client index:%d had died, this id give the new client", __FUNCTION__, i);
+                SYS_LOGD("%s, client index:%d had died, this id give the new client", __FUNCTION__, i);
                 cookie = i;
                 mClients[i] = callback;
                 break;
@@ -815,9 +855,8 @@ Return<void> SystemControlHal::setCallback(const sp<ISystemControlCallback>& cal
         if (!linkSuccess) {
             SYS_LOGE("Couldn't link death recipient for cookie: %d", cookie);
         }
-        SYS_LOGI("%s cookie:%d, client size:%d", __FUNCTION__, cookie, (int)mClients.size());
+        SYS_LOGD("%s cookie:%d, client size:%d", __FUNCTION__, cookie, (int)mClients.size());
     }
-
     return Void();
 }
 
@@ -1595,6 +1634,13 @@ Return<void> SystemControlHal::readAiPqTable(readAiPqTable_cb _hidl_cb) {
     return Void();
 }
 
+Return<int32_t> SystemControlHal::setAipqMode(int32_t mode, int32_t isSave) {
+    return mSysControl->setAipqMode(mode, isSave);
+}
+
+Return<int32_t> SystemControlHal::getAipqMode(void) {
+    return mSysControl->getAipqMode();
+}
 
 Return<Result> SystemControlHal::aisrContrl(bool on) {
     if (mSysControl->aisrContrl(on)) {
@@ -1615,6 +1661,14 @@ Return<Result> SystemControlHal::getAisr() {
         return Result::OK;
     }
     return Result::FAIL;
+}
+
+Return<int32_t> SystemControlHal::setAisrMode(int32_t mode, int32_t isSave) {
+    return mSysControl->setAisrMode(mode, isSave);
+}
+
+Return<int32_t> SystemControlHal::getAisrMode(void) {
+    return mSysControl->getAisrMode();
 }
 
 Return<int32_t> SystemControlHal::setAiColor(int32_t value, int32_t isSave) {

@@ -31,11 +31,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 import android.os.Build;
 import android.content.Intent;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
+import android.media.MediaFormat;
 import java.lang.ref.WeakReference;
+
 
 public class ScreenControlManager {
     private static final String TAG = "ScreenControlManager";
@@ -73,6 +77,8 @@ public class ScreenControlManager {
 
 
     private native void native_ForceStop();
+
+    private native void native_SetRecordParameter(String[] keys, Object[] values);
 
     public ScreenControlManager(Context context) {
         mContext = context;
@@ -258,6 +264,46 @@ public class ScreenControlManager {
             }
         }
         return null;
+    }
+
+    public void setRecordParameter(MediaFormat format) {
+        synchronized (mLock) {
+            String[] keys = null;
+            Object[] values = null;
+            if (format == null)
+                return;
+            Log.d(TAG,"setRecordParameter format: " + format.toString());
+            Set<String> keySet = format.getKeys();
+            if (keySet == null || keySet.size() <= 0 )
+                return;
+            keys = new String[keySet.size()];
+            values = new Object[keySet.size()];
+            int i = 0;
+            for (String key : keySet) {
+                int type = format.getValueTypeForKey(key);
+                if (type != MediaFormat.TYPE_NULL) {
+                    if (type == MediaFormat.TYPE_INTEGER) {
+                        int intValue = format.getInteger(key);
+                        values[i] = new Integer(intValue);
+                    } else if (type == MediaFormat.TYPE_LONG) {
+                        long longValue = format.getLong(key);
+                        values[i] = new Long(longValue);
+                    } else if (type == MediaFormat.TYPE_FLOAT) {
+                        float  floatValue = format.getFloat(key);
+                        values[i] = new Float(floatValue);
+                    } else if (type == MediaFormat.TYPE_STRING) {
+                        String stringValue = format.getString(key);
+                        values[i] = new String(stringValue);
+                    }
+                    keys[i] = key;
+                    ++i;
+                }
+
+            }
+            native_SetRecordParameter(keys,values);
+
+        }
+
     }
 
     public int startScreenRecord(int width, int height, int frameRate, int bitRate, int limitTimeSec, int sourceType, String filename) {

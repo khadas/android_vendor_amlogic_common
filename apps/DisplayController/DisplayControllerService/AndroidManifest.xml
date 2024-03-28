@@ -5,6 +5,8 @@
     package="com.droidlogic.displaycontrollerservice"
     android:sharedUserId="android.uid.system">
     <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS_FULL" />
+
+    <uses-permission android:name="android.car.permission.CAR_CONTROL_AUDIO_SETTINGS"/>
     <application
         android:persistent="true"
         android:hasCode="true"

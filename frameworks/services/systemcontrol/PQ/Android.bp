@@ -86,6 +86,7 @@ cc_library_shared {
         "CDynamicBackLight.cpp",
         "CHlgToneMapping.cpp",
         "CDolbyVision.cpp",
+		"GammaOperation.cpp",
     ],
 
     export_include_dirs: [
@@ -109,9 +110,7 @@ cc_library_shared {
         "libsystemcontrolservice",
         "vendor.amlogic.hardware.systemcontrol@1.1",
         "libaml_hal_lcd",
-        "libaml_hal_pq",
-        "libaml_hal_dv",
-        "libaml_hal_vdin",
+        "libaml_hal_ld",
     ],
 
     static_libs: [

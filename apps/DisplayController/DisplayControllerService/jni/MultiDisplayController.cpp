@@ -9,7 +9,7 @@
  */
 
 #define LOG_NDEBUG 0
-#define LOG_TAG "MultiDisplay-jni"
+#define LOG_TAG "MM"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +47,7 @@ namespace android
         return false;
     }
     static jlong mirrorNative(JNIEnv *env, jobject obj, jint fromPort,
-        jint toPort) {
+        jint toPort, jboolean control) {
         ALOGE("mirror native %d %d",fromPort,toPort);
         PhysicalDisplayId fromPhysicalId, toPhysicalId;
         if (!getPhysicalDisplayIdFromPort(fromPort,fromPhysicalId) || !getPhysicalDisplayIdFromPort(toPort,toPhysicalId)) {
@@ -64,6 +64,7 @@ namespace android
             ALOGE("Failed to create a mirror for screenrecord");
             return false;
         }
+
         ALOGE("get the right display mirror surface");
         ui::DisplayState displayState;
         auto err = SurfaceComposerClient::getDisplayState(displayToken, &displayState);
@@ -75,6 +76,11 @@ namespace android
         SurfaceComposerClient::Transaction t;
         t.setDisplayLayerStack(displayToken, displayState.layerStack);
         t.setLayerStack(mirrorRoot, displayState.layerStack);
+        if (control) {
+            t.setDropInputMode(mirrorRoot, gui::DropInputMode::NONE);
+        }else {
+            t.setDropInputMode(mirrorRoot, gui::DropInputMode::ALL);
+        }
         t.setLayer(mirrorRoot, INT32_MAX - 1);
         t.show(mirrorRoot);
         t.apply();
@@ -85,7 +91,7 @@ namespace android
         ALOGE("mirror nativeSwitch %d %d",fromPort,toPort);
         PhysicalDisplayId fromPhysicalId, toPhysicalId;
         if (!getPhysicalDisplayIdFromPort(fromPort,fromPhysicalId) || !getPhysicalDisplayIdFromPort(toPort,toPhysicalId)) {
-			ALOGE("cannot get port");
+            ALOGE("cannot get port");
             return false;
         }
 
@@ -121,14 +127,14 @@ namespace android
     }
 
     static void nativeRelease(JNIEnv *env, jclass obj, jlong nativeObject) {
-        ALOGE("mirror test");
+        ALOGE("mirror nativeRelease");
         SurfaceControl* surfaceControl = reinterpret_cast<SurfaceControl*>(nativeObject);
         surfaceControl->decStrong((void*)mirrorNative);
         surfaceControl = nullptr;
     }
     static JNINativeMethod sMethods[] = {
         {"nativeRelease",           "(J)V",               (void*)nativeRelease},
-        {"nativeMirror",           "(II)J",               (void*)mirrorNative},
+        {"nativeMirror",           "(IIZ)J",               (void*)mirrorNative},
         {"nativeSwitch",           "(II)Z",               (void*)nativeSwitch},
     };
 

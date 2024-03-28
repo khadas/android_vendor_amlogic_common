@@ -4,6 +4,10 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <FrameLayout
+        android:layout_width="1px"
+        android:layout_height="1px"
+        android:id="@+id/rootview"></FrameLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -24,7 +28,12 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/paddingTop"
             android:singleLine="false" />
-
+        <ImageButton
+            android:id="@+id/monitor_display"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/paddingTop"
+            android:src="@drawable/btn_open" />
     </LinearLayout>
 
 

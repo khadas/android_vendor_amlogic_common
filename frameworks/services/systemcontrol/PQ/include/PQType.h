@@ -158,6 +158,7 @@ typedef struct vpp_pictur_mode_para_s {
     int DvMode;
     int DvDarkDetail;
     int SmoothPlus;
+    int HdrTmo;
 
     //PM5 XML not has config
     int Deblock;
@@ -184,6 +185,23 @@ typedef enum vpp_gamma_curve_e {
     VPP_GAMMA_CURVE_11,
     VPP_GAMMA_CURVE_MAX,
 } vpp_gamma_curve_t;
+
+typedef enum vpp_gamma_mode_e {
+    VPP_GAMMA_MODE_DEFAULT = 0,
+    VPP_GAMMA_MODE_1_7,
+    VPP_GAMMA_MODE_1_8,
+    VPP_GAMMA_MODE_1_9,
+    VPP_GAMMA_MODE_2_0,
+    VPP_GAMMA_MODE_2_1,
+    VPP_GAMMA_MODE_2_2,
+    VPP_GAMMA_MODE_2_3,
+    VPP_GAMMA_MODE_2_4,
+    VPP_GAMMA_MODE_2_5,
+    VPP_GAMMA_MODE_2_6,
+    VPP_GAMMA_MODE_2_7,
+    VPP_GAMMA_MODE_BT1886,
+    VPP_GAMMA_MODE_MAX,
+} vpp_gamma_mode_t;
 
 typedef enum vpp_memc_mode_e {
     VPP_MEMC_MODE_OFF,
@@ -608,6 +626,28 @@ typedef enum tv_source_input_e {
     SOURCE_ADTV,
     SOURCE_MAX,
 } tv_source_input_t;
+
+typedef enum pq_source_input_e {
+    PQ_SRC_DEFAULT = 0,
+    PQ_SRC_TV,
+    PQ_SRC_AV1,
+    PQ_SRC_AV2,
+    PQ_SRC_YPBPR1,
+    PQ_SRC_YPBPR2,
+    PQ_SRC_HDMI1,
+    PQ_SRC_HDMI2,
+    PQ_SRC_HDMI3,
+    PQ_SRC_HDMI4,
+    PQ_SRC_VGA,
+    PQ_SRC_MPEG,
+    PQ_SRC_DTV,
+    PQ_SRC_SVIDEO,
+    PQ_SRC_IPTV,
+    PQ_SRC_DUMMY,
+    PQ_SRC_SPDIF,
+    PQ_SRC_ADTV,
+    PQ_SRC_MAX,
+} pq_source_input_t;
 
 typedef enum pq_sig_fmt_e {
     PQ_FMT_DEFAULT = 0,
@@ -1074,18 +1114,19 @@ typedef struct aml_lcd_ss_ctl_s {
     unsigned int mode;
 }aml_lcd_ss_ctl_t;
 
-typedef enum _aipq_mode_e {
-    AIPQ_MODE_OFF = 0,
-    AIPQ_MODE_LOW,
-    AIPQ_MODE_MID,
-    AIPQ_MODE_MAX,
-} aipq_mode_e;
-
 typedef enum _aisr_mode_e {
     AISR_MODE_OFF = 0,
     AISR_MODE_LOW,
     AISR_MODE_MID,
+    AISR_MODE_HIGH,
     AISR_MODE_MAX,
 } aisr_mode_e;
 
+typedef enum _aipq_mode_e {
+    AIPQ_MODE_OFF = 0,
+    AIPQ_MODE_LOW,
+    AIPQ_MODE_MID,
+    AIPQ_MODE_HIGH,
+    AIPQ_MODE_MAX,
+} aipq_mode_e;
 #endif

@@ -42,6 +42,8 @@ import android.content.ContentResolver;
 import android.provider.DeviceConfig;
 import org.json.JSONObject;
 import android.hardware.display.DisplayManager;
+import android.hardware.display.HdrConversionMode;
+
 import android.view.Display;
 import android.os.Handler;
 
@@ -51,6 +53,7 @@ import java.lang.StringBuffer;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import android.os.SystemProperties;
@@ -89,12 +92,14 @@ public class NetflixService extends Service {
      // Power State Change on Active Source Lost Settings values
     private static final String LOST_NONE = "none";
     private static final String LOST_STANDBY_NOW = "standby_now";
+    private static final String TEMP_HDR = "temp_hdr";
     private final String NDRP_CEC_STATUS = "nrdp_video_platform_capabilities";
 
     private static final String STR_ALWAYS = "0";
     private static final String STR_ADAPTIVE = "1";
     private static final int WAKEUP_REASON_CUSTOM = 9;
     private static final int MSG_UPDATA = 1;
+    private static final int MSG_UPDATA_DISPLAY = 2;
     private static final int UI_AUDIO_DELAY_OFFSET_TV_NON_DOLBY = 60;
     private static final int UI_AUDIO_DELAY_OFFSET_TV_MS12 = 110;
     private static final int UI_AUDIO_DELAY_OFFSET_OTT_DOLBY = 70;
@@ -120,6 +125,8 @@ public class NetflixService extends Service {
     private DeviceConfigListener mDeviceConfigListener = null;
     private  Handler mMsgHandler;
     private String mOriginalPowerStateChangeValue;
+    private HdrConversionMode mHdrConversionMode;
+
 
     private class SettingsObserver extends ContentObserver {
         public SettingsObserver(Handler handler) {
@@ -223,6 +230,9 @@ public class NetflixService extends Service {
         public void onReceive(Context context, Intent intent) {
             boolean isConnected = intent.getBooleanExtra("state", false);
             refreshAudioCapabilities(isConnected);
+            if (isConnected) {
+                mMsgHandler.sendEmptyMessageDelayed(MSG_UPDATA_DISPLAY,2000);
+            }
         }
     };
 
@@ -279,11 +289,16 @@ public class NetflixService extends Service {
                         Log.d(TAG, "handleMessage");
                         netflixFGStateUpdate();
                         break;
+                    case MSG_UPDATA_DISPLAY:
+                        Log.d(TAG, "handleMessage display");
+                        resetDisplayConversionMode();
+                        break;
                     default:
                         Log.d(TAG, "No handler case available for message: " + msg.what);
                 }
             }
         };
+        resetHdrPolicy();
     }
 
     @Override
@@ -308,6 +323,27 @@ public class NetflixService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+
+    private void resetDisplayConversionMode(){
+         if (mDisplayManager.getHdrConversionMode().getConversionMode() != HdrConversionMode.HDR_CONVERSION_SYSTEM)
+             return;
+
+        int preferredHdrFormat = mDisplayManager.getHdrConversionMode().getPreferredHdrOutputType();
+        Log.d(TAG, "now preferredHdrFormat = " + preferredHdrFormat);
+        if (preferredHdrFormat != -1
+                && !isHdrFormatSupported(mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).getMode(), preferredHdrFormat)) {
+            HdrConversionMode systemHdrConversionMode = new HdrConversionMode(
+                    HdrConversionMode.HDR_CONVERSION_SYSTEM);
+            mDisplayManager.setHdrConversionMode(systemHdrConversionMode);
+            Log.d(TAG, "reset HDR_CONVERSION_SYSTEM to right preferredHdrFormat");
+        }
+    }
+
+    private boolean isHdrFormatSupported(Display.Mode mode, int hdrFormat) {
+        return Arrays.stream(mode.getSupportedHdrTypes()).anyMatch(
+        hdr -> hdr == hdrFormat);
+   }
 
     private void initNrdpCapabilities() {
         String buildDate = PlatformAPI.getStringProperty("ro.build.version.incremental", "");
@@ -507,13 +543,14 @@ public class NetflixService extends Service {
                 }
                 ComponentName componentInfo = info.topActivity;
                 if (componentInfo.getPackageName().equals(pkgName)) {
-                    Log.d(TAG,pkgName + " is top activity!");
+                    Log.d(TAG, componentInfo.getPackageName() + " is top activity!");
                     return true;
                 }else{
-                    Log.d(TAG,pkgName + " is not top activity.");
-                    return false;
+                    Log.d(TAG,componentInfo.getPackageName() + " is visible.");
+                    continue;
                 }
             }
+            Log.d(TAG,pkgName + " is not top activity.");
         }catch (RemoteException e) {
             Log.e(TAG, "Cannot getTasks", e);
         }
@@ -695,6 +732,41 @@ public class NetflixService extends Service {
                 +mOutputModeManager.getHdrStrategy().startsWith(STR_ADAPTIVE)+mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).isHdr());
     }
 
+
+    private void setHDRConversionMode(boolean NetflixIsForeground) {
+        boolean isPassThroughHdr = mDisplayManager.getHdrConversionModeSetting().equals(new HdrConversionMode(
+                            HdrConversionMode.HDR_CONVERSION_PASSTHROUGH));
+        Log.d(TAG,"NetflixIsForeground = " + NetflixIsForeground
+                +" ,isPassThroughHdr = " + isPassThroughHdr
+                + ", is display support hdr = " + mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).isHdr());
+        if (tempHDR && (!NetflixIsForeground)) {
+            Log.i(TAG, "setHdrStrategy adaptive default");
+            mHdrConversionMode =new HdrConversionMode(HdrConversionMode.HDR_CONVERSION_PASSTHROUGH);
+            mDisplayManager.setHdrConversionMode(mHdrConversionMode);
+            tempHDR = false;
+            Settings.Global.putInt(mContext.getContentResolver(), TEMP_HDR, 0);
+            return;
+        }
+        if (NetflixIsForeground && isPassThroughHdr &&
+                                mDisplayManager.getDisplay(Display.DEFAULT_DISPLAY).isHdr()) {
+            Log.i(TAG, "setHdrStrategy  always");
+            mHdrConversionMode = new HdrConversionMode(HdrConversionMode.HDR_CONVERSION_SYSTEM);
+            mDisplayManager.setHdrConversionMode(mHdrConversionMode);
+            tempHDR = true;
+            Settings.Global.putInt(mContext.getContentResolver(), TEMP_HDR, 1);
+        }
+    }
+
+    private void resetHdrPolicy() {
+        int hdrpolicy = Settings.Global.getInt(mContext.getContentResolver(), TEMP_HDR, 0);
+        if (hdrpolicy == 1) {
+            Log.i(TAG, "reset HdrStrategy adaptive default");
+            mHdrConversionMode =new HdrConversionMode(HdrConversionMode.HDR_CONVERSION_PASSTHROUGH);
+            mDisplayManager.setHdrConversionMode(mHdrConversionMode);
+            Settings.Global.putInt(mContext.getContentResolver(), TEMP_HDR, 0);
+        }
+    }
+
     private void netflixFGStateUpdate() {
         synchronized (mLock) {
             boolean fg = isTopTask(NETFLIX_PKG_NAME);
@@ -719,7 +791,6 @@ public class NetflixService extends Service {
 
                 mAudioManager.setParameters("continuous_audio_mode=" + (fg ? "1" : "0"));
                 mSCM.setProperty("vendor.netflix.state", fg ? "fg" : "bg");
-
                 if (fg) {
                     mOriginalPowerStateChangeValue = mHdmiControlManager.getPowerStateChangeOnActiveSourceLost();
                     mHdmiControlManager.setPowerStateChangeOnActiveSourceLost(LOST_NONE);

@@ -15,7 +15,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ContentProviderClient;
 import android.content.Context;
-
+import android.hardware.display.DisplayManager;
 import android.media.tv.TvContract;
 import android.os.Handler;
 import android.os.Message;
@@ -25,7 +25,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.provider.Settings;
 import android.text.TextUtils;
-
+import android.view.Display;
 import com.droidlogic.app.AudioSettingManager;
 import com.droidlogic.app.AudioSystemCmdManager;
 import com.droidlogic.app.DroidLogicUtils;
@@ -56,7 +56,7 @@ public class DroidlogicApplication extends Application {
         mSystemControlEvent   = SystemControlEvent.getInstance(this);
         mSystemControlManager = SystemControlManager.getInstance();
         mSystemControlManager.setListener(mSystemControlEvent);
-        mSystemControlManager.setProperty("vendor.sys.display.boot_complete","1");
+
         // GTVS version default use earlysuspend wakelock
         if (isGtvsVersion() && SystemProperties.getBoolean("ro.vendor.platform.earlysuspend", true)) {
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
@@ -66,6 +66,13 @@ public class DroidlogicApplication extends Application {
             Log.d(TAG, "wakelocked");
         }
         DisableBtPairInstrumentation(this);
+        mSystemControlEvent.SetActiveModeChangeListener(new SystemControlEvent.ActiveModeChangeListener() {
+            @Override
+            public void changeActiveMode(int width, int height, int framerate){
+                Log.d(TAG,"changeActiveMode"+width);
+                DroidlogicApplication.this.changeActiveModeInner(width,height,framerate);
+            }
+        });
     }
 
     private boolean isGtvsVersion() {
@@ -87,6 +94,7 @@ public class DroidlogicApplication extends Application {
                     if (isBootvideoStopped()) {
                         Log.d(TAG, "bootvideo stopped, start initializing audio");
                         initAudio();
+                        syncDLG();
                     } else {
                         if (DroidLogicUtils.getAudioDebugEnable()) {
                             Log.d(TAG, "handleMessage sendEmptyMessageDelayed MSG_CHECK_BOOTVIDEO_FINISHED");
@@ -99,6 +107,55 @@ public class DroidlogicApplication extends Application {
             }
         }
     };
+
+   private void syncDLG() {
+        String isSupportDTVKIT = SystemControlManager.getInstance().getPropertyString("ro.vendor.platform.is.tv", "");
+        boolean tvflag = isSupportDTVKIT.equals("1");
+        if (!tvflag) return;
+        DisplayManager displaymanager =(DisplayManager) getApplicationContext().getSystemService(Context.DISPLAY_SERVICE);
+        Display.Mode mode = displaymanager.getDisplay(0).getMode();
+        Log.d(TAG,"syncDLG"+mode+"mSystemControlManager.GetDLGEnable()"+mSystemControlManager.GetDLGEnable());
+        if ((mSystemControlManager.GetDLGEnable()== 1) && (mode.getPhysicalHeight() != 1080)) {
+            if (isModeAvailable(1920,1080,(int)(mode.getRefreshRate()*400))) {
+                changeActiveModeInner(1920, 1080,(int)(mode.getRefreshRate()*400));
+            }else {
+                changeActiveModeInner(1920, 1080,(int)(mode.getRefreshRate()*200));
+            }
+        }else if ((mSystemControlManager.GetDLGEnable() == 0) && (mode.getPhysicalHeight() != 2160)) {
+            changeActiveModeInner(3840, 2160,(int)(mode.getRefreshRate()*50));
+        }
+        mSystemControlManager.setProperty("vendor.sys.display.boot_complete","1");
+    }
+    private boolean isModeAvailable(int width, int height, int framerate) {
+        DisplayManager displaymanager = getApplicationContext().getSystemService(DisplayManager.class);
+        Display defaultDisplay = displaymanager.getDisplay(Display.DEFAULT_DISPLAY);
+        Display.Mode[] modes = defaultDisplay.getSupportedModes();
+        for (Display.Mode m : modes) {
+            if (((int) (m.getRefreshRate() * 100) == framerate) && m.getPhysicalWidth() == width
+                && m.getPhysicalHeight() == height) {
+                    return true;
+                }
+        }
+        return false;
+    }
+
+    private void changeActiveModeInner(int width, int height, int framerate) {
+        DisplayManager displaymanager = getApplicationContext().getSystemService(DisplayManager.class);
+        Display defaultDisplay = displaymanager.getDisplay(Display.DEFAULT_DISPLAY);
+        Display.Mode[] modes = defaultDisplay.getSupportedModes();
+        Log.d(TAG,"changeActiveModeInner "+modes.length);
+        for (Display.Mode m : modes) {
+            Log.d(TAG,"changeActiveModeInner enter "+m+" "+(m.getPhysicalHeight() == height)+"/"+((int) (m.getRefreshRate() * 100) == framerate));
+            if (m.getPhysicalWidth() == width && ((int) (m.getRefreshRate() * 100) == framerate)) {
+                displaymanager.clearGlobalUserPreferredDisplayMode();
+                defaultDisplay.clearUserPreferredDisplayMode();
+                Log.d(TAG,"changeActiveModeInner"+m);
+                defaultDisplay.setUserPreferredDisplayMode(m);
+                displaymanager.setGlobalUserPreferredDisplayMode(m);
+            }
+        }
+    }
+
 
     private void initAudio () {
         startDroidLogicServices(AudioSystemCmdManager.SERVICE_PACKEGE_NANME, AudioSystemCmdManager.SERVICE_NANME);

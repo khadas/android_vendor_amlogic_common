@@ -570,3 +570,33 @@ void CConfigFile::GetDvFilePath(char *bin_file_path, char *cfg_file_path)
         SYS_LOGE("no Amlogic_dv.cfg in %s and %s and %s\n", DOLBY_CFG_FILE_DEFAULT_PATH_0, DOLBY_CFG_FILE_DEFAULT_PATH_1, DOLBY_CFG_FILE_DEFAULT_PATH_2);
     }
 }
+
+void CConfigFile::GetLdimBinPath(char *file_path)
+{
+    if (!isFileExist(PARAM_LDIM_BIN_PATH)) {
+        //read ldim bin path from pq_default.ini
+        const char *ldimBinConfigPath = NULL;
+        ldimBinConfigPath = GetString(CFG_SECTION_PQ, CFG_PQ_LDIM_BIN_PATH, LDIM_BIN_DEFAULT_PATH_0);
+
+        if (isFileExist(ldimBinConfigPath)) {
+            CFile FileLdim(ldimBinConfigPath);
+            if (FileLdim.copyTo(PARAM_LDIM_BIN_PATH) != 0 ) {
+                SYS_LOGE("copy file to %s error!\n", PARAM_LDIM_BIN_PATH );
+            }
+        } else if (isFileExist(LDIM_BIN_DEFAULT_PATH_0)) {
+            CFile FileLdim(LDIM_BIN_DEFAULT_PATH_0);
+            if (FileLdim.copyTo(PARAM_LDIM_BIN_PATH) != 0 ) {
+                SYS_LOGE("copy file to %s error!\n", PARAM_LDIM_BIN_PATH );
+            }
+        } else if (isFileExist(LDIM_BIN_DEFAULT_PATH_1)) {
+            CFile FileLdim(LDIM_BIN_DEFAULT_PATH_1);
+            if (FileLdim.copyTo(PARAM_LDIM_BIN_PATH) != 0 ) {
+                SYS_LOGE("copy file to %s error!\n", PARAM_LDIM_BIN_PATH );
+            }
+        } else {
+            SYS_LOGE("no ldim.bin in %s and %s\n", LDIM_BIN_DEFAULT_PATH_0, LDIM_BIN_DEFAULT_PATH_1);
+        }
+    }
+
+    strcpy(file_path, PARAM_LDIM_BIN_PATH);
+}

@@ -35,6 +35,8 @@
 
 using ::android::hidl::memory::V1_0::IMemory;
 using ::android::hardware::hidl_memory;
+using ::android::hardware::hidl_vec;
+using ::android::hardware::hidl_string;
 using ::android::hardware::mapMemory;
 using ::android::hardware::Void;
 using ::vendor::amlogic::hardware::screencontrol::V1_0::Result;
@@ -183,6 +185,23 @@ void ScreenControlClient::forceStop()
     if (mMicroDimCb.promote())
         mMicroDimCb = nullptr;
     mScreenCtrl->forceStop();
+}
+
+void ScreenControlClient::setExtraInt32Config(const std::map<std::string, int32_t>& config) {
+    Mutex::Autolock autoLock(mLock);
+    if (config.size() <= 0)
+        return;
+    hidl_vec<hidl_string> keys;
+    keys.resize(config.size());
+    hidl_vec<int32_t> values;
+    values.resize(config.size());
+    int32_t i = 0;
+    for (auto it = config.begin(); it != config.end(); it++,i++) {
+        keys[i] = it->first;
+        values[i] = it->second;
+        ALOGI("setExtraInt32Config  keys[%d]:%s,values[%d]:%d ",i,keys[i].c_str(),values[i]);
+    }
+    mScreenCtrl->setExtraInt32Config(keys,values);
 }
 
 Return<void> ScreenControlClient::onAvcDataArouse(const hidl_memory &mem,int32_t size, int32_t frame_type,int64_t pts)

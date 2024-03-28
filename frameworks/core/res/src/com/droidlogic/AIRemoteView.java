@@ -25,7 +25,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
-
+import com.droidlogic.app.SystemControlManager;
 
 public class AIRemoteView {
 
@@ -34,6 +34,8 @@ public class AIRemoteView {
     private WindowManager.LayoutParams mParams;
     private boolean isShowing;
     private Handler mHandler;
+    private TextView mShowOTTInfo;
+    private TextView mShowTVInfo;
     private static AIRemoteView mInstance;
 
     public synchronized static AIRemoteView getInstance() {
@@ -58,6 +60,10 @@ public class AIRemoteView {
                 | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                 | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
 
+        mShowOTTInfo = (TextView) mFloatView.findViewById(R.id.show_info_ott);
+        mShowTVInfo = (TextView) mFloatView.findViewById(R.id.show_info_tv);
+        updateUI("AI PQ invalid value...");
+
         isShowing = false;
 
     }
@@ -77,12 +83,19 @@ public class AIRemoteView {
     }
 
     public void updateUI(String value) {
+        if (isTvFeature()) {
+            updateUI(value, mShowTVInfo);
+        } else {
+            updateUI(value, mShowOTTInfo);
+        }
+    }
+
+    private void updateUI(String value, TextView textView) {
         if (mFloatView == null) return;
-        TextView ShowINFO = (TextView) mFloatView.findViewById(R.id.show_info);
-        if (value.equals(ShowINFO.getText().toString())) {
+        if (value.equals(textView.getText().toString())) {
             return;
         }
-        ShowINFO.setText(value);
+        textView.setText(value);
     }
 
     public boolean isShow() {
@@ -91,6 +104,11 @@ public class AIRemoteView {
 
     public boolean isCreated() {
         return !(mFloatView == null);
+    }
+
+    public static boolean isTvFeature() {
+        SystemControlManager sm = SystemControlManager.getInstance();
+        return ("1".equals(sm.getPropertyString("ro.vendor.platform.is.tv", "")));
     }
 
 }

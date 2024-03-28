@@ -43,6 +43,11 @@ SystemControlClient::SystemControlClient() {
          ALOGE("tryGet system control daemon Service");
     };
 
+    mSystemControlHidlCallback = new SystemControlHidlCallback(this);
+    Return<void> ret = ctrl->setCallback(mSystemControlHidlCallback);
+    if (!ret.isOk()) {
+        ALOGE("Failed to setCallback %s", ret.description().c_str());
+    }
     mDeathRecipient = new SystemControlDeathRecipient();
     Return<bool> linked = ctrl->linkToDeath(mDeathRecipient, /*cookie*/ 0);
     if (!linked.isOk()) {
@@ -132,6 +137,10 @@ bool SystemControlClient::writeSysfs(const std::string& path, const std::string&
         return true;
     }
     return false;
+}
+
+void SystemControlClient::dlgControl() {
+    mSysCtrl->dlgControl();
 }
 
 bool SystemControlClient::memcContrl(int isEnable) {
@@ -1435,6 +1444,14 @@ bool SystemControlClient::readAiPqTable(std::string& aiPqTable) {
     return true;
 }
 
+int SystemControlClient::setAipqMode(int mode, int isSave) {
+    return mSysCtrl->setAipqMode(mode, isSave);
+}
+
+int SystemControlClient::getAipqMode(void) {
+    return mSysCtrl->getAipqMode();
+}
+
 bool SystemControlClient::aisrContrl(int isEnable) {
     return (mSysCtrl->aisrContrl(isEnable) == Result::OK);
 }
@@ -1445,6 +1462,14 @@ bool SystemControlClient::hasAisrFunc() {
 
 bool SystemControlClient::getAisr() {
     return (mSysCtrl->getAisr() == Result::OK);
+}
+
+int SystemControlClient::setAisrMode(int mode, int isSave) {
+    return mSysCtrl->setAisrMode(mode, isSave);
+}
+
+int SystemControlClient::getAisrMode(void) {
+    return mSysCtrl->getAisrMode();
 }
 
 int SystemControlClient::setAiColor(int value, int isSave) {
@@ -1525,7 +1550,7 @@ int SystemControlClient::setVideoScreenColor(int color)
 }
 /*
 *parm:
-*window: 0:main_window, 1:sub_window
+*window: 1:main_window, 2:sub_window
 *Color: 0:black, 1:blue
 *frequency: 4: only once, 5:always, 6:disable show color frame
 */
@@ -1568,6 +1593,13 @@ Return<void> SystemControlClient::SystemControlHidlCallback::notifyCallback(cons
     } else {
         ALOGI("%s: listener is NULL.", __FUNCTION__);
     }
+
+    return Void();
+}
+
+Return<void> SystemControlClient::SystemControlHidlCallback::notifyChangeActiveMode(int param1, int param2, int param3) {
+    ALOGI("SystemControlClient::SystemControlHidlCallback::notifyChangeActiveMode");
+
 
     return Void();
 }
@@ -1658,6 +1690,21 @@ Return<void> SystemControlClient::SystemControlHidlCallback::notifyDensityChange
 
     return Void();
 }
+
+Return<void> SystemControlClient::SystemControlHidlCallback::notifyScreenColorChange(int newColor) {
+    sp<SysCtrlListener> listener;
+
+    listener = SysCtrlClient->mListener;
+    if (listener != NULL) {
+        listener->onScreenColorChange(newColor);
+    } else {
+        ALOGI("%s: listener is NULL.", __FUNCTION__);
+    }
+
+    return Void();
+
+}
+
 void SystemControlClient::SystemControlDeathRecipient::serviceDied(uint64_t cookie,
         const ::android::wp<::android::hidl::base::V1_0::IBase>& who) {
     LOG(ERROR) << "system control service died. need release some resources";

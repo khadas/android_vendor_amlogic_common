@@ -21,11 +21,23 @@ import android.hardware.display.DisplayManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.DisplayAddress;
+import android.provider.Settings;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.ArrayList;
 
+import android.car.media.CarAudioManager;
+import android.car.Car;
+import android.media.AudioAttributes;
+import android.media.AudioDeviceAttributes;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
+
 public class MultiDisplayController implements DisplayManager.DisplayListener {
-    private static final String TAG = "MM";
+    private static final String TAG = "MM-Service";
+    private static final String MMC_CONTROL = "mmc_control";
+    private static final HashMap<Integer, Long> mSurfaceRecord = new HashMap<Integer, Long>();
 
     static {
         System.loadLibrary("displaycontroller");
@@ -43,9 +55,11 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
 
         mDisplayManager.registerDisplayListener(MultiDisplayController.this, null);
         initialDisplayMapping();
+        saveMirroringDataBase(mSurfaceRecord.size());
     }
 
-    private static native long nativeMirror(int displayId, int toDisplayId);
+    private static native long nativeMirror(int displayId, int toDisplayId, boolean control);
+
     private static native boolean nativeSwitch(int displayId, int toDisplayId);
 
     private static native void nativeRelease(long surfaceNativeObject);
@@ -58,12 +72,23 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
 
     @Override
     public void onDisplayRemoved(int displayId) {
+        if (mSurfaceRecord.get(displayId) != null) {
+            Log.d(TAG, "record release for displayId ");
+            nativeRelease(mSurfaceRecord.get(displayId));
+        }
         removeMapping(displayId);
+        saveMirroringDataBase(mSurfaceRecord.size());
     }
 
     @Override
     public void onDisplayChanged(int displayId) {
 
+    }
+
+    public void stopMirrorIfMirrored() {
+        for (DisplayMapping map : mDisplayMappings) {
+            stopMapping(map.mDisplay.getDisplayId());
+        }
     }
 
     private void initialDisplayMapping() {
@@ -85,16 +110,17 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
         mDisplayMappings.add(map);
     }
 
-    public boolean switchDisplay(int fromDisplayId,int toDisplayId) {
+    public boolean switchDisplay(int fromDisplayId, int toDisplayId) {
         int tPort = findDisplay2phyPort(toDisplayId);
         int fPort = findDisplay2phyPort(fromDisplayId);
         if (tPort == -1 || fPort == -1) return false;
-        nativeSwitch(fPort,tPort);
+        nativeSwitch(fPort, tPort);
         return true;
     }
 
-    public boolean mirroringDisplay(int fromDisplayId, int toDisplayId) {
+    public boolean mirroringDisplay(int fromDisplayId, int toDisplayId, boolean control) {
         DisplayMapping mirrorDisplay = getMapping(toDisplayId);
+        if (mirrorDisplay == null) return false;
         if (getMapping(toDisplayId).isMapping()) {
             Log.d(TAG, "---- strage case " + Log.getStackTraceString(new Throwable()));
             return true;
@@ -102,15 +128,74 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
         int tPort = findDisplay2phyPort(toDisplayId);
         int fPort = findDisplay2phyPort(fromDisplayId);
         if (tPort == -1 || fPort == -1) return false;
-        long surfaceNativeObject = nativeMirror(fPort, tPort);
-        Log.d(TAG, "MirroringDisplay "+fromDisplayId+" - "+toDisplayId+" "+Log.getStackTraceString(new Throwable()));
+        long surfaceNativeObject = nativeMirror(fPort, tPort, control);
+        Log.d(TAG, "MirroringDisplay " + fromDisplayId + " - " + toDisplayId);
         if (surfaceNativeObject != 0) {
+            if (mSurfaceRecord.get(toDisplayId) != null) {
+                Log.d(TAG, "record release");
+                nativeRelease(mSurfaceRecord.get(toDisplayId));
+            }
+            mSurfaceRecord.put(toDisplayId, surfaceNativeObject);
             Log.d(TAG, "MirroringDisplay Info" + surfaceNativeObject);
-            mirrorDisplay.mMirroringSurface = surfaceNativeObject;
-            mirrorDisplay.mMirroredDisplayId = fromDisplayId;
+            mirrorDisplay.saveData(surfaceNativeObject,fromDisplayId,control);
+
         }
+        saveMirroringDataBase(mSurfaceRecord.size());
         Log.d(TAG, "updated info" + getMapping(fromDisplayId) + "::::" + getMapping(toDisplayId));
+
+        mirrorAudio(fromDisplayId, toDisplayId);
         return true;
+    }
+
+
+    private void mirrorAudio(int srcDisplayId, int dstDisplayId) {
+        Log.i(TAG, "mirrorAudio from display " + srcDisplayId + " to display " + dstDisplayId);
+        Car.createCar(mContext,null,Car.CAR_WAIT_TIMEOUT_WAIT_FOREVER,(car, ready) -> {
+            if (!ready) {
+                return;
+            }
+            CarAudioManager carAudioManager = (CarAudioManager) car.getCarManager(Car.AUDIO_SERVICE);
+            int dst_zoneId = carAudioManager.getZoneIdByDisplayId(dstDisplayId);
+            int src_zoneId = carAudioManager.getZoneIdByDisplayId(srcDisplayId);
+
+            Log.d(TAG, "   des_zoneId:" + dst_zoneId + ",src_zoneId:" + src_zoneId);
+            AudioDeviceInfo dst_deviceInfo = carAudioManager.getOutputDeviceForUsage(dst_zoneId, AudioAttributes.USAGE_MEDIA);
+            String addr_dest = dst_deviceInfo.getAddress();
+            AudioDeviceInfo src_deviceInfo = carAudioManager.getOutputDeviceForUsage(src_zoneId, AudioAttributes.USAGE_MEDIA);
+            String addr_src = src_deviceInfo.getAddress();
+            Log.d(TAG, "   addr_dest:" + addr_dest + ",addr_src:" + addr_src);
+
+            String command = "mirroring_src=bus_" + addr_src.substring(3,4) + ";mirroring_dest=bus_" + addr_src.substring(3,4) + ",bus_"+ addr_dest.substring(3,4);
+            Log.i(TAG, " command:" + command);
+            AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+            audioManager.setParameters(command);
+        });
+    }
+
+    private void stopMirrorAudio(int dstDisplayId) {
+        Log.d(TAG, "stopMirrorAudio to display " + dstDisplayId);
+        DisplayMapping mapping = getMapping(dstDisplayId);
+        if (mapping == null)
+            return;
+        int srcDisplayId = mapping.mMirroredDisplayId;
+
+        Car.createCar(mContext,null,Car.CAR_WAIT_TIMEOUT_WAIT_FOREVER,(car, ready) -> {
+            if (!ready) {
+                return;
+            }
+            CarAudioManager carAudioManager = (CarAudioManager) car.getCarManager(Car.AUDIO_SERVICE);
+            int src_zoneId = carAudioManager.getZoneIdByDisplayId(srcDisplayId);
+            AudioDeviceInfo src_deviceInfo = carAudioManager.getOutputDeviceForUsage(src_zoneId, AudioAttributes.USAGE_MEDIA);
+            String addr_src = src_deviceInfo.getAddress();
+            Log.d(TAG, "   src_zoneId:" + src_zoneId + ",addr_src:" + addr_src);
+            String command = "mirroring_src=bus_" + addr_src.substring(3,4) + ";mirroring=off";
+            Log.d(TAG, "command:" + command);
+            AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+            audioManager.setParameters(command);
+        });
+    }
+    private void saveMirroringDataBase(int mirroring) {
+        Settings.Global.putInt(mContext.getContentResolver(), MMC_CONTROL, mirroring);
     }
 
     public void stopMapping(int displayId) {
@@ -118,7 +203,25 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
             Log.d(TAG, "stopMapping but not mirrored");
             return;
         }
+        stopMirrorAudio(displayId);
         releaseMirrorDisplay(displayId);
+        saveMirroringDataBase(mSurfaceRecord.size());
+    }
+
+    public boolean isControlled(int displayId) {
+        DisplayMapping mapping = getMapping(displayId);
+        if (mapping == null) return false;
+        return mapping.isControlled();
+    }
+
+    public int getPhyPort(int displayId) {
+        return findDisplay2phyPort(displayId);
+    }
+
+    public int getMirroredId(int displayId) {
+        DisplayMapping mapping = getMapping(displayId);
+        if (mapping == null) return -1;
+        return mapping.getMirroredDisplay();
     }
 
     public int findDisplay2phyPort(int displayId) {
@@ -133,10 +236,22 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
 
     public boolean isMapping(int displayId) {
         DisplayMapping mapping = getMapping(displayId);
-        Log.d(TAG, "mapping current DisplayId" + displayId + "Mirrored displayId" + mapping.mMirroredDisplayId + " mapping.mMirroringSurface" + mapping.mMirroringSurface);
-        boolean ret= (mapping.mMirroredDisplayId != mapping.mDisplay.getDisplayId()) || (mapping.mMirroringSurface != 0);
-        Log.d(TAG,"isMapping "+displayId+" value:"+ret);
+        if (mapping == null) return false;
+        Log.d(TAG, "mapping current DisplayId:" + displayId + ",Mirrored displayId:" + mapping.mMirroredDisplayId + " mapping.mMirroringSurface" + mapping.mMirroringSurface);
+        boolean ret = (mapping.mMirroredDisplayId != -1 && mapping.mMirroredDisplayId != mapping.mDisplay.getDisplayId()) || (mapping.mMirroringSurface != 0);
+        Log.d(TAG, "isMapping " + displayId + " value:" + ret);
         return ret;
+    }
+
+    public boolean beMirroring(int displayId) {
+        Log.d(TAG, "beMirroring " + displayId);
+        for (DisplayMapping map : mDisplayMappings) {
+            Log.d(TAG, "map " + map.mMirroredDisplayId);
+            if (map.getMirroredDisplay() == displayId) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /*
@@ -155,51 +270,69 @@ public class MultiDisplayController implements DisplayManager.DisplayListener {
         return null;
     }
 
-
     /*
      * release Mirror Display which has Mirror.
      * */
     private void releaseMirrorDisplay(int displayId) {
+        Log.d(TAG, "releaseMirrorDisplay " + displayId);
         DisplayMapping map = getMapping(displayId);
+        if (map == null) return;
+        if (mSurfaceRecord.get(displayId) != null && map.mMirroringSurface != mSurfaceRecord.get(displayId)) {
+            nativeRelease(mSurfaceRecord.get(displayId));
+        }
         map.releaseMirror();
+        mSurfaceRecord.remove(displayId);
     }
-
 
     class DisplayMapping {
         private final Display mDisplay;
         private long mMirroringSurface;
         private int mMirroredDisplayId;
+        private boolean mIsControlled;
 
         private DisplayMapping(Display display) {
             mDisplay = display;
-            mMirroredDisplayId = display.getDisplayId();
+            mMirroredDisplayId = -1;//display.getDisplayId();
             mMirroringSurface = 0;
         }
 
+        public int getMirroredDisplay() {
+            if (isMapping()) {
+                return mMirroredDisplayId;
+            }
+            return -1;
+        }
+
+        public void saveData(long surfaceNativeObject,int fromDisplayId, boolean control) {
+            mMirroringSurface = surfaceNativeObject;
+            mMirroredDisplayId = fromDisplayId;
+            mIsControlled = control;
+        }
+
+        public boolean isControlled() {
+            return mIsControlled;
+        }
+
         public void releaseMirror() {
+            Log.d(TAG, "releaseMirror " + mMirroringSurface);
             if (mMirroringSurface != 0) {
                 nativeRelease(mMirroringSurface);
                 mMirroringSurface = 0;
             }
-            if (mMirroredDisplayId != mDisplay.getDisplayId()) {
-                mMirroredDisplayId = mDisplay.getDisplayId();
+            if (mMirroredDisplayId != -1) {
+                mMirroredDisplayId = -1;
             }
+            mIsControlled = false;
         }
 
         @Override
         public String toString() {
-            return "MirroringData{" +
-                    "mDisplay=" + mDisplay.getDisplayId() +
-                    ", mMirroringSurface=" + mMirroringSurface +
-                    ", mMirroredDisplayId=" + mMirroredDisplayId +
-                    '}';
+            return "MirroringData{" + "mDisplay=" + mDisplay.getDisplayId() + ", mMirroringSurface=" + mMirroringSurface + ", mMirroredDisplayId=" + mMirroredDisplayId + '}';
         }
-
-
 
         public boolean isMapping() {
             //be mirrored
-            if (mMirroredDisplayId != mDisplay.getDisplayId()) {
+            if (mMirroredDisplayId != -1) {
                 return true;
             }
             //mirrored

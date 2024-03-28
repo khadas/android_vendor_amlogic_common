@@ -17,18 +17,18 @@
  ******************************************************************************/
 /******************************************************************************
 *
-*	Module Name:
-*	    bt_list.h
+*   Module Name:
+*       bt_list.h
 *
-*	Abstract:
-*	    To implement list data structure
+*   Abstract:
+*       To implement list data structure
 *
-*	Major Change History:
-*	      When             Who         What
-*	    --------------------------------------------------------------
-*	    2010-06-04         W.Bi       Created
+*   Major Change History:
+*         When             Who         What
+*       --------------------------------------------------------------
+*       2010-06-04         W.Bi       Created
 *
-*	Notes:
+*   Notes:
 *
 ******************************************************************************/
 
@@ -60,7 +60,8 @@ Stack:
 */
 
 ///RT list structure definition
-typedef struct _RT_LIST_ENTRY {
+typedef struct _RT_LIST_ENTRY
+{
     struct _RT_LIST_ENTRY *Next;   ///< Entry's next element
     struct _RT_LIST_ENTRY *Prev;   ///< Entry's previous element
 } RT_LIST_ENTRY, *PRT_LIST_ENTRY;
@@ -96,14 +97,14 @@ void ListAddToTail(PRT_LIST_ENTRY ListNew, PRT_LIST_HEAD ListHead);
      \param [IN ] ListHead    <RT_LIST_ENTRY>                 : List header
      \return entry in the head , otherwise NULL
 */
-RT_LIST_ENTRY* ListGetTop(PRT_LIST_HEAD ListHead);
+RT_LIST_ENTRY *ListGetTop(PRT_LIST_HEAD ListHead);
 
 /**
     Get entry in the tail of the list
      \param [IN ] ListHead    <RT_LIST_ENTRY>                 : List header
      \return entry in the tail , otherwise NULL
 */
-RT_LIST_ENTRY*
+RT_LIST_ENTRY *
 ListGetTail(
     PRT_LIST_HEAD ListHead
 );
@@ -124,11 +125,11 @@ unsigned char ListIsEmpty(PRT_LIST_HEAD ListHead);
 //EXTERN void ListEmpty(PRT_LIST_HEAD ListHead);
 
 void
-    ListAdd(
+ListAdd(
     PRT_LIST_ENTRY New,
     PRT_LIST_ENTRY Prev,
     PRT_LIST_ENTRY Next
-    );
+);
 
 /*----------------------------------------------------------------------------------
     MACRO
@@ -140,7 +141,7 @@ void
     \param _ListHead   : List head of which to be iterated
 */
 #define LIST_FOR_EACH(_Iter, _ListHead) \
-        for ((_Iter) = (_ListHead)->Next; (_Iter) != (_ListHead); (_Iter) = (_Iter)->Next)
+    for ((_Iter) = (_ListHead)->Next; (_Iter) != (_ListHead); (_Iter) = (_Iter)->Next)
 
 /**
     Macros to iterate over the list safely against removal of list entry.
@@ -150,8 +151,8 @@ void
     \param _ListHead   : List head of which to be iterated
 */
 #define LIST_FOR_EACH_SAFELY(_Iter, _Temp, _ListHead) \
-        for ((_Iter) = (_ListHead)->Next, (_Temp) = (_Iter)->Next; (_Iter) != (_ListHead);  \
-               (_Iter) = (_Temp), (_Temp) = (_Iter)->Next)
+    for ((_Iter) = (_ListHead)->Next, (_Temp) = (_Iter)->Next; (_Iter) != (_ListHead);  \
+         (_Iter) = (_Temp), (_Temp) = (_Iter)->Next)
 
 /**
     Macros to get the struct pointer of this list entry

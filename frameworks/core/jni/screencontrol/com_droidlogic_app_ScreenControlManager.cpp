@@ -214,6 +214,48 @@ static void ScreenControlForceStop(JNIEnv *, jobject)
     }
 }
 
+static void ScreenControlSetRecordParameter(JNIEnv *env, jobject,jobjectArray keys, jobjectArray values)
+{
+    sp<ScreenControlClient>& scc = getScreenControlClient();
+    if (!scc)
+        return;
+    std::map<std::string,int32_t > int32Map;
+    jclass stringClass = env->FindClass("java/lang/String");
+    jclass integerClass = env->FindClass("java/lang/Integer");
+    if (!keys || !values)
+        return;
+    jsize numEntries = env->GetArrayLength(keys);
+    if (numEntries != env->GetArrayLength(values)) {
+        return;
+    }
+    for (jsize i = 0; i < numEntries; ++i) {
+        jobject keyObj = env->GetObjectArrayElement(keys, i);
+         if (!env->IsInstanceOf(keyObj, stringClass)) {
+            return;
+        }
+        const char *tmp = env->GetStringUTFChars((jstring)keyObj, NULL);
+
+        if (tmp == NULL) {
+            return ;
+        }
+        std::string keyString = tmp;
+        env->ReleaseStringUTFChars((jstring)keyObj, tmp);
+        tmp = NULL;
+        jobject valueObj = env->GetObjectArrayElement(values, i);
+        if (env->IsInstanceOf(valueObj, integerClass)) {
+            jmethodID intValueID =
+                env->GetMethodID(integerClass, "intValue", "()I");
+
+            jint value = env->CallIntMethod(valueObj, intValueID);
+
+            int32Map.insert(make_pair(keyString, value));
+        }
+    }
+    if (!int32Map.empty())
+        scc->setExtraInt32Config(int32Map);
+
+}
+
 
 
 
@@ -224,6 +266,8 @@ static JNINativeMethod ScreenControl_Methods[] = {
     {"native_startAvcRecord", "(IIIIIIIII)I", (void *) ScreenControlStartAvcRecord},
     {"native_startYuvRecord", "(IIIIIIII)I", (void *) ScreenControlStartYuvRecord},
     {"native_ForceStop", "()V", (void *) ScreenControlForceStop },
+    {"native_SetRecordParameter", "([Ljava/lang/String;[Ljava/lang/Object;)V", (void *) ScreenControlSetRecordParameter },
+
 };
 
 #define FIND_CLASS(var, className) \

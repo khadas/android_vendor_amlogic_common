@@ -180,15 +180,20 @@ static const dev_info bt_dev_pci[] = {
 static const dev_info bt_dev_sdio[] = {
     // broadcom sdio modules
     {{0x02D0, 0x4359}, "ap6398s",      BCM_VND_LIB,   "",                POWER_EVENT_RESET},
+    // realtek sdio modules
+    {{0x024C, 0xC822}, "rtl8822cs",    RTK_VND_LIB,   "",                POWER_EVENT_RESET},
     // mediatek sdio modules
     {{0x0e8d, 0x7608}, "mtk7668s",     MTK_VND_LIB,   "btmtksdio",       POWER_EVENT_EN},
     {{0x0e8d, 0x7603}, "mtk7661s",     MTK_VND_LIB,   "btmtksdio",       POWER_EVENT_EN},
     // amlogic sdio modules
     {{0x8888, 0x8888}, "aml_w1",       AML_VND_LIB,   "",                POWER_EVENT_EN},
-    {{0x1B8E, 0x0500}, "aml_w1u_s",    AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0540}, "aml_w1u_s",    AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0600}, "aml_w2_s",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0640}, "aml_w2_s",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x0500}, "aml_w1u_s",    AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0540}, "aml_w1u_s",    AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0600}, "aml_w2_s",     AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0640}, "aml_w2_s",     AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0800}, "aml_w2l_s",    AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0810}, "aml_w2l_s",    AML_VND_LIB,   "",                POWER_EVENT_DEF},
+    {{0x1B8E, 0x0808}, "aml_w2l_s",    AML_VND_LIB,   "",                POWER_EVENT_DEF},
     // nxp sdio modules
     {{0x02DF, 0x9149}, "nxp8987",      NXP_VND_LIB,   "",                POWER_EVENT_RESET},
     {{0x02DF, 0x9141}, "nxp8997",      NXP_VND_LIB,   "",                POWER_EVENT_RESET},
@@ -217,6 +222,7 @@ static const dev_info bt_dev_usb[] = {
     {{0x0bda, 0x0821}, "rtl8821au",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
     {{0x0bda, 0x885c}, "rtl8852au",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
     {{0x0bda, 0x885a}, "rtl8852au",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
+    {{0x0bda, 0xa85b}, "rtl8852bu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
     {{0x0bda, 0xB733}, "rtl8733bu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
     {{0x0bda, 0xC82C}, "rtl88x2cu",    RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_EN},
     {{0x0bda, 0xB761}, "rtl8761u",     RTK_VND_LIB,   "rtk_btusb",       POWER_EVENT_RESET},
@@ -227,8 +233,8 @@ static const dev_info bt_dev_usb[] = {
     // amlogic usb modules
     {{0x1B8E, 0x4C55}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_RESET},
     {{0x1B8E, 0x0541}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0601}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0641}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x0601}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_EN},
+    {{0x1B8E, 0x0641}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_EN},
 };
 
 /******************************************************************************
@@ -628,8 +634,9 @@ static void rmmod_aml_drv(void)
 
     if (get_aml_bt_module(mod_name)) {
         PR_INFO("aml modules need rmmod wifi_comm");
-        rmmod("wifi_comm");
-        usleep(100000);
+        if (!rmmod("wifi_comm")) {
+            usleep(100000);
+        }
     }
 }
 
@@ -1737,13 +1744,13 @@ static bool distinguish_bt_module_uart(void)
 
 static bool distinguish_bt_module(void)
 {
+    unsigned int retry_cnt = 1;
     unsigned int cnt = 0;
+    unsigned int retry_cnt_usb = 0;
 
     PR_DBG();
 
-    while(cnt < 2) {
-        cnt ++;
-
+    while (cnt <= retry_cnt) {
         if (distinguish_dev_name_specify()) {
             goto exit;
         }
@@ -1760,12 +1767,29 @@ static bool distinguish_bt_module(void)
             goto exit;
         }
 
-        if (distinguish_bt_module_uart()) {
-            goto exit;
+        if (cnt > 0) { // uart recognition takes too long, ignore it first when unsure if bt is en
+            if (distinguish_bt_module_uart()) {
+                goto exit;
+            }
+
+            while (retry_cnt_usb <= 20) {  // usb distinguish retry maximum delay 400ms
+                usleep(20000);
+                retry_cnt_usb ++;
+                PR_INFO("usb distinguish retry_cnt_usb:%u", retry_cnt_usb);
+                if (distinguish_bt_module_usb()) {
+                    goto exit;
+                } else {
+                    continue;
+                }
+            }
         }
 
-        upio_set_bluetooth_power(UPIO_BT_POWER_ON);
-        PR_INFO("retry cnt: %u", cnt);
+        cnt ++;
+
+        if (cnt <= retry_cnt) {
+            upio_set_bluetooth_power(UPIO_BT_POWER_ON);
+            PR_INFO("retry cnt:%u", cnt);
+        }
     }
 
     return false;

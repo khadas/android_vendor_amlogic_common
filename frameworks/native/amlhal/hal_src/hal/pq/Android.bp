@@ -27,7 +27,6 @@ cc_library_shared {
 
     srcs: [
         "aml_hal_di.cpp",
-        "aml_hal_ld.cpp",
         "aml_hal_memc.cpp",
         "aml_hal_pq.cpp",
     ],
@@ -37,7 +36,6 @@ cc_library_shared {
         "vendor/amlogic/common/frameworks/native/amlhal/hal_src/adaptor/inc",
         "vendor/amlogic/common/frameworks/native/amlhal/hal_src/libs/pq/LibTableOSD",
         "vendor/amlogic/common/frameworks/native/amlhal/hal_src/libs/pq/LibTablePQ",
-        "vendor/amlogic/common/frameworks/native/amlhal/hal_src/libs/pq/LibTableLD",
     ],
 	
 	shared_libs: [
@@ -46,7 +44,6 @@ cc_library_shared {
 	    "libadap_pq",
 		"libPQTableOSD",
 		"libPQTable",
-		"libPQTableLD",
     ],
 
     cflags: [

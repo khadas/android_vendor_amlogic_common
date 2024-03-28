@@ -45,7 +45,7 @@ class TSPacker : public ESConvertor::ESConvertorCallback {
 public:
     TSPacker();
     virtual ~TSPacker();
-    bool start(std::unique_ptr<ESConvertorParmeter>& input);
+    bool start(std::unique_ptr<ESConvertorParmeter>& input, AMediaFormat *format = nullptr);
     bool stop();
     bool readBuffer(uint8_t** buffer, int32_t* size, int64_t* pts);
     void onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts);

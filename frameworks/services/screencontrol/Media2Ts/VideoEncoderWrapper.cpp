@@ -59,40 +59,38 @@ VideoEncoderWrapper::~VideoEncoderWrapper() {
     }
 }
 
-bool VideoEncoderWrapper::init(int32_t width, int32_t height, int32_t bit_rate, int32_t frame_rate, int32_t i_frame_interval/*default as 0*/) {
+bool VideoEncoderWrapper::init(AMediaFormat* format) {
     std::lock_guard<std::mutex> lock(mLock);
     media_status_t err = AMEDIA_OK;
     bool ret = false;
-    ALOGI("[%s %d] width:%d,height=%d,bit_rate=%d,frame_rate=%d,i_frame_interval=%d", __FUNCTION__, __LINE__,
-                width,height,bit_rate,frame_rate,i_frame_interval);
+    int32_t i_frame_interval = 0;
+    if (!format) {
+        ALOGE("[%s %d] the format is null,init fail !!", __FUNCTION__, __LINE__);
+        goto out;
+    }
+    ALOGI("[%s %d] the format : %s", __FUNCTION__, __LINE__,AMediaFormat_toString(format));
+
     mEncoder = AMediaCodec_createEncoderByType("video/avc");
     if (mEncoder == NULL) {
         ALOGE("[%s %d] create fail !!", __FUNCTION__, __LINE__);
-        return ret;
+        goto out;
     }
-    AMediaFormat* outputFormat = AMediaFormat_new();
-    AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_WIDTH, width);
-    AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_HEIGHT, height);
-    AMediaFormat_setString(outputFormat, AMEDIAFORMAT_KEY_MIME, "video/avc");
-
-    AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_BIT_RATE, bit_rate);
-    AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_BITRATE_MODE, OMX_Video_ControlRateConstant);
-    AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_FRAME_RATE, frame_rate);
-
     if (mIsSoftwareEncoder) {
-        AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 5);
-        AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_COLOR_FORMAT, COLOR_FormatYUV420SemiPlanar);
-        AMediaFormat_setInt32(outputFormat, "store-metadata-in-buffers", false);
-        AMediaFormat_setInt32(outputFormat, "prepend-sps-pps-to-idr-frames", 0);
+        if (!AMediaFormat_getInt32(format, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, &i_frame_interval))
+            AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 5);
+        AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_COLOR_FORMAT, COLOR_FormatYUV420SemiPlanar);
+        AMediaFormat_setInt32(format, "store-metadata-in-buffers", false);
+        AMediaFormat_setInt32(format, "prepend-sps-pps-to-idr-frames", 0);
     } else {
-        AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 15);  // Iframes every 15 secs
-        AMediaFormat_setInt32(outputFormat, AMEDIAFORMAT_KEY_COLOR_FORMAT, OMX_COLOR_FormatAndroidOpaque);
-        AMediaFormat_setInt32(outputFormat, "store-metadata-in-buffers", true);
-        AMediaFormat_setInt32(outputFormat, "prepend-sps-pps-to-idr-frames", 1);
-        AMediaFormat_setInt32(outputFormat, "vendor.venc.canvasmode.value", 1);
+        if (!AMediaFormat_getInt32(format, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, &i_frame_interval))
+            AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 15);  // Iframes every 15 secs
+        AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_COLOR_FORMAT, OMX_COLOR_FormatAndroidOpaque);
+        AMediaFormat_setInt32(format, "store-metadata-in-buffers", true);
+        AMediaFormat_setInt32(format, "prepend-sps-pps-to-idr-frames", 1);
+        AMediaFormat_setInt32(format, "vendor.venc.canvasmode.value", 1);
     }
     err = AMediaCodec_configure(mEncoder,
-              outputFormat,
+              format,
               nullptr,
               nullptr,
               AMEDIACODEC_CONFIGURE_FLAG_ENCODE);
@@ -111,7 +109,6 @@ bool VideoEncoderWrapper::init(int32_t width, int32_t height, int32_t bit_rate, 
     ALOGD("[%s %d] finish", __FUNCTION__, __LINE__);
     ret = true;
 out:
-    AMediaFormat_delete(outputFormat);
     return ret;
 }
 

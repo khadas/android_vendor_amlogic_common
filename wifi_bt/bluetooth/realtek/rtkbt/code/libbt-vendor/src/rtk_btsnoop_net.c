@@ -40,7 +40,7 @@
 #define HCI_ISODATA_PKT         0x05
 #define FW_LOG_PATH         "/data/misc/bluedroid/firmware_log_rtk"
 
-#define RTK_DEFAULT_BTSNOOP_SIZE 0x186A0
+#define RTK_DEFAULT_BTSNOOP_SIZE 0xffffffff //0xffffffff means don't split btsnoop file
 
 unsigned int rtkbt_h5logfilter = 0x01;
 bool rtk_btsnoop_dump = false;
@@ -50,6 +50,7 @@ char rtk_btsnoop_path[1024] = {'\0'};
 static uint32_t rtk_packets_per_file;
 static uint32_t rtk_packet_counter;
 static pthread_mutex_t btsnoop_log_lock;
+static bool fwlog_header_half_flag = 0;
 extern const int  INVALID_FD;
 
 
@@ -75,15 +76,16 @@ static int hci_btsnoop_fd = -1;
 static const uint64_t BTSNOOP_EPOCH_DELTA = 0x00dcddb30f2f8000ULL;
 
 
-static uint64_t rtk_btsnoop_timestamp(void) {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
+static uint64_t rtk_btsnoop_timestamp(void)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
 
-  // Timestamp is in microseconds.
-  uint64_t timestamp = tv.tv_sec * 1000LL * 1000LL;
-  timestamp += tv.tv_usec;
-  timestamp += BTSNOOP_EPOCH_DELTA;
-  return timestamp;
+    // Timestamp is in microseconds.
+    uint64_t timestamp = tv.tv_sec * 1000LL * 1000LL;
+    timestamp += tv.tv_usec;
+    timestamp += BTSNOOP_EPOCH_DELTA;
+    return timestamp;
 }
 
 void rtk_btsnoop_open()
@@ -95,80 +97,106 @@ void rtk_btsnoop_open()
 
     rtk_packet_counter = 0;
     rtk_packets_per_file = property_get_int32("persist.vendor.btsnoopsize", RTK_DEFAULT_BTSNOOP_SIZE);
-    if (hci_btsnoop_fd != -1) {
-      close(hci_btsnoop_fd);
-      hci_btsnoop_fd = -1;
+    if (hci_btsnoop_fd != -1)
+    {
+        close(hci_btsnoop_fd);
+        hci_btsnoop_fd = -1;
     }
 
-    if(rtk_btsnoop_save_log) {
+    if (rtk_btsnoop_save_log)
+    {
         time_t current_time = time(NULL);
-        struct tm* time_created = localtime(&current_time);
-        char config_time_created[sizeof("YYYY-MM-DD-HH-MM-SS")];
-        strftime(config_time_created, sizeof("YYYY-MM-DD-HH-MM-SS"), "%Y-%m-%d-%H-%M-%S",
-             time_created);
-        timestamp = rtk_btsnoop_timestamp() - BTSNOOP_EPOCH_DELTA;
-        usec = (uint32_t)(timestamp % 1000000LL);
-        snprintf(last_log_path, PATH_MAX, "%s.%s:%dUS", rtk_btsnoop_path, config_time_created, usec);
+        struct tm *time_created = localtime(&current_time);
+        if (time_created)
+        {
+            char config_time_created[sizeof("YYYY-MM-DD-HH-MM-SS")];
+            strftime(config_time_created, sizeof("YYYY-MM-DD-HH-MM-SS"), "%Y-%m-%d-%H-%M-%S",
+                     time_created);
+            timestamp = rtk_btsnoop_timestamp() - BTSNOOP_EPOCH_DELTA;
+            usec = (uint32_t)(timestamp % 1000000LL);
+            snprintf(last_log_path, PATH_MAX, "%s.%s:%uUS", rtk_btsnoop_path, config_time_created, usec);
+        }
+        else
+        {
+            snprintf(last_log_path, PATH_MAX, "%s.last", rtk_btsnoop_path);
+        }
         if (!rename(rtk_btsnoop_path, last_log_path) && errno != ENOENT)
-            ALOGE("%s unable to rename '%s' to '%s': %s", __func__, rtk_btsnoop_path, last_log_path, strerror(errno));
+        {
+            ALOGE("%s unable to rename '%s' to '%s': %s", __func__, rtk_btsnoop_path, last_log_path,
+                  strerror(errno));
+        }
     }
-    else {
+    else
+    {
         snprintf(last_log_path, PATH_MAX, "%s.last", rtk_btsnoop_path);
         if (!rename(rtk_btsnoop_path, last_log_path) && errno != ENOENT)
-            ALOGE("%s unable to rename '%s' to '%s': %s", __func__, rtk_btsnoop_path, last_log_path, strerror(errno));
+        {
+            ALOGE("%s unable to rename '%s' to '%s': %s", __func__, rtk_btsnoop_path, last_log_path,
+                  strerror(errno));
+        }
     }
 
     hci_btsnoop_fd = open(rtk_btsnoop_path,
                           O_WRONLY | O_CREAT | O_TRUNC,
                           S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 
-    if (hci_btsnoop_fd == -1) {
-      ALOGE("%s unable to open '%s': %s", __func__, rtk_btsnoop_path, strerror(errno));
-      return;
+    if (hci_btsnoop_fd == -1)
+    {
+        ALOGE("%s unable to open '%s': %s", __func__, rtk_btsnoop_path, strerror(errno));
+        return;
     }
 
     write(hci_btsnoop_fd, "btsnoop\0\0\0\0\1\0\0\x3\xea", 16);
 }
 
-void rtk_btsnoop_close(void) {
+void rtk_btsnoop_close(void)
+{
     pthread_mutex_destroy(&btsnoop_log_lock);
     if (hci_btsnoop_fd != -1)
+    {
         close(hci_btsnoop_fd);
+    }
     hci_btsnoop_fd = -1;
 }
 
-static void rtk_btsnoop_write(const void *data, size_t length) {
+static void rtk_btsnoop_write(const void *data, size_t length)
+{
     if (hci_btsnoop_fd != -1)
+    {
         write(hci_btsnoop_fd, data, length);
+    }
 }
 
-static void rtk_btsnoop_write_packet(serial_data_type_t type, const uint8_t *packet, bool is_received) {
+static void rtk_btsnoop_write_packet(serial_data_type_t type, const uint8_t *packet,
+                                     bool is_received)
+{
     int length_he = 0;
     int length;
-    int flags = 0;
+    int flags;
     int drops = 0;
     pthread_mutex_lock(&btsnoop_log_lock);
-    switch (type) {
+    switch (type)
+    {
     case HCI_COMMAND_PKT:
         length_he = packet[2] + 4;
         flags = 2;
-    break;
+        break;
     case HCI_ACLDATA_PKT:
         length_he = (packet[3] << 8) + packet[2] + 5;
         flags = is_received;
-    break;
+        break;
     case HCI_SCODATA_PKT:
         length_he = packet[2] + 4;
         flags = is_received;
-    break;
+        break;
     case HCI_EVENT_PKT:
         length_he = packet[1] + 3;
         flags = 3;
-    break;
+        break;
     case HCI_ISODATA_PKT:
         length_he = (packet[3] << 8) + packet[2] + 5;
-        flags= is_received;
-    break;
+        flags = is_received;
+        break;
     default:
         break;
     }
@@ -191,87 +219,118 @@ static void rtk_btsnoop_write_packet(serial_data_type_t type, const uint8_t *pac
     rtk_btsnoop_write(&time_lo, 4);
     rtk_btsnoop_write(&type, 1);
     rtk_btsnoop_write(packet, length_he - 1);
-    if(hci_btsnoop_fd != -1) {
+    if (hci_btsnoop_fd != -1 && rtk_packets_per_file != RTK_DEFAULT_BTSNOOP_SIZE)
+    {
         rtk_packet_counter++;
-        if(rtk_packet_counter > rtk_packets_per_file)
+        if (rtk_packet_counter > rtk_packets_per_file)
+        {
             rtk_btsnoop_open();
+        }
     }
     pthread_mutex_unlock(&btsnoop_log_lock);
 }
 
-void rtk_btsnoop_capture(const HC_BT_HDR *p_buf, bool is_rcvd) {
-  const uint8_t *p = (const uint8_t *)(p_buf + 1) + p_buf->offset;
+void rtk_btsnoop_capture(const HC_BT_HDR *p_buf, bool is_rcvd)
+{
+    const uint8_t *p = (const uint8_t *)(p_buf + 1) + p_buf->offset;
 
-  if (hci_btsnoop_fd == -1)
-    return;
+    if (hci_btsnoop_fd == -1)
+    {
+        return;
+    }
 
-  switch (p_buf->event & MSG_EVT_MASK) {
+    switch (p_buf->event & MSG_EVT_MASK)
+    {
     case MSG_HC_TO_STACK_HCI_EVT:
-    if((*(p + 3) == 0x94) && (*(p + 4) == 0xfc) && (*(p + 5) == 0x00)&&(rtkbt_h5logfilter&1)){}
-    else
-      rtk_btsnoop_write_packet(HCI_EVENT_PKT, p, false);
-      break;
+        if ((*(p + 3) == 0x94) && (*(p + 4) == 0xfc) && (*(p + 5) == 0x00) && (rtkbt_h5logfilter & 1)) {}
+        else
+        {
+            rtk_btsnoop_write_packet(HCI_EVENT_PKT, p, false);
+        }
+        break;
     case MSG_HC_TO_STACK_HCI_ACL:
     case MSG_STACK_TO_HC_HCI_ACL:
-      rtk_btsnoop_write_packet(HCI_ACLDATA_PKT, p, is_rcvd);
-      break;
+        rtk_btsnoop_write_packet(HCI_ACLDATA_PKT, p, is_rcvd);
+        break;
     case MSG_HC_TO_STACK_HCI_SCO:
     case MSG_STACK_TO_HC_HCI_SCO:
-      rtk_btsnoop_write_packet(HCI_SCODATA_PKT, p, is_rcvd);
-      break;
+        rtk_btsnoop_write_packet(HCI_SCODATA_PKT, p, is_rcvd);
+        break;
     case MSG_STACK_TO_HC_HCI_CMD:
-      if(((rtkbt_h5logfilter & 1) == 0) || (*p != 0x94) || (*(p + 1) != 0xfc))
-      rtk_btsnoop_write_packet(HCI_COMMAND_PKT, p, true);
-      break;
+        if (((rtkbt_h5logfilter & 1) == 0) || (*p != 0x94) || (*(p + 1) != 0xfc))
+        {
+            rtk_btsnoop_write_packet(HCI_COMMAND_PKT, p, true);
+        }
+        break;
     case MSG_HC_TO_STACK_HCI_ISO:
     case MSG_STACK_TO_HC_HCI_ISO:
-      rtk_btsnoop_write_packet(HCI_ISODATA_PKT, p, is_rcvd);
-      break;
-  }
+        rtk_btsnoop_write_packet(HCI_ISODATA_PKT, p, is_rcvd);
+        break;
+    }
 }
 
-void rtk_btsnoop_net_open() {
+void rtk_btsnoop_net_open()
+{
     rtk_listen_thread_valid_ = (pthread_create(&rtk_listen_thread_, NULL, rtk_listen_fn_, NULL) == 0);
-    if (!rtk_listen_thread_valid_) {
+    if (!rtk_listen_thread_valid_)
+    {
         ALOGE("%s pthread_create failed: %s", __func__, strerror(errno));
-    } else {
+    }
+    else
+    {
         ALOGD("initialized");
     }
 }
 
-void rtk_btsnoop_net_close() {
-    if (rtk_listen_thread_valid_) {
+void rtk_btsnoop_net_close()
+{
+    if (rtk_listen_thread_valid_)
+    {
+        int ret;
         shutdown(rtk_listen_socket_, SHUT_RDWR);
-        pthread_join(rtk_listen_thread_, NULL);
+        if ((ret = pthread_join(rtk_listen_thread_, NULL)) < 0)
+        {
+            ALOGE("userial_socket_open thread_socket_id pthread_join() FAILED result:%d", ret);
+        }
         rtk_listen_thread_valid_ = false;
     }
 }
 
-void rtk_btsnoop_net_write(serial_data_type_t type, uint8_t *data, bool is_received) {
-    if (rtk_listen_socket_ == -1) {
+void rtk_btsnoop_net_write(serial_data_type_t type, uint8_t *data, bool is_received)
+{
+    if (rtk_listen_socket_ == -1)
+    {
         return;
     }
     int length = 0;
     uint8_t *p = data;
 
-    switch (type) {
+    switch (type)
+    {
     case HCI_COMMAND_PKT:
-        if(((rtkbt_h5logfilter & 1) == 0) || (*p != 0x94) || (*(p + 1) != 0xfc))
+        if (((rtkbt_h5logfilter & 1) == 0) || (*p != 0x94) || (*(p + 1) != 0xfc))
+        {
             length = data[2] + 3;
+        }
         else
+        {
             return;
-    break;
+        }
+        break;
     case HCI_ACLDATA_PKT:
         length = (data[3] << 8) + data[2] + 4;
-    break;
+        break;
     case HCI_SCODATA_PKT:
         length = data[2] + 3;
-    break;
+        break;
     case HCI_EVENT_PKT:
-    if((*(p + 3) == 0x94) && (*(p + 4) == 0xfc) && (*(p + 5) == 0x00)&&(rtkbt_h5logfilter&1)){return;}
-    else
-        length = data[1] + 2;
-    break;
+        if ((*(p + 3) == 0x94) && (*(p + 4) == 0xfc) && (*(p + 5) == 0x00) &&
+            (rtkbt_h5logfilter & 1)) {return;}
+        else
+        {
+            length = data[1] + 2;
+        }
+        break;
     default:
         break;
     }
@@ -289,15 +348,20 @@ void rtk_btsnoop_net_write(serial_data_type_t type, uint8_t *data, bool is_recei
     time_t tt;
     time(&tt);
     t = localtime(&tt);
-
+    if (t == NULL)
+    {
+        ALOGE("%s localtime return NULL", __func__);
+        return;
+    }
     struct timeval tv;
     gettimeofday(&tv, NULL);
 
-    uint64_t nano_time = (t->tm_hour * 3600 + t->tm_min * 60 + t->tm_sec) * 1000 * 1000LL * 1000 + tv.tv_usec * 1000;
+    uint64_t nano_time = (t->tm_hour * 3600 + t->tm_min * 60 + t->tm_sec) * 1000 * 1000LL * 1000 +
+                         tv.tv_usec * 1000LL;
     uint16_t year = (t->tm_year + 1900) & 0xFFFF;
-    uint8_t  month = (t->tm_mon+1) & 0xFF;
+    uint8_t  month = (t->tm_mon + 1) & 0xFF;
     uint8_t  day =
-    buffer[0] = 0x02;
+        buffer[0] = 0x02;
     buffer[1] = 0x00;
     buffer[2] = 0x01;
     buffer[3] = 0x02;
@@ -316,34 +380,39 @@ void rtk_btsnoop_net_write(serial_data_type_t type, uint8_t *data, bool is_recei
     memcpy(&buffer[i], &length, sizeof(int));
     i = 4;
 #endif
-    switch (type) {
-        case HCI_COMMAND_PKT:
+    switch (type)
+    {
+    case HCI_COMMAND_PKT:
         buffer[i] = HCI_COMMAND;
         break;
 
-        case HCI_ACLDATA_PKT:
-        if(is_received) {
+    case HCI_ACLDATA_PKT:
+        if (is_received)
+        {
             buffer[i] = HCI_ACL_DATA_C2H;
         }
-        else {
+        else
+        {
             buffer[i] = HCI_ACL_DATA_H2C;
         }
         break;
 
-        case HCI_SCODATA_PKT:
-        if(is_received) {
+    case HCI_SCODATA_PKT:
+        if (is_received)
+        {
             buffer[i] = HCI_SCO_DATA_C2H;
         }
-        else {
+        else
+        {
             buffer[i] = HCI_SCO_DATA_H2C;
         }
         break;
 
-        case HCI_EVENT_PKT:
+    case HCI_EVENT_PKT:
         buffer[i] = HCI_EVENT;
         break;
 
-        default:
+    default:
         buffer[i] = 0;
         break;
 
@@ -363,17 +432,20 @@ void rtk_btsnoop_net_write(serial_data_type_t type, uint8_t *data, bool is_recei
     client_addr.sin_port = htons(RTK_REMOTE_PORT_);
     pthread_mutex_lock(&rtk_client_socket_lock_);
     int ret;
-    RTK_NO_INTR(ret = sendto(rtk_listen_socket_, buffer, (length+i), 0,(struct sockaddr*)&client_addr, sizeof(struct sockaddr_in)));
+    RTK_NO_INTR(ret = sendto(rtk_listen_socket_, buffer, (length + i), 0,
+                             (struct sockaddr *)&client_addr, sizeof(struct sockaddr_in)));
     //sendto(rtk_listen_socket_, buffer, 25, 0,(struct sockaddr*)&client_addr, sizeof(struct sockaddr_in));
     pthread_mutex_unlock(&rtk_client_socket_lock_);
 }
 
-static void *rtk_listen_fn_(void *context) {
+static void *rtk_listen_fn_(void *context)
+{
     RTK_UNUSED(context);
     prctl(PR_SET_NAME, (unsigned long)RTK_LISTEN_THREAD_NAME_, 0, 0, 0);
 
     rtk_listen_socket_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (rtk_listen_socket_ == -1) {
+    if (rtk_listen_socket_ == -1)
+    {
         ALOGE("%s socket creation failed: %s", __func__, strerror(errno));
         goto cleanup;
     }
@@ -390,7 +462,8 @@ static void *rtk_listen_fn_(void *context) {
     client_addr.sin_addr.s_addr = htonl(RTK_REMOTEHOST_);
     client_addr.sin_port = htons(RTK_REMOTE_PORT_);
 
-    if (bind(rtk_listen_socket_, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+    if (bind(rtk_listen_socket_, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+    {
         ALOGE("%s unable to bind listen socket: %s", __func__, strerror(errno));
         goto cleanup;
     }
@@ -401,54 +474,156 @@ cleanup:
     return NULL;
 }
 
-static void rtk_safe_close_(int *fd) {
-  assert(fd != NULL);
-  if (*fd != -1) {
-    close(*fd);
-    *fd = -1;
-  }
+static void rtk_safe_close_(int *fd)
+{
+    assert(fd != NULL);
+    if (*fd != -1)
+    {
+        close(*fd);
+        *fd = -1;
+    }
 }
-int hci_open_firmware_log_file_rtk(uint8_t seg) {
-	static char config_time_created[sizeof("YYYY-MM-DD-HH-MM-SS")];
-  char name[PATH_MAX];
-  memset(name,0,PATH_MAX);
-	if(seg == 0){
-		ALOGE("%s this is first segment!!", __func__);
-		time_t current_time = time(NULL);
-		struct tm* time_created = localtime(&current_time);
-		strftime(config_time_created, sizeof("YYYY-MM-DD-HH-MM-SS"), "%Y-%m-%d-%H-%M-%S",time_created);
-	}
-	snprintf(name, PATH_MAX, "%s.%s_%d", FW_LOG_PATH, config_time_created,seg);
-  ALOGE("%s begin to open %s", __func__,name);
-  mode_t prevmask = umask(0);
-  int logfile_fd = open(name, O_WRONLY | O_CREAT | O_TRUNC,
-                        S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
-  umask(prevmask);
-  if (logfile_fd == INVALID_FD) {
-    ALOGE("%s unable to open '%s': %s", __func__, FW_LOG_PATH, strerror(errno));
-  }
-  return logfile_fd;
+
+int hci_open_firmware_log_file_rtk(uint8_t seg)
+{
+    static char config_time_created[sizeof("YYYY-MM-DD-HH-MM-SS")];
+    char name[PATH_MAX];
+    memset(name, 0, PATH_MAX);
+    if (seg == 0)
+    {
+        ALOGE("%s this is first segment!!", __func__);
+        time_t current_time = time(NULL);
+        struct tm *time_created = localtime(&current_time);
+        if (!time_created)
+        {
+            return INVALID_FD;
+        }
+
+        strftime(config_time_created, sizeof("YYYY-MM-DD-HH-MM-SS"), "%Y-%m-%d-%H-%M-%S", time_created);
+    }
+
+    snprintf(name, PATH_MAX, "%s.%s_%d", FW_LOG_PATH, config_time_created, seg);
+    ALOGE("%s begin to open %s", __func__, name);
+    mode_t prevmask = umask(0);
+    int logfile_fd = open(name, O_WRONLY | O_CREAT | O_TRUNC,
+                          S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+    umask(prevmask);
+    if (logfile_fd == INVALID_FD)
+    {
+        ALOGE("%s unable to open '%s': %s", __func__, FW_LOG_PATH, strerror(errno));
+    }
+    return logfile_fd;
 }
-void hci_log_firmware_debug_packet_rtk(int fd, HC_BT_HDR* p_buf) {
-	 time_t time_log = time(NULL);
-	 struct tm* tm_log = localtime(&time_log);
-	 struct timeval time_msec;
-	 unsigned char timebuffer[9] = {0};
-	 gettimeofday( &time_msec, NULL );
- 	uint16_t msec = time_msec.tv_usec/1000;
-	 *((uint16_t*)timebuffer) = tm_log->tm_year;
-	 *((uint8_t*)timebuffer+2) = tm_log->tm_mon + 1;
-	 *((uint8_t*)timebuffer+3) = tm_log->tm_mday;
-	 *((uint8_t*)timebuffer+4) = tm_log->tm_hour;
-	 *((uint8_t*)timebuffer+5) = tm_log->tm_min;
-	 *((uint8_t*)timebuffer+6) = tm_log->tm_sec;
-	 timebuffer[7] = msec&0xff;
-	 timebuffer[8] = (msec>>8)&0xff;
-  write(fd, timebuffer, 9);
-  uint16_t len = *((const uint8_t *)(p_buf + 1) + 1) - 2;
-  const uint8_t *p = (const uint8_t *)(p_buf + 1) + p_buf->offset + 4;
-  write(fd, p, len);
+
+static int fwlog_header_search(const uint8_t *log_buff, int len)
+{
+    for (int i = 0; i < len - 1; i++)
+    {
+        if ((log_buff[i] == 0xA5) && (log_buff[i + 1] == 0xA5))
+        {
+            return i;
+        }
+    }
+    return -1;
 }
-void hci_close_firmware_log_file(int fd) {
-  if (fd != INVALID_FD) close(fd);
+
+void hci_log_firmware_debug_packet_rtk(int fd, HC_BT_HDR *p_buf, serial_data_type_t type)
+{
+    uint8_t format_buf[1024] = {0};
+    int target_count = 0;
+    time_t time_log = time(NULL);
+    uint16_t len = 0;
+    struct tm *tm_log = localtime(&time_log);
+    if (!tm_log)
+    {
+        return;
+    }
+    struct timeval time_msec;
+    unsigned char timebuffer[9] = {0};
+    gettimeofday(&time_msec, NULL);
+    uint16_t msec = time_msec.tv_usec / 1000;
+    *((uint16_t *)timebuffer) = tm_log->tm_year;
+    *((uint8_t *)timebuffer + 2) = tm_log->tm_mon + 1;
+    *((uint8_t *)timebuffer + 3) = tm_log->tm_mday;
+    *((uint8_t *)timebuffer + 4) = tm_log->tm_hour;
+    *((uint8_t *)timebuffer + 5) = tm_log->tm_min;
+    *((uint8_t *)timebuffer + 6) = tm_log->tm_sec;
+    timebuffer[7] = msec & 0xff;
+    timebuffer[8] = (msec >> 8) & 0xff;
+    if (type == DATA_TYPE_EVENT)
+    {
+        write(fd, timebuffer, 9);
+        len = *((const uint8_t *)(p_buf + 1) + 1) - 2;
+    }
+    else if (type == DATA_TYPE_ACL)
+    {
+        len = *((const uint16_t *)(p_buf + 1) + 2);
+    }
+    const uint8_t *p = (const uint8_t *)(p_buf + 1) + p_buf->offset + 4;
+    if (type == DATA_TYPE_EVENT)
+    {
+        write(fd, p, len);
+    }
+    else if (type == DATA_TYPE_ACL)
+    {
+        if (fwlog_header_half_flag)
+        {
+            if (p[0] == 0xA5)
+            {
+                memcpy(format_buf + target_count, timebuffer, 9);
+                target_count += 9;
+                format_buf[target_count++] = 0xA5;
+                format_buf[target_count++] = 0xA5;
+                p++;
+                len--;
+            }
+            else
+            {
+                format_buf[target_count++] = 0xA5;
+            }
+            fwlog_header_half_flag = false;
+        }
+        int pos = -1;
+        while ((pos = fwlog_header_search(p, len)) >= 0)
+        {
+            // log data before headeer
+            memcpy(format_buf + target_count, p, pos);
+            target_count += pos;
+
+            // insert timestamp and header
+            memcpy(format_buf + target_count, timebuffer, 9);
+            target_count += 9;
+
+            format_buf[target_count++] = 0xA5;
+            format_buf[target_count++] = 0xA5;
+
+            p += (pos + 2);
+            len -= (pos + 2);
+        }
+        if (len > 0)
+        {
+            if ((p[len - 1] == 0xA5))
+            {
+                if (len > 1)
+                {
+                    memcpy(format_buf + target_count, p, len - 1);
+                    target_count += (len - 1);
+                }
+
+                fwlog_header_half_flag = true;
+            }
+            else
+            {
+                memcpy(format_buf + target_count, p, len);
+                target_count += len;
+                fwlog_header_half_flag = false;
+            }
+        }
+        write(fd, format_buf, target_count);
+    }
+}
+
+void hci_close_firmware_log_file(int fd)
+{
+    if (fd != INVALID_FD) { close(fd); }
 }

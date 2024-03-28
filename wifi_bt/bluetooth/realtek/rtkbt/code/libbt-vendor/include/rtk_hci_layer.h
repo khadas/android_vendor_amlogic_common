@@ -51,6 +51,7 @@
 
 ///// END LEGACY DEFINITIONS /////
 
+#define HCI_CMD_MIN_SIZE 4
 #define BT_HC_HDR_SIZE (sizeof(HC_BT_HDR))
 
 #endif

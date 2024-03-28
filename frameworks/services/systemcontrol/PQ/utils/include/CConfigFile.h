@@ -14,12 +14,14 @@
 #define PQ_DB_DEFAULT_PATH_0                "/mnt/vendor/odm_ext/etc/tvconfig/pq/pq.db"
 #define OVERSCAN_DB_DEFAULT_PATH_0          "/mnt/vendor/odm_ext/etc/tvconfig/pq/overscan.db"
 #define PQ_CONFIG_DEFAULT_PATH_0            "/mnt/vendor/odm_ext/etc/tvconfig/pq/pq_default.ini"
+#define LDIM_BIN_DEFAULT_PATH_0             "/mnt/vendor/odm_ext/etc/tvconfig/pq/ldim.bin"
 #define DOLBY_BIN_FILE_DEFAULT_PATH_0       "/mnt/vendor/odm_ext/etc/tvconfig/panel/dv_config.bin"
 #define DOLBY_CFG_FILE_DEFAULT_PATH_0       "/mnt/vendor/odm_ext/etc/tvconfig/panel/Amlogic_dv.cfg"
 
 #define PQ_DB_DEFAULT_PATH_1                "/odm/etc/tvconfig/pq/pq.db"
 #define OVERSCAN_DB_DEFAULT_PATH_1          "/odm/etc/tvconfig/pq/overscan.db"
 #define PQ_CONFIG_DEFAULT_PATH_1            "/odm/etc/tvconfig/pq/pq_default.ini"
+#define LDIM_BIN_DEFAULT_PATH_1             "/odm/etc/tvconfig/pq/ldim.bin"
 #define DOLBY_BIN_FILE_DEFAULT_PATH_1       "/odm/etc/tvconfig/panel/dv_config.bin"
 #define DOLBY_CFG_FILE_DEFAULT_PATH_1       "/odm/etc/tvconfig/panel/Amlogic_dv.cfg"
 
@@ -29,6 +31,7 @@
 //pq file running dir path
 #define PARAM_PQ_DB_PATH                    "/mnt/vendor/param/pq/pq.db"
 #define PARAM_OVERSCAN_DB_PATH              "/mnt/vendor/param/pq/overscan.db"
+#define PARAM_LDIM_BIN_PATH                 "/mnt/vendor/param/pq/ldim.bin"
 
 #define PARAM_SSM_DATA_PATH                 "/mnt/vendor/param/pq/ssm_data"
 #define PARAM_SSM_HANDLER_PATH              "/mnt/vendor/param/pq/SSMHandler"
@@ -43,6 +46,7 @@
 #define CFG_PQ_WB_PATH                          "pq_wb_path"
 #define CFG_PQ_DV_BIN_PATH                      "pq_dv_bin_path"
 #define CFG_PQ_DV_CFG_PATH                      "pq_dv_cfg_path"
+#define CFG_PQ_LDIM_BIN_PATH                    "pq_ldim_bin_path"
 
 #define CFG_BIG_SMALL_DB_ENABLE                 "pq.BigSmallDb.en"
 #define CFG_ALL_PQ_MODULE_ENABLE                "pq.AllPQModule.en"
@@ -192,6 +196,7 @@ public:
     void GetSSMDataHandlerPath(char *file_path);
     void GetWBFilePath(char *file_path);
     void GetDvFilePath(char *bin_file_path, char *cfg_file_path);
+    void GetLdimBinPath(char *file_path);
     int LoadFromFile(const char *filename);
     int SaveToFile(const char *filename = NULL);
     int SetString(const char *section, const char *key, const char *value);

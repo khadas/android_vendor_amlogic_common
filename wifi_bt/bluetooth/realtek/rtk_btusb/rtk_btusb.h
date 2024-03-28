@@ -46,30 +46,33 @@
 #include <sound/pcm_params.h>
 
 #define RTK_SCO_ID "snd_sco_rtk"
-enum {
-	USB_CAPTURE_RUNNING,
-	USB_PLAYBACK_RUNNING,
-	ALSA_CAPTURE_OPEN,
-	ALSA_PLAYBACK_OPEN,
-	ALSA_CAPTURE_RUNNING,
-	ALSA_PLAYBACK_RUNNING,
-	CAPTURE_URB_COMPLETED,
-	PLAYBACK_URB_COMPLETED,
-	DISCONNECTED,
+enum
+{
+    USB_CAPTURE_RUNNING,
+    USB_PLAYBACK_RUNNING,
+    ALSA_CAPTURE_OPEN,
+    ALSA_PLAYBACK_OPEN,
+    ALSA_CAPTURE_RUNNING,
+    ALSA_PLAYBACK_RUNNING,
+    CAPTURE_URB_COMPLETED,
+    PLAYBACK_URB_COMPLETED,
+    DISCONNECTED,
 };
 
 // RTK sound card
-typedef struct RTK_sco_card {
+typedef struct RTK_sco_card
+{
     struct snd_card *card;
     struct snd_pcm *pcm;
     struct usb_device *dev;
     struct btusb_data *usb_data;
     unsigned long states;
-    struct rtk_sco_stream {
-		    struct snd_pcm_substream *substream;
-		    unsigned int sco_packet_bytes;
-		    snd_pcm_uframes_t buffer_pos;
-	  } capture, playback;
+    struct rtk_sco_stream
+    {
+        struct snd_pcm_substream *substream;
+        unsigned int sco_packet_bytes;
+        snd_pcm_uframes_t buffer_pos;
+    } capture, playback;
     spinlock_t capture_lock;
     spinlock_t playback_lock;
     struct work_struct send_sco_work;
@@ -167,6 +170,7 @@ int mp_drv_mode = 0; /* 1 Mptool Fw; 0 Normal Fw */
 #define ROM_LMP_8821a               0X8821
 #define ROM_LMP_8761a               0X8761
 #define ROM_LMP_8761b               0X8761
+#define ROM_LMP_8761c               0X8761
 #define ROM_LMP_8703a               0x8723
 #define ROM_LMP_8763a               0x8763
 #define ROM_LMP_8703b               0x8703
@@ -187,14 +191,16 @@ int mp_drv_mode = 0; /* 1 Mptool Fw; 0 Normal Fw */
 #define ROM_LMP_8852bp              0x8852
 #define ROM_LMP_8851b               0x8851
 #define ROM_LMP_8822e               0x8822
-
+#define ROM_LMP_8852d               0x8852
+#define ROM_LMP_8852bt              0x8852
 
 /* signature: Realtek */
-const uint8_t RTK_EPATCH_SIGNATURE[8] = {0x52,0x65,0x61,0x6C,0x74,0x65,0x63,0x68};
+const uint8_t RTK_EPATCH_SIGNATURE[8] = {0x52, 0x65, 0x61, 0x6C, 0x74, 0x65, 0x63, 0x68};
 /* Extension Section IGNATURE:0x77FD0451 */
-const uint8_t EXTENSION_SECTION_SIGNATURE[4] = {0x51,0x04,0xFD,0x77};
+const uint8_t EXTENSION_SECTION_SIGNATURE[4] = {0x51, 0x04, 0xFD, 0x77};
 
-uint16_t project_id[] = {
+uint16_t project_id[] =
+{
     ROM_LMP_8723a,
     ROM_LMP_8723b,
     ROM_LMP_8821a,
@@ -231,61 +237,84 @@ uint16_t project_id[] = {
     ROM_LMP_8822e,
     ROM_LMP_8852bp,//34 8852bp
     ROM_LMP_8851a,
-    ROM_LMP_8851b
+    ROM_LMP_8851b,
+    ROM_LMP_NONE,
+    ROM_LMP_NONE,
+    ROM_LMP_NONE,
+    ROM_LMP_NONE,
+    ROM_LMP_NONE,
+    ROM_LMP_8852d,//42 8852d
+    ROM_LMP_NONE,
+    ROM_LMP_NONE,
+    ROM_LMP_NONE,
+    ROM_LMP_NONE,
+    ROM_LMP_8852bt,//47 8852bt
+    ROM_LMP_NONE,
+    ROM_LMP_NONE,
+    ROM_LMP_NONE,
+    ROM_LMP_8761c  //51 8761c_mx
 };
-struct rtk_eversion_evt {
+struct rtk_eversion_evt
+{
     uint8_t status;
     uint8_t version;
-} __attribute__ ((packed));
+} __attribute__((packed));
 
 /*modified by lamparten 1020*/
-struct rtk_reset_evt {
+struct rtk_reset_evt
+{
     uint8_t status;
-} __attribute__ ((packed));
+} __attribute__((packed));
 /*modified by lamparten 1020*/
 
-struct rtk_localversion_evt {
+struct rtk_localversion_evt
+{
     uint8_t status;
     uint8_t hci_version;
     uint16_t hci_revision;
     uint8_t lmp_version;
     uint16_t lmp_manufacture;
     uint16_t lmp_subversion;
-} __attribute__ ((packed));
+} __attribute__((packed));
 
-struct rtk_epatch_entry {
+struct rtk_epatch_entry
+{
     uint16_t chip_id;
     uint16_t patch_length;
     uint32_t start_offset;
     uint32_t coex_version;
     uint32_t svn_version;
     uint32_t fw_version;
-} __attribute__ ((packed));
+} __attribute__((packed));
 
-struct rtk_epatch {
+struct rtk_epatch
+{
     uint8_t signature[8];
     uint32_t fw_version;
     uint16_t number_of_total_patch;
     struct rtk_epatch_entry entry[0];
-} __attribute__ ((packed));
+} __attribute__((packed));
 
-struct rtk_extension_entry {
+struct rtk_extension_entry
+{
     uint8_t opcode;
     uint8_t length;
     uint8_t *data;
-} __attribute__ ((packed));
+} __attribute__((packed));
 
-struct rtk_bt_vendor_config_entry{
+struct rtk_bt_vendor_config_entry
+{
     uint16_t offset;
     uint8_t entry_len;
     uint8_t entry_data[0];
-} __attribute__ ((packed));
+} __attribute__((packed));
 
-struct rtk_bt_vendor_config{
+struct rtk_bt_vendor_config
+{
     uint32_t signature;
     uint16_t data_len;
     struct rtk_bt_vendor_config_entry entry[0];
-} __attribute__ ((packed));
+} __attribute__((packed));
 
 /* Realtek - For rtk_btusb driver end */
 
@@ -299,12 +328,14 @@ struct rtk_bt_vendor_config{
 #define BT_SKB_RESERVE    8
 
 /* BD Address */
-typedef struct {
+typedef struct
+{
     __u8 b[6];
 } __packed bdaddr_t;
 
 /* Skb helpers */
-struct bt_skb_cb {
+struct bt_skb_cb
+{
     __u8 pkt_type;
     __u8 incoming;
     __u16 expect;
@@ -320,7 +351,8 @@ static inline struct sk_buff *bt_skb_alloc(unsigned int len, gfp_t how)
 {
     struct sk_buff *skb;
 
-    if ((skb = alloc_skb(len + BT_SKB_RESERVE, how))) {
+    if ((skb = alloc_skb(len + BT_SKB_RESERVE, how)))
+    {
         skb_reserve(skb, BT_SKB_RESERVE);
         bt_cb(skb)->incoming  = 0;
     }
@@ -355,7 +387,8 @@ static inline struct sk_buff *bt_skb_alloc(unsigned int len, gfp_t how)
 #define CHAR_DLFW           8
 
 /* HCI device flags */
-enum {
+enum
+{
     HCI_UP,           //if char device is opened set this flag, clear flag when close
     HCI_RUNNING,      //if usb transport has opened set this flag, clear flag when close
     HCI_UNREGISTER,
@@ -373,7 +406,8 @@ enum {
 #define HCI_MAX_EIR_LENGTH        240
 
 #define HCI_OP_READ_LOCAL_VERSION    0x1001
-struct hci_rp_read_local_version {
+struct hci_rp_read_local_version
+{
     __u8     status;
     __u8     hci_ver;
     __le16   hci_rev;
@@ -383,7 +417,8 @@ struct hci_rp_read_local_version {
 } __packed;
 
 #define HCI_EV_CMD_COMPLETE        0x0e
-struct hci_ev_cmd_complete {
+struct hci_ev_cmd_complete
+{
     __u8     ncmd;
     __le16   opcode;
 } __packed;
@@ -395,27 +430,32 @@ struct hci_ev_cmd_complete {
 #define HCI_SCO_HDR_SIZE     3
 #define HCI_ISO_HDR_SIZE     4
 
-struct hci_command_hdr {
+struct hci_command_hdr
+{
     __le16    opcode;        /* OCF & OGF */
     __u8    plen;
 } __packed;
 
-struct hci_event_hdr {
+struct hci_event_hdr
+{
     __u8    evt;
     __u8    plen;
 } __packed;
 
-struct hci_acl_hdr {
+struct hci_acl_hdr
+{
     __le16    handle;        /* Handle & Flags(PB, BC) */
     __le16    dlen;
 } __packed;
 
-struct hci_sco_hdr {
+struct hci_sco_hdr
+{
     __le16    handle;
     __u8    dlen;
 } __packed;
 
-struct hci_iso_hdr {
+struct hci_iso_hdr
+{
     __le16    handle;        /* Handle & Flags(PB, BC) */
     __le16    dlen;
 } __packed;
@@ -441,7 +481,8 @@ static inline struct hci_iso_hdr *hci_iso_hdr(const struct sk_buff *skb)
 }
 
 /* ---- HCI Ioctl requests structures ---- */
-struct hci_dev_stats {
+struct hci_dev_stats
+{
     __u32 err_rx;
     __u32 err_tx;
     __u32 cmd_tx;
@@ -458,7 +499,8 @@ struct hci_dev_stats {
 /*****************************************
 ** Realtek - Integrate from hci_core.h  **
 *****************************************/
-struct hci_conn_hash {
+struct hci_conn_hash
+{
     struct list_head list;
     unsigned int     acl_num;
     unsigned int     sco_num;
@@ -468,7 +510,8 @@ struct hci_conn_hash {
 #define HCI_MAX_SHORT_NAME_LENGTH    10
 
 #define NUM_REASSEMBLY 4
-struct hci_dev {
+struct hci_dev
+{
     struct mutex    lock;
 
     char        name[8];
@@ -516,7 +559,9 @@ static inline struct hci_dev *__hci_dev_hold(struct hci_dev *d)
 static inline void __hci_dev_put(struct hci_dev *d)
 {
     if (atomic_dec_and_test(&d->refcnt))
+    {
         d->destruct(d);
+    }
 }
 #endif
 
@@ -639,15 +684,19 @@ static inline void hci_set_drvdata(struct hci_dev *hdev, void *data)
 #define MAX_PATCH_SIZE_65_2K          (0x104D0 + 529)   //65.2K 8852b
 #define MAX_PATCH_SIZE_78K            (1024*78 + 529)   //78K  8852c
 #define MAX_PATCH_SIZE_145K           (0x24620)        //145K 8822E
+#define MAX_PATCH_SIZE_131K           (0x20D90)        //131K 8852D
+#define MAX_PATCH_SIZE_500K           (1024*500 + 529)  //500K 8761c_mx
 
-enum rtk_endpoit {
+enum rtk_endpoit
+{
     CTRL_EP = 0,
     INTR_EP = 1,
     BULK_EP = 2,
     ISOC_EP = 3
 };
 
-typedef struct {
+typedef struct
+{
     uint16_t    vid;
     uint16_t    pid;
     uint16_t    lmp_sub_default;
@@ -662,7 +711,8 @@ typedef struct {
     uint32_t    max_patch_size;
 } patch_info;
 
-typedef struct {
+typedef struct
+{
     struct usb_interface    *intf;
     struct usb_device        *udev;
     patch_info *patch_entry;
@@ -678,12 +728,14 @@ typedef struct {
     int            fw_len;
 } firmware_info;
 
-typedef struct {
+typedef struct
+{
     uint8_t index;
     uint8_t data[PATCH_SEG_MAX];
 } __attribute__((packed)) download_cp;
 
-typedef struct {
+typedef struct
+{
     uint8_t status;
     uint8_t index;
 } __attribute__((packed)) download_rp;
@@ -704,7 +756,7 @@ typedef struct {
 #define BDADDR_FILE "/data/misc/bluetooth/bdaddr"
 #define FACTORY_BT_BDADDR_STORAGE_LEN 17
 
-static inline int getmacaddr(uint8_t * vnd_local_bd_addr)
+static inline int getmacaddr(uint8_t *vnd_local_bd_addr)
 {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 14)
     struct file  *bdaddr_file;
@@ -714,7 +766,8 @@ static inline int getmacaddr(uint8_t * vnd_local_bd_addr)
     int ret = -1;
     memset(buf, 0, FACTORY_BT_BDADDR_STORAGE_LEN);
     bdaddr_file = filp_open(BDADDR_FILE, O_RDONLY, 0);
-    if (IS_ERR(bdaddr_file)){
+    if (IS_ERR(bdaddr_file))
+    {
         RTKBT_INFO("No Mac Config for BT\n");
         return -1;
     }
@@ -723,22 +776,27 @@ static inline int getmacaddr(uint8_t * vnd_local_bd_addr)
     ret = vfs_read(bdaddr_file, buf, FACTORY_BT_BDADDR_STORAGE_LEN, &bdaddr_file->f_pos);
     set_fs(oldfs);
     filp_close(bdaddr_file, NULL);
-    if(ret == FACTORY_BT_BDADDR_STORAGE_LEN)
+    if (ret == FACTORY_BT_BDADDR_STORAGE_LEN)
     {
-        for (i = 0; i < 6; i++) {
-            if(buf[3*i]>'9')
+        for (i = 0; i < 6; i++)
+        {
+            if (buf[3 * i] > '9')
             {
-                if(buf[3*i]>'Z')
-                    buf[3*i] -=('a'-'A'); //change  a to A
-                buf[3*i] -= ('A'-'9'-1);
+                if (buf[3 * i] > 'Z')
+                {
+                    buf[3 * i] -= ('a' - 'A');    //change  a to A
+                }
+                buf[3 * i] -= ('A' - '9' - 1);
             }
-            if(buf[3*i+1]>'9')
+            if (buf[3 * i + 1] > '9')
             {
-                if(buf[3*i+1]>'Z')
-                    buf[3*i+1] -=('a'-'A'); //change  a to A
-                buf[3*i+1] -= ('A'-'9'-1);
+                if (buf[3 * i + 1] > 'Z')
+                {
+                    buf[3 * i + 1] -= ('a' - 'A');    //change  a to A
+                }
+                buf[3 * i + 1] -= ('A' - '9' - 1);
             }
-            vnd_local_bd_addr[5-i] = ((uint8_t)buf[3*i]-'0')*16 + ((uint8_t)buf[3*i+1]-'0');
+            vnd_local_bd_addr[5 - i] = ((uint8_t)buf[3 * i] - '0') * 16 + ((uint8_t)buf[3 * i + 1] - '0');
         }
         return 0;
     }
@@ -749,39 +807,43 @@ static inline int getmacaddr(uint8_t * vnd_local_bd_addr)
 static inline int getAltSettings(patch_info *patch_entry, unsigned short *offset, int max_group_cnt)
 {
     int n = 0;
-    if(patch_entry)
+    if (patch_entry)
+    {
         offset[n++] = patch_entry->mac_offset;
-/*
-//sample code, add special settings
+    }
+    /*
+    //sample code, add special settings
 
-    offset[n++] = 0x15B;
-*/
+        offset[n++] = 0x15B;
+    */
     return n;
 }
-static inline int getAltSettingVal(patch_info *patch_entry, unsigned short offset, unsigned char * val)
+static inline int getAltSettingVal(patch_info *patch_entry, unsigned short offset,
+                                   unsigned char *val)
 {
     int res = 0;
 
-    switch(offset)
+    switch (offset)
     {
-/*
-//sample code, add special settings
-        case 0x15B:
-            val[0] = 0x0B;
-            val[1] = 0x0B;
-            val[2] = 0x0B;
-            val[3] = 0x0B;
-            res = 4;
-            break;
-*/
-        default:
-            res = 0;
-            break;
+    /*
+    //sample code, add special settings
+            case 0x15B:
+                val[0] = 0x0B;
+                val[1] = 0x0B;
+                val[2] = 0x0B;
+                val[3] = 0x0B;
+                res = 4;
+                break;
+    */
+    default:
+        res = 0;
+        break;
     }
 
-    if((patch_entry)&&(offset == patch_entry->mac_offset)&&(res == 0))
+    if ((patch_entry) && (offset == patch_entry->mac_offset) && (res == 0))
     {
-        if(getmacaddr(val) == 0){
+        if (getmacaddr(val) == 0)
+        {
             RTKBT_INFO("MAC: %02x:%02x:%02x:%02x:%02x:%02x", val[5], val[4], val[3], val[2], val[1], val[0]);
             res = 6;
         }

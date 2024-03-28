@@ -14,6 +14,7 @@ cc_library_shared {
     "-std=c++17",
   ],
   srcs: [
+    "ScreenControlService.cpp",
     "ScreenCatch/ScreenCatch.cpp",
     "Media2Ts/VideoEncoderWrapper.cpp",
     "Media2Ts/esconvertor.cpp",
@@ -31,6 +32,8 @@ cc_library_shared {
     "frameworks/native/libs/gui/include",
     "hardware/amlogic/gralloc/amlogic",
     "vendor/amlogic/common/system/libge2d/v2/include",
+    "system/libhidl/transport/include/hidl",
+    "system/libhidl/libhidlmemory/include"
   ],
   local_include_dirs: [
       "include",
@@ -53,7 +56,9 @@ cc_library_shared {
     "libmeson_display_adapter_remote",
     "libyuv",
     "libge2d-2.0",
-    "libion"
+    "libion",
+    "android.hidl.allocator@1.0",
+    "android.hidl.memory@1.0",
   ],
 }
 
@@ -88,7 +93,6 @@ cc_binary {
   vendor: true,
   srcs: [
     "ScreenControlHal.cpp",
-    "ScreenControlService.cpp",
     "main_screencontrol.cpp",
   ],
 

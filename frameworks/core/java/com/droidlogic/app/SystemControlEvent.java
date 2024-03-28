@@ -52,6 +52,7 @@ public class SystemControlEvent extends ISystemControlCallback.Stub {
     private DisplayModeListener     mDisplayModeListener     = null;
     private AudioEventListener      mAudioListener           = null;
     private HdrInfoListener         mHdrInfoListener         = null;
+    private ActiveModeChangeListener mActiveModeListener     = null;
     public static SystemControlEvent mInstance;
 
     private SystemControlEvent(Context context) {
@@ -82,8 +83,6 @@ public class SystemControlEvent extends ISystemControlCallback.Stub {
             boolean  plugged = (event - EVENT_HDMI_PLUG_OUT) ==1 ? true : false;
             intent.putExtra(EXTRA_HDMI_PLUGGED_STATE, plugged);
         } else if (event == EVENT_HDMI_AUDIO_OUT || event == EVENT_HDMI_AUDIO_IN) {
-            setWiredDeviceConnectionState(DEVICE_OUT_AUX_DIGITAL, (event - EVENT_HDMI_AUDIO_OUT), "", "");
-            //mAudioManager.setWiredDeviceConnectionState(AudioManager.DEVICE_OUT_HDMI, (event - EVENT_HDMI_AUDIO_OUT), "", "");
             return;
         }  else {
             intent = new Intent(ACTION_SYSTEM_CONTROL_EVENT);
@@ -138,6 +137,15 @@ public class SystemControlEvent extends ISystemControlCallback.Stub {
         }
     }
 
+    public void notifyChangeActiveMode(int param1, int param2, int param3) {
+        Log.i(TAG, "mActiveModeListener: : " + param1 + "x" + param2+" f:"+param3);
+        if (mActiveModeListener != null) {
+            mActiveModeListener.changeActiveMode(param1, param2, param3);
+        } else {
+            Log.e(TAG, "mActiveModeListener is null");
+        }
+    }
+
     public void notifyAudioCallback(int param1, int param2, int param3, int param4) {
         Log.d(TAG, "notify audio callback param1:" + param1 + "param2:" + param2 + "param3:" + param3 + "param4:" + param4);
         if (mAudioListener != null) {
@@ -161,32 +169,18 @@ public class SystemControlEvent extends ISystemControlCallback.Stub {
         Log.d(TAG, "SetFBCUpgradeEventListener");
         mFBCUpgradeEventListener  = l;
     }
-    public void notifyDensityChange(int displayId, int width, int height) {
-        if (DisplayDensityManager.Enabled()) {
-            DisplayDensityManager mDisplayManager = DisplayDensityManager.getInstance(mContext);
-            mDisplayManager.adjustDisplayDensityByMode(displayId,width,height);
-        }
+
+    public interface ActiveModeChangeListener {
+        void changeActiveMode(int width, int height, int framerate);
     }
-    private void setWiredDeviceConnectionState(int type, int state, String address, String name) {
-        try {
-            Class<?> audioManager = Class.forName("android.media.AudioManager");
-            Method setwireState = audioManager.getMethod("setWiredDeviceConnectionState",
-                                    int.class, int.class, String.class, String.class);
-            Log.d(TAG,"setWireDeviceConnectionState "+setwireState);
 
-            setwireState.invoke(mAudioManager, type, state, address, name);
+    public void SetActiveModeChangeListener (ActiveModeChangeListener l) {
+        Log.d(TAG, "SetActiveModeChangeListener");
+        mActiveModeListener = l;
+    }
 
-        } catch(ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException ex) {
-            ex.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+    public void notifyDensityChange(int displayId, int width, int height) {
+        //no used
     }
 
     private void setAudioStateWhenDisplayModeChanged() {
@@ -203,5 +197,9 @@ public class SystemControlEvent extends ISystemControlCallback.Stub {
         if (outModeManager.getForceDDPEnable() != ddpEnable) {
             outModeManager.setForceDDPEnable(ddpEnable);
         }
+    }
+
+        public void notifyScreenColorChange(int newColor) {
+            Log.d(TAG, "notifyScreenColorChange callback");
     }
 }

@@ -300,6 +300,8 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     Return<int32_t> setAipqEnable(int32_t isEnable) override;
     Return<int32_t> getAipqEnable() override;
     Return<void> readAiPqTable(readAiPqTable_cb _hidl_cb) override;
+    Return<int32_t> setAipqMode(int32_t mode, int32_t isSave) override;
+    Return<int32_t> getAipqMode(void) override;
     Return<int32_t> getBlueStretch(void) override;
     Return<int32_t> setBlueStretch(int32_t level, int32_t is_save) override;
     Return<int32_t> getLocalDimming(void) override;
@@ -312,6 +314,8 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     Return<Result> aisrContrl(bool on) override;
     Return<Result> hasAisrFunc() override;
     Return<Result> getAisr() override;
+    Return<int32_t> setAisrMode(int32_t mode, int32_t isSave) override;
+    Return<int32_t> getAisrMode(void) override;
     //aicolor
     Return<int32_t> setAiColor(int32_t value, int32_t isSave) override;
     Return<int32_t> getAiColor(void) override;
@@ -330,6 +334,8 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
 
     //memc
     Return<Result> memcContrl(bool on) override;
+
+    Return<void> dlgControl() override;
 
     //static frame
     Return<int32_t> setStaticFrameEnable(int32_t enable, int32_t isSave);
@@ -352,7 +358,9 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     virtual void onHdrInfoChange(int32_t newHdrInfo);
     virtual void onDensityChange(int32_t param1,int32_t param2, int32_t param3);
     virtual void onAudioEvent(int32_t param1, int32_t param2, int32_t param3, int32_t param4);
+    virtual void setActiveModeRemote(int32_t param1,int32_t param2, int32_t param3);
     Return<void> setAudioParam(int32_t param1, int32_t param2, int32_t param3, int32_t param4, setAudioParam_cb _hidl_cb);
+    virtual void onScreenColorChange(int32_t newColor);
 
     // Methods from ::android::hidl::base::V1_0::IBase follow.
     Return<void> debug(const hidl_handle& fd, const hidl_vec<hidl_string>& args) override;

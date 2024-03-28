@@ -69,7 +69,8 @@ timed_out poll_idle_timeout;
 ******************************************************************************/
 
 /* Poll state */
-enum {
+enum
+{
     POLL_DISABLED = 0,      /* initial state */
     POLL_ENABLED,
 };
@@ -84,12 +85,12 @@ typedef struct
 } bt_poll_cb_t;
 
 extern int timer_create(clockid_t clockid, struct sigevent *sevp,
-                                timer_t *timerid);
+                        timer_t *timerid);
 extern int timer_delete(timer_t timerid);
 
 int timer_settime(timer_t timerid, int flags,
-                      const struct itimerspec *new_value,
-                      struct itimerspec * old_value);
+                  const struct itimerspec *new_value,
+                  struct itimerspec *old_value);
 /******************************************************************************
 **  Static variables
 ******************************************************************************/
@@ -116,7 +117,8 @@ static void poll_timer_stop(void)
 
     ALOGI("poll_timer_stop: timer_created %d", bt_poll_cb.timer_created);
 
-    if (bt_poll_cb.timer_created == true) {
+    if (bt_poll_cb.timer_created == true)
+    {
         ts.it_value.tv_sec = 0;
         ts.it_value.tv_nsec = 0;
         ts.it_interval.tv_sec = 0;
@@ -124,7 +126,9 @@ static void poll_timer_stop(void)
 
         status = timer_settime(bt_poll_cb.timer_id, 0, &ts, 0);
         if (status == -1)
+        {
             ALOGE("[STOP] Failed to set poll idle timeout");
+        }
     }
 }
 
@@ -141,14 +145,15 @@ static void poll_timer_stop(void)
 ** Returns         None
 **
 *******************************************************************************/
-void poll_init(timed_out ptr_timeout,uint32_t timeout)
+void poll_init(timed_out ptr_timeout, uint32_t timeout)
 {
-    memset((void*)&bt_poll_cb, 0, sizeof(bt_poll_cb_t));
+    memset((void *)&bt_poll_cb, 0, sizeof(bt_poll_cb_t));
     poll_idle_timeout = ptr_timeout;
     bt_poll_cb.state = POLL_DISABLED;
     bt_poll_cb.timeout_ms = timeout;
 
-    ALOGI("poll_init: state %d, timeout %d ms,timeout=%d", bt_poll_cb.state, bt_poll_cb.timeout_ms,timeout);
+    ALOGI("poll_init: state %d, timeout %d ms,timeout=%d", bt_poll_cb.state, bt_poll_cb.timeout_ms,
+          timeout);
 }
 
 /*******************************************************************************
@@ -164,7 +169,8 @@ void poll_cleanup(void)
 {
     ALOGI("poll_cleanup: timer_created %d", bt_poll_cb.timer_created);
 
-    if (bt_poll_cb.timer_created == true) {
+    if (bt_poll_cb.timer_created == true)
+    {
         timer_delete(bt_poll_cb.timer_id);
     }
 }
@@ -182,18 +188,24 @@ void poll_enable(uint8_t turn_on)
 {
     ALOGI("poll_enable: turn_on %d, state %d", turn_on, bt_poll_cb.state);
 
-    if ((turn_on == true) && (bt_poll_cb.state == POLL_ENABLED)) {
+    if ((turn_on == true) && (bt_poll_cb.state == POLL_ENABLED))
+    {
         ALOGI("poll_enable: poll is already on!!!");
         return;
-    } else if ((turn_on == false) && (bt_poll_cb.state == POLL_DISABLED)) {
+    }
+    else if ((turn_on == false) && (bt_poll_cb.state == POLL_DISABLED))
+    {
         ALOGI("poll_enable: poll is already off!!!");
         return;
     }
 
-    if (turn_on == false) {
+    if (turn_on == false)
+    {
         poll_timer_stop();
         bt_poll_cb.state = POLL_DISABLED;
-    } else {
+    }
+    else
+    {
         /* start poll timer when poll_timer_flush invoked first time */
         bt_poll_cb.state = POLL_ENABLED;
     }
@@ -220,9 +232,12 @@ void poll_timer_flush(void)
     BTPOLLDBG("poll_timer_flush: state %d", bt_poll_cb.state);
 
     if (bt_poll_cb.state != POLL_ENABLED)
+    {
         return;
+    }
 
-    if (bt_poll_cb.timer_created == false) {
+    if (bt_poll_cb.timer_created == false)
+    {
         se.sigev_notify = SIGEV_THREAD;
         se.sigev_value.sival_ptr = &bt_poll_cb.timer_id;
         se.sigev_notify_function = poll_idle_timeout;
@@ -231,10 +246,17 @@ void poll_timer_flush(void)
         status = timer_create(CLOCK_MONOTONIC, &se, &bt_poll_cb.timer_id);
 
         if (status == 0)
+        {
             bt_poll_cb.timer_created = true;
+        }
+        else
+        {
+            ALOGE("[Flush] Failed to timer create");
+        }
     }
 #if (defined(ENABLE_BT_POLL_IN_ACTIVE_MODE) && (ENABLE_BT_POLL_IN_ACTIVE_MODE == false))
-    if (bt_poll_cb.timer_created == true) {
+    if (bt_poll_cb.timer_created == true)
+    {
         ts.it_value.tv_sec = bt_poll_cb.timeout_ms / 1000;
         ts.it_value.tv_nsec = 1000 * 1000 * (bt_poll_cb.timeout_ms % 1000);
         ts.it_interval.tv_sec = 0;
@@ -242,7 +264,9 @@ void poll_timer_flush(void)
 
         status = timer_settime(bt_poll_cb.timer_id, 0, &ts, 0);
         if (status == -1)
+        {
             ALOGE("[Flush] Failed to set poll idle timeout");
+        }
     }
 #endif
 }

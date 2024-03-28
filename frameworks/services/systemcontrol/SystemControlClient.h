@@ -53,12 +53,12 @@ public:
     virtual void onHdrInfoChange(int newHdrInfo) = 0;
     virtual void onAudioEvent(int param1, int param2, int param3, int param4) = 0;
     virtual void onDensityChange(int param1,int param2, int param3) = 0;
+    virtual void onScreenColorChange(int newColor) = 0;
 };
 
 class SystemControlClient  : virtual public RefBase {
 private:
     SystemControlClient();
-
 public:
     bool getProperty(const std::string& key, std::string& value);
     bool getPropertyString(const std::string& key, std::string& value, std::string& def);
@@ -303,10 +303,14 @@ public:
     int setAipqEnable(int isEnable);
     int getAipqEnable();
     bool readAiPqTable(std::string& aiPqTable);
+    int setAipqMode(int mode, int isSave);
+    int getAipqMode(void);
     //aisr
     bool aisrContrl(int isEnable);
     bool hasAisrFunc();
     bool getAisr();
+    int setAisrMode(int mode, int isSave);
+    int getAisrMode(void);
     //aicolor
     int setAiColor(int value, int isSave);
     int getAiColor(void);
@@ -340,8 +344,10 @@ public:
     int UpdateFBCUpgradeStatus(int state, int param);
     int setAudioParam(int param1, int param2, int param3, int param4 = -1);
     bool syncDensity(int displayid, int width, int height);
+    void onActiveMode(int param1, int param2, int param3);
     void setListener(const sp<SysCtrlListener> &listener);
     static SystemControlClient * getInstance();
+    void dlgControl();
 
  private:
      class SystemControlHidlCallback : public ISystemControlCallback {
@@ -353,6 +359,8 @@ public:
          Return<void> notifyHdrInfoChangedCallback(int newHdrInfo) override;
          Return<void> notifyDensityChange(int param1, int param2, int param3) override;
          Return<void> notifyAudioCallback(int param1, int param2, int param3, int param4) override;
+         Return<void> notifyChangeActiveMode(int param1, int param2, int param3) override;
+         Return<void> notifyScreenColorChange(int newColor) override;
      private:
          SystemControlClient *SysCtrlClient;
      };

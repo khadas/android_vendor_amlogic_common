@@ -1096,6 +1096,12 @@ ScopedAStatus AmlogicCameraDeviceSession::configureStreams(
     aml_camera_stream_configuration_t stream_list{};
     std::vector<aml_camera_stream_t*> streams;
 
+    for (const auto &it : in_requestedConfiguration.streams) {
+        if (it.useCase != aidl::android::hardware::camera::metadata::ScalerAvailableStreamUseCases::ANDROID_SCALER_AVAILABLE_STREAM_USE_CASES_DEFAULT) {
+            return fromStatus(Status::ILLEGAL_ARGUMENT);
+        }
+    }
+
     if (!preProcessConfigurationLocked(in_requestedConfiguration, &stream_list, &streams)) {
         return fromStatus(Status::INTERNAL_ERROR);
     }
@@ -1121,7 +1127,7 @@ ScopedAStatus AmlogicCameraDeviceSession::configureStreams(
         }
         mFirstRequest = true;
     }
-    return fromStatus(Status::OK);
+    return fromStatus(status);
 }
 
  ScopedAStatus AmlogicCameraDeviceSession::flush() {
@@ -1301,6 +1307,8 @@ Status AmlogicCameraDeviceSession::processOneCaptureRequest(const CaptureRequest
         if (aeCancelTriggerNeeded) {
             mInflightAETriggerOverrides.erase(request.frameNumber);
         }
+        if (ret == BAD_VALUE)
+            return Status::ILLEGAL_ARGUMENT;
         return Status::INTERNAL_ERROR;
     }
 

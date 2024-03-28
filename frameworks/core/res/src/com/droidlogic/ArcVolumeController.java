@@ -52,10 +52,12 @@ public class ArcVolumeController {
     private static final int MSG_SHOW_VOLUME_BAR = 2;
     private static final int MSG_SHOW_VOLUME_BAR_AVR_MUTE = 3;
     private static final int MSG_SHOW_ARC_PORT_WARNING = 4;
+    private static final int MSG_VOLUME_MUTE_SELF_ADJUST = 5;
 
     private static final long DELAY_VOLUME_BAR_DISMISS = 1000;
     private static final long DELAY_AVR_MUTE = 2000;
     private static final long DELAY_ARC_PORT_WARNING = 2000;
+    private static final long DELAY_VOLUME_MUTE_SELF_ADJUST = 2000;
 
     // Related with HdmiControlManager.OSD_MESSAGE_AVR_VOLUME_CHANGED = 2
     private static final int OSD_NAME_VOLUME_KEY = 3;
@@ -75,6 +77,8 @@ public class ArcVolumeController {
     // when connected with avr, tv could always be initiated with unmute.
     private boolean mMute = false;
 
+    private boolean mMuteSelfAdjust = false;
+
     private Handler mHandler = new Handler() {
         public void handleMessage(@NonNull Message msg) {
             switch (msg.what) {
@@ -90,6 +94,9 @@ public class ArcVolumeController {
                 case MSG_SHOW_ARC_PORT_WARNING:
                     Log.d(TAG, "Audio system is not connected to arc port!");
                     Toast.makeText(mContext, R.string.arc_port_warning, Toast.LENGTH_LONG).show();
+                    break;
+                case MSG_VOLUME_MUTE_SELF_ADJUST:
+                    mMuteSelfAdjust = false;
                     break;
             }
         }
@@ -211,7 +218,12 @@ public class ArcVolumeController {
                             Log.d(TAG, "avr mute:" + mute + " device mute:" + mMute);
                             mHandler.removeMessages(MSG_SHOW_VOLUME_BAR_AVR_MUTE, null);
                             mHandler.sendMessageDelayed(Message.obtain(mHandler, MSG_SHOW_VOLUME_BAR_AVR_MUTE,
-                                mute ? ENABLED : DISABLED), DELAY_AVR_MUTE);
+                                mute ? ENABLED : DISABLED), mMuteSelfAdjust ? DELAY_AVR_MUTE : 0);
+                        } else {
+                            Log.d(TAG, "remove avr's previous audio status if exist");
+                            if (mHandler.hasMessages(MSG_SHOW_VOLUME_BAR_AVR_MUTE)) {
+                                mHandler.removeMessages(MSG_SHOW_VOLUME_BAR_AVR_MUTE, null);
+                            }
                         }
                         break;
                     case HdmiControlManager.OSD_MESSAGE_ARC_CONNECTED_INVALID_PORT:
@@ -238,6 +250,9 @@ public class ArcVolumeController {
                                 } else {
                                     value = ENABLED;
                                 }
+                                mMuteSelfAdjust = true;
+                                mHandler.removeMessages(MSG_VOLUME_MUTE_SELF_ADJUST);
+                                mHandler.sendEmptyMessageDelayed(MSG_VOLUME_MUTE_SELF_ADJUST, DELAY_VOLUME_MUTE_SELF_ADJUST);
                                 break;
                             default:
                                 Log.e(TAG, "unknown key event:" + extra);

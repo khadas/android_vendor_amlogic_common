@@ -27,7 +27,6 @@ cc_library_shared {
 
     srcs: [
         "adap_di.cpp",
-        "adap_ld.cpp",
         "adap_memc.cpp",
         "adap_pq.cpp",
     ],

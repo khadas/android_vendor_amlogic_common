@@ -16,6 +16,7 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "ESConvertor"
 #include <utils/Log.h>
+#include <OMX_Video.h>
 #include "../ScreenControlDebug.h"
 #include "../ScreenControlH264.h"
 #include "esconvertor.h"
@@ -47,8 +48,9 @@ ESConvertor::~ESConvertor() {
     ALOGI("~ESConvertor");
 }
 
-bool ESConvertor::start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertorCallback *client) {
+bool ESConvertor::start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertorCallback *client, AMediaFormat *format /*default as nullptr*/) {
     std::lock_guard<std::mutex> lock(mLock);
+    AMediaFormat* MediaFormat = nullptr;
     if (input->source_type < AML_CAPTURE_VIDEO || input->source_type > SCAML_CAPTURE_UNKNOWN) {
         ALOGE("[%s %d] dont't support the type=%d", __FUNCTION__, __LINE__,input->source_type);
         return false;
@@ -67,8 +69,23 @@ bool ESConvertor::start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertor
     mScreenManager = ScreenManager::getInstance();
     if (!mScreenManager)
         return false;
+    MediaFormat = format;
+    if (!format)
+        MediaFormat = AMediaFormat_new();
+    if (!MediaFormat)
+        return false;
+    AMediaFormat_setInt32(MediaFormat, AMEDIAFORMAT_KEY_WIDTH, input->size->width());
+    AMediaFormat_setInt32(MediaFormat, AMEDIAFORMAT_KEY_HEIGHT, input->size->height());
+    AMediaFormat_setString(MediaFormat, AMEDIAFORMAT_KEY_MIME, "video/avc");
 
-    if (!mEncoder->init(input->size->width(), input->size->height(), input->bit_rate_, input->frame_rate,input->i_frame_interval)) {
+    AMediaFormat_setInt32(MediaFormat, AMEDIAFORMAT_KEY_BIT_RATE, input->bit_rate_);
+    AMediaFormat_setInt32(MediaFormat, AMEDIAFORMAT_KEY_BITRATE_MODE, OMX_Video_ControlRateConstant);
+    AMediaFormat_setInt32(MediaFormat, AMEDIAFORMAT_KEY_FRAME_RATE, input->frame_rate);
+    bool ret = mEncoder->init(MediaFormat);
+    if (!format && MediaFormat) {
+        AMediaFormat_delete(MediaFormat);
+    }
+    if (!ret) {
         ALOGE("[%s %d] encoder init fail!", __FUNCTION__, __LINE__);
         return false;
     }

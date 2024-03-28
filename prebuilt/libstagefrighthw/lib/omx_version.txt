@@ -1,0 +1,31 @@
+========================================
+COMMIT    : 857a981 omx: CF2 release V2.13.20-g6416d6e [1/1]
+BRANCH    : * (HEAD detached from 11e277a)
+AUTHOR    : Author: shuanglong.wang <shuanglong.wang@amlogic.com>
+BUILD_TIME: 2024-01-31 15:11:26
+BUILD_NAME: drm.autobuild
+BUILD_ID  : 2075
+BUILD_HOST: android-build
+========================================
+Revision History
+857a981 omx: CF2 release V2.13.20-g6416d6e [1/1]
+6416d6e omx: CB1 support for android U [1/1]
+11e277a omx2: CF1 support reuse picture buffer of the error frame. [2/2]
+cf684cf omx2: CB2 Fix apts is not accurate with real duration time. [1/1]
+6047a2c omx2: CF2 add dtv avs avs+ support. [1/2]
+2b589c3 Merge "omx2: CB1 avc interlace need use dw 0x10 [1/1]"
+bfcda36 omx2: CB1 avc interlace need use dw 0x10 [1/1]
+b18889e omx2: CB2 fix transmission message thread crash issue. [1/1]
+0e7ba0e omx: CF2 Add ac4 omx es passthrough mode. [2/2]
+add5aff omx: CB2 add protect for mTsyncHandle [1/1]
+66b311c omx2: CB2 HBO Max and the aspect ratio was wrong. [1/1]
+131a17b omx: support 4 drm playback [1/1]
+ac0dbd8 Merge "omx2: CF1 use dw=0x10 for low-latency mode if full YUV is required [1/2]"
+33a3513 Merge changes from topics 'SH-16642', 'IPTV-25187'
+994fd11 omx2: CB2 delete unsupported profile. [1/1]
+0052ab4 OMX2: CB1 Make dw=16 for SurfacTexture stream playback. [1/1]
+1c1b494 omx2: CB2 use add profile & level select interface. [1/1]
+dee6637 omx: CB2 sync omx patch from s-amlogic-v2.9 to master [2/2]
+b1354af omx2: CF1 use dw=0x10 for low-latency mode if full YUV is required [1/2]
+d431e73 OMX2: use om1 vp9 and av1 crash
+========================================

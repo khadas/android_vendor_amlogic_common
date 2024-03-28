@@ -94,4 +94,5 @@ interface ISystemControl extends @1.0::ISystemControl{
   frameRateDisplay (bool on, Rect rect)
        generates (Result result);
   oneway frameRateDisplayAsync(bool on, Rect rect);
+  dlgControl();
 };

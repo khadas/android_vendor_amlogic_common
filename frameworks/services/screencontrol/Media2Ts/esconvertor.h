@@ -49,7 +49,7 @@ public:
     };
     ESConvertor();
     virtual ~ESConvertor();
-    bool start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertorCallback *client);
+    bool start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertorCallback *client, AMediaFormat *format = nullptr);
     bool stop();
     void PictureReady(const OutputRecord &output);
     void EventNotify(int32_t event);

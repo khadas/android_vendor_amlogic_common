@@ -54,7 +54,7 @@
 /******************************************************************************
 **  functions
 ******************************************************************************/
-uint32_t Skt_Read(int fd, uint8_t *p_buf, uint32_t len, bool* condition)
+uint32_t Skt_Read(int fd, uint8_t *p_buf, uint32_t len, bool *condition)
 {
     int n_read = 0;
     struct pollfd pfd;
@@ -66,10 +66,12 @@ uint32_t Skt_Read(int fd, uint8_t *p_buf, uint32_t len, bool* condition)
 
     while (n_read < (int)len)
     {
-        if(condition && !(*condition))
+        if (condition && !(*condition))
+        {
             return n_read;
+        }
         pfd.fd = fd;
-        pfd.events = POLLIN|POLLHUP|POLLNVAL|POLLRDHUP;
+        pfd.events = POLLIN | POLLHUP | POLLNVAL | POLLRDHUP;
 
         /* make sure there is data prior to attempting read to avoid blocking
            a read for more than poll timeout */
@@ -80,13 +82,14 @@ uint32_t Skt_Read(int fd, uint8_t *p_buf, uint32_t len, bool* condition)
         {
             continue;
         }
-        if (poll_ret < 0) {
+        if (poll_ret < 0)
+        {
             ALOGE("%s(): poll() failed: return %d errno %d (%s)",
-                           __func__, poll_ret, errno, strerror(errno));
+                  __func__, poll_ret, errno, strerror(errno));
             break;
         }
 
-        if (pfd.revents & (POLLHUP|POLLNVAL|POLLRDHUP) )
+        if (pfd.revents & (POLLHUP | POLLNVAL | POLLRDHUP))
         {
             return 0;
         }
@@ -125,19 +128,19 @@ int Skt_Read_noblock(int fd, uint8_t *p_buf, uint32_t len)
     }
 
     pfd.fd = fd;
-    pfd.events = POLLIN|POLLHUP|POLLRDHUP;
+    pfd.events = POLLIN | POLLHUP | POLLRDHUP;
 
     if (poll(&pfd, 1, 0) == 0)
     {
         return 0;
     }
 
-    if (pfd.revents & (POLLHUP|POLLNVAL|POLLRDHUP) )
+    if (pfd.revents & (POLLHUP | POLLNVAL | POLLRDHUP))
     {
         return 0;
     }
 
-    n_read = recv(fd, p_buf, len, MSG_DONTWAIT|MSG_NOSIGNAL);
+    n_read = recv(fd, p_buf, len, MSG_DONTWAIT | MSG_NOSIGNAL);
 
     return n_read;
 }
@@ -146,7 +149,8 @@ bool Skt_Send(int fd, uint8_t *p_buf, uint16_t msglen)
 {
     ssize_t ret;
     RTK_NO_INTR(ret = write(fd, p_buf, msglen));
-    if (ret < 0) {
+    if (ret < 0)
+    {
         ALOGE("failed to write (%s)", strerror(errno));
     }
 
@@ -157,15 +161,16 @@ int Skt_Send_noblock(int fd, uint8_t *p_buf, uint16_t msglen)
 {
     int res = 0;
     struct pollfd pfd;
+    memset(&pfd, 0, sizeof(struct pollfd));
 
     pfd.fd = fd;
-    pfd.events = POLLOUT|POLLHUP;
+    pfd.events = POLLOUT | POLLHUP;
     if (poll(&pfd, 1, 0) == 0)
     {
         return 0;
     }
 
-    if (pfd.revents & (POLLHUP|POLLNVAL) )
+    if (pfd.revents & (POLLHUP | POLLNVAL))
     {
         ALOGE("poll : channel detached remotely");
         return 0;

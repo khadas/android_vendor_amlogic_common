@@ -491,7 +491,7 @@ int wpa_driver_nl80211_driver_cmd(void *priv, char *cmd, char *buf,
 		}
 	} while(0);
 
-	if (os_strncasecmp(cmd, "COUNTRY", 7) == 0 && os_strncasecmp(wifi_status, "qca", 3) != 0) {
+	if (os_strncasecmp(cmd, "COUNTRY", 7) == 0 && os_strncasecmp(wifi_status, "qca", 3) != 0 && os_strncasecmp(wifi_status, "rtl", 3) != 0) {
 		char alpha2[3];
 		struct nl_msg *msg;
 		msg = nlmsg_alloc();
@@ -522,13 +522,20 @@ int wpa_driver_nl80211_driver_cmd(void *priv, char *cmd, char *buf,
 
 	if (os_strncasecmp(cmd, "BTCOEXMODE", 10) == 0 || os_strncasecmp(cmd, "MIRACAST", 8) == 0 ||
 		os_strncasecmp(cmd, "WLS_BATCHING", 12) == 0 || os_strcasecmp(cmd, "BTCOEXSCAN-STOP") == 0 ||
-		os_strncasecmp(cmd, "RXFILTER", 8) == 0 || os_strncasecmp(cmd, "SETSUSPENDMODE", 14) == 0 ||
+		os_strncasecmp(cmd, "RXFILTER", 8) == 0 ||
 		os_strncasecmp(cmd, "SETBAND", 7) == 0)
 		return 0;
+
+	if (os_strncasecmp(cmd, "SETSUSPENDMODE", 14) == 0) {
+		if (os_strncasecmp(wifi_status, "aml", 3) != 0) {
+			return 0;
+		}
+	}
 
 	if (os_strncasecmp(cmd, "SET_AP_WPS_P2P_IE", 17) == 0) {
 		if ((os_strncasecmp(wifi_status, "mtk", 3) == 0) ||
 			(os_strncasecmp(wifi_status, "rtl8852bs", 9) == 0) ||
+			(os_strncasecmp(wifi_status, "rtl8822cs", 9) == 0) ||
 			(os_strncasecmp(wifi_status, "uwe", 3) ==0 )) {
 			return 0;
 		}

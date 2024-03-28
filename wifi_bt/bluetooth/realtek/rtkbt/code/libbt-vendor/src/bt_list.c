@@ -17,18 +17,18 @@
  ******************************************************************************/
 /******************************************************************************
 *
-*	Module Name:
-*	    bt_list.c
+*   Module Name:
+*       bt_list.c
 *
-*	Abstract:
-*	    To implement list data structure
+*   Abstract:
+*       To implement list data structure
 *
-*	Major Change History:
-*	      When             Who         What
-*    	--------------------------------------------------------------
-*	    2010-06-04         W.Bi       Created
+*   Major Change History:
+*         When             Who         What
+*       --------------------------------------------------------------
+*       2010-06-04         W.Bi       Created
 *
-*	Notes:
+*   Notes:
 *
 ******************************************************************************/
 #include "bt_list.h"
@@ -65,11 +65,11 @@ unsigned char ListIsEmpty(PRT_LIST_HEAD ListHead)
     @Next: Next element in the list
 */
 void
-    ListAdd(
+ListAdd(
     PRT_LIST_ENTRY New,
     PRT_LIST_ENTRY Prev,
     PRT_LIST_ENTRY Next
-    )
+)
 {
     Next->Prev = New;
     New->Next = Next;
@@ -86,7 +86,7 @@ void
 ListAddToHead(
     PRT_LIST_ENTRY ListNew,
     PRT_LIST_HEAD ListHead
-    )
+)
 {
     ListAdd(ListNew, ListHead, ListHead->Next);
 }
@@ -101,30 +101,34 @@ void
 ListAddToTail(
     PRT_LIST_ENTRY ListNew,
     PRT_LIST_HEAD ListHead
-    )
+)
 {
     ListAdd(ListNew, ListHead->Prev, ListHead);
 }
 
-RT_LIST_ENTRY*
+RT_LIST_ENTRY *
 ListGetTop(
     PRT_LIST_HEAD ListHead
 )
 {
 
     if (ListIsEmpty(ListHead))
+    {
         return 0;
+    }
 
     return ListHead->Next;
 }
 
-RT_LIST_ENTRY*
+RT_LIST_ENTRY *
 ListGetTail(
     PRT_LIST_HEAD ListHead
 )
 {
     if (ListIsEmpty(ListHead))
+    {
         return 0;
+    }
 
     return ListHead->Prev;
 }
