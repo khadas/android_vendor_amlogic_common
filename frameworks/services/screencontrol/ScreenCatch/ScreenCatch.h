@@ -42,6 +42,8 @@ public:
     bool readBuffer(uint8_t* buffer, int32_t* size);
     int32_t getErrorEvent();
 
+    void pause();
+    void resume();
 private:
     bool captureforKeystone();
     std::mutex mLock;

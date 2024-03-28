@@ -48,7 +48,20 @@ typedef enum {
 struct InputParmeter {
     InputParmeter(): source_type(SCAML_CAPTURE_UNKNOWN),
                     frame_rate(0),format(SCREENCONTROL_PIX_FMT_UNKNOWN){};
-    InputParmeter(InputParmeter&&) = default;
+    InputParmeter(InputParmeter& t ) {
+        size = std::make_unique<Size>(t.size->width(),t.size->height());
+        area = std::make_unique<Area>(t.area->x(),t.area->y(), t.area->width(), t.area->height());
+        source_type = t.source_type;
+        frame_rate = t.frame_rate;
+        format = t.format;
+    }
+    bool operator==(const InputParmeter& t) {
+        if ((*size == *(t.size)) && (*area == *(t.area))
+            && (source_type == t.source_type)) {
+            return true;
+        }
+        return false;
+    }
     ~InputParmeter() = default;
     std::unique_ptr<Size> size;
     std::unique_ptr<Area> area;
@@ -113,6 +126,9 @@ public:
 
     void stop(int32_t client_id);
 
+    void pause(int32_t client_id);
+    void resume(int32_t client_id);
+
     bool realseBuffer(int32_t client_id,int32_t index);
 
     // the callback from screen source
@@ -147,6 +163,7 @@ private:
     bool mIsMultiAcquire;
     bool mStart;
 };
+
 
 
 

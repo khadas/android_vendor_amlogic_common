@@ -21,6 +21,7 @@
 #include <android/hidl/allocator/1.0/IAllocator.h>
 #include <android/hidl/memory/1.0/IMemory.h>
 #include <hidlmemory/mapping.h>
+#include "ulit.h"
 #include "ScreenControlHal.h"
 namespace vendor {
 namespace amlogic {
@@ -63,8 +64,14 @@ Return<void> ScreenControlHal::startScreenCapBuffer(int32_t left, int32_t top, i
             sp<IMemory> memory = mapMemory(mem);
             void* data = memory->getPointer();
             memory->update();
+            int64_t first_times = android::getNowTimesUs();
             ret = mScreenControl->startScreenCapBuffer(left, top, right, bottom,
                                                  width, height, sourceType, data, &bufSize);
+            int64_t end_times = android::getNowTimesUs();
+            ALOGI("[%s %d] start screencap duration %lld ms", __FUNCTION__, __LINE__,(end_times - first_times) / 1000);
+            mScreenControl->stopScreenCapBuffer();
+            int64_t end_times1 = android::getNowTimesUs();
+            ALOGI("[%s %d] all screecap duration %lld ms", __FUNCTION__, __LINE__,(end_times1 - first_times) / 1000);
             memory->commit();
             _cb(ret,mem);
         } else {

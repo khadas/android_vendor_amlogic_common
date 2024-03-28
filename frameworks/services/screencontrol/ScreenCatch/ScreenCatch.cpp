@@ -121,7 +121,7 @@ bool ScreenCatch::start(std::unique_ptr<InputParmeter>& input) {
     auto screenInput = std::make_unique<InputParmeter>();
     screenInput->source_type = input->source_type;
     screenInput->format = SCREENCONTROL_PIX_FMT_RGBA888;
-    screenInput->frame_rate = 1;
+    screenInput->frame_rate = 60;
     size = input->size->width() * input->size->height() * 4;
     screenInput->size = std::move(input->size);
     screenInput->area = std::move(input->area);
@@ -173,13 +173,18 @@ bool ScreenCatch::readBuffer(uint8_t* buffer, int32_t* size) {
         mOutputQueue.erase(mOutputQueue.begin());
         return false;
     }
+    int64_t first_times = android::getNowTimesUs();
     memcpy(buffer,(*output)->raw,mRawBufferSize);
+    int64_t end_times = android::getNowTimesUs();
+    ALOGI("[%s %d] copy duration %lld ms", __FUNCTION__, __LINE__,(end_times - first_times) / 1000);
     *size = mRawBufferSize;
     if (mClientId > 0) {
         if ((*output)->raw)
             delete [](*output)->raw;
-    }else
-        mScreenManager->realseBuffer(mClientId,(*output)->index);
+    } else {
+       mScreenManager->realseBuffer(mClientId,(*output)->index);
+    }
+
     mOutputQueue.erase(mOutputQueue.begin());
     ALOGD("[%s %d] get the buffer size = %d", __FUNCTION__, __LINE__,mRawBufferSize);
     return true;
@@ -187,6 +192,18 @@ bool ScreenCatch::readBuffer(uint8_t* buffer, int32_t* size) {
 
 int32_t ScreenCatch::getErrorEvent() {
     return mErrorEvent;
+}
+
+void ScreenCatch::pause() {
+    std::lock_guard<std::mutex> lock(mLock);
+    ALOGD("[%s %d]", __FUNCTION__, __LINE__);
+    mScreenManager->pause(mClientId);
+}
+
+void ScreenCatch::resume() {
+    std::lock_guard<std::mutex> lock(mLock);
+    ALOGD("[%s %d]", __FUNCTION__, __LINE__);
+    mScreenManager->resume(mClientId);
 }
 
 bool ScreenCatch::captureforKeystone() {

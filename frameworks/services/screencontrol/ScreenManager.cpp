@@ -79,6 +79,14 @@ ScreenManager::ScreenManager():
 {
     ALOGI("[%s %d] Construct", __FUNCTION__, __LINE__);
     mMultiClientMap.clear();
+    if (hw_get_module(AML_SCREEN_HARDWARE_MODULE_ID, (const hw_module_t **)&mScreenModule) < 0) {
+        ALOGE("[%s %d] can`t get AML_SCREEN_HARDWARE_MODULE_ID module", __FUNCTION__, __LINE__);
+    }
+    if (mScreenModule->common.methods->open((const hw_module_t *)mScreenModule, "1",
+            (struct hw_device_t**)&mScreenDev) < 0 || !mScreenDev) {
+        mScreenModule = nullptr;
+        ALOGE("[%s %d] open AML_SCREEN_SOURCE fail", __FUNCTION__, __LINE__);
+    }
 
 }
 
@@ -92,13 +100,14 @@ ScreenManager::~ScreenManager() {
             stop(i);
         }
     }
+    mScreenDev->common.close((struct hw_device_t *)mScreenDev);
 }
 
 
 bool ScreenManager::start(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client, int32_t *id, bool multi_acquire) {
     std::lock_guard<std::mutex> alock(mCallbackLock);
     std::lock_guard<std::mutex> lock(mLock);
-    if (mStart && (!mIsMultiAcquire || (input->source_type != mInputParmeter->source_type))) {
+    if (!input || (mStart && (!mIsMultiAcquire || (input->source_type != mInputParmeter->source_type)))) {
         ALOGE("[%s %d] the module has been opened and the user is not multi acquire! %d:%d", __FUNCTION__, __LINE__,mStart,mIsMultiAcquire);
         return false;
     }
@@ -126,20 +135,11 @@ bool ScreenManager::start(std::unique_ptr<InputParmeter>& input, ScreenMangerCal
     if (mBufferSize == 0 )
         return false;
 
-    if (hw_get_module(AML_SCREEN_HARDWARE_MODULE_ID, (const hw_module_t **)&mScreenModule) < 0) {
-        ALOGE("[%s %d] can`t get AML_SCREEN_HARDWARE_MODULE_ID module", __FUNCTION__, __LINE__);
-        return false;
-    }
 
     ALOGI("[%s %d] mPortType=%#x(%s)", __FUNCTION__, __LINE__,
         mPortType, (PORTTYPE_VALUE_VPP0_VIDEO_ONLY == mPortType?"video only":
             (PORTTYPE_VALUE_VPP0_VIDEO_OSD == mPortType?"video+osd":"osd only")));
-    if (mScreenModule->common.methods->open((const hw_module_t *)mScreenModule, "1",
-            (struct hw_device_t**)&mScreenDev) < 0 || !mScreenDev) {
-        mScreenModule = nullptr;
-        ALOGE("[%s %d] open AML_SCREEN_SOURCE fail", __FUNCTION__, __LINE__);
-        return false;
-    }
+
     int32_t degree = getRotationDegree();
     if ( degree > 0) {
         setVideoRotation(degree);
@@ -183,6 +183,17 @@ bool ScreenManager::startMoreClient(std::unique_ptr<InputParmeter>& input, Scree
     mMultiClientMap.insert(std::pair<int32_t, std::unique_ptr<MultiClientInfo>>(*id, std::move(info)));
     return true;
 }
+void ScreenManager::pause(int32_t client_id) {
+    std::lock_guard<std::mutex> lock(mLock);
+    ALOGD("[%s %d]", __FUNCTION__, __LINE__);
+    mScreenDev->ops.pause(mScreenDev);
+}
+
+void ScreenManager::resume(int32_t client_id) {
+    std::lock_guard<std::mutex> lock(mLock);
+    ALOGD("[%s %d]", __FUNCTION__, __LINE__);
+    mScreenDev->ops.resume(mScreenDev);
+}
 
 void ScreenManager::stop(int32_t client_id) {
     ALOGI("[%s %d] client_id = %d", __FUNCTION__, __LINE__,client_id);
@@ -203,7 +214,6 @@ void ScreenManager::stop(int32_t client_id) {
     mScreenDev->ops.stop(mScreenDev);
     mOutputRecordQueue.clear();
     mMultiClientMap.clear();
-    mScreenDev->common.close((struct hw_device_t *)mScreenDev);
     mScreenModule = nullptr;
     mScreenMangerCallback = nullptr;
     mStart = false;

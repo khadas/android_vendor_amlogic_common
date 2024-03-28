@@ -59,6 +59,8 @@ public:
     int32_t startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom,
                         int32_t width, int32_t height, int32_t sourceType, void *dstBuffer, int32_t *dstBufferSize);
 
+    void stopScreenCapBuffer();
+
 
     int32_t startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
                                 int32_t frameRate, int32_t bitRate,int32_t limitTimeSec, int32_t sourceType, const char* filename);
@@ -82,6 +84,7 @@ public:
 private:
     mutable Mutex mLock;
     mutable Mutex mScreenMangerLock;
+    mutable Mutex mScreenCapLock;
     bool mStart;
     int32_t mMicroWidth;
     int32_t mMicroHeight;
@@ -90,6 +93,8 @@ private:
     std::unique_ptr<ESConvertor> mConvertor;
     ScreenManager* mScreenManager;
     AMediaFormat* mEncoderFormat;
+    std::unique_ptr<ScreenCatch> mScreenCatch;
+    std::unique_ptr<InputParmeter> mScreenCapParmeter;
 };
 
 // ----------------------------------------------------------------------------

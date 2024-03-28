@@ -135,22 +135,32 @@ int32_t ScreenControlService::startScreenCapBuffer(int32_t left, int32_t top, in
                                                 int32_t height, int32_t sourceType, void *dstBuffer, int32_t *dstBufferSize) {
     ALOGI("[%s] left:%d, top:%d, right:%d, bottom:%d, width:%d, height:%d, sourceType:%d\n",
                 __func__, left, top, right, bottom, width, height, sourceType);
-    std::unique_ptr<ScreenCatch> screen_catch = std::make_unique<ScreenCatch>();
+    Mutex::Autolock autoLock(mScreenCapLock);
+    int result = 0;
     auto size = std::make_unique<Size>(width,height);
     auto area = std::make_unique<Area>(left,top,right,bottom);
     auto parmeter = std::make_unique<InputParmeter>();
     parmeter->size = std::move(size);
     parmeter->area = std::move(area);
     parmeter->source_type = sourceType;
-    int result = 0;
-    if (!dstBuffer || !screen_catch->start(parmeter)) {
-        ALOGE("[%s %d] ScreenCatch start fail !! dstBuffer=%p", __FUNCTION__, __LINE__,dstBuffer);
-        return AML_ERROR_CODE_OTHER;
+    if (mScreenCatch && (*parmeter == *mScreenCapParmeter)) {
+        mScreenCatch->resume();
+    } else {
+        if (mScreenCatch) {
+            mScreenCatch->stop();
+            mScreenCatch = nullptr;
+        }
+        mScreenCatch = std::make_unique<ScreenCatch>();
+        mScreenCapParmeter = std::make_unique<InputParmeter>(*parmeter);
+        if (!dstBuffer || !mScreenCatch->start(parmeter)) {
+            ALOGE("[%s %d] ScreenCatch start fail !! dstBuffer=%p", __FUNCTION__, __LINE__,dstBuffer);
+            return AML_ERROR_CODE_OTHER;
+        }
     }
     int64_t firsetNowUs = getNowTimesUs();;
-    while (!screen_catch->readBuffer((uint8_t*)dstBuffer,dstBufferSize)) {
+    while (!mScreenCatch->readBuffer((uint8_t*)dstBuffer,dstBufferSize)) {
         int64_t nowUs = getNowTimesUs();
-        int32_t event = screen_catch->getErrorEvent();
+        int32_t event = mScreenCatch->getErrorEvent();
         if (event == AML_ENEVENT_HDCP_LIMIT) {
             result = AML_ERROR_CODE_HDCP_LIMIT;
             goto exit;
@@ -165,8 +175,24 @@ int32_t ScreenControlService::startScreenCapBuffer(int32_t left, int32_t top, in
     }
     ALOGI("[%s %d] readed buffer size = %d", __FUNCTION__, __LINE__,*dstBufferSize);
 exit:
-    screen_catch->stop();
+    if (result == 0) {
+        mScreenCatch->pause();
+    } else {
+        mScreenCatch->stop();
+        mScreenCapParmeter = nullptr;
+        mScreenCatch == nullptr;
+    }
     return result;
+}
+
+void ScreenControlService::stopScreenCapBuffer() {
+    Mutex::Autolock autoLock(mScreenCapLock);
+    ALOGI("stopScreenCapBuffer()");
+    if (!mScreenCatch)
+        return;
+    mScreenCatch->stop();
+    mScreenCatch = nullptr;
+    mScreenCapParmeter = nullptr;
 }
 
 int32_t ScreenControlService::startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
