@@ -12,6 +12,25 @@ func init() {
     android.RegisterModuleType("stagefrighthw_go_defaults", stagefrighthw_go_DefaultsFactory)
     android.RegisterModuleType("stagefrighthw_ddlib_go_defaults", stagefrighthw_ddlib_go_DefaultsFactory)
     android.RegisterModuleType("stagefrighthw_videodec_go_defaults", stagefrighthw_videodec_go_DefaultsFactory)
+    android.RegisterModuleType("stagefrighthw_dtsxlib_go_defaults", stagefrighthw_dtsxlib_go_DefaultsFactory)
+}
+
+func stagefrighthw_dtsxlib_go_DefaultsFactory() (android.Module) {
+    module := cc.DefaultsFactory()
+    android.AddLoadHook(module, func(ctx android.LoadHookContext) {
+        type props struct {
+            Enabled *bool
+        }
+        p := &props{}
+
+        if android.ExistentPathForSource(ctx, "vendor/amlogic/common/prebuilt/libstagefrighthw/lib/libHwAudio_dtsx.so").Valid() == true {
+            p.Enabled = proptools.BoolPtr(true)
+        } else {
+            p.Enabled = proptools.BoolPtr(false)
+        }
+        ctx.AppendProperties(p)
+    })
+    return module
 }
 
 func stagefrighthw_go_DefaultsFactory() (android.Module) {

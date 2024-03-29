@@ -41,6 +41,10 @@ stagefrighthw_go_defaults {
 }
 
 
+stagefrighthw_dtsxlib_go_defaults {
+    name: "stagefrighthw_dtsxlib_go_defaults",
+}
+
 stagefrighthw_ddlib_go_defaults {
     name: "stagefrighthw_ddlib_go_defaults",
 }
@@ -147,6 +151,24 @@ cc_prebuilt_library_shared {
     },
     check_elf_files: false,
 }
+
+
+cc_prebuilt_library_shared {
+    name: "libHwAudio_dtsx",
+    device_specific: true,
+    defaults: ["stagefrighthw_go_defaults","stagefrighthw_dtsxlib_go_defaults"],
+    arch: {
+        arm: {
+            srcs: ["lib/libHwAudio_dtsx.so"],
+        },
+        arm64: {
+            srcs: ["lib64/libHwAudio_dtsx.so"],
+        },
+    },
+    check_elf_files: false,
+}
+
+
 cc_prebuilt_library_shared {
     name: "libHwAudio_dcvdec_passthrough",
     vendor: true,
