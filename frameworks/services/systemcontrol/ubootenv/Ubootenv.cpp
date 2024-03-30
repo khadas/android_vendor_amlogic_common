@@ -39,25 +39,19 @@ Ubootenv::Ubootenv() :
 
     memset(mEnvPartitionName, 0, sizeof(mEnvPartitionName));
     init();
-
-    //printValues();
 }
 
 Ubootenv::~Ubootenv() {
+    pthread_mutex_lock(&mEnvLock);
+
     if (mEnvData.image) {
         free(mEnvData.image);
         mEnvData.image = NULL;
         mEnvData.crc = NULL;
         mEnvData.data = NULL;
     }
-    env_attribute * pAttr = mEnvAttrHeader.next;
-    memset(&mEnvAttrHeader, 0, sizeof(env_attribute));
-    env_attribute * pTmp = NULL;
-    while (pAttr) {
-        pTmp = pAttr;
-        pAttr = pAttr->next;
-        free(pTmp);
-    }
+
+    pthread_mutex_unlock(&mEnvLock);
 }
 
 int Ubootenv::updateValue(const char* name, const char* value) {
@@ -66,12 +60,16 @@ int Ubootenv::updateValue(const char* name, const char* value) {
         return -1;
     }
 
+    if (!name || !value) {
+        SYS_LOGE("[ubootenv] update value or name is null\n");
+        return -1;
+    }
+
     SYS_LOGI("[ubootenv] update value name [%s]: value [%s] \n", name, value);
     const char* envName = NULL;
     if (strcmp(name, "ubootenv.var.bootcmd") == 0) {
         envName = "bootcmd";
-    }
-    else {
+    } else {
         if (!isEnv(name)) {
             //should assert here.
             SYS_LOGE("[ubootenv] %s is not a ubootenv variable.\n", name);
@@ -80,14 +78,17 @@ int Ubootenv::updateValue(const char* name, const char* value) {
         envName = name + strlen(PROFIX_UBOOTENV_VAR);
     }
 
+    pthread_mutex_lock(&mEnvLock);
+
     const char *envValue = get(envName);
     if (!envValue)
         envValue = "";
 
-    if (!strcmp(value, envValue))
+    if (!strcmp(value, envValue)) {
+        pthread_mutex_unlock(&mEnvLock);
         return 0;
+    }
 
-    pthread_mutex_lock(&mEnvLock);
     set(envName, value, true);
 
     int i = 0;
@@ -125,19 +126,34 @@ const char * Ubootenv::getValue(const char * key) {
 }
 
 void Ubootenv::printValues() {
-    env_attribute *attr = &mEnvAttrHeader;
-    while (attr != NULL) {
-        SYS_LOGI("[ubootenv] key: [%s], value: [%s]\n", attr->key, attr->value);
-        attr = attr->next;
-    }
+    char *proc = mEnvData.data;
+    char *nextProc;
+
+    do {
+        nextProc = proc + strlen(proc) + sizeof(char);
+        SYS_LOGV("[ubootenv] printenv: %s\n", proc);
+
+        if (!(*nextProc)) {
+            SYS_LOGI("[ubootenv] printenv end\n");
+            break;
+        }
+        proc = nextProc;
+    } while(1);
 }
 
 void Ubootenv::dump(int fd) {
-    env_attribute *attr = &mEnvAttrHeader;
-    while (attr != NULL) {
-        dprintf(fd, "[ubootenv] key: [%s], value: [%s]\n", attr->key, attr->value);
-        attr = attr->next;
-    }
+    char *proc = mEnvData.data;
+    char *nextProc;
+    do {
+        dprintf(fd, "[ubootenv] env: [%s]\n", proc);
+        nextProc = proc + strlen(proc) + sizeof(char);
+
+        if (!(*nextProc)) {
+            SYS_LOGI("[ubootenv] printenv end\n");
+            break;
+        }
+        proc = nextProc;
+    } while(1);
 }
 
 int Ubootenv::reInit() {
@@ -149,17 +165,11 @@ int Ubootenv::reInit() {
        mEnvData.crc = NULL;
        mEnvData.data = NULL;
    }
-   env_attribute * pAttr = mEnvAttrHeader.next;
-   memset(&mEnvAttrHeader, 0, sizeof(env_attribute));
-   env_attribute * pTmp = NULL;
-   while (pAttr) {
-       pTmp = pAttr;
-       pAttr = pAttr->next;
-       free(pTmp);
-   }
-   init();
 
    pthread_mutex_unlock(&mEnvLock);
+
+   init();
+
    return 0;
 }
 
@@ -229,25 +239,9 @@ int Ubootenv::init() {
         return -2;
     }
 
-#if 0
-    char prefix[PROP_VALUE_MAX] = {0};
-    property_get("ro.ubootenv.variable.prefix", prefix, "");
-    if (prefix[0] == 0) {
-        strcpy(prefix , "ubootenv.var");
-        SYS_LOGI("[ubootenv] set property ro.ubootenv.variable.prefix: %s\n", prefix);
-        property_set("ro.ubootenv.variable.prefix", prefix);
-    }
+    printValues();
 
-    if (strlen(prefix) > 16) {
-        SYS_LOGE("[ubootenv] Cannot r/w ubootenv variables - prefix length > 16.\n");
-        return -4;
-    }
-
-    sprintf(PROFIX_UBOOTENV_VAR, "%s.", prefix);
-    SYS_LOGI("[ubootenv] ubootenv variable prefix is: %s\n", prefix);
-#endif
-
-    propertyLoad();
+    mEnvInitDone = true;
     return 0;
 }
 
@@ -267,6 +261,8 @@ int Ubootenv::readPartitionData() {
         return -2;
     }
 
+    pthread_mutex_lock(&mEnvLock);
+
     memset(addr, 0, mEnvPartitionSize);
     mEnvData.image = addr;
     struct env_image *image = (struct env_image *)addr;
@@ -277,12 +273,10 @@ int Ubootenv::readPartitionData() {
     if (ret == (int)mEnvPartitionSize) {
         uint32_t crcCalc = crc32(0, (uint8_t *)mEnvData.data, mEnvSize);
         if (crcCalc != *(mEnvData.crc)) {
-            SYS_LOGE("[ubootenv] CRC Check SYS_LOGE save_crc=%08x, crcCalc = %08x \n",
+            SYS_LOGE("[ubootenv] CRC Check fail save_crc=%08x, crcCalc = %08x \n",
                 *mEnvData.crc, crcCalc);
             flag = -3;
         }
-        //parseAttribute();
-        //printValues();
     } else {
         SYS_LOGE("[ubootenv] read error 0x%x \n",ret);
         flag = -5;
@@ -298,7 +292,7 @@ int Ubootenv::readPartitionData() {
         if (ret2 == (int)mEnvPartitionSize) {
             uint32_t crcCalc = crc32(0, (uint8_t *)mEnvData.data, mEnvSize);
             if (crcCalc != *(mEnvData.crc)) {
-                SYS_LOGE("[ubootenv] CRC2 Check SYS_LOGE save_crc=%08x, crcCalc = %08x \n",
+                SYS_LOGE("[ubootenv] CRC2 Check fail save_crc=%08x, crcCalc = %08x \n",
                     *mEnvData.crc, crcCalc);
                 close(fd);
                 return -3;
@@ -306,65 +300,55 @@ int Ubootenv::readPartitionData() {
         }
     }
 
-    parseAttribute();
+    pthread_mutex_unlock(&mEnvLock);
 
 exit:
     close(fd);
     return 0;
 }
 
-/* Parse a session attribute */
-env_attribute* Ubootenv::parseAttribute() {
-    char *proc = mEnvData.data;
-    char *nextProc;
-    env_attribute *attr = &mEnvAttrHeader;
-
-    memset(attr, 0, sizeof(env_attribute));
-
-    do {
-        nextProc = proc + strlen(proc) + sizeof(char);
-        //SYS_LOGV("process %s\n",proc);
-        char *key = strchr(proc, (int)'=');
-        if (key != NULL) {
-            *key=0;
-            strcpy(attr->key, proc);
-            strcpy(attr->value, key + sizeof(char));
-        } else {
-            SYS_LOGE("[ubootenv] error need '=' skip this value\n");
-        }
-
-        if (!(*nextProc)) {
-            //SYS_LOGV("process end \n");
-            break;
-        }
-        proc = nextProc;
-
-        attr->next = (env_attribute *)malloc(sizeof(env_attribute));
-        if (attr->next == NULL) {
-            SYS_LOGE("[ubootenv] parse attribute malloc error \n");
-            break;
-        }
-        memset(attr->next, 0, sizeof(env_attribute));
-        attr = attr->next;
-    }while(1);
-
-    return &mEnvAttrHeader;
-}
-
 char * Ubootenv::get(const char * key) {
+    char *proc = mEnvData.data;
+    char *nextProc = NULL;
+    char *envValue = NULL;
+    char envKey[128];
+
     if (!mEnvInitDone) {
         SYS_LOGE("[ubootenv] don't init done\n");
         return NULL;
     }
 
-    env_attribute *attr = &mEnvAttrHeader;
-    while (attr) {
-        if (!strcmp(key, attr->key)) {
-            return attr->value;
+    do {
+        //SYS_LOGV("[ubootenv] proc: %s \n", proc);
+        envValue = strchr(proc, '=');
+        if (envValue) {
+            int offset = envValue - proc;
+            memset(envKey, 0 , sizeof(envKey));
+            if (offset*sizeof(char) < sizeof(envKey)) {
+                memcpy(envKey, proc, offset*sizeof(char));
+            } else {
+                SYS_LOGE("[ubootenv] env key :%s size is larger than 128 bytes and only copy 127 bytes\n", proc);
+                memcpy(envKey, proc, sizeof(envKey) - 1);
+            }
+
+            if (!strcmp(envKey, key)) {
+                envValue += sizeof(char);
+                SYS_LOGI("[ubootenv]  get key:%s envValue: %s\n", key, envValue);
+                break;
+            } else {
+                envValue = NULL;
+            }
         }
-        attr = attr->next;
-    }
-    return NULL;
+
+        nextProc = proc + strlen(proc) + sizeof(char);
+        if (!(*nextProc)) {
+            SYS_LOGI("[ubootenv] search end and not find env:%s\n", key);
+            break;
+        }
+        proc = nextProc;
+    } while(1);
+
+    return envValue;
 }
 
 /*
@@ -372,27 +356,86 @@ creat_args_flag : if true , if envvalue don't exists Creat it .
               if false , if envvalue don't exists just exit .
 */
 int Ubootenv::set(const char * key,  const char * value, bool createNew) {
-    env_attribute *attr = &mEnvAttrHeader;
-    env_attribute *last = attr;
-    while (attr) {
-        if (!strcmp(key, attr->key)) {
-            strcpy(attr->value, value);
-            return 2;
+    //malloc size > the active env size and keep the '\0' end
+    char *mEnvData_Backup = (char *)malloc(mEnvPartitionSize);
+    if (mEnvData_Backup == NULL) {
+        SYS_LOGE("[ubootenv] Not enough memory for environment (%u bytes)\n", mEnvSize);
+        return -1;
+    }
+
+    if (strlen(key)>= 128 || strlen(value) >= 4096) {
+        SYS_LOGE("[ubootenv] Invalid env data key:%s, value:%s size is larger\n", key, value);
+        return -1;
+    }
+
+    memset(mEnvData_Backup, 0, mEnvPartitionSize);
+    memcpy(mEnvData_Backup, mEnvData.data, mEnvSize);
+    memset(mEnvData.data, 0, mEnvSize);
+
+    int len = 0;
+    bool find = false;
+    char *data = mEnvData.data;
+    char *proc = mEnvData_Backup;
+    char *nextProc;
+    char envKey[128];
+    char envValue[4096];
+
+    //parse key and value and if key have and replace value
+    do {
+        //SYS_LOGV("[ubootenv] set proc: %s \n", proc);
+        nextProc = proc + strlen(proc) + sizeof(char);
+        char *del = strchr(proc, (int)'=');
+        if (del != NULL) {
+            memset(envKey, 0, sizeof(envKey));
+            memset(envValue, 0, sizeof(envValue));
+            *del=0;
+            if (strlen(proc) < sizeof(envKey)) {
+                strcpy(envKey, proc);
+            } else {
+                SYS_LOGE("[ubootenv] env key :%s size is larger than 128 bytes and only copy 127 bytes\n", proc);
+                strncpy(envKey, proc, sizeof(envKey) - 1);
+            }
+
+            if (!strcmp(envKey, key)) {
+                strcpy(envValue, value);
+                find = true;
+            } else {
+                char *value = del + sizeof(char);
+                if (strlen(value) < sizeof(envValue)) {
+                    strcpy(envValue, del + sizeof(char));
+                } else {
+                    SYS_LOGE("[ubootenv] env data :%s size is larger than 4096 bytes and only copy 4095 bytes\n", value);
+                    strncpy(envValue, del + sizeof(char), sizeof(envValue) - 1);
+                }
+            }
+
+            len = sprintf(data, "%s=%s", envKey, envValue);
+            if (len < (int)(sizeof(char)*3)) {
+                SYS_LOGE("[ubootenv] Invalid env data key:%s, value:%s\n", envKey, envValue);
+            } else {
+                data += len + sizeof(char);
+            }
         }
-        last = attr;
-        attr = attr->next;
+
+        if (!(*nextProc)) {
+            break;
+        }
+        proc = nextProc;
+    } while(1);
+
+    //append the key and value at end of env data if not find the key
+    if (!find && createNew) {
+        len = sprintf(data, "%s=%s", key, value);
+        if (len < (int)(sizeof(char)*3)) {
+            SYS_LOGE("[ubootenv] Invalid env data key:%s, value:%s\n", key, value);
+        } else {
+            data += len + sizeof(char);
+        }
     }
 
-    if (createNew) {
-        SYS_LOGV("[ubootenv] ubootenv.var.%s not found, create it.\n", key);
+    printValues();
 
-        attr = (env_attribute *)malloc(sizeof(env_attribute));
-        last->next = attr;
-        memset(attr, 0, sizeof(env_attribute));
-        strcpy(attr->key, key);
-        strcpy(attr->value, value);
-        return 1;
-    }
+    free(mEnvData_Backup);
     return 0;
 }
 
@@ -402,7 +445,6 @@ int Ubootenv::save() {
     int err;
     int lseeknum;
 
-    formatAttribute();
     *(mEnvData.crc) = crc32(0, (uint8_t *)mEnvData.data, mEnvSize);
 
     if ((fd = open (mEnvPartitionName, O_RDWR)) < 0) {
@@ -498,24 +540,6 @@ int Ubootenv::save() {
     return 0;
 }
 
-/*  attribute revert to sava data*/
-int Ubootenv::formatAttribute() {
-    env_attribute *attr = &mEnvAttrHeader;
-    char *data = mEnvData.data;
-    memset(mEnvData.data, 0, mEnvSize);
-    do {
-        int len = sprintf(data, "%s=%s", attr->key, attr->value);
-        if (len < (int)(sizeof(char)*3)) {
-            SYS_LOGE("[ubootenv] Invalid env data key:%s, value:%s\n", attr->key, attr->value);
-        }
-        else
-            data += len + sizeof(char);
-
-        attr = attr->next;
-    } while (attr);
-    return 0;
-}
-
 int Ubootenv::isEnv(const char* prop_name) {
     if (!prop_name || !(*prop_name))
         return 0;
@@ -528,56 +552,4 @@ int Ubootenv::isEnv(const char* prop_name) {
         return 1;
 
     return 0;
-}
-
-#if 0
-void Ubootenv::propertyTrampoline(void* raw_data, const char* name, const char* value, unsigned serial) {
-    struct callback_data* data = (struct callback_data*)(raw_data);
-    data->callback(name, value, data->cookie);
-}
-
-void Ubootenv::propertyListCallback(const prop_info* pi, void* data) {
-    __system_property_read_callback(pi, propertyTrampoline, data);
-}
-
-void Ubootenv::propertyInit(const char *key, const char *value, void *cookie) {
-    if (isEnv(key)) {
-        const char* variable_name = key + strlen(PROFIX_UBOOTENV_VAR);
-        const char *variable_value = get(variable_name);
-        if (!variable_value)
-            variable_value = "";
-        if (strcmp(variable_value, value)) {
-            property_set(key, variable_value);
-            SYS_LOGI("[ubootenv] bootenv_prop_init set property key:%s value:%s\n", key, variable_value);
-            (*((int*)cookie))++;
-        }
-    }
-}
-
-int Ubootenv::propertyList(void (*propfn)(const char *key, const char *value, void *cookie), void *cookie) {
-    if (true/*bionic_get_application_target_sdk_version() >= __ANDROID_API_O__*/) {
-        struct callback_data data = { propfn, cookie };
-        return __system_property_foreach(propertyListCallback, &data);
-    }
-
-    char name[PROP_NAME_MAX];
-    char value[PROP_VALUE_MAX];
-    const prop_info *pi;
-    unsigned n;
-
-    for (n = 0; (pi = __system_property_find_nth(n)); n++) {
-        __system_property_read(pi, name, value);
-        propfn(name, value, cookie);
-    }
-    return 0;
-}
-#endif
-
-void Ubootenv::propertyLoad() {
-    int count = 0;
-
-    //propertyList(propertyInit, (void*)&count);
-
-    SYS_LOGI("[ubootenv] set property count: %d\n", count);
-    mEnvInitDone = true;
 }
