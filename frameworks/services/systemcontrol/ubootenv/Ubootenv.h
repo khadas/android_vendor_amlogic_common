@@ -34,8 +34,8 @@ typedef struct environment {
 
 typedef struct env_attribute {
     struct env_attribute *next;
-    char *key;
-    char *value;
+    char key[256];
+    char value[4096];
 } env_attribute_t;
 
 struct callback_data {
