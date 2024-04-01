@@ -9322,14 +9322,14 @@ void CPQControl::resetAllUserSettingParam()
         mSSMAction->SSMSaveMemcMode(i, config_val);
 
         buf = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_MEMCDEBLURLEVEL_DEF, NULL);
-        int Deblur_para[VPP_MEMC_MODE_MAX] = { 0, 3, 6, 10 };
+        int Deblur_para[VPP_MEMC_MODE_MAX] = { 0, 3, 6, 10, 10};
         pqTransformStringToInt(buf, Deblur_para);
         for (int j = VPP_MEMC_MODE_OFF; j < VPP_MEMC_MODE_MAX; j++) {
             mSSMAction->SSMSaveMemcDeblurLevel(i * VPP_MEMC_MODE_MAX + j, Deblur_para[j]);
         }
 
         buf = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_MEMCDEJUDDERLEVEL_DEF, NULL);
-        int DeJudder_para[VPP_MEMC_MODE_MAX] = { 0, 3, 6, 10 };
+        int DeJudder_para[VPP_MEMC_MODE_MAX] = { 0, 3, 6, 10, 10};
         pqTransformStringToInt(buf, DeJudder_para);
         for (int j = VPP_MEMC_MODE_OFF; j < VPP_MEMC_MODE_MAX; j++) {
             mSSMAction->SSMSaveMemcDeJudderLevel(i * VPP_MEMC_MODE_MAX + j, DeJudder_para[j]);
@@ -9885,14 +9885,14 @@ void CPQControl::resetPQTableSetting(void)
         mSSMAction->SSMSaveMemcMode(i, config_val);
 
         buf = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_MEMCDEBLURLEVEL_DEF, NULL);
-        int Deblur_para[VPP_MEMC_MODE_MAX] = { 0, 3, 6, 10 };
+        int Deblur_para[VPP_MEMC_MODE_MAX] = { 0, 3, 6, 10, 10};
         pqTransformStringToInt(buf, Deblur_para);
         for (j = VPP_MEMC_MODE_OFF; j < VPP_MEMC_MODE_MAX; j++) {
             mSSMAction->SSMSaveMemcDeblurLevel(i * VPP_MEMC_MODE_MAX + j, Deblur_para[j]);
         }
 
         buf = mPQConfigFile->GetString(CFG_SECTION_PQ, CFG_MEMCDEJUDDERLEVEL_DEF, NULL);
-        int DeJudder_para[VPP_MEMC_MODE_MAX] = { 0, 3, 6, 10 };
+        int DeJudder_para[VPP_MEMC_MODE_MAX] = { 0, 3, 6, 10, 10};
         pqTransformStringToInt(buf, DeJudder_para);
         for (j = VPP_MEMC_MODE_OFF; j < VPP_MEMC_MODE_MAX; j++) {
             mSSMAction->SSMSaveMemcDeJudderLevel(i * VPP_MEMC_MODE_MAX + j, DeJudder_para[j]);
