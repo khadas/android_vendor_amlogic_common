@@ -1130,4 +1130,15 @@ typedef enum _aipq_mode_e {
     AIPQ_MODE_HIGH,
     AIPQ_MODE_MAX,
 } aipq_mode_e;
+
+typedef enum frc_fpp_state_e {
+    FPP_MEMC_OFF = 0,    // MEMC OFF
+    FPP_MEMC_LOW,        // MEMC LOW, default level9
+    FPP_MEMC_MID,        // MEMC MID, default level10
+    FPP_MEMC_HIGH,       // MEMC HIGH, default level10 and fullback
+    FPP_MEMC_CUSTOME,    // Retain customization
+    FPP_MEMC_24PFILM,    // 24P Film mode, 32 Pulldown out 48fps
+    FPP_MEMC_MAX,
+}frc_fpp_state_t;
+
 #endif

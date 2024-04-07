@@ -121,6 +121,7 @@
 //memc
 #define PROP_CPQ_MEMC               "persist.vendor.sys.memc"
 #define CPQ_MEMC_SYSFS              "/dev/frc"
+#define FRC_IOC_SET_DEBLUR_LEVEL    _IOW('F', 0x05, unsigned int)
 #define MEMDEV_CONTRL               _IOW('F', 0x06, unsigned int)
 #define FRC_IOC_SET_MEMC_LEVEL      _IOW('F', 0x07, unsigned int)
 #define FRC_IOC_SET_MEMC_DEMO       _IOW('F', 0x08, unsigned int)
