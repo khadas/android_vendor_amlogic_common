@@ -1,0 +1,33 @@
+package {
+    // See: http://go/android-license-faq
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "frameworks_base_license"
+    // to get the below license kinds:
+    //   SPDX-license-identifier-Apache-2.0
+    default_applicable_licenses: ["vendor_amlogic_common_license"],
+}
+
+android_app {
+    name: "DroidVoiceEnrollment",
+    srcs: ["**/*.java"],
+    platform_apis: true,
+    privileged: true,
+
+    system_ext_specific: true,
+    certificate: "platform",
+
+    dex_preopt: {
+	    enabled: false,
+    },
+
+    required: [
+        "droid_enrollment_permissions.xml",
+    ],
+}
+prebuilt_etc {
+    name: "droid_enrollment_permissions.xml",
+    system_ext_specific: true,
+    sub_dir: "permissions",
+    src: "droid_enrollment_permissions.xml",
+    filename_from_src: true,
+}
