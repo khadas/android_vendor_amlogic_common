@@ -71,15 +71,21 @@ static int amsysfs_set_str(const char *path, const char *val) {
         close(fd);
         return 0;
     } else {
-        ALOGD("amsysfs_set_sysfs_str open %s fail: %d", path, errno);
+        ALOGD("%s open %s fail: %d", __func__, path, errno);
     }
     return -1;
 }
 
-static int set_dmx_source()
+static int set_dmx_source(bool isNewDemux, int demux_id)
 {
-    amsysfs_set_str("/sys/class/stb/source", "dmx0");
-    amsysfs_set_str("/sys/class/stb/demux0_source", "hiu");
+    if (isNewDemux) {
+        char cmd[30];
+        sprintf(cmd,"%d local dma_%d", demux_id, demux_id);
+        amsysfs_set_str("/sys/class/dmx/dmx_source", cmd);
+    } else {
+        amsysfs_set_str("/sys/class/stb/source", "dmx0");
+        amsysfs_set_str("/sys/class/stb/demux0_source", "hiu");
+    }
     return 0;
 }
 
@@ -123,6 +129,7 @@ BootVideo::BootVideo() {
     mTsplayParam.vTrickMode = AV_VIDEO_TRICK_MODE_NONE;
     mWaitPlayFinish = property_get_bool(PROPERTY_TSPLAYER_WAITFINISH, false);
     mLastPlayTs = -1;
+    property_set(PROPERTY_BOOTVIDEO_EXIT, "1");
 }
 
 bool BootVideo::CreateVideoTunnelId(int* id) {
@@ -348,18 +355,19 @@ int BootVideo::play() {
     ALOGD("file name = %s, is_open %d, size %lld, tsType %d\n",
                 mTsplayParam.filePath, file.is_open(),(long long) fsize, mTsplayParam.tsType);
 
-    //am_tsplayer_handle session;
-    am_tsplayer_init_params parm = {mTsplayParam.tsType, TS_INPUT_BUFFER_TYPE_NORMAL, 0, 0};
+    int demux_id = 0;
     int32_t bootplay_mode = 1;
+    am_tsplayer_init_params parm = {mTsplayParam.tsType, TS_INPUT_BUFFER_TYPE_NORMAL, demux_id, 0};
     AmTsPlayer_setParams(mSession, AM_TSPLAYER_KEY_BOOTPLAY_MODE , (void*)&bootplay_mode);
     AmTsPlayer_create(parm, &mSession);
 
     bool isTsyncNonTunelflag = false;
     if (access("/sys/class/stb/demux0_source",F_OK) != 0) {
+       set_dmx_source(true, demux_id);
        isTsyncNonTunelflag = true;
     } else {
         struct utsname kernel_msg;
-        set_dmx_source();
+        set_dmx_source(false, 0);
         uname(&kernel_msg);
         if (strstr(kernel_msg.release, "5.15") != NULL) {
             ALOGD("single dmx nontunelmode need set VideoTunnelId\n");
