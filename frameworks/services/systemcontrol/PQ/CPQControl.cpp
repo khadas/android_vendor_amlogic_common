@@ -3459,7 +3459,10 @@ int CPQControl::Cpq_SetMemcDeBlurLevel(int level, source_input_param_t source_in
         return 0;
     }
 
-    //need support
+    if (MEMCDeviceIOCtl(FRC_IOC_SET_DEBLUR_LEVEL, &level) < 0) {
+        SYS_LOGE("%s failed!\n",__FUNCTION__);
+        return -1;
+    }
 
     SYS_LOGD("%s success!\n",__FUNCTION__);
     return 0;
