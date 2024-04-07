@@ -3472,8 +3472,6 @@ void DisplayMode::saveHdmiParamToEnv() {
         setBootEnv(UBOOTENV_COLORATTRIBUTE, colorAttr.c_str());
         //colorDepth&&colorSpace is used for uboot hdmi to find
         //best color attributes for the selected hdmi mode when TV changed
-        pSysWrite->getPropertyString(PROP_DEEPCOLOR_CTL, colorDepth, "8");
-        pSysWrite->getPropertyString(PROP_PIXFMT, colorSpace, "auto");
         setBootEnv(UBOOTENV_HDMICOLORDEPTH, colorDepth);
         setBootEnv(UBOOTENV_HDMICOLORSPACE, colorSpace);
 

@@ -317,8 +317,6 @@ using namespace android;
  *sdr content force be converted to hdr content
  */
 #define UBOOTENV_SDR2HDR                "ubootenv.var.sdr2hdr"
-#define PROP_DEEPCOLOR_CTL              "persist.sys.open.deepcolor" // 8, 10, 12
-#define PROP_PIXFMT                     "persist.sys.open.pixfmt" // rgb, ycbcr
 
 //memc
 #define PROP_DISPLAY_MEMC               "persist.vendor.sys.memc"
