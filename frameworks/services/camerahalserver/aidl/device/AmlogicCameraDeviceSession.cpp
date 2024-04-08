@@ -174,14 +174,9 @@ bool AmlogicCameraDeviceSession::initialize() {
     // "ro.camera" properties are no longer supported on vendor side.
     //  Support a fall back for the fmq size override that uses "ro.vendor.camera"
     //  properties.
-    int32_t reqFMQSize = property_get_int32("ro.vendor.camera.req.fmq.size", /*default*/-1);
+    int32_t reqFMQSize = property_get_int32("vendor.camhal.req.fmq.size", /*default*/-1);
     if (reqFMQSize < 0) {
-        reqFMQSize = property_get_int32("ro.camera.req.fmq.size", /*default*/-1);
-        if (reqFMQSize < 0) {
-            reqFMQSize = CAMERA_REQUEST_METADATA_QUEUE_SIZE;
-        } else {
-            ALOGV("%s: request FMQ size overridden to %d", __FUNCTION__, reqFMQSize);
-        }
+        reqFMQSize = CAMERA_REQUEST_METADATA_QUEUE_SIZE;
     } else {
         ALOGV("%s: request FMQ size overridden to %d via fallback property", __FUNCTION__,
                 reqFMQSize);
@@ -198,14 +193,9 @@ bool AmlogicCameraDeviceSession::initialize() {
     // "ro.camera" properties are no longer supported on vendor side.
     //  Support a fall back for the fmq size override that uses "ro.vendor.camera"
     //  properties.
-    int32_t resFMQSize = property_get_int32("ro.vendor.camera.res.fmq.size", /*default*/-1);
+    int32_t resFMQSize = property_get_int32("vendor.camhal.res.fmq.size", /*default*/-1);
     if (resFMQSize < 0) {
-        resFMQSize = property_get_int32("ro.camera.res.fmq.size", /*default*/-1);
-        if (resFMQSize < 0) {
-            resFMQSize = CAMERA_RESULT_METADATA_QUEUE_SIZE;
-        } else {
-            ALOGV("%s: result FMQ size overridden to %d", __FUNCTION__, resFMQSize);
-        }
+        resFMQSize = CAMERA_RESULT_METADATA_QUEUE_SIZE;
     } else {
         ALOGV("%s: result FMQ size overridden to %d via fallback property", __FUNCTION__,
                 resFMQSize);
@@ -238,7 +228,7 @@ Status AmlogicCameraDeviceSession::initStatus() const {
 }
 
 bool AmlogicCameraDeviceSession::shouldFreeBufEarly() {
-    return property_get_bool("ro.vendor.camera.free_buf_early", 0) == 1;
+    return property_get_bool("vendor.camhal.free_buf_early", 0) == 1;
 }
 
 
