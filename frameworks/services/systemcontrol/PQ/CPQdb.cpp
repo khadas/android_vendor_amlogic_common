@@ -3018,6 +3018,8 @@ int CPQdb::PQ_GetPictureModeParams(pq_src_param_t source_input, vpp_picture_mode
                     params->SmoothPlus = c.getInt(1);
                 } else if (!strcmp(type, "HdrTmo")) {
                     params->HdrTmo = c.getInt(1);
+                } else if (!strcmp(type, "DvLightSensor")) {
+                    params->AMDvLightSensor = c.getInt(1);
                 }
             } while (c.moveToNext());
         } else {

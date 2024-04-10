@@ -143,6 +143,7 @@
 //pqmode para
 #define MAX_PICTUREMODE_PARAM_SIZE                100
 #define MAX_TEMPERATURE_PARAM_SIZE                48
+#define MAX_AMDVIQAPOPICTURE_PARAM_SIZE           20
 
 typedef enum db_name_e {
     DB_NAME_PQ = 0,
@@ -243,6 +244,10 @@ public:
     int Set_PictureMode(vpp_picture_mode_t pq_mode, pq_src_param_t source_input_param, pq_mode_switch_type_t switch_type);
     int SetFacColorParams(source_input_param_t source_input_param, vpp_picture_mode_t pqMode);
 
+    // for DV IQ APO
+    int SetDvApoPictureParams(AMDV_APO_TYPE type, AMDV_IQ_APO_STRUCT *params);
+    int GetDvApoPictureParams(AMDV_APO_TYPE type, AMDV_IQ_APO_STRUCT *params);
+
     //color Temperature
     int SetColorTemperature(int temp_mode, int is_save);
     int GetColorTemperature(void);
@@ -299,6 +304,7 @@ public:
     int GetSharpness(void);
     int SaveSharpness(int value);
     int Cpq_SetSharpness(int value, source_input_param_t source_input_param);
+    int Cpq_SetSuperResolution(int value, source_input_param_t source_input_param);
     int Cpq_SetSharpness0Level(int value, source_input_param_t source_input_param);
     int Cpq_SetSharpness1Level(int value, source_input_param_t source_input_param);
     int Cpq_SetSharpnessPiLevel(int value, source_input_param_t source_input_param);
@@ -590,6 +596,8 @@ public:
     char* CalculateFileSha1(const char* filePath);
     int GenerateTargetPQ();
 
+    int SetAmDolbyIQType(int type);
+
     //black/bule/chroma stretch
     int SetBlackStretch(int level, int is_save);
     int GetBlackStretch(void);
@@ -611,11 +619,16 @@ public:
     int SaveLocalDimming(int level);
     int Cpq_SetLocalDimming(vpp_pq_level_t level);
 
+    int RefreshDvApoPictureMode(int Type);
     int SetDolbyDarkDetail(int mode, int is_save);
     int GetDolbyDarkDetail(void);
     int SaveDolbyDarkDetail(int value);
     int Cpq_SetDolbyDarkDetail(int mode);
     int Cpq_SetAmDolbyPQMode(int mode);
+    int SetAMDolbyLightSensor(int mode, int is_save);
+    int GetAMDolbyLightSensor(void);
+    int SaveAMDolbyLightSensor(int value);
+    int Cpq_SetAMDolbyLightSensor(int mode);
 
     void InitTconGamma(void);
     void InitTconlessBin(void);
@@ -756,9 +769,11 @@ private:
     tvin_aspect_ratio_e mCurrentAfdInfo                = TVIN_ASPECT_NULL;
     hdr_type_t mCurrentHdrType                         = HDR_TYPE_NONE;
     vpp_picture_mode_t mLastPictureMode                = VPP_PICTURE_MODE_STANDARD;
+    vpp_picture_mode_t mCurrentPictureMode             = VPP_PICTURE_MODE_STANDARD;
     pq_source_input_t CurSource                        = PQ_SRC_MPEG;
     pq_sig_fmt_t CurTimming                            = PQ_FMT_SDR;
 
     mutable Mutex mLock;
+    int IsDvApoTypeGame = 0;
 };
 #endif

@@ -173,6 +173,10 @@ bool UEventObserver::isMatch(const char* buffer, size_t length,
         else if (matched && strstr(field, "FRAME_RATE_END_HINT")) {
             strcpy(ueventData->switchName, "end_hint");
         }
+        // for dv
+        else if (matched && strstr(field, "AMDV_CONTENT_TYPE=")) {
+            strcpy(ueventData->switchState, field + strlen("AMDV_CONTENT_TYPE="));
+        }
         field += strlen(field) + 1;
     } while (field != end);
 
@@ -373,6 +377,8 @@ int UEventObserver::tv_framerateevent_thread() {
     addMatch(FRAME_RATE_VDIN1_UEVENT);
     addMatch(FRAME_RATE_VDIN0_UEVENT_N);
     addMatch(FRAME_RATE_VDIN1_UEVENT_N);
+
+    addMatch(AMDOLBY_VISION_UEVENT);
     ret = pthread_create(&thread_id, NULL, AFRUenventThreadLoop, this);
     if (ret != 0) {
         SYS_LOGE("Create HDMITxUenventThreadLoop error :%d!\n", ret);
@@ -390,13 +396,17 @@ void* UEventObserver::AFRUenventThreadLoop(void* data) {
         memset(&ueventData, 0, sizeof(uevent_data_t));
         pThiz->waitForNextEvent(&ueventData);
 
-        SYS_LOGI("uevent name:%s, switch_state: %s\n", ueventData.switchName, ueventData.matchName);
+        SYS_LOGI("len: %d, buf: %s, uevent name: %s, switch_state: %s\n", ueventData.len, ueventData.buf, ueventData.matchName, ueventData.switchState);
         if (!strcmp(ueventData.matchName, FRAME_RATE_DECODER_UEVENT) ||
                          !strcmp(ueventData.matchName, FRAME_RATE_VDIN0_UEVENT) ||
                          !strcmp(ueventData.matchName, FRAME_RATE_VDIN1_UEVENT) ||
                          !strcmp(ueventData.matchName, FRAME_RATE_VDIN0_UEVENT_N) ||
                          !strcmp(ueventData.matchName, FRAME_RATE_VDIN1_UEVENT_N)) {
             pThiz->pmFrameRateAutoAdaption->onTxUeventReceived(&ueventData);
+        } else if (!strcmp(ueventData.matchName, AMDOLBY_VISION_UEVENT)) {
+#ifdef FRAMERATE_MODE
+            pThiz->pmFrameRateAutoAdaption->onAMDolbyUevent(&ueventData);
+#endif
         }
     }
 

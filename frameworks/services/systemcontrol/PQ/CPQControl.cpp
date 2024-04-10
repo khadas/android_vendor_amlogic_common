@@ -669,6 +669,7 @@ int CPQControl::LoadPQSettings()
      SYS_LOGI("pq_source_input: %d, timming: %d, \n", mCurrentPqSource.pq_source_input, mCurrentPqSource.pq_sig_fmt);
 
      int ret = 0;
+     IsDvApoTypeGame = 0;
      if (mbCpqCfg_new_picture_mode_enable) {
          ret |= Set_PictureMode((vpp_picture_mode_t)GetPQMode(), mCurrentPqSource, PQ_MODE_SWITCH_TYPE_INIT);
          ret |= LoadPQTableSettings();
@@ -1041,6 +1042,7 @@ int CPQControl::SetPQMode(int pq_mode, int is_save , int is_autoswitch)
         SavePQMode(pq_mode);
     }
 
+    IsDvApoTypeGame = 0;
     if (mbCpqCfg_new_picture_mode_enable) {
         ret = Set_PictureMode((vpp_picture_mode_t)pq_mode, mCurrentPqSource, (pq_mode_switch_type_t)is_autoswitch);
     } else {
@@ -1074,6 +1076,16 @@ int CPQControl::GetPQMode(void)
         offset = mSourceInputForSaveParam;
     }
     mSSMAction->SSMReadPictureMode(offset, &mode);
+
+    switch (mCurrentHdrType) {
+        case HDR_TYPE_DOVI:
+            if (IsDvApoTypeGame) {
+                mode = VPP_PICTURE_MODE_GAME;
+            }
+        default:
+            //SYS_LOGD("%s: VPP_PICTURE_MODE_STANDARD\n", __FUNCTION__);
+            break;
+    }
 
     if (mode < VPP_PICTURE_MODE_STANDARD || mode >= VPP_PICTURE_MODE_MAX) {
         mode = VPP_PICTURE_MODE_STANDARD;
@@ -2611,6 +2623,22 @@ int CPQControl::Cpq_SetSharpness(int value, source_input_param_t source_input_pa
     ret |= Cpq_SetSharpness0Level(value, source_input_param);
     ret |= Cpq_SetSharpness1Level(value, source_input_param);
     ret |= Cpq_SetSharpnessPiLevel(value, source_input_param);
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed!\n",__FUNCTION__);
+    } else {
+        SYS_LOGD("%s success!\n",__FUNCTION__);
+    }
+
+    return ret;
+}
+
+// for DV IQ APO patch
+int CPQControl::Cpq_SetSuperResolution(int value, source_input_param_t source_input_param)
+{
+    int ret = 0;
+    ret |= Cpq_SetSharpness0FixedParam(source_input_param);
+    ret |= Cpq_SetSharpness1FixedParam(source_input_param);
 
     if (ret < 0) {
         SYS_LOGE("%s failed!\n",__FUNCTION__);
@@ -9804,6 +9832,16 @@ bool CPQControl::isBootvideoStopped()
     return ret;
 }
 
+AMDV_IQ_APO_STRUCT dv_apo[AMDV_APOO_TYPE_MAX] = {
+// for DV IQ APO
+/*Module                    sharp  sr  memc  nr*/
+/*Type 0          */        {0,    0,   0,   2},
+/*Type 1          */        {0,    0,   0,   0},
+/*Type 2          */        {0,    0,   0,   0},
+/*Type 3          */        {25,   1,   3,   1},
+/*Type 4          */        {50,   2,   0,   2},
+};
+
 void CPQControl::resetPQUiSetting(void)
 {
     int ret = 0, i = 0, j = 0, k = 0, config_val = 0;
@@ -9866,6 +9904,11 @@ void CPQControl::resetPQUiSetting(void)
     //PQ Module Demo State
     for (int i = PQ_DEMO_MEMC; i < PQ_DEMO_MAX; i++) {
         mSSMAction->SSMSavePQModuleDemoState(i, 0);
+    }
+
+    // for DV IQ APO
+    for (int i = AMDV_APOO_TYPE_0; i < AMDV_APOO_TYPE_MAX; i++) {
+        SetDvApoPictureParams((AMDV_APO_TYPE)i, &dv_apo[i]);
     }
 
     return;
@@ -10041,16 +10084,60 @@ int CPQControl::GetPictureModeData(pq_src_param_t pq_source_input, vpp_picture_m
     return ret;
 }
 
+// for DV IQ APO
+int CPQControl::SetDvApoPictureParams(AMDV_APO_TYPE type, AMDV_IQ_APO_STRUCT *params)
+{
+    int ret = -1;
+    int size = sizeof(AMDV_IQ_APO_STRUCT);
+    if (size > MAX_AMDVIQAPOPICTURE_PARAM_SIZE) {
+        SYS_LOGE("%s error size: %d > ssmdata param len : %d!\n", __FUNCTION__, size, MAX_AMDVIQAPOPICTURE_PARAM_SIZE);
+        return -1;
+    }
+
+    ret = mSSMAction->SSMSaveDvApoPictureParams(type * MAX_AMDVIQAPOPICTURE_PARAM_SIZE, size, (int *)params);
+    if (ret < 0) {
+        SYS_LOGE("%s error!\n", __FUNCTION__);
+    }
+
+    return ret;
+}
+
+int CPQControl::GetDvApoPictureParams(AMDV_APO_TYPE type, AMDV_IQ_APO_STRUCT *params)
+{
+    int ret = -1;
+    int size = sizeof(AMDV_IQ_APO_STRUCT);
+    if (size > MAX_AMDVIQAPOPICTURE_PARAM_SIZE) {
+        SYS_LOGE("%s error size: %d > ssmdata param len : %d!\n", __FUNCTION__, size, MAX_AMDVIQAPOPICTURE_PARAM_SIZE);
+        return -1;
+    }
+
+    ret = mSSMAction->SSMReadDvApoPictureParams(type * MAX_AMDVIQAPOPICTURE_PARAM_SIZE, size, (int *)params);
+    if (ret < 0) {
+        SYS_LOGE("%s error!\n", __FUNCTION__);
+    }
+
+    return ret;
+}
+
 int CPQControl::Set_PictureMode(vpp_picture_mode_t pq_mode, pq_src_param_t source_input_param, pq_mode_switch_type_t switch_type)
 {
     int ret = -1;
     vpp_pictur_mode_para_t pq_para;
+    mCurrentPictureMode = pq_mode; //for dv iq
 
     SetPcGameMode(pq_mode, switch_type);
 
     SetFacColorParams(mCurrentSourceInputInfo, pq_mode);
 
     ret = GetPictureModeData(source_input_param, pq_mode, &pq_para);
+
+    SYS_LOGD("%s: PictureMode:   %d.                                                              \n", __FUNCTION__, pq_mode);
+    SYS_LOGD("%s: Brightness:    %d, Contrast:         %d, Saturation:    %d, Hue:             %d.\n", __FUNCTION__, pq_para.Brightness, pq_para.Contrast, pq_para.Saturation, pq_para.Hue);
+    SYS_LOGD("%s: Sharpness:     %d, Backlight:        %d, Nr:            %d, DynamicContrast: %d.\n", __FUNCTION__, pq_para.Sharpness, pq_para.Backlight, pq_para.Nr, pq_para.DynamicContrast);
+    SYS_LOGD("%s: ColorGamut:    %d, ColorTemperature: %d, LocalContrast: %d, BlackStretch:    %d.\n", __FUNCTION__, pq_para.ColorGamut, pq_para.ColorTemperature, pq_para.LocalContrast, pq_para.BlackStretch);
+    SYS_LOGD("%s: BlueStretch:   %d, MpegNr:           %d, ChromaCoring:  %d. DvMode:          %d.\n", __FUNCTION__, pq_para.BlueStretch, pq_para.MpegNr, pq_para.ChromaCoring, pq_para.DvMode);
+    SYS_LOGD("%s: DvDarkDetail:  %d, SmoothPlus:       %d, Deblock:       %d. Demosquito:      %d.\n", __FUNCTION__, pq_para.DvDarkDetail, pq_para.SmoothPlus, pq_para.Deblock, pq_para.Demosquito);
+    SYS_LOGD("%s: AMDvLightSensor: %d.                                                            \n", __FUNCTION__, pq_para.AMDvLightSensor);
 
     if (ret == 0) {
         ret |= Cpq_SetBrightness(pq_para.Brightness, mCurrentSourceInputInfo);
@@ -10071,6 +10158,7 @@ int CPQControl::Set_PictureMode(vpp_picture_mode_t pq_mode, pq_src_param_t sourc
         ret |= Cpq_SetAmDolbyPQMode(pq_para.DvMode);
         ret |= Cpq_SetDolbyDarkDetail(pq_para.DvDarkDetail);
         ret |= Cpq_SetHDRTMOMode((hdr_tmo_t)pq_para.HdrTmo);
+        ret |= Cpq_SetAMDolbyLightSensor(pq_para.AMDvLightSensor);
 
         //colortemp
         Cpq_CheckColorTemperatureParamAlldata(mCurrentSourceInputInfo);
@@ -10341,6 +10429,35 @@ int CPQControl::LoadTconlessBin(unsigned int index)
         return ret;
 }
 
+int CPQControl::RefreshDvApoPictureMode(int Type)
+{
+    if (mCurrentHdrType != HDR_TYPE_DOVI) {
+        return 0;
+    }
+
+    if (Type < AMDV_APOO_TYPE_0 || Type > AMDV_APOO_TYPE_4) {
+        SYS_LOGE("%s:Type %d out of range\n", __FUNCTION__, Type);
+        return -1;
+    }
+
+    AMDV_IQ_APO_STRUCT params;
+    if (GetDvApoPictureParams((AMDV_APO_TYPE)Type, &params) < 0) {
+        SYS_LOGE("%s: fail\n",__FUNCTION__);
+        return -1;
+    }
+
+    Cpq_SetMemcMode((vpp_memc_mode_t)params.Memc, mCurrentSourceInputInfo);
+    Cpq_SetSharpness(params.Sharp, mCurrentSourceInputInfo);
+    Cpq_SetSuperResolution(params.Sr, mCurrentSourceInputInfo);
+    Cpq_SetNoiseReductionMode((vpp_noise_reduction_mode_t)params.Nr, mCurrentSourceInputInfo);
+
+    SYS_LOGD("%s:Refresh Type: %d. MEMC  -> %d\n", __FUNCTION__, Type, params.Memc);
+    SYS_LOGD("%s:Refresh Type: %d. Sharp -> %d\n", __FUNCTION__, Type, params.Sharp);
+    SYS_LOGD("%s:Refresh Type: %d. Sr    -> %d\n", __FUNCTION__, Type, params.Sr);
+    SYS_LOGD("%s:Refresh Type: %d. Nr    -> %d\n", __FUNCTION__, Type, params.Nr);
+    return 0;
+}
+
 int CPQControl::SetDolbyDarkDetail(int mode, int is_save)
 {
     int ret =0;
@@ -10418,6 +10535,78 @@ int CPQControl::Cpq_SetAmDolbyPQMode(int mode)
 
     int ret = -1;
     ret = mDolbyVision->SetDolbyPQMode((dolby_pq_mode_t)mode);
+
+    if (ret < 0)
+        SYS_LOGE("%s failed!\n",__FUNCTION__);
+
+    return ret;
+}
+
+int CPQControl::SetAMDolbyLightSensor(int mode, int is_save)
+{
+    int ret =0;
+    SYS_LOGD("%s, mode = %d\n", __FUNCTION__, mode);
+    ret = Cpq_SetAMDolbyLightSensor(mode);
+
+    if ((ret == 0) && (is_save == 1)) {
+        ret = SaveAMDolbyLightSensor(mode);
+    }
+
+    if (ret < 0) {
+        SYS_LOGE("%s failed!\n",__FUNCTION__);
+    } else {
+        SYS_LOGD("%s success!\n",__FUNCTION__);
+    }
+    return 0;
+}
+
+int CPQControl::GetAMDolbyLightSensor(void)
+{
+    int mode = -1;
+
+    if (mbCpqCfg_new_picture_mode_enable) {
+        vpp_picture_mode_t pq_mode = (vpp_picture_mode_t)GetPQMode();
+        vpp_pictur_mode_para_t para;
+        if (GetPictureModeData(mCurrentPqSource, pq_mode, &para) == 0) {
+            mode = para.AMDvLightSensor;
+        }
+    }
+
+    SYS_LOGD("%s, source: %d, timming: %d, mode = %d\n", __FUNCTION__, mSourceInputForSaveParam, mCurrentPqSource.pq_sig_fmt, mode);
+    return mode;
+}
+
+int CPQControl::SaveAMDolbyLightSensor(int value)
+{
+    int ret = -1;
+    if (mbCpqCfg_new_picture_mode_enable) {
+        vpp_pictur_mode_para_t para;
+        vpp_picture_mode_t pq_mode = (vpp_picture_mode_t)GetPQMode();
+        if (GetPictureModeData(mCurrentPqSource, pq_mode, &para) == 0) {
+            para.AMDvLightSensor = value;
+            ret = SetPictureModeData(mCurrentPqSource, pq_mode, &para);
+        }
+    }
+
+    if (ret < 0)
+        SYS_LOGE("%s failed!\n",__FUNCTION__);
+
+    return ret;
+}
+
+int CPQControl::Cpq_SetAMDolbyLightSensor(int mode)
+{
+    if (mode < 0) {
+        SYS_LOGD("%s skip LightSensor!\n",__FUNCTION__);
+        return 0;
+    }
+
+    light_sensor_s data;
+    data.flag = mode;
+    data.t_frontLux = 0;
+
+    int ret = -1;
+    ret = mDolbyVision->SetDolbyPQLightSensor(&data);
 
     if (ret < 0)
         SYS_LOGE("%s failed!\n",__FUNCTION__);
@@ -10666,3 +10855,32 @@ int CPQControl::SetSrTable_WorkArroundByEvent(void)
 
     return ret;
 }
+
+int CPQControl::SetAmDolbyIQType(int type)
+{
+    if (mCurrentHdrType != HDR_TYPE_DOVI) {
+        SYS_LOGD("%s: Not Dv Mode, SKIP!\n", __FUNCTION__, type, IsDvApoTypeGame);
+        return 0;
+    }
+
+    if (type == AMDV_APOO_TYPE_2 && (mCurrentPictureMode != VPP_PICTURE_MODE_AMDV_IQ && mCurrentPictureMode != VPP_PICTURE_MODE_GAME)) {// dv tye == 2 and not iq mode or game mode
+        SYS_LOGD("%s: DV IQ Type Event = %d\n", __FUNCTION__, type);
+        IsDvApoTypeGame = 1;
+        Set_PictureMode(VPP_PICTURE_MODE_GAME, mCurrentPqSource, PQ_MODE_SWITCH_TYPE_INIT);
+    } else {
+        if (IsDvApoTypeGame) {
+            IsDvApoTypeGame = 0;
+            Set_PictureMode((vpp_picture_mode_t)GetPQMode(), mCurrentPqSource, PQ_MODE_SWITCH_TYPE_INIT);
+        }
+    }
+
+    if (mCurrentPictureMode == VPP_PICTURE_MODE_AMDV_DARK && type != AMDV_APOO_TYPE_2) {
+        SYS_LOGD("%s: PICTURE_MODE_DV_DARK mode  skip Apo\n", __FUNCTION__, type, IsDvApoTypeGame);
+    } else {
+        RefreshDvApoPictureMode(type);
+    }
+
+    SYS_LOGD("%s: mCurrentPictureMode = %d, DV IQ Type = %d, IsDvApoTypeGame = %d\n", __FUNCTION__, mCurrentPictureMode, type, IsDvApoTypeGame);
+    return 0;
+}
+

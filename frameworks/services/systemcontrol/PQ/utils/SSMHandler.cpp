@@ -333,6 +333,7 @@ struct SSMHeader_section2_t gSSMHeader_section2[] = {
     {.id =VPP_DATA_POS_AIPQ_MODE_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =VPP_DATA_POS_AICOLOR_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =VPP_DATA_PQMODULE_DEMO_STATE_START, .addr = 0, .size = SSM_PQ_DEMO_MAX, .valid = 0, .rsv = {0}},
+    {.id =VPP_DATA_POS_AMDVAPO_PICTURE_PARAM_START, .addr = 0, .size = SSM_AMDV_APOO_TYPE_MAX * SSM_MAX_AMDVIQAPOPICTURE_PARAM_SIZE, .valid = 0, .rsv = {0}},
 };
 
 struct SSMHeader_section1_t gSSMHeader_section1 =

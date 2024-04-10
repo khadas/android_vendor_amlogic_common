@@ -175,3 +175,14 @@ int CDolbyVision::SetDolbyPQDarkDetail(int mode) {
     return ret;
 }
 
+int CDolbyVision::SetDolbyPQLightSensor(light_sensor_s *pData) {
+    int ret = DeviceIOCtl(DOLBY_IOC_SET_AMDV_LIGHT_SENSE, pData);
+    if (ret < 0) {
+        SYS_LOGD("%s failed!\n", __FUNCTION__);
+    } else {
+        SYS_LOGD("%s success!\n", __FUNCTION__);
+    }
+
+    return ret;
+}
+

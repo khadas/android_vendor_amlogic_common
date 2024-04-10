@@ -815,3 +815,19 @@ int FrameRateAutoAdaption::getOutputAdaptType() {
     //SYS_LOGD("mode: %d\n", type);
     return type;
 }
+
+#ifdef FRAMERATE_MODE
+void FrameRateAutoAdaption::onAMDolbyUevent(uevent_data_t* ueventData) {
+    if (pCPQControl != NULL) {
+        SYS_LOGD("FrameRateAutoAdaption buf %s \n", ueventData->buf);
+        SYS_LOGD("FrameRateAutoAdaption matchName %s \n", ueventData->matchName);
+        SYS_LOGD("FrameRateAutoAdaption switchName %s \n", ueventData->switchName);
+        SYS_LOGD("FrameRateAutoAdaption switchState %s \n", ueventData->switchState);
+    }
+
+    int type = atoi(ueventData->switchState);
+
+    pCPQControl->SetAmDolbyIQType(type);
+}
+#endif
+

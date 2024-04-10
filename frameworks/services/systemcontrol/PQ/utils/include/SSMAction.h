@@ -189,6 +189,8 @@ public:
     int SSMReadPictureModeParamsFlag(int offset, int *rw_val);
     int SSMSavePictureModeParams(int offset, int size, int *rw_val);
     int SSMReadPictureModeParams(int offset, int size, int *rw_val);
+    int SSMSaveDvApoPictureParams(int offset, int size, int *rw_val);
+    int SSMReadDvApoPictureParams(int offset, int size, int *rw_val);
 
     int m_dev_fd;
     static SSMAction *mInstance;

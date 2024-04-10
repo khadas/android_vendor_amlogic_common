@@ -24,6 +24,7 @@
 #include <memory>
 
 #define SSM_MAX_PICTUREMODE_PARAM_SIZE                100
+#define SSM_MAX_AMDVIQAPOPICTURE_PARAM_SIZE           20
 
 typedef enum SSM_status_e
 {
@@ -182,6 +183,7 @@ enum{
     VPP_DATA_POS_AIPQ_MODE_START = 313,
     VPP_DATA_POS_AICOLOR_START = 314,
     VPP_DATA_PQMODULE_DEMO_STATE_START = 315,
+    VPP_DATA_POS_AMDVAPO_PICTURE_PARAM_START = 316,
     SSM_DATA_MAX,
 };
 
@@ -254,8 +256,18 @@ typedef enum SSM_picture_mode_e {
     SSM_PICTURE_MODE_SHARP,
     SSM_PICTURE_MODE_DV_BRIGHT,
     SSM_PICTURE_MODE_DV_DARK,
+    SSM_PICTURE_MODE_AMDV_IQ,
     SSM_PICTURE_MODE_MAX,
 } SSM_picture_mode_t;
+
+typedef enum ssm_amdv_apo_type_e {
+    SSM_AMDV_APOO_TYPE_0 = 0,
+    SSM_AMDV_APOO_TYPE_1,
+    SSM_AMDV_APOO_TYPE_2,
+    SSM_AMDV_APOO_TYPE_3,
+    SSM_AMDV_APOO_TYPE_4,
+    SSM_AMDV_APOO_TYPE_MAX,
+} ssm_amdv_apo_type_t;
 
 typedef enum SSM_temperature_mode_e {
     SSM_TEMPERATURE_MODE_STANDARD,

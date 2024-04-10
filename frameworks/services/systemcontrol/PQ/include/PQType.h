@@ -159,6 +159,7 @@ typedef struct vpp_pictur_mode_para_s {
     int DvDarkDetail;
     int SmoothPlus;
     int HdrTmo;
+    int AMDvLightSensor;
 
     //PM5 XML not has config
     int Deblock;
@@ -169,6 +170,22 @@ typedef struct pqosd_picture_mode_para_s {
     vpp_pictur_mode_para_t *param;
     int isValid;
 } pqosd_picture_mode_para_t;
+
+typedef enum _AMDV_APO_TYPE {
+    AMDV_APOO_TYPE_0 = 0,
+    AMDV_APOO_TYPE_1,
+    AMDV_APOO_TYPE_2,
+    AMDV_APOO_TYPE_3,
+    AMDV_APOO_TYPE_4,
+    AMDV_APOO_TYPE_MAX,
+} AMDV_APO_TYPE;
+
+typedef struct _AMDV_IQ_APO_STRUCT {
+    int Sharp;
+    int Sr;
+    int Memc;
+    int Nr;
+}AMDV_IQ_APO_STRUCT;
 
 typedef enum vpp_gamma_curve_e {
     VPP_GAMMA_CURVE_DEFAULT,//choose gamma table by value has been saved.
@@ -680,6 +697,7 @@ typedef enum vpp_picture_mode_e {
     VPP_PICTURE_MODE_SHARP,
     VPP_PICTURE_MODE_AMDV_DARK,
     VPP_PICTURE_MODE_AMDV_BRIGHT,
+    VPP_PICTURE_MODE_AMDV_IQ,
     VPP_PICTURE_MODE_MAX,
 } vpp_picture_mode_t;
 
