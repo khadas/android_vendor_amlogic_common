@@ -46,6 +46,7 @@ namespace implementation {
 
 SystemControlHal::SystemControlHal(SystemControlService * control)
     : mSysControl(control),
+    mClients(),
     mDeathRecipient(new DeathRecipient(this)) {
 
     control->setListener(this);
