@@ -90,34 +90,6 @@ static int set_dmx_source(bool isNewDemux, int demux_id)
     return 0;
 }
 
-static void disaleDI(bool off) {
-    int ch = property_get_int32("vendor.hwc.di_channel_number", -1);
-    ALOGD("disaleDI: ch=%d, %s", ch, off?"disable":"enable");
-    if (off) {
-        if (ch < 0) {
-            amsysfs_set_str("/sys/module/decoder_common/parameters/max_di_instance", "0");
-            amsysfs_set_str("/sys/module/decoder_common/parameters/v4lvideo_add_di", "0");
-        } else {
-            property_set("vendor.hwc.di_channel_number", "0");
-            property_set("vendor.media.mediahal.tsplayer.vtbuffer_number_limit", "4");
-            amsysfs_set_str("/sys/module/decoder_common/parameters/max_di_instance", "0");
-            amsysfs_set_str("/sys/module/decoder_common/parameters/v4lvideo_add_di", "0");
-            amsysfs_set_str("/sys/class/di_process/di_proc_enable", "0");
-        }
-    } else {
-        if (ch < 0) {
-            amsysfs_set_str("/sys/module/decoder_common/parameters/max_di_instance", "2");
-            amsysfs_set_str("/sys/module/decoder_common/parameters/v4lvideo_add_di", "1");
-        } else {
-            property_set("vendor.hwc.di_channel_number", "2");
-            property_set("vendor.media.mediahal.tsplayer.vtbuffer_number_limit", "1");
-            amsysfs_set_str("/sys/module/decoder_common/parameters/max_di_instance", "2");
-            amsysfs_set_str("/sys/module/decoder_common/parameters/v4lvideo_add_di", "0");
-            amsysfs_set_str("/sys/class/di_process/di_proc_enable", "1");
-        }
-    }
-}
-
 BootVideo::BootVideo() {
     property_get(PROPERTY_TSPLAYER_PATH, mTsplayParam.filePath, TSPLAYER_PATH_DEF);
     mTsplayParam.vCodec = (am_tsplayer_video_codec)property_get_int32(PROPERTY_TSPLAYER_VCODEC, (int32_t)TSPLAYER_VCODEC_DEF);
@@ -388,7 +360,6 @@ int BootVideo::play() {
             return 0;
         }
     }
-    disaleDI(true);
 
     uint32_t versionM, versionL;
     AmTsPlayer_getVersion(&versionM, &versionL);
@@ -456,7 +427,6 @@ int BootVideo::play() {
         usleep(5000);
     }
 
-    disaleDI(false);
     property_set(PROPERTY_BOOTVIDEO_EXIT, "0");
     delete [](buf);
 
