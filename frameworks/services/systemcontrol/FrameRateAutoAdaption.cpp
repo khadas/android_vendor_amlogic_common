@@ -532,9 +532,9 @@ bool FrameRateAutoAdaption::afrInDLG(std::string customStr, int frameValue, bool
     int height =0;
     for (iter = modelist.begin(); iter != modelist.end(); iter++) {
         bool enter = false;
-        if ((int)(iter->first/100) % (int)(VIDEORATE/frameValue) == 0) {
+        if (!frameRateIsFloat(frameValue) && ((int)(iter->first/100) % (int)(VIDEORATE*1.0f/frameValue) == 0)) {
             enter = true;
-        }else if (frameRateIsFloat(frameValue) && ((int)(iter->first/100 +1) % (int)(VIDEORATE/frameValue+0.1f) == 0)) {
+        }else if (frameRateIsFloat(frameValue) && ((int)(iter->first/100 +1) % (int)(VIDEORATE*1.0f/frameValue+0.1f) == 0)) {
             enter = true;
         }else if (((frameValue == FRAME_RATE_DURATION_2397)
             || (frameValue == FRAME_RATE_DURATION_2398)
@@ -559,6 +559,9 @@ bool FrameRateAutoAdaption::afrInDLG(std::string customStr, int frameValue, bool
                 if (width >0 && height >0) {
                    // if (height == 1080) width = width/2;
                     mHdmiCallback->setActiveModeRemote(width,height,(int)(iter->first));
+#ifdef FRAMERATE_MODE
+                    mTask->sendMessage(ms2ns(3000));
+#endif
                 }
                 if (isRestore) {
                     DisplayModeMgr::getInstance().setFrameRate(0,
@@ -581,6 +584,9 @@ bool FrameRateAutoAdaption::switch144Special(int width, int height, int framerat
     }
     if ((!currentIs144 && ((framerate/100) %144 == 0)) || (currentIs144 && ((framerate/100) %144 != 0))) {
         mHdmiCallback->setActiveModeRemote(width,height,framerate);
+#ifdef FRAMERATE_MODE
+        mTask->sendMessage(ms2ns(3000));
+#endif
     }else {
         DisplayModeMgr::getInstance().setFrameRate(framerate/100.0f,
                             "outputDispatch switch144Special");
@@ -628,16 +634,16 @@ bool FrameRateAutoAdaption::freesyncFrame(int frameRate) {
         DisplayModeMgr::getInstance().getModeDetail(iter->second.c_str(),width,height);
         SYS_LOGD("freesyncFrame modelist  %s, iter->first %d",iter->second.c_str(),iter->first);
         bool enter = false;
-        if ((int)(iter->first/100) % (int)(VIDEORATE/frameRate) == 0) {
+        if (!frameRateIsFloat(frameRate) &&((int)(iter->first/100) % (int)(VIDEORATE*1.0f/frameRate) == 0)) {
             enter = true;
-        }else if (frameRateIsFloat(frameRate) && ((int)(iter->first/100 +1) % (int)(VIDEORATE/frameRate+0.1f) == 0)) {
+        }else if (frameRateIsFloat(frameRate) && ((int)(iter->first/100 +1) % (int)(VIDEORATE*1.0f/frameRate+0.1f) == 0)) {
             enter = true;
         }else if (((frameRate == FRAME_RATE_DURATION_2397)
             || (frameRate == FRAME_RATE_DURATION_2398)
             || (frameRate == FRAME_RATE_DURATION_2997)) && ((int)(iter->first/100 +1) % 60 == 0)) {
             enter = true;
         }
-        if ((int)(iter->first/100) == (int)(VIDEORATE/frameRate) && iter->second.find(str) == std::string::npos) {
+        if ((int)(iter->first/100) == (int)(VIDEORATE*1.0f/frameRate) && iter->second.find(str) == std::string::npos) {
             SYS_LOGD("freesyncFrame change display mode %s",iter->second.c_str());
             if (width >0 && height >0) {
                 mHdmiCallback->setActiveModeRemote(width,height,(int)(iter->first));
@@ -775,9 +781,9 @@ bool FrameRateAutoAdaption::afrOnly(int frameValue) {
     int height = 0;
     for (iter = modelist.begin(); iter != modelist.end(); iter++) {
         bool enter = false;
-        if ((int)(iter->first/100) % (int)(VIDEORATE/frameValue) == 0) {
+        if (!frameRateIsFloat(frameValue) && ((int)(iter->first/100) % (int)(VIDEORATE*1.0f/frameValue) == 0)) {
             enter = true;
-        }else if (frameRateIsFloat(frameValue) && ((int)(iter->first/100 +1) % (int)(VIDEORATE/frameValue+0.1f) == 0)) {
+        }else if (frameRateIsFloat(frameValue) && ((int)(iter->first/100 +1) % (int)(VIDEORATE*1.0f/frameValue+0.1f) == 0)) {
             enter = true;
         }else if (((frameValue == FRAME_RATE_DURATION_2397)
             || (frameValue == FRAME_RATE_DURATION_2398)
