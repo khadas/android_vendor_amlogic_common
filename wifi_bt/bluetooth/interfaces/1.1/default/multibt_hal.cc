@@ -181,6 +181,8 @@ static const dev_info bt_dev_sdio[] = {
     // broadcom sdio modules
     {{0x02D0, 0x4359}, "ap6398s",      BCM_VND_LIB,   "",                POWER_EVENT_RESET},
     {{0x02D0, 0xaaec}, "ap6276s",      BCM_VND_LIB,   "",                POWER_EVENT_RESET},
+    // qualcomm sdio modules
+    {{0x0271, 0x050A}, "qca6174",      QCA_VND_LIB,   "",                POWER_EVENT_RESET},
     // realtek sdio modules
     {{0x024C, 0xC822}, "rtl8822cs",    RTK_VND_LIB,   "",                POWER_EVENT_RESET},
     // mediatek sdio modules
@@ -263,10 +265,10 @@ int mailbox_qca_bt_name(void)
     int fd = -1;
     int ret = -1;
     char path[PATH_MAX_LEN] = {'\0'};
-    char bt_name[] = {"qca_bt"};
+    char bt_name[] = {"qca6174"};
 
     if (strcmp(bt_prop_val.dev_name, bt_name)) {
-        PR_INFO("bt_name:%s, not qca_bt", bt_prop_val.dev_name);
+        PR_INFO("bt_name:%s, not qca6174", bt_prop_val.dev_name);
         goto exit;
     }
 
