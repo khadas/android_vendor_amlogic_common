@@ -219,6 +219,7 @@ public:
     int LoadPQSettings();
     int LoadPQUISettings();
     int LoadPQTableSettings(void);
+    int PQModuleDemoInit();
     int LoadCpqLdimRegs(void);
     int Cpq_LoadRegs(am_regs_t regs);
     int Cpq_LoadDisplayModeRegs(ve_pq_load_t regs);

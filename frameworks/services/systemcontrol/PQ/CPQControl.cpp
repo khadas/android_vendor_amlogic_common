@@ -199,6 +199,13 @@ void CPQControl::CPQControlInit()
         SYS_LOGD("Load PQ success!\n");
     }
 
+    //PQ Module Demo
+    if (PQModuleDemoInit() < 0) {
+        SYS_LOGE("PQ Module Demo Init failed!\n");
+    } else {
+        SYS_LOGD("PQ Module Demo Init success!\n");
+    }
+
     //set backlight
     BacklightInit();
     //auto backlight
@@ -718,10 +725,6 @@ int CPQControl::LoadPQSettings()
 
     ret |= Cpq_SetSmoothPlusMode((vpp_smooth_plus_mode_t)GetSmoothPlusMode(), mCurrentSourceInputInfo);
 
-    for (int modules = PQ_DEMO_MEMC; modules < PQ_DEMO_MAX; modules++) {
-        ret |= SetPQModuleDemoState((pq_module_demo_t)modules, (pq_module_demo_state_t)GetPQModuleDemoState(modules));
-    }
-
     return ret;
 }
 
@@ -791,6 +794,16 @@ bool CPQControl::IsDisableAllPQ(void)
     }
 
     return true;
+}
+
+int CPQControl::PQModuleDemoInit()
+{
+    int ret = 0;
+    for (int modules = PQ_DEMO_MEMC; modules < PQ_DEMO_MAX; modules++) {
+        ret |= SetPQModuleDemoState((pq_module_demo_t)modules, (pq_module_demo_state_t)GetPQModuleDemoState(modules));
+    }
+
+    return ret;
 }
 
 int CPQControl::Cpq_LoadRegs(am_regs_t regs)
@@ -10597,10 +10610,6 @@ int CPQControl::Set_PictureMode(vpp_picture_mode_t pq_mode, pq_src_param_t sourc
         //colortemp
         Cpq_CheckColorTemperatureParamAlldata(mCurrentSourceInputInfo);
         ret |= Cpq_SetColorTemperatureWithoutSave((vpp_color_temperature_mode_t)pq_para.ColorTemperature, mCurrentSourceInputInfo.source_input);
-    }
-
-    for (int modules = PQ_DEMO_MEMC; modules < PQ_DEMO_MAX; modules++) {
-        ret |= SetPQModuleDemoState((pq_module_demo_t)modules, (pq_module_demo_state_t)GetPQModuleDemoState(modules));
     }
 
     if (ret < 0) {
