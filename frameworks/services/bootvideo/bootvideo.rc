@@ -9,6 +9,10 @@ on init
     start vendor.tee_supplicant
     start vendor.tee_preload_fw
 
+on early-fs
+    chmod 0755 /sys/kernel/tracing
+    chmod 0755 /sys/kernel/debug/tracing
+
 on fs
     start vendor.gralloc-v2
     start surfaceflinger
