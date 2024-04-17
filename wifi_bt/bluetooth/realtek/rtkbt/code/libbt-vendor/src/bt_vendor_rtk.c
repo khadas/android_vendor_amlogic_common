@@ -551,6 +551,12 @@ static void *vendor_dl_fw_thrd()
     }
     while (evt_ret);
 
+    if (event_dl_fd > 0)
+    {
+        close(event_dl_fd);
+        event_dl_fd = -1;
+    }
+
     if (rtkbt_transtype & RTKBT_TRANS_UART)
     {
         hw_config_start(rtkbt_transtype);
@@ -919,6 +925,7 @@ static void cleanup(void)
     if (poll_dl_fd > 0)
     {
         close(poll_dl_fd);
+        poll_dl_fd = -1;
     }
     rtkbt_stack_conf_cleanup();
     rtkbt_wakeup_cfg_clean();

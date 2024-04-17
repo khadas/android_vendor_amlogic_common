@@ -833,7 +833,12 @@ void userial_vendor_close(void)
     }
 #endif
 
-    vnd_userial.fd = -1;
+    if (vnd_userial.fd > 0)
+    {
+        close(vnd_userial.fd);
+        vnd_userial.fd = -1;
+    }
+
     vnd_userial.btdriver_state = false;
     if (rtk_parse_manager)
     {
@@ -3973,6 +3978,7 @@ int userial_socket_open()
     }
 
     vnd_userial.epoll_fd = epoll_create(64);
+    ALOGE("userial_socket_open: creat epoll_create here vnd_userial.epoll_fd = %d", vnd_userial.epoll_fd);
     if (vnd_userial.epoll_fd == -1)
     {
         ALOGE("%s unable to create epoll instance: %s", __func__, strerror(errno));
