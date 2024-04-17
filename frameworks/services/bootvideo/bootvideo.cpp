@@ -33,11 +33,13 @@
 #include <amlogic/am_gralloc_ext.h>
 #include <sys/utsname.h>
 #include <string.h>
+#include <ui/DisplayMode.h>
 
 #include "bootvideo.h"
 
 #define PROPERTY_BOOTANIM_EXIT "service.bootanim.exit"
 #define PROPERTY_BOOTVIDEO_EXIT "service.bootvideo.exit"
+#define PROPERTY_ANDROID_ROTATION "persist.sys.builtinrotation"
 
 #define PROPERTY_TSPLAYER_PATH "persist.bootvideo.path"
 #define PROPERTY_TSPLAYER_VCODEC "persist.bootvideo.vcodec"
@@ -90,6 +92,15 @@ static int set_dmx_source(bool isNewDemux, int demux_id)
     return 0;
 }
 
+BootVideo::SurfaceControlWrapper::SurfaceControlWrapper(const sp<IBinder>& token, sp<SurfaceControl>& sc, Rect& rect) {
+    mToken = token;
+    sf = sc;
+    displayRect = rect;
+}
+BootVideo::SurfaceControlWrapper::~SurfaceControlWrapper() {
+    sf = nullptr;
+}
+
 BootVideo::BootVideo() {
     property_get(PROPERTY_TSPLAYER_PATH, mTsplayParam.filePath, TSPLAYER_PATH_DEF);
     mTsplayParam.vCodec = (am_tsplayer_video_codec)property_get_int32(PROPERTY_TSPLAYER_VCODEC, (int32_t)TSPLAYER_VCODEC_DEF);
@@ -104,6 +115,52 @@ BootVideo::BootVideo() {
     mLastPlayTs = -1;
     property_set(PROPERTY_BOOTVIDEO_EXIT, "1");
     mPlayEndTimeOutMs = property_get_int32(PROPERTY_TSPLAYER_PLAYTIMEOUT, TSPLAYER_PLAY_TIMEOUT);
+    mRotation = (ui::Rotation)property_get_int32(PROPERTY_ANDROID_ROTATION, (int32_t)ui::ROTATION_0);
+}
+
+bool BootVideo::mirrorDisplay() {
+    const std::vector<PhysicalDisplayId> ids = SurfaceComposerClient::getPhysicalDisplayIds();
+    auto id_first = ids.front();
+
+    ALOGD("mirrorDisplay: ids size: %d", ids.size());
+    if (ids.size() <= 1) {
+        ALOGD("mirrorDisplay no need mirror display");
+        return false;
+    }
+    mMirroredSurfaceControls.reserve((ids.size() - 1));
+    int index = 0;
+    for (auto id: ids) {
+        index ++;
+        if (index == 1) {
+            continue;
+        }
+
+        SurfaceComposerClient::Transaction t;
+        const auto displayToken = SurfaceComposerClient::getPhysicalDisplayToken(id);
+        ui::DisplayMode displayMode;
+        const status_t error = SurfaceComposerClient::getActiveDisplayMode(displayToken, &displayMode);
+        if (error != NO_ERROR)
+            return false;
+        if (ui::ROTATION_90 == mRotation || ui::ROTATION_270 == mRotation) {
+            std::swap(displayMode.resolution.width, displayMode.resolution.height);
+        }
+        ALOGD("mirrordisplay:%d resolution:%dx%d", index, displayMode.resolution.width, displayMode.resolution.height);
+        Rect displayRect(displayMode.resolution.getWidth(), displayMode.resolution.getHeight());
+        auto mirrorControl = SurfaceComposerClient::getDefault()->mirrorDisplay(id_first);
+        const auto layerStack = ui::LayerStack::fromValue(index);
+        SurfaceComposerClient::setDisplayPowerMode(displayToken, 2);
+        SurfaceControlWrapper* sfWrapper = new SurfaceControlWrapper(displayToken, mirrorControl,displayRect);
+        mMirroredSurfaceControls.push_back(sfWrapper);
+
+        t.setDisplayLayerStack(displayToken, layerStack);
+        t.setLayer(mirrorControl, 0x7FFFFFFF)
+            .setLayerStack(mirrorControl, layerStack)
+            .setDisplayProjection(displayToken, mRotation, displayRect, displayRect);
+        t.setGeometry(mirrorControl,displayRect, displayRect,0)
+            .show(mirrorControl)
+            .apply();
+    }
+    return true;
 }
 
 bool BootVideo::CreateVideoTunnelId(int* id) {
@@ -121,8 +178,9 @@ bool BootVideo::CreateVideoTunnelId(int* id) {
             //printf("mSurface == NULL in line 79");
             return false;
         }
+
         char test[20];
-        sprintf(test,"BootvideoSurface_%d",tunnelId);
+        sprintf(test,"BootVideoSurface_%d",tunnelId);
         ALOGD("CreateVideoTunnelId name:%s \n",test);
         mControl = mComposerClient->createSurface(String8(test),
                 w, h, HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED);
@@ -134,12 +192,31 @@ bool BootVideo::CreateVideoTunnelId(int* id) {
             printf("! mControl->isValid  no ");
             return false;
         }
-        SurfaceComposerClient::Transaction{}
-        .setLayer(mControl, LAYER_VIDEO)
-        .setFlags(mControl, android::layer_state_t::eLayerOpaque, android::layer_state_t::eLayerOpaque)
-        .show(mControl)
-        .setPosition(mControl, x, y)
-        .apply();
+
+        const std::vector<PhysicalDisplayId> ids = SurfaceComposerClient::getPhysicalDisplayIds();
+        auto id_first = ids.front();
+        const auto firstToken = SurfaceComposerClient::getPhysicalDisplayToken(id_first);
+        ui::DisplayMode displayMode;
+        status_t err = SurfaceComposerClient::getActiveDisplayMode(firstToken, &displayMode);
+        if (err != NO_ERROR)
+            return false;
+        if (ui::ROTATION_90 == mRotation || ui::ROTATION_270 == mRotation) {
+            std::swap(displayMode.resolution.width, displayMode.resolution.height);
+        }
+        int width = displayMode.resolution.getWidth();
+        int height = displayMode.resolution.getHeight();
+        ALOGD("display: resolution:%dx%d", width, height);
+        Rect displayRect(width, height);
+
+        SurfaceComposerClient::Transaction t;
+        t.setDisplayProjection(firstToken, mRotation, displayRect, displayRect);
+        t.setLayer(mControl, LAYER_VIDEO);
+        t.setLayerStack(mControl, ui::DEFAULT_LAYER_STACK);
+        t.setFlags(mControl, android::layer_state_t::eLayerOpaque, android::layer_state_t::eLayerOpaque)
+            .show(mControl)
+            .setPosition(mControl, x, y)
+            .apply();
+
         mSurface = mControl->getSurface();
         if (mSurface == NULL) {
             printf("mSurface == NULL");
@@ -389,6 +466,7 @@ int BootVideo::play() {
     size_t readSize = 0;
     bool isEof = false;
 
+    mirrorDisplay();
     while (mTsplayParam.tsType)
     {
         if (checkExit()) {
@@ -449,6 +527,8 @@ int BootVideo::play() {
         mComposerClient.clear();
         mComposerClient = nullptr;
     }
+    mMirroredSurfaceControls.clear();
+
     ALOGD("bootvideo play exit");
     return 0;
 }

@@ -1,6 +1,6 @@
 
-#ifndef ANDROID_BOOTANIMATION_H
-#define ANDROID_BOOTANIMATION_H
+#ifndef ANDROID_BOOTVIDEO_H
+#define ANDROID_BOOTVIDEO_H
 
 #include <gui/IProducerListener.h>
 #include <gui/Surface.h>
@@ -39,7 +39,16 @@ public:
     struct tsplay_param mTsplayParam;
 
 private:
-    bool CreateSurface();
+    class SurfaceControlWrapper {
+    public:
+        sp<SurfaceControl> sf;
+        sp<IBinder> mToken;
+        Rect displayRect;
+        SurfaceControlWrapper(const sp<IBinder>& token, sp<SurfaceControl>& sc, Rect& rect);
+        ~SurfaceControlWrapper();
+    };
+
+    bool mirrorDisplay();
     bool CreateVideoTunnelId(int* id);
     bool checkExit();
     static void video_callback(void *user_data, am_tsplayer_event *event);
@@ -49,10 +58,12 @@ private:
     sp<SurfaceComposerClient> mComposerClient = NULL;
     sp<SurfaceControl> mControl = NULL;
     sp<Surface> mSurface = NULL;
+    ui::Rotation mRotation;
+    std::vector<SurfaceControlWrapper*> mMirroredSurfaceControls;
     bool mWaitPlayFinish;
     uint64_t mLastPlayTs;
     uint64_t mLastGetTs;
     int mPlayEndTimeOutMs;
 };
-#endif //ANDROID_BOOTANIMATION_H
+#endif //ANDROID_BOOTVIDEO_H
 

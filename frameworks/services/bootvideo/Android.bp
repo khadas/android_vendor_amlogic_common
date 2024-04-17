@@ -43,7 +43,7 @@ cc_binary {
     init_rc: ["bootvideo.rc"],
 
     srcs: [
-        "main.cpp",
+        "main_bootvideo.cpp",
         "bootvideo.cpp",
     ],
     shared_libs: [
