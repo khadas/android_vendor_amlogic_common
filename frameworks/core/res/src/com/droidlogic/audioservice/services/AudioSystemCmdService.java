@@ -851,10 +851,10 @@ public class AudioSystemCmdService extends Service {
 
     private void setAudioPortGain() {
         mCurrentIndex = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-        if (mAudioSource.type() != AudioSystem.DEVICE_IN_TV_TUNER || mAudioPatch == null) {
+        if (mAudioSource == null || mAudioSource.type() != AudioSystem.DEVICE_IN_TV_TUNER || mAudioPatch == null) {
             return;
         }
-        if (mAudioSource != null && mAudioSource.gains().length > 0) {
+        if (mAudioSource.gains().length > 0) {
             AudioGain sourceGain = mAudioSource.gains()[0];
             int gainValueMb = (int)(100 * AudioSystem.getStreamVolumeDB(AudioManager.STREAM_MUSIC, mCurrentIndex, AudioManager.DEVICE_OUT_SPEAKER));
             int[] gainValues = new int[]{gainValueMb};
