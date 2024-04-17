@@ -311,6 +311,7 @@ public class SubtitleManager {
     private native int nativeGetSubType();
     private native String nativeGetSubLanguage(int idx);
     private native void nativeSetSubLanguage(String lang);
+    private native void nativeSetStartTimeStamp(int startTime);
     private native String nativeGetCurName();
     private native int nativeGetSubTypeDetail();
     private native int nativeTtControl(int teletxtEvent, int magazine, int page, int regionId);
@@ -496,6 +497,7 @@ public class SubtitleManager {
     //param: video axis from sysfs video/axis
     public void computeSubScreenAxisWithParam(int x, int y, int w, int h) {
         String mode = mSystemControl.readSysFs(DISPLAY_MODE_SYSFS).replaceAll("\n","");
+        Log.d(TAG, "mode:" + mode);
         int[] curPosition = mSystemControl.getPosition(mode);
         int modeX = curPosition[0];
         int modeY = curPosition[1];
@@ -507,9 +509,16 @@ public class SubtitleManager {
         int fbW = mDm.widthPixels;
         int fbH = mDm.heightPixels;
 
-        if (modeW == 0 || modeH == 0 || w == 0 || h  == 0) {
+
+        if (w == 0 || h  == 0) {
             LOGE("error, w or h should not zero here!");
             return;
+        }
+
+        if (modeW == 0 || modeH == 0 ) {
+            Log.d(TAG, "modeW or modeH is 0, use default resolution value");
+            modeW = fbW;
+            modeH = fbH;
         }
 
         float ratioViewW = ((float)w) / modeW;
@@ -1245,6 +1254,10 @@ public class SubtitleManager {
 
     public void setSubLanguage(String lang) {
         nativeSetSubLanguage(lang);
+    }
+
+    public void setStartTimeStamp(int startTime) {
+        nativeSetStartTimeStamp(startTime);
     }
 
     public String getCurName() {

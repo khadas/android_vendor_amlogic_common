@@ -408,6 +408,18 @@ interface ISystemControl {
   getGammaValue()
       generates (int32_t ret);
 
+  SetWhitebalanceGamma(int32_t channel, int32_t point, int32_t offset)
+      generates (int32_t ret);
+
+  GetWhitebalanceGamma(int32_t channel, int32_t point)
+      generates (int32_t ret);
+
+  FactorySetWhitebalanceGamma(int32_t colortemp, int32_t channel, int32_t point, int32_t offset)
+      generates (int32_t ret);
+
+  FactoryGetWhitebalanceGamma(int32_t colortemp, int32_t channel, int32_t point)
+      generates (int32_t ret);
+
   hasMemcFunc()
       generates (Result result);
 

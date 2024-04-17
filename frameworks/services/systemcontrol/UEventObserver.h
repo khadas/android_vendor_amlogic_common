@@ -35,7 +35,8 @@
 using namespace android;
 #endif
 
-#define HDMI_TX_UEVENT    "change@/devices/virtual/amhdmitx/amhdmitx0"   //hdmi uevent
+#define HDMI_TX_UEVENT               "change@/devices/virtual/amhdmitx/amhdmitx0"   //hdmi uevent
+#define AMDOLBY_VISION_UEVENT        "change@/devices/virtual/amdolby_vision/amdolby_vision"
 
 #define UEVENT_HPD                   "hdmitx_hpd"
 #define UEVENT_HDCP                  "hdmitx_hdcp"

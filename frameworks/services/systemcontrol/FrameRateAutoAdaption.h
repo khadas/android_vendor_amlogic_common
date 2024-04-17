@@ -134,6 +134,8 @@ public:
     void enter4k1korBack();
 #ifdef FRAMERATE_MODE
     void setPQHandle(CPQControl* handle);
+    void onAMDolbyUevent(uevent_data_t* ueventData);
+
 #endif
     int mFracDefaultValue;
 private:
@@ -145,6 +147,7 @@ private:
     bool frameRateIsFloat(int framerate);
     bool afrInDLG(std::string customStr, int frameValue,bool frameOnly);
     bool enter4k1k(int framerate);
+    bool switch144Special(int width, int height, int framerate);
     bool backFrom4k1k(int frameRate);
     int mVdinEventFd;
     Callback *mHdmiCallback;

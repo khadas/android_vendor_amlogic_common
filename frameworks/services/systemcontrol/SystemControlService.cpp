@@ -1219,7 +1219,7 @@ int SystemControlService::getEyeProtectionMode(int source_input)
 int SystemControlService::setGammaValue(int gamma_curve, int is_save)
 {
     if (pCPQControl != NULL) {
-        return pCPQControl->SetGammaValue((vpp_gamma_mode_t)gamma_curve, is_save);
+        return pCPQControl->SetGammaValue((vpp_gamma_curve_t)gamma_curve, is_save);
     } else {
         return -1;
     }
@@ -1229,6 +1229,42 @@ int SystemControlService::getGammaValue()
 {
     if (pCPQControl != NULL) {
         return pCPQControl->GetGammaValue();
+    } else {
+        return -1;
+    }
+}
+
+int SystemControlService::SetWhitebalanceGamma(int channel, int point, int offset)
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->SetWhitebalanceGamma(channel, point, offset);
+    } else {
+        return -1;
+    }
+}
+
+int SystemControlService::GetWhitebalanceGamma(int channel, int point)
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->GetWhitebalanceGamma(channel, point);
+    } else {
+        return -1;
+    }
+}
+
+int SystemControlService::FactorySetWhitebalanceGamma(int colortemp, int channel, int point, int offset)
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->FactorySetWhitebalanceGamma(colortemp, channel, point, offset);
+    } else {
+        return -1;
+    }
+}
+
+int SystemControlService::FactoryGetWhitebalanceGamma(int colortemp, int channel, int point)
+{
+    if (pCPQControl != NULL) {
+        return pCPQControl->FactoryGetWhitebalanceGamma(colortemp, channel, point);
     } else {
         return -1;
     }

@@ -18,6 +18,15 @@
 // ***************************************************************************
 // *** enum definitions *********************************************
 // ***************************************************************************
+#define MAX_PQ_SRC_INDEX                  (18) //(PQ_SRC_MAX)
+#define MAX_PQ_TIMMING_INDEX              (6)  //(PQ_FMT_MAX)
+
+#define MAX_COLORTEMP_INDEX               (6)  //(VPP_COLOR_TEMPERATURE_MODE_MAX)
+
+#define MAX_WB_GAMMA_POINT                (11)
+
+#define MAX_WB_GAMMA_PARAM_SIZE           ((MAX_WB_GAMMA_POINT * 3 * 4) + 4) // > (sizeof(WB_GAMMA_TABLE) + sizeof(int))
+
 typedef union tag_suc {
     short s;
     unsigned char c[2];
@@ -159,6 +168,8 @@ typedef struct vpp_pictur_mode_para_s {
     int DvDarkDetail;
     int SmoothPlus;
     int HdrTmo;
+    int AMDvLightSensor;
+    int GammaMidLuminance;
 
     //PM5 XML not has config
     int Deblock;
@@ -169,6 +180,22 @@ typedef struct pqosd_picture_mode_para_s {
     vpp_pictur_mode_para_t *param;
     int isValid;
 } pqosd_picture_mode_para_t;
+
+typedef enum _AMDV_APO_TYPE {
+    AMDV_APOO_TYPE_0 = 0,
+    AMDV_APOO_TYPE_1,
+    AMDV_APOO_TYPE_2,
+    AMDV_APOO_TYPE_3,
+    AMDV_APOO_TYPE_4,
+    AMDV_APOO_TYPE_MAX,
+} AMDV_APO_TYPE;
+
+typedef struct _AMDV_IQ_APO_STRUCT {
+    int Sharp;
+    int Sr;
+    int Memc;
+    int Nr;
+}AMDV_IQ_APO_STRUCT;
 
 typedef enum vpp_gamma_curve_e {
     VPP_GAMMA_CURVE_DEFAULT,//choose gamma table by value has been saved.
@@ -183,6 +210,7 @@ typedef enum vpp_gamma_curve_e {
     VPP_GAMMA_CURVE_9,
     VPP_GAMMA_CURVE_10,
     VPP_GAMMA_CURVE_11,
+    VPP_GAMMA_CURVE_BT1886,
     VPP_GAMMA_CURVE_MAX,
 } vpp_gamma_curve_t;
 
@@ -208,6 +236,7 @@ typedef enum vpp_memc_mode_e {
     VPP_MEMC_MODE_LOW,
     VPP_MEMC_MODE_MID,
     VPP_MEMC_MODE_HIGH,
+    VPP_MEMC_MODE_USER,
     VPP_MEMC_MODE_MAX,
 } vpp_memc_mode_t;
 
@@ -679,6 +708,7 @@ typedef enum vpp_picture_mode_e {
     VPP_PICTURE_MODE_SHARP,
     VPP_PICTURE_MODE_AMDV_DARK,
     VPP_PICTURE_MODE_AMDV_BRIGHT,
+    VPP_PICTURE_MODE_AMDV_IQ,
     VPP_PICTURE_MODE_MAX,
 } vpp_picture_mode_t;
 
@@ -1129,4 +1159,28 @@ typedef enum _aipq_mode_e {
     AIPQ_MODE_HIGH,
     AIPQ_MODE_MAX,
 } aipq_mode_e;
+
+typedef enum frc_fpp_state_e {
+    FPP_MEMC_OFF = 0,    // MEMC OFF
+    FPP_MEMC_LOW,        // MEMC LOW, default level9
+    FPP_MEMC_MID,        // MEMC MID, default level10
+    FPP_MEMC_HIGH,       // MEMC HIGH, default level10 and fullback
+    FPP_MEMC_CUSTOME,    // Retain customization
+    FPP_MEMC_24PFILM,    // 24P Film mode, 32 Pulldown out 48fps
+    FPP_MEMC_MAX,
+}frc_fpp_state_t;
+
+typedef struct _WB_GAMMA_TABLE {
+    int R_OFFSET[MAX_WB_GAMMA_POINT];
+    int G_OFFSET[MAX_WB_GAMMA_POINT];
+    int B_OFFSET[MAX_WB_GAMMA_POINT];
+} WB_GAMMA_TABLE;
+
+typedef enum _CHANNEL_TYPE {
+    RED_CH = 0,
+    GREEN_CH,
+    BLUE_CH,
+    MAX_CH,
+} CHANNEL_TYPE;
+
 #endif

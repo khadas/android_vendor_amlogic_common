@@ -89,7 +89,7 @@ void MsgHandler::handleMessage(const Message& message){
     switch (message.what) {
         case MsgHandler::kWhatCheck:
         ALOGD("MsgHandler::kWhatCheck");
-        if (mFrameRate->getLastFrame() <= 0 && !mFrameRate->getVideoLayerOn()) {
+        if (/*mFrameRate->getLastFrame() <= 0 && */!mFrameRate->getVideoLayerOn()) {
             mFrameRate->restoreEnv();
         }else if (mFrameRate->getLastFrame() > 0 && mFrameRate->getVideoLayerOn()) {
             mFrameRate->delayControl(mFrameRate->getLastFrame());

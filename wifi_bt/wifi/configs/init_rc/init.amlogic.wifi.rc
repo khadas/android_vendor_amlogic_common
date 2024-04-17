@@ -60,6 +60,10 @@ on property:vendor.wifi_name=aml
 on property:vendor.wifi_name=nxp
    setprop wifi.direct.interface p2p0
 
+on property:vendor.wifi_name=atbm603x
+   setprop wifi.direct.interface ap0
+   setprop ro.vendor.platform.wifi.suspend true
+
 on property:vendor.w1_wifi_type=ap
    write /sys/module/vlsicomm/parameters/con_mode 6
 

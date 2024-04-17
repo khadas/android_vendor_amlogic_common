@@ -46,6 +46,7 @@ namespace implementation {
 
 SystemControlHal::SystemControlHal(SystemControlService * control)
     : mSysControl(control),
+    mClients(),
     mDeathRecipient(new DeathRecipient(this)) {
 
     control->setListener(this);
@@ -1107,6 +1108,24 @@ Return<int32_t> SystemControlHal::setGammaValue(int32_t gamma_curve, int32_t isS
 
 Return<int32_t> SystemControlHal::getGammaValue(void) {
     return mSysControl->getGammaValue();
+}
+
+Return<int32_t> SystemControlHal::SetWhitebalanceGamma(int32_t channel, int32_t point, int32_t offset) {
+    return mSysControl->SetWhitebalanceGamma(channel, point, offset);
+}
+
+Return<int32_t> SystemControlHal::GetWhitebalanceGamma(int32_t channel, int32_t point) {
+     return mSysControl->GetWhitebalanceGamma(channel, point);
+}
+
+Return<int32_t> SystemControlHal::FactorySetWhitebalanceGamma(int32_t colortemp, int32_t channel, int32_t point, int32_t offset)
+{
+    return mSysControl->FactorySetWhitebalanceGamma(colortemp, channel, point, offset);
+}
+
+Return<int32_t> SystemControlHal::FactoryGetWhitebalanceGamma(int32_t colortemp, int32_t channel, int32_t point)
+{
+    return mSysControl->FactoryGetWhitebalanceGamma(colortemp, channel, point);
 }
 
 Return<Result> SystemControlHal::hasMemcFunc() {

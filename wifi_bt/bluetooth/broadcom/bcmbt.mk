@@ -25,6 +25,7 @@ PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/AP6256
 PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/20704/BCM20703A2.hcd:$(TARGET_COPY_OUT_VENDOR)/etc/bluetooth/BCM20703A2.hcd
 PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/AP6275p/BT/BCM4362A2.hcd:$(TARGET_COPY_OUT_VENDOR)/etc/bluetooth/BCM4362A2.hcd
 PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/AP6236/BT/BCM43430B0.hcd:$(TARGET_COPY_OUT_VENDOR)/etc/bluetooth/BCM43430B0.hcd
+PRODUCT_COPY_FILES += vendor/amlogic/common/wifi_bt/wifi/bcm_ampak/config/AP6276s/BT//SYN43756.hcd:$(TARGET_COPY_OUT_VENDOR)/etc/bluetooth/SYN43756.hcd
 
 PRODUCT_COPY_FILES += frameworks/native/data/etc/android.hardware.bluetooth.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth.xml \
 	                  frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml

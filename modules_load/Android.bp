@@ -1,0 +1,38 @@
+package {
+    default_applicable_licenses: [
+        "vendor_amlogic_common_module_install_license",
+    ],
+}
+
+license {
+    name: "vendor_amlogic_common_module_install_license",
+    visibility: [":__subpackages__"],
+    license_kinds: [
+        "SPDX-license-identifier-Apache-2.0",
+        "SPDX-license-identifier-FTL",
+        "SPDX-license-identifier-GPL",
+        "SPDX-license-identifier-LGPL-2.1",
+        "SPDX-license-identifier-MIT",
+        "legacy_by_exception_only", // by exception only
+        "legacy_notice",
+        "legacy_proprietary",
+    ],
+    license_text: [
+        "LICENSE",
+    ],
+}
+
+cc_binary {
+    name: "modules_load",
+    cflags: [
+        "-Werror",
+    ],
+    vendor: true,
+    srcs: [
+        "main.cpp",
+    ],
+    shared_libs: [
+        "liblog",
+        "libbase",
+    ],
+}

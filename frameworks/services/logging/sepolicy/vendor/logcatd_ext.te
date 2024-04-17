@@ -3,6 +3,7 @@
 #allow logcatd_ext proc:file rw_file_perms;
 allow logcatd_ext sysfs_amhdmitx:file rw_file_perms;
 allow logcatd_ext sysfs_amhdmitx:dir { search r_dir_perms };
+allow logcatd_ext unlabeled:dir search;
 
 # never allowed for vendor property
 #set_prop(logcatd_ext, vendor_media_prop)

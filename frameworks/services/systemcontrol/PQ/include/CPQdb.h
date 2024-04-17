@@ -211,7 +211,7 @@ public:
     int PQ_GetGammaTableR(int panel_id, source_input_param_t source_input_param, tcon_gamma_table_t *gamma_r);
     int PQ_GetGammaTableG(int panel_id, source_input_param_t source_input_param, tcon_gamma_table_t *gamma_g);
     int PQ_GetGammaTableB(int panel_id, source_input_param_t source_input_param, tcon_gamma_table_t *gamma_b);
-    int PQ_GetGammaSpecialTable(vpp_gamma_curve_t gamma_curve, const char *f_name, GAMMA_TABLE *gamma_value);
+    int PQ_GetGammaSpecialTable(vpp_gamma_curve_t gamma_curve, const char *f_name, tcon_gamma_table_t *gamma_value);
     int PQ_GetWhiteBalanceGammaSpecialTable(vpp_color_temperature_mode_t mode, const char *f_name, tcon_gamma_table_t *gamma_value);
 	int PQ_GetVGAAdjustPara(tvin_sig_fmt_t vga_fmt, tvafe_vga_parm_t *adjparam);
     int PQ_SetVGAAdjustPara(tvin_sig_fmt_t vga_fmt, tvafe_vga_parm_t adjparam);

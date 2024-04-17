@@ -55,7 +55,12 @@ public class DroidlogicApplication extends Application {
         //register system control callback
         mSystemControlEvent   = SystemControlEvent.getInstance(this);
         mSystemControlManager = SystemControlManager.getInstance();
-        mSystemControlManager.setListener(mSystemControlEvent);
+        String isSupportDTVKIT = SystemControlManager.getInstance().getPropertyString("ro.vendor.platform.is.tv", "");
+
+        if (isSupportDTVKIT.equals("1")) {
+
+            mSystemControlManager.setListener(mSystemControlEvent);
+        }
 
         // GTVS version default use earlysuspend wakelock
         if (isGtvsVersion() && SystemProperties.getBoolean("ro.vendor.platform.earlysuspend", true)) {
@@ -94,7 +99,7 @@ public class DroidlogicApplication extends Application {
                     if (isBootvideoStopped()) {
                         Log.d(TAG, "bootvideo stopped, start initializing audio");
                         initAudio();
-                        syncDLG();
+                        mSystemControlManager.setProperty("vendor.sys.display.boot_complete","1");
                     } else {
                         if (DroidLogicUtils.getAudioDebugEnable()) {
                             Log.d(TAG, "handleMessage sendEmptyMessageDelayed MSG_CHECK_BOOTVIDEO_FINISHED");
@@ -108,23 +113,19 @@ public class DroidlogicApplication extends Application {
         }
     };
 
-   private void syncDLG() {
+   private void syncDLG(int width, int height, int framerate) {
         String isSupportDTVKIT = SystemControlManager.getInstance().getPropertyString("ro.vendor.platform.is.tv", "");
         boolean tvflag = isSupportDTVKIT.equals("1");
         if (!tvflag) return;
-        DisplayManager displaymanager =(DisplayManager) getApplicationContext().getSystemService(Context.DISPLAY_SERVICE);
-        Display.Mode mode = displaymanager.getDisplay(0).getMode();
-        Log.d(TAG,"syncDLG"+mode+"mSystemControlManager.GetDLGEnable()"+mSystemControlManager.GetDLGEnable());
-        if ((mSystemControlManager.GetDLGEnable()== 1) && (mode.getPhysicalHeight() != 1080)) {
-            if (isModeAvailable(1920,1080,(int)(mode.getRefreshRate()*400))) {
-                changeActiveModeInner(1920, 1080,(int)(mode.getRefreshRate()*400));
-            }else {
-                changeActiveModeInner(1920, 1080,(int)(mode.getRefreshRate()*200));
-            }
-        }else if ((mSystemControlManager.GetDLGEnable() == 0) && (mode.getPhysicalHeight() != 2160)) {
-            changeActiveModeInner(3840, 2160,(int)(mode.getRefreshRate()*50));
+        int uiWidth = 3840;
+        int uiHeight = 2160;
+        if (isUfr()) {
+            uiWidth = 1920;
+            uiHeight = 1080;
         }
-        mSystemControlManager.setProperty("vendor.sys.display.boot_complete","1");
+        if (isModeAvailable(uiWidth,uiHeight, framerate)) {
+            changeActiveModeInner(uiWidth, uiHeight, framerate);
+        }
     }
     private boolean isModeAvailable(int width, int height, int framerate) {
         DisplayManager displaymanager = getApplicationContext().getSystemService(DisplayManager.class);
@@ -139,19 +140,32 @@ public class DroidlogicApplication extends Application {
         return false;
     }
 
+    private boolean isUfr() {
+        DisplayManager displaymanager = getApplicationContext().getSystemService(DisplayManager.class);
+        Display defaultDisplay = displaymanager.getDisplay(Display.DEFAULT_DISPLAY);
+        Display.Mode[] modes = defaultDisplay.getSupportedModes();
+        for (Display.Mode m : modes) {
+            if (m.getRefreshRate() >= 144) {
+                    return true;
+                }
+        }
+        return false;
+    }
+
     private void changeActiveModeInner(int width, int height, int framerate) {
         DisplayManager displaymanager = getApplicationContext().getSystemService(DisplayManager.class);
         Display defaultDisplay = displaymanager.getDisplay(Display.DEFAULT_DISPLAY);
         Display.Mode[] modes = defaultDisplay.getSupportedModes();
-        Log.d(TAG,"changeActiveModeInner "+modes.length);
+        Log.d(TAG,"changeActiveModeInner "+width+"x"+height+" "+framerate+" fps");
         for (Display.Mode m : modes) {
             Log.d(TAG,"changeActiveModeInner enter "+m+" "+(m.getPhysicalHeight() == height)+"/"+((int) (m.getRefreshRate() * 100) == framerate));
-            if (m.getPhysicalWidth() == width && ((int) (m.getRefreshRate() * 100) == framerate)) {
+            if (((int) (m.getRefreshRate() * 100) == framerate)) {
                 displaymanager.clearGlobalUserPreferredDisplayMode();
                 defaultDisplay.clearUserPreferredDisplayMode();
-                Log.d(TAG,"changeActiveModeInner"+m);
+                Log.d(TAG,"changeActiveModeInner-->"+m);
                 defaultDisplay.setUserPreferredDisplayMode(m);
                 displaymanager.setGlobalUserPreferredDisplayMode(m);
+                break;
             }
         }
     }

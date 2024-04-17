@@ -1250,7 +1250,7 @@ wifi_error wifi_set_log_handler(wifi_request_id id, wifi_interface_handle iface,
     }
     result = (wifi_error)cmd->start();
     if (result != WIFI_SUCCESS) {
-        wifi_unregister_cmd(handle, id);
+        wifi_unregister_cmd(handle, cmd);
         cmd->releaseRef();
         return result;
     }
@@ -2165,7 +2165,7 @@ wifi_error wifi_set_alert_handler(wifi_request_id id, wifi_interface_handle ifac
     }
     result = (wifi_error)cmd->start();
     if (result != WIFI_SUCCESS) {
-        wifi_unregister_cmd(handle, id);
+        wifi_unregister_cmd(handle, cmd);
         cmd->releaseRef();
         return result;
     }

@@ -82,16 +82,16 @@ typedef struct {
 
 typedef struct {
     dev_id mod_id;
-    char dev_name[20];
-    char vnd_lib_name[64];
-    char mod_name[20];
+    char dev_name[PROP_VALUE_MAX];
+    char vnd_lib_name[PROP_VALUE_MAX];
+    char mod_name[PROP_VALUE_MAX];
     char power_type;
 } dev_info;
 
 typedef struct {
     unsigned int vid;
-    char dev_name[20];
-    char vnd_lib_name[64];
+    char dev_name[PROP_VALUE_MAX];
+    char vnd_lib_name[PROP_VALUE_MAX];
     char power_type;
 } dev_info_uart;
 
@@ -180,6 +180,7 @@ static const dev_info bt_dev_pci[] = {
 static const dev_info bt_dev_sdio[] = {
     // broadcom sdio modules
     {{0x02D0, 0x4359}, "ap6398s",      BCM_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x02D0, 0xaaec}, "ap6276s",      BCM_VND_LIB,   "",                POWER_EVENT_RESET},
     // realtek sdio modules
     {{0x024C, 0xC822}, "rtl8822cs",    RTK_VND_LIB,   "",                POWER_EVENT_RESET},
     // mediatek sdio modules
@@ -231,10 +232,13 @@ static const dev_info bt_dev_usb[] = {
     {{0x0e8d, 0x7668}, "mtk7668u",     MTK_VND_LIB,   "btmtk_usb",       POWER_EVENT_EN},
     {{0x0e8d, 0x7961}, "mtk7920u",     MT792_VND_LIB, "btmtk_usb_unify", POWER_EVENT_RESET},
     // amlogic usb modules
-    {{0x1B8E, 0x4C55}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_RESET},
-    {{0x1B8E, 0x0541}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_RESET},
+    {{0x1B8E, 0x4C55}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_EN},
+    {{0x1B8E, 0x0541}, "aml_w1u",      AML_VND_LIB,   "",                POWER_EVENT_EN},
     {{0x1B8E, 0x0601}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_EN},
     {{0x1B8E, 0x0641}, "aml_w2_u",     AML_VND_LIB,   "",                POWER_EVENT_EN},
+    {{0x1B8E, 0x0801}, "aml_w2l_u",    AML_VND_LIB,   "",                POWER_EVENT_EN},
+    {{0x1B8E, 0x0809}, "aml_w2l_u",    AML_VND_LIB,   "",                POWER_EVENT_EN},
+    {{0x1B8E, 0x0811}, "aml_w2l_u",    AML_VND_LIB,   "",                POWER_EVENT_EN},
 };
 
 /******************************************************************************
@@ -318,11 +322,11 @@ static void set_bt_prop(const char *dev_name, const char *mod_name, const char *
         return;
     }
 
-    memcpy(bt_prop_val.dev_name, dev_name, sizeof(bt_prop_val.dev_name));
+    memcpy(bt_prop_val.dev_name, dev_name, (sizeof(bt_prop_val.dev_name) - 1));
     property_set(PROP_BT_NAME, bt_prop_val.dev_name);
-    memcpy(bt_prop_val.mod_name, mod_name, sizeof(bt_prop_val.mod_name));
+    memcpy(bt_prop_val.mod_name, mod_name, (sizeof(bt_prop_val.mod_name) - 1));
     property_set(PROP_BT_MODULE, bt_prop_val.mod_name);
-    memcpy(bt_prop_val.vnd_lib_name, vnd_lib_name, sizeof(bt_prop_val.vnd_lib_name));
+    memcpy(bt_prop_val.vnd_lib_name, vnd_lib_name, (sizeof(bt_prop_val.vnd_lib_name) - 1));
     property_set(PROP_LIBBT_VENDOR, bt_prop_val.vnd_lib_name);
 }
 
@@ -375,9 +379,10 @@ static bool matching_dev_id_uart(unsigned int vid)
         if (bt_dev_uart[cnt].vid == vid) {
             PR_INFO("matched vid:%4x, dev_name:%s, cnt:%u, set property",bt_dev_uart[cnt].vid,
                 bt_dev_uart[cnt].dev_name, cnt);
-            memcpy(bt_prop_val.dev_name, bt_dev_uart[cnt].dev_name, sizeof(bt_prop_val.dev_name));
+            memcpy(bt_prop_val.dev_name, bt_dev_uart[cnt].dev_name, (sizeof(bt_prop_val.dev_name) - 1));
             property_set(PROP_BT_NAME, bt_prop_val.dev_name);
-            memcpy(bt_prop_val.vnd_lib_name, bt_dev_uart[cnt].vnd_lib_name, sizeof(bt_prop_val.vnd_lib_name));
+            memcpy(bt_prop_val.vnd_lib_name, bt_dev_uart[cnt].vnd_lib_name,
+                (sizeof(bt_prop_val.vnd_lib_name) - 1));
             property_set(PROP_LIBBT_VENDOR, bt_prop_val.vnd_lib_name);
             ret = true;
             break;
@@ -815,8 +820,8 @@ static bool distinguish_bt_module_pci(void)
     }
 
     while ((next = readdir(dir)) != NULL) {
-        char line[256]= {'\0'};
-        char uevent_file[256] = {'\0'};
+        char line[256] = {'\0'};
+        char uevent_file[512] = {'\0'};
 
         /* Read pci uevent file, uevent's data like below:
          * DRIVER=w2_comm
@@ -851,6 +856,11 @@ static bool distinguish_bt_module_pci(void)
                 goto exit;
             }
         }
+
+        if (fp) {
+            fclose(fp);
+            fp = NULL;
+        }
     }
 
 exit:
@@ -880,8 +890,8 @@ static bool distinguish_bt_module_sdio(void)
     }
 
     while ((next = readdir(dir)) != NULL) {
-        char line[256]= {'\0'};
-        char uevent_file[256] = {'\0'};
+        char line[256] = {'\0'};
+        char uevent_file[512] = {'\0'};
 
         /* Read sdio uevent file, uevent's data like below:
          * DRIVER=aml_sdio
@@ -918,6 +928,11 @@ static bool distinguish_bt_module_sdio(void)
                 goto exit;
             }
         }
+
+        if (fp) {
+            fclose(fp);
+            fp = NULL;
+        }
     }
 
 exit:
@@ -947,8 +962,8 @@ static bool distinguish_bt_module_usb(void)
     }
 
     while ((next = readdir(dir)) != NULL) {
-        char line[256]= {'\0'};
-        char uevent_file[256] = {'\0'};
+        char line[256] = {'\0'};
+        char uevent_file[512] = {'\0'};
 
         /* Read usb uevent file, uevent's data like below:
          * MAJOR=189
@@ -986,6 +1001,11 @@ static bool distinguish_bt_module_usb(void)
             if (ret) {
                 goto exit;
             }
+        }
+
+        if (fp) {
+            fclose(fp);
+            fp = NULL;
         }
     }
 
@@ -1772,7 +1792,7 @@ static bool distinguish_bt_module(void)
                 goto exit;
             }
 
-            while (retry_cnt_usb <= 20) {  // usb distinguish retry maximum delay 400ms
+            while (retry_cnt_usb < 20) {  // usb distinguish retry maximum delay 400ms
                 usleep(20000);
                 retry_cnt_usb ++;
                 PR_INFO("usb distinguish retry_cnt_usb:%u", retry_cnt_usb);

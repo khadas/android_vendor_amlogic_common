@@ -799,12 +799,14 @@ static int op(bt_vendor_opcode_t opcode, void *param)
                 BTVNDDBG("USB op for %d", opcode);
                 int fd, idx = 0;
                 int (*fd_array)[] = (int (*)[]) param;
-                for (idx = 0; idx < 10; idx++)
+                for (idx = 0; idx < 50; idx++)
                 {
                     if (userial_vendor_usb_open() != -1)
                     {
                         retval = 1;
                         break;
+                    } else {
+                        usleep(20000); /* aml patch: fix usb rtkbt open failed */
                     }
                 }
                 fd = userial_socket_open();

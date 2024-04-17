@@ -135,7 +135,9 @@ typedef struct tcon_gamma_table_s {
 } tcon_gamma_table_t;
 
 typedef struct _GAMMA_TABLE {
-    unsigned int data[GAMMA_NUMBER];
+    struct tcon_gamma_table_s R;
+    struct tcon_gamma_table_s G;
+    struct tcon_gamma_table_s B;
 } GAMMA_TABLE;
 
 typedef struct tcon_rgb_ogo_s {

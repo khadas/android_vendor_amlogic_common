@@ -1,4 +1,5 @@
-service vendor.bluetooth-1-0 /vendor/bin/hw/android.hardware.bluetooth@1.0-service-droidlogic
+service vendor.bluetooth-1-1-droidlogic /vendor/bin/hw/android.hardware.bluetooth@1.1-service-droidlogic
+    interface android.hardware.bluetooth@1.1::IBluetoothHci default
     interface android.hardware.bluetooth@1.0::IBluetoothHci default
     class hal
     capabilities BLOCK_SUSPEND NET_ADMIN SYS_NICE SYS_MODULE

@@ -159,7 +159,7 @@
 #define CFG_AUTO_NR_MOTION_HP_CGAIN             "auto.nr.motion_hp_cgain"
 #define CFG_AUTO_NR_APL_GAIN                    "auto.nr.apl_gain"
 
-static const int MAX_CONFIG_FILE_LINE_LEN = 512;
+static const int MAX_CONFIG_FILE_LINE_LEN = 256;
 
 typedef enum _LINE_TYPE {
     LINE_TYPE_SECTION = 0,
@@ -216,7 +216,7 @@ private:
     int InsertKeyLine(SECTION *pSec, LINE *line);
 
     static CConfigFile *mInstance;
-    char mpFileName[256];
+    char mpFileName[64];
     FILE *mpConfigFile;
     LINE *mpFirstLine;
     SECTION *mpFirstSection;

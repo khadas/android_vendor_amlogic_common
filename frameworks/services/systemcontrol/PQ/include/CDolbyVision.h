@@ -98,6 +98,11 @@ typedef struct ambient_cfg_s {
     unsigned int dark_detail;
 } __attribute__ ((aligned(8))) ambient_cfg_t;
 
+typedef struct light_sensor_s{
+    int flag;
+    unsigned int t_frontLux;
+}light_sensor_t;
+
 // ***************************************************************************
 // *** IOCTL definitions **********
 // ***************************************************************************
@@ -128,6 +133,8 @@ typedef struct ambient_cfg_s {
 #define DOLBY_IOC_SET_DV_BL                   _IOW((DOLBY_IOC_MAGIC), 0xb, int)
 /* 1: enable dv dark detail, 0: disable dv dark detail */
 #define DOLBY_IOC_SET_DV_DARK_DETAIL          _IOW((DOLBY_IOC_MAGIC), 0xc, int)
+/* set light sense flag(1:enable 0:disable), t_frontLux */
+#define DOLBY_IOC_SET_AMDV_LIGHT_SENSE        _IOW((DOLBY_IOC_MAGIC), 0xf, struct light_sensor_s)
 
 class CDolbyVision {
 public:
@@ -141,6 +148,8 @@ public:
     int SetDolbyPQFullParam(dolby_full_pq_info_t fullInfo);
     int GetDolbyPQFullParam(dolby_full_pq_info_t *fullInfo);
     int SetDolbyPQDarkDetail(int mode);
+    int SetDolbyPQLightSensor(light_sensor_s *pData);
+
 private:
     int DeviceIOCtl(int request, ...);
 };

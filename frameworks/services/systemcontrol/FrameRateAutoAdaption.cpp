@@ -105,7 +105,9 @@ void FrameRateAutoAdaption::enter4k1korBack() {
     } else if (!isDLGOn() && strstr(curDisplayMode,customStr2.c_str()) == NULL) {
         afrInDLG(customStr2,framerate,false);
     }
-    mLastFrameRate = -1;
+    if (!mLastFromVdin) {
+        mLastFrameRate = -1;
+    }
 }
 
 int FrameRateAutoAdaption::parseConfigFile() {
@@ -203,7 +205,8 @@ bool FrameRateAutoAdaption::frameRateIsFloat(int frameRateValue) {
             || (frameRateValue == FRAME_RATE_DURATION_2398)
             || (frameRateValue == FRAME_RATE_DURATION_2997)
             || (frameRateValue == FRAME_RATE_DURATION_5992)
-            || (frameRateValue == FRAME_RATE_DURATION_5994)) {
+            || (frameRateValue == FRAME_RATE_DURATION_5994)
+            || (frameRateValue == FRAME_RATE_DURATION_119)) {
                 return true;
     }
     return false;
@@ -264,7 +267,7 @@ void FrameRateAutoAdaption::setVideoLayerOn(bool on) {
     }else {
         SYS_LOGD("video layer off (mLastFrameRate: %d)", mLastFrameRate);
 
-        char curDisplayMode[MODE_LEN] = {0};
+       /* char curDisplayMode[MODE_LEN] = {0};
         DisplayModeMgr::getInstance().getDisplayMode(curDisplayMode, MODE_LEN);
         std::string customStr("3840x1080p");
         if (isDLGOn() && strstr(curDisplayMode,customStr.c_str()) == NULL) {
@@ -276,7 +279,7 @@ void FrameRateAutoAdaption::setVideoLayerOn(bool on) {
         }
         if (mLastFrameRate > 0) {
             return;
-        }
+        }*/
 #ifdef FRAMERATE_MODE
         SYS_LOGD("message send here");
         mTask->sendMessage(ms2ns(100));
@@ -296,7 +299,6 @@ bool FrameRateAutoAdaption::backFrom4k1k(int frameRate) {
     return false;
 }
 void FrameRateAutoAdaption::policyControl(int frameRateValue) {
-    SYS_LOGD("policyControl mLastFrameRate %d frameRateValue %d mLastFromVdin %d",mLastFrameRate, frameRateValue,mLastFromVdin);
     if (!isFrameRateOn()) {
         return;
     }
@@ -316,6 +318,7 @@ void FrameRateAutoAdaption::policyControl(int frameRateValue) {
     }
     mTask->sendMessage(0);
 #endif
+   SYS_LOGD("policyControl exit");
 }
 
 void FrameRateAutoAdaption::delayControl(int frameRateValue){
@@ -448,6 +451,7 @@ void FrameRateAutoAdaption::inputValidateAndParse(void* data, int inType) {
                      ioctl(mVdinEventFd, TVIN_IOC_G_SIG_INFO, &info);
                      if ( info.status != TVIN_SIG_STATUS_STABLE ) {
                         SYS_LOGD("signal unstable and last frame %d mLastFromVdin %d",mLastFrameRate, mLastFromVdin);
+                        mLastFrameRate = 0;
                         break;
                      }
                      if (info.fps <= 0) break;
@@ -527,26 +531,38 @@ bool FrameRateAutoAdaption::afrInDLG(std::string customStr, int frameValue, bool
     int width =0;
     int height =0;
     for (iter = modelist.begin(); iter != modelist.end(); iter++) {
-        SYS_LOGD("afrInDLG frameRate %d mode %d %s",frameValue,iter->first,iter->second.c_str());
-        if ((int)(iter->first/100) % (int)(VIDEORATE/frameValue) == 0) {
+        bool enter = false;
+        if (!frameRateIsFloat(frameValue) && ((int)(iter->first/100) % (int)(VIDEORATE*1.0f/frameValue) == 0)) {
+            enter = true;
+        }else if (frameRateIsFloat(frameValue) && ((int)(iter->first/100 +1) % (int)(VIDEORATE*1.0f/frameValue+0.1f) == 0)) {
+            enter = true;
+        }else if (((frameValue == FRAME_RATE_DURATION_2397)
+            || (frameValue == FRAME_RATE_DURATION_2398)
+            || (frameValue == FRAME_RATE_DURATION_2997)) && ((int)(iter->first/100 +1) % 60 == 0)) {
+            enter = true;
+        }
+        SYS_LOGD("afrInDLG frameRate %d mode %d %s %d",frameValue,iter->first,iter->second.c_str(), enter);
+        if (enter) {
+            DisplayModeMgr::getInstance().getModeDetail(iter->second.c_str(),width,height);
             if (frameOnly) {
                 if (isRestore) {
                     SYS_LOGD("restore framerate");
                     DisplayModeMgr::getInstance().setFrameRate(0,
                             "outputDispatch afrInDLG");
-            }else {
+                }else {
                     SYS_LOGD("framerateOnly %d %s",iter->first,iter->second.c_str());
-                    DisplayModeMgr::getInstance().setFrameRate((iter->first)/100.0f,
-                            "outputDispatch afrInDLG");
-            }
+                    switch144Special(width, height, (int)((iter->first)));
+                }
             }else {
                 SYS_LOGD("setDisplayMode %d %s and restore %d",iter->first,iter->second.c_str(),isRestore);
-                DisplayModeMgr::getInstance().getModeDetail(iter->second.c_str(),width,height);
                 SYS_LOGD("mgr update name to size %dx%d",width,height);
                 if (width >0 && height >0) {
-                    if (height == 1080) width = width/2;
+                   // if (height == 1080) width = width/2;
                     mHdmiCallback->setActiveModeRemote(width,height,(int)(iter->first));
-            }
+#ifdef FRAMERATE_MODE
+                    mTask->sendMessage(ms2ns(3000));
+#endif
+                }
                 if (isRestore) {
                     DisplayModeMgr::getInstance().setFrameRate(0,
                             "outputDispatch afrInDLG");
@@ -557,6 +573,27 @@ bool FrameRateAutoAdaption::afrInDLG(std::string customStr, int frameValue, bool
     }
     return false;
 }
+
+bool FrameRateAutoAdaption::switch144Special(int width, int height, int framerate) {
+    SYS_LOGD("switch144Special update name to size %dx%dp%dhz",width,height,framerate);
+    char curDisplayMode[MODE_LEN] = {0};
+    DisplayModeMgr::getInstance().getDisplayMode(curDisplayMode, MODE_LEN);
+    bool currentIs144 = false;
+    if ((strstr(curDisplayMode,"144") != NULL) || (strstr(curDisplayMode,"288") != NULL)) {
+        currentIs144 = true;
+    }
+    if ((!currentIs144 && ((framerate/100) %144 == 0)) || (currentIs144 && ((framerate/100) %144 != 0))) {
+        mHdmiCallback->setActiveModeRemote(width,height,framerate);
+#ifdef FRAMERATE_MODE
+        mTask->sendMessage(ms2ns(3000));
+#endif
+    }else {
+        DisplayModeMgr::getInstance().setFrameRate(framerate/100.0f,
+                            "outputDispatch switch144Special");
+    }
+    return true;
+}
+
 bool FrameRateAutoAdaption::enter4k1k(int framerate) {
     char curDisplayMode[MODE_LEN] = {0};
     DisplayModeMgr::getInstance().getDisplayMode(curDisplayMode, MODE_LEN);
@@ -592,19 +629,31 @@ bool FrameRateAutoAdaption::freesyncFrame(int frameRate) {
     std::multimap<int, std::string, std::less<int>>::iterator iter;
     int width = 0;
     int height = 0;
+
     for (iter = modelist.begin(); iter != modelist.end(); iter++) {
+        DisplayModeMgr::getInstance().getModeDetail(iter->second.c_str(),width,height);
         SYS_LOGD("freesyncFrame modelist  %s, iter->first %d",iter->second.c_str(),iter->first);
-        if ((int)(iter->first/100) == (int)(VIDEORATE/frameRate) && iter->second.find(str) == std::string::npos) {
+        bool enter = false;
+        if (!frameRateIsFloat(frameRate) &&((int)(iter->first/100) % (int)(VIDEORATE*1.0f/frameRate) == 0)) {
+            enter = true;
+        }else if (frameRateIsFloat(frameRate) && ((int)(iter->first/100 +1) % (int)(VIDEORATE*1.0f/frameRate+0.1f) == 0)) {
+            enter = true;
+        }else if (((frameRate == FRAME_RATE_DURATION_2397)
+            || (frameRate == FRAME_RATE_DURATION_2398)
+            || (frameRate == FRAME_RATE_DURATION_2997)) && ((int)(iter->first/100 +1) % 60 == 0)) {
+            enter = true;
+        }
+        if ((int)(iter->first/100) == (int)(VIDEORATE*1.0f/frameRate) && iter->second.find(str) == std::string::npos) {
             SYS_LOGD("freesyncFrame change display mode %s",iter->second.c_str());
-            DisplayModeMgr::getInstance().getModeDetail(iter->second.c_str(),width,height);
             if (width >0 && height >0) {
                 mHdmiCallback->setActiveModeRemote(width,height,(int)(iter->first));
             }
             return true;
-        }else  if ((int)(iter->first/100) == (int)(VIDEORATE/frameRate)) {
+        }else  if (enter) {
             SYS_LOGD("freesyncFrame set rate only %s",iter->second.c_str());
-            DisplayModeMgr::getInstance().setFrameRate((iter->first)/100.0f,
-                            "outputDispatch freesync");
+            switch144Special(width, height, (int)((iter->first)));
+           // DisplayModeMgr::getInstance().setFrameRate((iter->first)/100.0f,
+            //                "outputDispatch freesync");
     return false;
         }
     }
@@ -627,11 +676,17 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
             //mSysWrite.readSysfs(FRAMERAT_PANEL_OUT,PanelValue);
             if (frameRate == 0) {
                 SYS_LOGD("restore mLastFrame %d",mLastFrameRate);
-               // if (!backFrom4k1k(1600)) {
+                char curDisplayMode[MODE_LEN] = {0};
+                DisplayModeMgr::getInstance().getDisplayMode(curDisplayMode, MODE_LEN);
+                if (strstr(curDisplayMode,"144") != NULL) {
+                    mHdmiCallback->setActiveModeRemote(3840,2160,12000);
+                }else if (strstr(curDisplayMode,"288") != NULL){
+                    mHdmiCallback->setActiveModeRemote(3840,1080,24000);
+                }else {
                     SYS_LOGD("tv set outputmode frameRate 0");
                     DisplayModeMgr::getInstance().setFrameRate(0,
                             "tv set outputmode frameRate 0");
-               // }
+                }
                 return;
             }else {
                 int dlgOn = isDLGOn();
@@ -641,33 +696,52 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
                 }
                 SYS_LOGD("isDLGOn() %d frameRate %d videoLayerOn %d isVdin %d",dlgOn,frameRate,videoLayerOn,isVdin);
                 //memc on+dlgOn 60->120hz
-                /*if ((dlgOn == 1) && (((pCPQControl != NULL) && pCPQControl->GetMemcMode() > 0
-                    && pCPQControl->GetPQMode() != 6 && pCPQControl->GetPQMode() != 7) || !isVdin) && enter4k1k(frameRate)) {
+                if ((dlgOn == 1) && (((pCPQControl != NULL) && pCPQControl->GetMemcMode() > 0
+                    && pCPQControl->GetPQMode() != 6 && pCPQControl->GetPQMode() != 7) && isVdin) && enter4k1k(frameRate)) {
                     SYS_LOGD("memc on,force enter4k1k ok");
                     return;
-                }*/
+                }
                 /*dlg open, while pq is 6 or 7, then when vdin is 48 or more than 100 or decoder value, the
                 *the highest value in display range. when vdin is lower than 100 , back from dlg then
                 *set the value to 50/60.
                 */
                 if ((dlgOn == 1) && isVdin && ((pCPQControl != NULL)
-                    && (pCPQControl->GetPQMode() == 6 || pCPQControl->GetPQMode() == 7))){
+                    && (pCPQControl->GetPQMode() == 6 || pCPQControl->GetPQMode() == 7)) && !backFrom4k1k(frameRate)){
                     freesyncFrame(frameRate);
-                    mLastFrameRate = -1;
+                    //mLastFrameRate = -1;
                     return;
                 }
 #endif
                 if ((dlgOn == 0) && backFrom4k1k(frameRate)) {
-                    mLastFrameRate = -1;
+                    //mLastFrameRate = -1;
                     SYS_LOGD("leave 4k1k");
                     return;
                 }
                 if (!afrOnly(frameRate)) {
                     SYS_LOGD("afr output final %f", VIDEORATE*1.0f/frameRate);
-                    DisplayModeMgr::getInstance().setFrameRate(VIDEORATE*1.0f/frameRate,
-                            "outputDispatch 222");
+                    switch (frameRate) {
+                        case FRAME_RATE_DURATION_2397:
+                        case FRAME_RATE_DURATION_5992:
+                        case FRAME_RATE_DURATION_5994:
+                        case FRAME_RATE_DURATION_2398:
+                        case FRAME_RATE_DURATION_2997:
+                            DisplayModeMgr::getInstance().setFrameRate(VIDEORATE*1.0f/5994,
+                                        "outputDispatch 222");
+                            break;
+                        case FRAME_RATE_DURATION_25:
+                        case FRAME_RATE_DURATION_50:
+                            DisplayModeMgr::getInstance().setFrameRate(VIDEORATE*1.0f/5000,
+                                        "outputDispatch 222");
+                            break;
+                        default:
+                            DisplayModeMgr::getInstance().setFrameRate(VIDEORATE*1.0f/6000,
+                                        "outputDispatch 222");
+                            break;
+                    }
                 }
-                mLastFrameRate = -1;
+                if (!mLastFromVdin) {
+                    mLastFrameRate = -1;
+                }
             }
             break;
         }
@@ -703,11 +777,22 @@ bool FrameRateAutoAdaption::afrOnly(int frameValue) {
         modelist.insert(vt(p->first, p->second));
     }
     std::multimap<int, std::string, std::greater<int>>::iterator iter;
+    int width = 0;
+    int height = 0;
     for (iter = modelist.begin(); iter != modelist.end(); iter++) {
-        if (((int)(iter->first/100) % (int)(VIDEORATE/frameValue) ==0) ) {
-            SYS_LOGD("afr only change set framerate %s %d",iter->second.c_str(),iter->first);
-            DisplayModeMgr::getInstance().setFrameRate((iter->first)/100.0f,
-                            "outputDispatch afr only");
+        bool enter = false;
+        if (!frameRateIsFloat(frameValue) && ((int)(iter->first/100) % (int)(VIDEORATE*1.0f/frameValue) == 0)) {
+            enter = true;
+        }else if (frameRateIsFloat(frameValue) && ((int)(iter->first/100 +1) % (int)(VIDEORATE*1.0f/frameValue+0.1f) == 0)) {
+            enter = true;
+        }else if (((frameValue == FRAME_RATE_DURATION_2397)
+            || (frameValue == FRAME_RATE_DURATION_2398)
+            || (frameValue == FRAME_RATE_DURATION_2997)) && ((int)(iter->first/100 +1) % 60 == 0)) {
+            enter = true;
+        }
+        if (enter) {
+            DisplayModeMgr::getInstance().getModeDetail(iter->second.c_str(),width,height);
+            switch144Special(width,height,(int)((iter->first)));
             return true;
         }
     }
@@ -736,3 +821,19 @@ int FrameRateAutoAdaption::getOutputAdaptType() {
     //SYS_LOGD("mode: %d\n", type);
     return type;
 }
+
+#ifdef FRAMERATE_MODE
+void FrameRateAutoAdaption::onAMDolbyUevent(uevent_data_t* ueventData) {
+    if (pCPQControl != NULL) {
+        SYS_LOGD("FrameRateAutoAdaption buf %s \n", ueventData->buf);
+        SYS_LOGD("FrameRateAutoAdaption matchName %s \n", ueventData->matchName);
+        SYS_LOGD("FrameRateAutoAdaption switchName %s \n", ueventData->switchName);
+        SYS_LOGD("FrameRateAutoAdaption switchState %s \n", ueventData->switchState);
+    }
+
+    int type = atoi(ueventData->switchState);
+
+    pCPQControl->SetAmDolbyIQType(type);
+}
+#endif
+

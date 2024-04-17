@@ -32,17 +32,6 @@ typedef struct environment {
     char *data;
 } environment_t;
 
-typedef struct env_attribute {
-    struct env_attribute *next;
-    char key[256];
-    char value[4096];
-} env_attribute_t;
-
-struct callback_data {
-    void (*callback)(const char* name, const char* value, void* cookie);
-    void* cookie;
-};
-
 class Ubootenv {
 public:
     Ubootenv();
@@ -57,24 +46,16 @@ public:
 private:
     int init();
     int readPartitionData();
-    env_attribute* parseAttribute();
     char* get(const char * key);
     int set(const char * key,  const char * value, bool createNew);
     int save();
-    int formatAttribute();
     int isEnv(const char* prop_name);
-    void propertyTrampoline(void* raw_data, const char* name, const char* value, unsigned serial);
-    void propertyListCallback(const prop_info* pi, void* data);
-    void propertyInit(const char *key, const char *value, void *cookie);
-    int propertyList(void (*propfn)(const char *key, const char *value, void *cookie), void *cookie);
-    void propertyLoad();
 
     char mEnvPartitionName[32];
     int mEnvPartitionSize;
     int mEnvSize;
 
     environment_t mEnvData;
-    env_attribute_t mEnvAttrHeader;
 
     pthread_mutex_t mEnvLock;
     bool mEnvInitDone;
