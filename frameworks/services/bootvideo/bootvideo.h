@@ -52,6 +52,7 @@ private:
     bool mWaitPlayFinish;
     uint64_t mLastPlayTs;
     uint64_t mLastGetTs;
+    int mPlayEndTimeOutMs;
 };
 #endif //ANDROID_BOOTANIMATION_H
 

@@ -46,17 +46,18 @@
 #define PROPERTY_TSPLAYER_APID "persist.bootvideo.apid"
 #define PROPERTY_TSPLAYER_PLAYBACK "persist.bootvideo.playback"
 #define PROPERTY_TSPLAYER_WAITFINISH "persist.bootvideo.waitfinish"
+#define PROPERTY_TSPLAYER_PLAYTIMEOUT "persist.bootvideo.playtimeout"
 
 #define TSPLAYER_PATH_DEF "/system/etc/bootvideo.ts"
 #define TSPLAYER_VCODEC_DEF AV_VIDEO_CODEC_H264
 #define TSPLAYER_ACODEC_DEF AV_AUDIO_CODEC_AAC
 #define TSPLAYER_VPID_DEF 0x100
 #define TSPLAYER_APID_DEF 0x101
+#define TSPLAYER_PLAY_TIMEOUT 400
 
 const int LAYER_VIDEO = 0x30000000;
 const int kRwSize = 188*300;
 const int kRwTimeout = 500;
-
 
 #ifndef UNUSED
 #define UNUSED(x) (void)(x)
@@ -130,6 +131,7 @@ BootVideo::BootVideo() {
     mWaitPlayFinish = property_get_bool(PROPERTY_TSPLAYER_WAITFINISH, false);
     mLastPlayTs = -1;
     property_set(PROPERTY_BOOTVIDEO_EXIT, "1");
+    mPlayEndTimeOutMs = property_get_int32(PROPERTY_TSPLAYER_PLAYTIMEOUT, TSPLAYER_PLAY_TIMEOUT);
 }
 
 bool BootVideo::CreateVideoTunnelId(int* id) {
@@ -322,8 +324,10 @@ bool BootVideo::checkExit() {
     AmTsPlayer_getCurrentTime(mSession, &playtime);
     if (playtime > 0) {
         if (mLastPlayTs == playtime) {
-            //ALOGD("bootvideo:checkExit %lld time diff: %lld", playtime, nowus - mLastGetTs);
-            if (nowus - mLastGetTs > 125000000) {
+            int64_t diff = (nowus - mLastGetTs)/1000000;
+            if (diff > 100)
+                ALOGD("bootvideo:checkExit %lld time diff: %lld", playtime, diff);
+            if (diff > mPlayEndTimeOutMs) {
                 playend = true;
             }
         } else {
@@ -333,7 +337,7 @@ bool BootVideo::checkExit() {
     }
     readyToExit = property_get_int32(PROPERTY_BOOTANIM_EXIT, 0);
     if ((readyToExit > 0 && !mWaitPlayFinish) || playend) {
-        ALOGD("service.bootanim.exit %d, play end: %d, exit", readyToExit, playend);
+        ALOGD("service.bootanim.exit %d, play end: %d, exit  pts=%lld", readyToExit, playend, playtime);
         return true;
     }
     return false;
@@ -449,7 +453,7 @@ int BootVideo::play() {
             } else
                 break;
         } while(retry-- > 0);
-        usleep(500);
+        usleep(5000);
     }
 
     disaleDI(false);
