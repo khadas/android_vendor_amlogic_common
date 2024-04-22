@@ -32,8 +32,10 @@ using namespace std;
 
 bool bootAnimationDisabled() {
     int disable = property_get_int32("debug.sf.nobootanimation", 0);
+    int bootanim = property_get_int32("persist.vendor.media.bootvideo", 0);
     int type = property_get_int32("persist.vendor.media.bootvideo.tsplayer", 0);
-    if (type == 0 || disable > 0) {
+    bootanim /= 1000;
+    if (type == 0 || disable > 0 || bootanim != 3) {
         ALOGD("bootAnimationDisabled %d, type=%d", disable, type);
         return true;
     }
