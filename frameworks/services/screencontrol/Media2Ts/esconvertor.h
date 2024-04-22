@@ -51,6 +51,7 @@ public:
     virtual ~ESConvertor();
     bool start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertorCallback *client, AMediaFormat *format = nullptr);
     bool stop();
+    void setCallback(ESConvertorCallback *client);
     void PictureReady(const OutputRecord &output);
     void EventNotify(int32_t event);
     void onInputBufferAvailable(int64_t pts);
@@ -60,16 +61,13 @@ private:
     ESConvertorCallback* mESConvertorCallback;
     ScreenManager* mScreenManager;
     std::mutex mLock;
+    std::mutex mCallBackLock;
     bool mStart;
     int32_t mClientId;
     std::unique_ptr<ESConvertorParmeter> mInput;
     std::unique_ptr<VideoEncoderWrapper> mEncoder;
     std::unique_ptr<DataDumper> mDumper;
     std::list<std::unique_ptr<BufferPtsInfo>> mWorkingInfoQueue;
-
-
-
-
 };
 
 

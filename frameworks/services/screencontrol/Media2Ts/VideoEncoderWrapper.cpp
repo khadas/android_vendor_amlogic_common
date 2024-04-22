@@ -44,18 +44,18 @@ VideoEncoderWrapper::VideoEncoderWrapper(VideoEncoderWrapperCallback * client):
         (fd = open("/dev/amvenc_multi", O_RDWR))>= 0?close(fd):
         (fd = open("/dev/vc8000", O_RDWR)) >= 0?close(fd):
         mIsSoftwareEncoder = true;
-        ALOGI("VideoEncoderWrapper");
+        ALOGI("VideoEncoderWrapper : %p",this);
 }
 
 
 
 VideoEncoderWrapper::~VideoEncoderWrapper() {
-    ALOGI("~VideoEncoderWrapper");
+    ALOGI("~VideoEncoderWrapper : %p",this);
     while (!mPendingInputQueue.empty()) {
         auto input = mPendingInputQueue.begin();
         if (!mIsSoftwareEncoder && (*input)->data_ )
             free((*input)->data_);
-        mPendingInputQueue.pop_front();
+        mPendingInputQueue.erase(input);
     }
 }
 
@@ -127,7 +127,10 @@ bool VideoEncoderWrapper::encodec(void* data,const int32_t size,const int64_t pt
         memcpy(encodec_data,data,size);
     }
     auto input = std::make_unique<InputData>(encodec_data,size,pts);
+    std::unique_lock<std::mutex> pl(mPendingInputLock);
     mPendingInputQueue.push_back(std::move(input));
+    pl.unlock();
+    ALOGI("[%s %d] push_back pts=%lld ,size =%d", __FUNCTION__, __LINE__,pts,mPendingInputQueue.size());
     return true;
 }
 
@@ -188,7 +191,7 @@ bool VideoEncoderWrapper::stop() {
         auto input = mPendingInputQueue.begin();
         if (!mIsSoftwareEncoder && (*input)->data_ )
             free((*input)->data_);
-        mPendingInputQueue.pop_front();
+        mPendingInputQueue.erase(input);
     }
     mWorkingFrameNum = 0;
     mCSDbufferSize = 0;
@@ -210,13 +213,14 @@ void VideoEncoderWrapper::threadVideoFunc() {
                 break;
             }
             onDequeueInputWork();
+            std::unique_lock<std::mutex> pl(mPendingInputLock);
             if (!mPendingInputQueue.empty() && !mInputBufferIds.empty()) {
                 auto input = mPendingInputQueue.begin();
                 if (EnqueueInput(*input)) {
-                    mPendingInputQueue.pop_front();
+                    mPendingInputQueue.erase(input);
                 }
-
             }
+            pl.unlock();
             // the first output buffer is CSD buffer,
             // and it get the output buffer from encoder when
             // the encoder has input buffer
@@ -252,13 +256,6 @@ void VideoEncoderWrapper::onDequeueInputWork() {
 
     }
     mInputBufferIds.push_back(index);
-    if (!mPendingInputQueue.empty()) {
-        auto input = mPendingInputQueue.begin();
-        VDLog("[%s %d] EnqueueInput", __FUNCTION__, __LINE__);
-        if (EnqueueInput(*input)) {
-            mPendingInputQueue.pop_front();
-        }
-    }
     return;
 }
 

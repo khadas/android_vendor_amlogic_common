@@ -109,7 +109,7 @@ bool ScreenCatch::start(std::unique_ptr<InputParmeter>& input) {
         ALOGE("[%s %d] dont't support the type=%d", __FUNCTION__, __LINE__,input->source_type);
         return false;
     }
-    ALOGI("[%s %d]  ScreenManager start finish source_type = %d (%d/%d)", __FUNCTION__, __LINE__,
+    ALOGI("[%s %d] source_type = %d (%d/%d)", __FUNCTION__, __LINE__,
                 input->source_type,input->size->width(),input->size->height());
     if (property_get(PROP_POSTPROCESSOR, postprocessor, "") > 0 &&
         strlen(postprocessor) > 0 && !strcasecmp(postprocessor, "true")) {
@@ -141,7 +141,9 @@ bool ScreenCatch::stop() {
         ALOGE("[%s %d] the ScreenCatch has been started !", __FUNCTION__, __LINE__);
         return false;
     }
+    mScreenManager->setCallback(mClientId,nullptr);
     mScreenManager->stop(mClientId);
+    std::unique_lock<std::mutex> ol(mOutputQueueLock);
     while (!mOutputQueue.empty()) {
         auto output = mOutputQueue.begin();
         if (!(*output)->raw) {
@@ -154,6 +156,7 @@ bool ScreenCatch::stop() {
         }
         mOutputQueue.erase(output);
     }
+    ol.unlock();
     mStart = false;
     mScreenManager = nullptr;
     mRawBufferSize = 0;
@@ -163,6 +166,7 @@ bool ScreenCatch::stop() {
 
 bool ScreenCatch::readBuffer(uint8_t* buffer, int32_t* size) {
     std::lock_guard<std::mutex> lock(mLock);
+    std::lock_guard<std::mutex> ol(mOutputQueueLock);
     if (!mStart || mOutputQueue.empty()) {
         ALOGV("[%s %d] the ScreenCatch has been started or mOutputQueue don't have any buffer ", __FUNCTION__, __LINE__);
         return false;
@@ -185,7 +189,7 @@ bool ScreenCatch::readBuffer(uint8_t* buffer, int32_t* size) {
        mScreenManager->realseBuffer(mClientId,(*output)->index);
     }
 
-    mOutputQueue.erase(mOutputQueue.begin());
+    mOutputQueue.erase(output);
     ALOGD("[%s %d] get the buffer size = %d", __FUNCTION__, __LINE__,mRawBufferSize);
     return true;
 }
@@ -197,12 +201,14 @@ int32_t ScreenCatch::getErrorEvent() {
 void ScreenCatch::pause() {
     std::lock_guard<std::mutex> lock(mLock);
     ALOGD("[%s %d]", __FUNCTION__, __LINE__);
+    mScreenManager->setCallback(mClientId,nullptr);
     mScreenManager->pause(mClientId);
 }
 
 void ScreenCatch::resume() {
     std::lock_guard<std::mutex> lock(mLock);
     ALOGD("[%s %d]", __FUNCTION__, __LINE__);
+    mScreenManager->setCallback(mClientId,this);
     mScreenManager->resume(mClientId);
 }
 
@@ -256,8 +262,9 @@ void ScreenCatch::PictureReady(const OutputRecord &output) {
         return;
     }
     auto info = std::make_unique<OutputInfo>(output.raw_buffer,output.index);
-
+    std::unique_lock<std::mutex> ol(mOutputQueueLock);
     mOutputQueue.push_back(std::move(info));
+    ol.unlock();
 }
 
 void ScreenCatch::EventNotify(int32_t event) {

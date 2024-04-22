@@ -41,11 +41,11 @@ enum record_type
     RECORD_TYPE_YUV
 };
 
-class ScreenControlClient  : public IScreenControlCallback {
+class ScreenControlClient  : virtual public RefBase {
 public:
     ScreenControlClient();
 
-    ~ScreenControlClient();
+    virtual ~ScreenControlClient();
     class AvcRecordCallback : public virtual RefBase {
     public:
         AvcRecordCallback() = default;
@@ -162,23 +162,31 @@ public:
 
     void setExtraInt32Config(const std::map<std::string, int32_t>& config);
 
-    Return<void> onAvcDataArouse(const hidl_memory &mem,int32_t size, int32_t frame_type,int64_t pts);
-
-    Return<void> onYuvDataArouse(const hidl_memory &mem,int32_t size);
-
-    Return<void> onMicroDimArouse(const hidl_memory &mem,int32_t size);
-
-
-
     void forceStop();
 
 private:
+    class ScreenControlHidlCallback : public IScreenControlCallback {
+    public:
+        // ScreenControlHidlCallback(ScreenControlClient *client): mScrCtrlClient(client) {};
+        // virtual ~ScreenControlHidlCallback() = default;
+        ScreenControlHidlCallback(ScreenControlClient *client);
+        virtual ~ScreenControlHidlCallback();
+        Return<void> onAvcDataArouse(const hidl_memory &mem,int32_t size, int32_t frame_type,int64_t pts) override;
+
+        Return<void> onYuvDataArouse(const hidl_memory &mem,int32_t size) override;
+
+        Return<void> onMicroDimArouse(const hidl_memory &mem,int32_t size) override;
+    private:
+        ScreenControlClient *mScrCtrlClient;
+    };
     static ScreenControlClient *mInstance;
     sp<IScreenControl> mScreenCtrl;
     wp<AvcRecordCallback> mAvcCb;
     wp<YuvRecordCallback> mYuvCb;
     wp<MicroDimCallback> mMicroDimCb;
+    sp<ScreenControlHidlCallback> mScreenControlHidlCallback;
     Mutex mLock;
+    Mutex mScreenCapLock;
 };
 
 }

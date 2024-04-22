@@ -41,15 +41,15 @@ using ::android::Mutex;
 ScreenControlHal::ScreenControlHal(ScreenControlService * control):
 mScreenControl(control),
 mDeathRecipient(new DeathRecipient(this)) {
-    ALOGI("ScreenControlHal setListener ");
-    control->setListener(this);
+    ALOGI("ScreenControlHal :%p",this);
 }
 
 ScreenControlHal::~ScreenControlHal() {
+    ALOGI("~ScreenControlHal :%p",this);
 }
 Return<void> ScreenControlHal::setCallback(const sp<IScreenControlCallback>& callback)  {
     if (callback != nullptr) {
-        ALOGI("setCallback ");
+        ALOGI("setCallback :%p",callback.get());
         mCallBack = callback;
     }
     return Void();
@@ -104,6 +104,7 @@ Return<Result> ScreenControlHal::startAvcRecord(int32_t left, int32_t top, int32
     Mutex::Autolock autoLock(mLock);
     Return<Result> ret = Result::FAIL;
     if ( NULL != mScreenControl) {
+        mScreenControl->setListener(this);
         if (mEncoderFormat)
             mScreenControl->setExtreConfig(mEncoderFormat);
         if (android::OK == mScreenControl->startAvcRecord(left, top, right, bottom, width, height, frameRate, bitRate, sourceType))
@@ -115,9 +116,9 @@ Return<Result> ScreenControlHal::startAvcRecord(int32_t left, int32_t top, int32
 
 Return<void> ScreenControlHal::forceStop() {
     if (NULL != mScreenControl) {
+        mScreenControl->setListener(nullptr);
         mScreenControl->forceStop();
     }
-    mCallBack = nullptr;
     return Void();
 }
 
@@ -145,8 +146,8 @@ void ScreenControlHal::onEsBufferAvailable(void* data, int32_t size, int32_t fra
                 void* pointer = memory->getPointer();
                 memcpy(pointer,data,size);
                 memory->update();
-                mCallBack->onAvcDataArouse(mem,size,frame_type,pts);
                 memory->commit();
+                mCallBack->onAvcDataArouse(mem,size,frame_type,pts);
             } else {
                 ALOGI("alloc memory Fail");
             }
@@ -159,6 +160,7 @@ Return<Result> ScreenControlHal::startYuvRecord(int32_t left, int32_t top, int32
                                     int32_t width, int32_t height,int32_t frameRate, int32_t sourceType) {
     Mutex::Autolock autoLock(mLock);
      if ( NULL != mScreenControl) {
+        mScreenControl->setListener(this);
         if (android::OK == mScreenControl->startYuvRecord(left, top, right, bottom, width, height, frameRate, sourceType))
             return Result::OK;
     }
@@ -176,8 +178,8 @@ void ScreenControlHal::onYuvBufferAvailable(void* data, int32_t size) {
                 void* pointer = memory->getPointer();
                 memcpy(pointer,data,size);
                 memory->update();
-                mCallBack->onYuvDataArouse(mem,size);
                 memory->commit();
+                mCallBack->onYuvDataArouse(mem,size);
             } else {
                 ALOGI("alloc memory Fail");
             }
@@ -189,6 +191,7 @@ void ScreenControlHal::onYuvBufferAvailable(void* data, int32_t size) {
 Return<Result> ScreenControlHal::startMicroDim(int32_t width, int32_t height) {
     Mutex::Autolock autoLock(mLock);
     if ( NULL != mScreenControl) {
+        mScreenControl->setListener(this);
         if (android::OK == mScreenControl->startMicroDim( width, height))
             return Result::OK;
     }
@@ -206,8 +209,9 @@ void ScreenControlHal::onMicroDimAvailable(void* data, int32_t size) {
                 void* pointer = memory->getPointer();
                 memcpy(pointer,data,size);
                 memory->update();
-                mCallBack->onMicroDimArouse(mem,size);
                 memory->commit();
+                mCallBack->onMicroDimArouse(mem,size);
+
             } else {
                 ALOGI("alloc memory Fail");
             }

@@ -149,7 +149,7 @@ cc_binary {
     "libcutils",
     "liblog",
     "libui",
-    "libscreencontrolservice",
+    "libscreencontrolclient",
     "libmediandk",
     "libamgralloc_ext",
     "libmeson_display_adapter_remote",
@@ -182,7 +182,7 @@ cc_binary {
     "libutils",
     "libcutils",
     "liblog",
-    "libscreencontrolservice",
+    "libscreencontrolclient",
     "libmediandk",
   ],
 
@@ -211,7 +211,7 @@ cc_binary {
     "libutils",
     "libcutils",
     "liblog",
-    "libscreencontrolservice",
+    "libscreencontrolclient",
     "libmediandk",
   ],
 
@@ -222,5 +222,47 @@ cc_binary {
   local_include_dirs: [
       "include",
   ],
+}
+
+cc_binary {
+  name: "yuvrecordtest",
+  vendor: true,
+  srcs: [
+    "YuvRecordTest.cpp",
+  ],
+
+  shared_libs: [
+    "vendor.amlogic.hardware.screencontrol@1.0",
+    "libbinder",
+    "libstagefright_foundation",
+    "libhardware",
+    "libutils",
+    "libcutils",
+    "liblog",
+    "libscreencontrolclient",
+    "libmediandk",
+  ],
+
+  include_dirs: [
+    "frameworks/native/include",
+    "frameworks/av/include",
+  ],
+}
+
+cc_binary {
+  name: "ScreenControlUnitTest",
+  vendor: true,
+  srcs: [
+    "screencontrol_unit_test.cpp",
+  ],
+
+  shared_libs: [
+    "vendor.amlogic.hardware.screencontrol@1.0",
+    "libscreencontrolclient",
+    "libhidlbase",
+    "liblog",
+    "libutils",
+  ],
+  static_libs: ["libgtest"],
 }
 

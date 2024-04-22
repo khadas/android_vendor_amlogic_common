@@ -94,7 +94,10 @@ bool TSPacker::stop() {
         ALOGE("[%s %d] the tspacker has been not started", __FUNCTION__, __LINE__);
         return false;
     }
-    if (!mConvertor || !mConvertor->stop()) {
+    if (!mConvertor)
+        return false;
+    mConvertor->setCallback(nullptr);
+    if (!mConvertor->stop()) {
         ALOGE("[%s %d] ESConvertor stop fail", __FUNCTION__, __LINE__);
         return false;
     }

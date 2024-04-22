@@ -47,6 +47,7 @@ public:
 private:
     bool captureforKeystone();
     std::mutex mLock;
+    std::mutex mOutputQueueLock;
     ScreenManager* mScreenManager;
     bool mStart;
     std::list<std::unique_ptr<OutputInfo>> mOutputQueue;

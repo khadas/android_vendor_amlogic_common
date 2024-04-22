@@ -77,7 +77,7 @@ ScreenManager::ScreenManager():
     mIsMultiAcquire(true),
     mStart(false)
 {
-    ALOGI("[%s %d] Construct", __FUNCTION__, __LINE__);
+    ALOGI("ScreenManager :%p",this);
     mMultiClientMap.clear();
     if (hw_get_module(AML_SCREEN_HARDWARE_MODULE_ID, (const hw_module_t **)&mScreenModule) < 0) {
         ALOGE("[%s %d] can`t get AML_SCREEN_HARDWARE_MODULE_ID module", __FUNCTION__, __LINE__);
@@ -92,8 +92,7 @@ ScreenManager::ScreenManager():
 
 
 ScreenManager::~ScreenManager() {
-    ALOGI("~ScreenManager");
-
+    ALOGI("~ScreenManager :%p",this);
     if (mStart) {
         int num = mClientNum;
         for (int i = 0;i < num;i++) {
@@ -105,7 +104,6 @@ ScreenManager::~ScreenManager() {
 
 
 bool ScreenManager::start(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client, int32_t *id, bool multi_acquire) {
-    std::lock_guard<std::mutex> alock(mCallbackLock);
     std::lock_guard<std::mutex> lock(mLock);
     if (!input || (mStart && (!mIsMultiAcquire || (input->source_type != mInputParmeter->source_type)))) {
         ALOGE("[%s %d] the module has been opened and the user is not multi acquire! %d:%d", __FUNCTION__, __LINE__,mStart,mIsMultiAcquire);
@@ -113,7 +111,7 @@ bool ScreenManager::start(std::unique_ptr<InputParmeter>& input, ScreenMangerCal
     }
     if (mStart)
         return startMoreClient(input,client,id);
-
+    std::lock_guard<std::mutex> alock(mCallbackLock);
     if (client)
         mScreenMangerCallback = client;
     mInputParmeter = std::move(input);
@@ -180,42 +178,71 @@ bool ScreenManager::startMoreClient(std::unique_ptr<InputParmeter>& input, Scree
     *id = mClientNum;
     mClientNum++;
     ALOGI("[%s %d]  id=%d,mClientNum=%d", __FUNCTION__, __LINE__,*id,mClientNum);
+    std::unique_lock<std::mutex> ml(mClientMapLock);
     mMultiClientMap.insert(std::pair<int32_t, std::unique_ptr<MultiClientInfo>>(*id, std::move(info)));
+    ml.unlock();
     return true;
 }
 void ScreenManager::pause(int32_t client_id) {
     std::lock_guard<std::mutex> lock(mLock);
     ALOGD("[%s %d]", __FUNCTION__, __LINE__);
-    mScreenDev->ops.pause(mScreenDev);
+    if (client_id > 0) {
+        std::lock_guard<std::mutex> ml(mClientMapLock);
+        auto it = mMultiClientMap.find(client_id);
+        if (it != mMultiClientMap.end()) {
+            it->second->isrunning = false;
+        }
+    } else {
+        mScreenDev->ops.pause(mScreenDev);
+    }
 }
 
 void ScreenManager::resume(int32_t client_id) {
     std::lock_guard<std::mutex> lock(mLock);
     ALOGD("[%s %d]", __FUNCTION__, __LINE__);
-    mScreenDev->ops.resume(mScreenDev);
+    if (client_id > 0) {
+        std::lock_guard<std::mutex> ml(mClientMapLock);
+        auto it = mMultiClientMap.find(client_id);
+        if (it != mMultiClientMap.end()) {
+            it->second->isrunning = true;
+        }
+    } else {
+        mScreenDev->ops.resume(mScreenDev);
+    }
 }
 
 void ScreenManager::stop(int32_t client_id) {
     ALOGI("[%s %d] client_id = %d", __FUNCTION__, __LINE__,client_id);
     std::lock_guard<std::mutex> lock(mLock);
+    std::unique_lock<std::mutex> ml(mClientMapLock);
     if (client_id > 0) {
         auto it = mMultiClientMap.find(client_id);
         if (it != mMultiClientMap.end()) {
             mMultiClientMap.erase(it);
             mClientNum--;
         }
-        if (mClientNum > 0)
+        if (mClientNum > 0 && mScreenMangerCallback)
             return;
-    }else if (client_id == 0 && mClientNum > 1) {
-        if (mScreenMangerCallback)
-            mScreenMangerCallback = nullptr;
-        return;
     }
+    ml.unlock();
+    std::unique_lock<std::mutex> cl(mCallbackLock);
+    if (client_id == 0) {
+        mScreenMangerCallback = nullptr;
+        if (mClientNum > 1) {
+            while (!mOutputRecordQueue.empty()) {
+                auto output = mOutputRecordQueue.begin();
+                mScreenDev->ops.release_buffer(mScreenDev, (long *)(*output)->raw_buffer);
+                mOutputRecordQueue.erase(output);
+            }
+            return;
+        }
+
+    }
+    cl.unlock();
     mScreenDev->ops.stop(mScreenDev);
     mOutputRecordQueue.clear();
     mMultiClientMap.clear();
     mScreenModule = nullptr;
-    mScreenMangerCallback = nullptr;
     mStart = false;
     mBufferSize = 0;
     mFormat = 0;
@@ -223,6 +250,20 @@ void ScreenManager::stop(int32_t client_id) {
     mIsMultiAcquire = true;
     ALOGI("[%s %d] stop finish", __FUNCTION__, __LINE__);
     return;
+}
+
+void ScreenManager::setCallback(int32_t client_id, ScreenMangerCallback *client) {
+    std::unique_lock<std::mutex> cl(mCallbackLock);
+    if (client_id == 0) {
+        mScreenMangerCallback = client;
+    } else if (client_id > 0){
+        std::lock_guard<std::mutex> ml(mClientMapLock);
+        auto it = mMultiClientMap.find(client_id);
+        if (it != mMultiClientMap.end()) {
+            it->second->cb = client;
+        }
+    }
+
 }
 
 bool ScreenManager::isSupportFormat(){
@@ -291,8 +332,9 @@ bool ScreenManager::setVideoRotation(int32_t degree)
 
 bool ScreenManager::realseBuffer(int32_t client_id, int32_t index) {
     ALOGI("[%s %d] begin client_id:%d,index:%d,pts:%lld", __FUNCTION__, __LINE__, client_id,index);
-    std::lock_guard<std::mutex> alock(mCallbackLock);
     std::lock_guard<std::mutex> lock(mLock);
+    std::lock_guard<std::mutex> alock(mOutputQueueLock);
+
     if (index < 0 || mOutputRecordQueue.size() == 0 || client_id > 0) {
         ALOGE("realseBuffer failed, index %d, mOutputRecordQueue size %d client_id =%d\n",
                     index,(int32_t)mOutputRecordQueue.size(),client_id);
@@ -342,8 +384,11 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
         dumper->dump((uint8_t *)buffer->buffer_mem,mBufferSize);
         ALOGI("[%s %d] dump raw data dir = %s", __FUNCTION__, __LINE__,filename);
     }
+    std::unique_lock<std::mutex> ml(mClientMapLock);
     if (!mMultiClientMap.empty()) {
         for (auto it = mMultiClientMap.begin(); it != mMultiClientMap.end(); it++) {
+            if (!it->second->isrunning || !(it->second->cb))
+                continue;
             int32_t size = getBufferSize(it->second->size,it->second->format);
             uint8_t* dst = new uint8_t[size];
             std::shared_ptr<FormatCovert> covert;
@@ -362,12 +407,13 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
                 delete []dst;
         }
     }
+    ml.unlock();
     if (mScreenMangerCallback) {
+        std::unique_lock<std::mutex> ol(mOutputQueueLock);
         const OutputRecord picture(output->index, mBufferSize,output->tv_usec, output->raw_buffer, output->canvas_buffer,mInputParmeter->format);
         mOutputRecordQueue.push_back(std::move(output));
-        cl.unlock();
+        ol.unlock();
         mScreenMangerCallback->PictureReady(picture);
-        cl.lock();
     } else {
         mScreenDev->ops.release_buffer(mScreenDev, buffer->buffer_mem);
     }

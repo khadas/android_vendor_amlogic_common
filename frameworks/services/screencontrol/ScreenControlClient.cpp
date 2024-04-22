@@ -54,11 +54,14 @@ ScreenControlClient::ScreenControlClient()
          ALOGE("tryGet screen control daemon Service");
     };
 
+
+    ALOGI("ScreenControlClient :%p",this);
     mScreenCtrl = std::move(ctrl);
 }
 
 ScreenControlClient::~ScreenControlClient()
 {
+    ALOGI("~ScreenControlClient :%p",this);
     if (mInstance != NULL)
         delete mInstance;
 }
@@ -75,7 +78,7 @@ ScreenControlClient *ScreenControlClient::getInstance()
 int ScreenControlClient::startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom,
         int32_t width, int32_t height, int32_t sourceType, void **buffer, int *bufSize)
 {
-    Mutex::Autolock autoLock(mLock);
+    Mutex::Autolock autoLock(mScreenCapLock);
     int result = -1;
     ALOGI("enter %s,left=%d,top=%d,right=%d,bottom=%d,width=%d,height=%d,srctype=%d",
             __func__, left, top, right, bottom, width, height, sourceType);
@@ -110,7 +113,6 @@ int ScreenControlClient::startScreenRecord(int32_t left, int32_t top, int32_t ri
 int ScreenControlClient::startScreenRecord(int32_t width, int32_t height, int32_t frameRate,
                         int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const char* filename)
 {
-    Mutex::Autolock autoLock(mLock);
     return startScreenRecord(0,0,width,height,width, height, frameRate,
                                 bitRate, limitTimeSec, sourceType, filename);
 }
@@ -119,8 +121,14 @@ int ScreenControlClient::startAvcScreenRecord(int32_t left, int32_t top, int32_t
                                 int32_t height, int32_t frameRate,int32_t bitRate, int32_t sourceType)
 {
     Mutex::Autolock autoLock(mLock);
+    Mutex::Autolock autoLock1(mScreenCapLock);
     int result = -1;
-    mScreenCtrl->setCallback(this);
+    if (!mScreenControlHidlCallback)
+        mScreenControlHidlCallback = new ScreenControlHidlCallback(this);
+    Return<void> ret = mScreenCtrl->setCallback(mScreenControlHidlCallback);
+    if (!ret.isOk()) {
+        ALOGE("Failed to setCallback %s", ret.description().c_str());
+    }
     ALOGI("enter %s,left=%d,top=%d,right=%d,bottom=%d, width=%d,height=%d,rate=%d,bitrate=%d,srctype=%d",
             __func__, left, top, right, bottom, width, height, frameRate, bitRate, sourceType);
     if (Result::OK == mScreenCtrl->startAvcRecord(left, top, right, bottom, width, height,
@@ -137,8 +145,14 @@ int ScreenControlClient::startAvcScreenRecord(int32_t width, int32_t height, int
 int ScreenControlClient::startYuvScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width,
                                 int32_t height, int32_t frameRate, int32_t sourceType) {
     Mutex::Autolock autoLock(mLock);
+    Mutex::Autolock autoLock1(mScreenCapLock);
     int result = -1;
-    mScreenCtrl->setCallback(this);
+     if (!mScreenControlHidlCallback)
+        mScreenControlHidlCallback = new ScreenControlHidlCallback(this);
+    Return<void> ret = mScreenCtrl->setCallback(mScreenControlHidlCallback);
+    if (!ret.isOk()) {
+        ALOGE("Failed to setCallback %s", ret.description().c_str());
+    }
     ALOGI("enter %s,left=%d,top=%d,right=%d,bottom=%d, width=%d,height=%d,rate=%d,srctype=%d",
             __func__, left, top, right, bottom, width, height, frameRate, sourceType);
     if (Result::OK == mScreenCtrl->startYuvRecord(left, top, right, bottom, width, height,
@@ -156,8 +170,14 @@ int ScreenControlClient::startYuvScreenRecord(int32_t width, int32_t height, int
 int32_t ScreenControlClient::startMicroDim(int32_t width, int32_t height)
 {
     Mutex::Autolock autoLock(mLock);
+    Mutex::Autolock autoLock1(mScreenCapLock);
     int result = -1;
-    mScreenCtrl->setCallback(this);
+    if (!mScreenControlHidlCallback)
+        mScreenControlHidlCallback = new ScreenControlHidlCallback(this);
+    Return<void> ret = mScreenCtrl->setCallback(mScreenControlHidlCallback);
+    if (!ret.isOk()) {
+        ALOGE("Failed to setCallback %s", ret.description().c_str());
+    }
     ALOGI("enter %s, width=%d,height=%d",__func__, width, height);
     if (Result::OK == mScreenCtrl->startMicroDim(width, height))
         result = 0;
@@ -165,25 +185,22 @@ int32_t ScreenControlClient::startMicroDim(int32_t width, int32_t height)
 }
 
 void ScreenControlClient::setAvcCallback(const sp<AvcRecordCallback>&f) {
+    ALOGI("setAvcCallback :%p",f.get());
     mAvcCb = f;
 }
 
 void ScreenControlClient::setYuvCallback(const sp<YuvRecordCallback>&f) {
+    ALOGI("setYuvCallback :%p",f.get());
     mYuvCb = f;
 }
 
 void ScreenControlClient::setMicroDimCallback(const sp<MicroDimCallback>&f) {
+    ALOGI("setMicroDimCallback :%p",f.get());
     mMicroDimCb = f;
 }
 void ScreenControlClient::forceStop()
 {
     ALOGD("[%s %d]", __FUNCTION__, __LINE__);
-    if (mAvcCb.promote())
-        mAvcCb = nullptr;
-    if (mYuvCb.promote())
-        mYuvCb = nullptr;
-    if (mMicroDimCb.promote())
-        mMicroDimCb = nullptr;
     mScreenCtrl->forceStop();
 }
 
@@ -204,10 +221,10 @@ void ScreenControlClient::setExtraInt32Config(const std::map<std::string, int32_
     mScreenCtrl->setExtraInt32Config(keys,values);
 }
 
-Return<void> ScreenControlClient::onAvcDataArouse(const hidl_memory &mem,int32_t size, int32_t frame_type,int64_t pts)
+Return<void> ScreenControlClient::ScreenControlHidlCallback::onAvcDataArouse(const hidl_memory &mem,int32_t size, int32_t frame_type,int64_t pts)
 {
     ALOGI("onAvcDataArouse size = %d,frame_type=%d,pts = %ld",size, frame_type, pts);
-    sp<AvcRecordCallback> f = mAvcCb.promote();
+    sp<AvcRecordCallback> f = mScrCtrlClient->mAvcCb.promote();
     if (f != nullptr) {
         sp<IMemory> memory = mapMemory(mem);
         f->onAvcDataArouse(memory->getPointer(),size,frame_type,pts);
@@ -215,10 +232,12 @@ Return<void> ScreenControlClient::onAvcDataArouse(const hidl_memory &mem,int32_t
     return Void();
 
 }
-Return<void> ScreenControlClient::onYuvDataArouse(const hidl_memory &mem,int32_t size)
+Return<void> ScreenControlClient::ScreenControlHidlCallback::onYuvDataArouse(const hidl_memory &mem,int32_t size)
 {
     ALOGI("onYuvDataArouse size = %d",size);
-    sp<YuvRecordCallback> f = mYuvCb.promote();
+    if (!mScrCtrlClient)
+        return Void();
+    sp<YuvRecordCallback> f = mScrCtrlClient->mYuvCb.promote();
     if (f != nullptr) {
         sp<IMemory> memory = mapMemory(mem);
         f->onYuvDataArouse(memory->getPointer(),size);
@@ -226,14 +245,23 @@ Return<void> ScreenControlClient::onYuvDataArouse(const hidl_memory &mem,int32_t
     return Void();
 }
 
-Return<void> ScreenControlClient::onMicroDimArouse(const hidl_memory &mem,int32_t size) {
+Return<void> ScreenControlClient::ScreenControlHidlCallback::onMicroDimArouse(const hidl_memory &mem,int32_t size) {
     ALOGI("onMicroDimArouse size = %d",size);
-    sp<MicroDimCallback> f = mMicroDimCb.promote();
+    sp<MicroDimCallback> f = mScrCtrlClient->mMicroDimCb.promote();
     if (f != nullptr) {
         sp<IMemory> memory = mapMemory(mem);
         f->onMicroDimArouse(memory->getPointer(),size);
     }
     return Void();
+
+}
+
+ScreenControlClient::ScreenControlHidlCallback::ScreenControlHidlCallback(ScreenControlClient *client):
+                            mScrCtrlClient(client) {
+    ALOGI("ScreenControlHidlCallback :%p",this);
+};
+ScreenControlClient::ScreenControlHidlCallback::~ScreenControlHidlCallback() {
+    ALOGI("~ScreenControlHidlCallback :%p",this);
 
 }
 

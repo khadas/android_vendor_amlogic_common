@@ -82,10 +82,12 @@ public:
     void EventNotify(int32_t event);
 
 private:
-    mutable Mutex mLock;
-    mutable Mutex mScreenMangerLock;
-    mutable Mutex mScreenCapLock;
+    std::mutex mLock;
+    std::mutex mScreenCapLock;
+    std::condition_variable mScreenCapCondition;
+
     bool mStart;
+    bool mWaitStop;
     int32_t mMicroWidth;
     int32_t mMicroHeight;
     int32_t mYuvRecordId;

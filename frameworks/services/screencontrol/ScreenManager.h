@@ -111,12 +111,13 @@ public:
     */
     struct MultiClientInfo {
         MultiClientInfo(aml_screencontrol_format f,ScreenMangerCallback *c): format(f),
-                        cb(c){};
+                        cb(c),isrunning(true){};
         MultiClientInfo(MultiClientInfo&&) = default;
         ~MultiClientInfo() = default;
         std::unique_ptr<Size> size;
         aml_screencontrol_format format;
         ScreenMangerCallback *cb;
+        bool isrunning;
     };
     static ScreenManager* getInstance() {
         static ScreenManager value;
@@ -127,7 +128,10 @@ public:
     void stop(int32_t client_id);
 
     void pause(int32_t client_id);
+
     void resume(int32_t client_id);
+
+    void setCallback(int32_t client_id, ScreenMangerCallback *client);
 
     bool realseBuffer(int32_t client_id,int32_t index);
 
@@ -153,6 +157,8 @@ private:
     aml_screen_device_t* mScreenDev;
     std::mutex mLock;
     std::mutex mCallbackLock;
+    std::mutex mOutputQueueLock;
+    std::mutex mClientMapLock;
     std::list<std::unique_ptr<OutputRecord>> mOutputRecordQueue;
     std::map<int32_t,std::unique_ptr<MultiClientInfo>> mMultiClientMap;
     int32_t mBufferSize;

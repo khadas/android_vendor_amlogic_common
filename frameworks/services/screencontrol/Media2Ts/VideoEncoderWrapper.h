@@ -66,6 +66,7 @@ private:
     AMediaCodec *mEncoder;
     std::vector<std::thread> ts;
     std::mutex mLock;
+    std::mutex mPendingInputLock;
     bool mStart;
     std::list<size_t> mInputBufferIds;
     std::list<std::unique_ptr<InputData>> mPendingInputQueue;
