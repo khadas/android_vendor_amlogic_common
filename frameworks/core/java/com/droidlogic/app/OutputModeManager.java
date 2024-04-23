@@ -432,6 +432,8 @@ public class OutputModeManager {
     private static String tvSupportDolbyVisionType;
     private List<String> mOutModeList = new ArrayList<String>();
     private List<String> mOutTitleList = new ArrayList<String>();
+    private List<String> mConnectorModeList  = new ArrayList<String>();
+    private List<String> mConnectorModelistTitle = new ArrayList<String>();
     private static String[] mHdmiSupportModeList;
     private static String[] mHdmiSupportTitleList;
     private volatile List<String> mHdmiModeList;
@@ -591,6 +593,142 @@ public class OutputModeManager {
             intent.putExtra(EXTRA_HDMI_MODE, newMode);
             mContext.sendStickyBroadcastAsUser(intent, UserHandle.ALL);
         }
+    }
+
+    /* Must call after getConnectorModeList */
+    public List<String> getConnectorModeListTitle() {
+        return mConnectorModeList;
+    }
+
+    public List<String> getConnectorModeList(int displayid) {
+        //init mode and title list
+        mConnectorModeList.clear();
+        mConnectorModelistTitle.clear();
+
+        String id = String.valueOf(displayid);
+        ArrayList<String> displayIds = getDisplayIds();
+        boolean contains = displayIds.contains(id);
+        if (!contains) {
+            Log.e(TAG, "displayid" + displayid +"is invalid" + " in displayIds" + displayIds);
+            return mConnectorModeList;
+        }
+
+        SystemControlManager.ConnectorType display = getConnectorType(displayid);
+
+        //If get connector mode list fail, stop and return empty list
+        ArrayList<String> Modelist = new ArrayList<String>();
+        mSystemControl.getConnectorModeList(Modelist, display);
+        if (Modelist.size() <= 0) {
+            Log.w(TAG, "read hdmi support mode fail");
+            return mConnectorModeList;
+        }
+
+        //1. update title for 59.94/29.97/23.976
+        //HDMI_LIST-->listMode
+        //HDMI_TITLE-->listTitle
+        List<String> listMode = new ArrayList<String>();
+        List<String> listTitle = new ArrayList<String>();
+        if (display == SystemControlManager.ConnectorType.CONN_TYPE_HDMI
+            || display == SystemControlManager.ConnectorType.CONN_TYPE_HDMIA) {
+            String frac_rate_policy = getFrameRateOffset();
+            for (int i = 0; i < HDMI_LIST.length; i++) {
+                if (HDMI_LIST[i] != null) {
+                    listMode.add(HDMI_LIST[i]);
+                    if (frac_rate_policy.contains(HDMI_OFFSET_ENABLE)) {
+                        if (HDMI_TITLE[i].contains("60hz")) {
+                            listTitle.add(HDMI_TITLE[i].replace("60hz", "59.94hz"));
+                        } else if (HDMI_TITLE[i].contains("30hz")) {
+                            listTitle.add(HDMI_TITLE[i].replace("30hz", "29.97hz"));
+                        } else if (HDMI_TITLE[i].contains("24hz")) {
+                            listTitle.add(HDMI_TITLE[i].replace("24hz", "23.976hz"));
+                        } else {
+                            listTitle.add(HDMI_TITLE[i]);
+                        }
+                    } else {
+                        listTitle.add(HDMI_TITLE[i]);
+                    }
+                }
+            }
+        } else {
+            for (int i = 0; i < HDMI_LIST.length; i++) {
+                if (HDMI_LIST[i] != null) {
+                    listMode.add(HDMI_LIST[i]);
+                    listTitle.add(HDMI_TITLE[i]);
+                }
+            }
+        }
+
+        //2. check hdmi edid support mode
+        //2.1 filter hdmi edid mode list
+        //listMode-->mConnectorModeList
+        //listTitle-->mConnectorModelistTitle
+        for (int i = 0; i < listMode.size(); i++) {
+            if (Modelist.contains(listMode.get(i))) {
+                mConnectorModeList.add(listMode.get(i));
+                mConnectorModelistTitle.add(listTitle.get(i));
+            }
+        }
+
+        if (isLogPrint(2)) {
+            Log.d(TAG, "mConnectorModeList: " + mConnectorModeList);
+        }
+        return mConnectorModeList;
+    }
+
+    public String getConnectorMode(int displayid) {
+        String id = String.valueOf(displayid);
+        ArrayList<String> displayIds = getDisplayIds();
+        boolean contains = displayIds.contains(id);
+        if (!contains) {
+            Log.e(TAG, "displayid" + displayid +"is invalid" + " in displayIds" + displayIds);
+            return "";
+        }
+
+        SystemControlManager.ConnectorType display = getConnectorType(displayid);
+        return mSystemControl.getConnectorMode(display);
+    }
+
+    public void setConnectorMode(final String newMode, int displayid) {
+        synchronized (mLock) {
+            String id = String.valueOf(displayid);
+            ArrayList<String> displayIds = getDisplayIds();
+            boolean contains = displayIds.contains(id);
+            if (!contains) {
+                Log.e(TAG, "displayid" + displayid +"is invalid" + " in displayIds" + displayIds);
+            } else {
+                String oldMode = getConnectorMode(displayid);
+
+                if (oldMode == null || oldMode.length() < 4) {
+                    Log.e(TAG, "get display mode error, oldMode:" + oldMode + " set to default " + DEFAULT_OUTPUT_MODE);
+                    oldMode = DEFAULT_OUTPUT_MODE;
+                }
+
+                Log.d(TAG, "change mode from " + oldMode + " -> " + newMode);
+
+                SystemControlManager.ConnectorType display = getConnectorType(displayid);
+                mSystemControl.setConnectorMode(newMode, display);
+            }
+        }
+    }
+
+    /* get connector display id list */
+    public ArrayList<String> getDisplayIds() {
+        ArrayList<String> displayIdsList = new ArrayList<String>();
+        mSystemControl.getDisplayIds(displayIdsList);
+
+        return displayIdsList;
+    }
+
+    public SystemControlManager.ConnectorType getConnectorType(int displayid) {
+        String id = String.valueOf(displayid);
+        ArrayList<String> displayIds = getDisplayIds();
+        boolean contains = displayIds.contains(id);
+        if (!contains) {
+            Log.e(TAG, "displayid" + displayid +"is invalid" + " in displayIds" + displayIds);
+            return SystemControlManager.ConnectorType.CONN_TYPE_UNKNOWN;
+        }
+
+        return mSystemControl.getConnectorType(displayid);
     }
 
     public void setOsdMouse(String curMode) {

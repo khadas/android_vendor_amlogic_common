@@ -173,6 +173,50 @@ bool DisplayModeMgr::getSupportDisplayModes(std::map<int,std::string>& list,std:
     }
     return ret;
 }
+
+bool DisplayModeMgr::getDisplayModeList(std::vector<std::string>& Modelist, ConnectorType display) {
+    CHECK_DISPLAY_SERVICE();
+
+    bool ret = false;
+    std::vector<meson::DisplayModeInfo> displayModeList;
+
+    ret = mDisplayAdapter->getSupportDisplayModes(displayModeList, display);
+
+    if (!ret) {
+        SYS_LOGE("%s fail\n", __FUNCTION__);
+        ret = false;
+    } else {
+        for (auto mode : displayModeList) {
+            Modelist.push_back(mode.name);
+            SYS_LOGD("%s %u %u %u %u %f \n", mode.name.c_str(), mode.dpiX, mode.dpiY, mode.pixelW, mode.pixelH, mode.refreshRate);
+        }
+    }
+    return ret;
+}
+
+bool DisplayModeMgr::getDisplayIds(std::vector<int>& Displayidlist) {
+    CHECK_DISPLAY_SERVICE();
+
+    bool ret = false;
+
+    ret = mDisplayAdapter->getDisplayIds(Displayidlist);
+
+    if (!ret)
+        SYS_LOGE("%s fail\n", __FUNCTION__);
+
+    return ret;
+}
+
+bool DisplayModeMgr::getConnectorType(int32_t displayId, ConnectorType &outDisplayType) {
+    bool ret = false;
+
+    ret = mDisplayAdapter->getConnectorType(displayId, outDisplayType);
+    if (!ret)
+        SYS_LOGE("displayId:%d %s fail\n", displayId, __FUNCTION__);
+
+    return ret;
+}
+
 bool DisplayModeMgr::getDisplayMode(char *mode, int len) {
     bool ret = false;
     std::string curMode = "null";

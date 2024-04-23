@@ -100,6 +100,11 @@ class SystemControlHal : public ISystemControl, public SystemControlNotify, publ
     Return<void> loopMountUnmount(int32_t isMount, const hidl_string& path) override;
     Return<void> setSourceOutputMode(const hidl_string& mode) override;
     Return<void> setSinkOutputMode(const hidl_string& mode) override;
+    Return<Result> setConnectorMode(const hidl_string& mode, int32_t display) override;
+    Return<void> getConnectorMode(int32_t display, getConnectorMode_cb _hidl_cb) override;
+    Return<void> getConnectorModeList(int32_t display, getConnectorModeList_cb _hidl_cb) override;
+    Return<void> getDisplayIds(getDisplayIds_cb _hidl_cb) override;
+    Return<void> getConnectorType(int32_t display, getConnectorType_cb _hidl_cb) override;
     Return<void> setDigitalMode(const hidl_string& mode) override;
     Return<void> setOsdMouseMode(const hidl_string& mode) override;
     Return<void> setOsdMousePara(int32_t x, int32_t y, int32_t w, int32_t h) override;

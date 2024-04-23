@@ -48,10 +48,9 @@
 using namespace android;
 #endif
 #include "UEventObserver.h"
-#include "DisplayModeMgr.h"
 
-#include <DisplayAdapter.h>
-using ConnectorType = meson::DisplayAdapter::ConnectorType;
+//#include <DisplayAdapter.h>
+//using ConnectorType = meson::DisplayAdapter::ConnectorType;
 
 // Sink reference table, sorted by priority, per CDF
 static const char* MODES_SINK[] = {
@@ -2368,6 +2367,61 @@ bool DisplayMode::getDisplayMode(char* mode) {
 void DisplayMode::setDisplayMode(std::string mode) {
     SYS_LOGI("%s mode:%s\n", __FUNCTION__, mode.c_str());
     DisplayModeMgr::getInstance().setDisplayMode(mode);
+}
+
+//set connector output mode
+bool DisplayMode::setConnectorMode(std::string& mode, ConnectorType display) {
+    bool ret = true;
+    SYS_LOGI("%s mode:%s display:%d\n", __FUNCTION__, mode.c_str(), display);
+    if (display == meson::DisplayAdapter::CONN_TYPE_HDMI) {
+        setSourceOutputMode(mode.c_str());
+    } else {
+        ret = DisplayModeMgr::getInstance().setDisplayMode(mode, display);
+    }
+
+    return ret;
+}
+
+//get connector output mode
+bool DisplayMode::getConnectorMode(std::string& mode, ConnectorType display) {
+    bool ret = false;
+
+    ret = DisplayModeMgr::getInstance().getDisplayMode(mode, display);
+    SYS_LOGI("%s mode:%s\n", __FUNCTION__, mode.c_str());
+
+    return ret;
+}
+
+//get connector output mode
+bool DisplayMode::getConnectorModeList(std::vector<std::string>& modelist, ConnectorType display) {
+    bool ret = false;
+
+    ret = DisplayModeMgr::getInstance().getDisplayModeList(modelist, display);
+
+    return ret;
+}
+
+//get display id list
+bool DisplayMode::getDisplayIds(std::vector<int>& displayIdsList) {
+    bool ret = false;
+
+    ret = DisplayModeMgr::getInstance().getDisplayIds(displayIdsList);
+
+    return ret;
+}
+
+bool DisplayMode::getConnectorType(int32_t displayId, int& DisplayType) {
+    bool ret = false;
+    ConnectorType outDisplayType = meson::DisplayAdapter::CONN_TYPE_UNKNOWN;
+
+    ret = DisplayModeMgr::getInstance().getConnectorType(displayId, outDisplayType);
+    if (!ret) {
+        SYS_LOGE("%s displayId:%d fail\n", __FUNCTION__, displayId);
+    } else {
+        DisplayType = (int)outDisplayType;
+    }
+
+    return ret;
 }
 
 void DisplayMode::setFrameRate(float frameRate) {

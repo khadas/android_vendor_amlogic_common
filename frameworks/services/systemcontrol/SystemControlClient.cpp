@@ -454,6 +454,72 @@ void SystemControlClient::setSinkOutputMode(const std::string& mode) {
     mSysCtrl->setSinkOutputMode(mode);
 }
 
+bool SystemControlClient::setConnectorMode(const std::string& mode, int display) {
+    Result rtn = mSysCtrl->setConnectorMode(mode, display);
+    if (rtn == Result::OK) {
+        return true;
+    }
+    return false;
+}
+
+bool SystemControlClient::getConnectorMode(std::string& mode, int display) {
+    mSysCtrl->getConnectorMode(display, [&mode](const Result &ret, const hidl_string& v) {
+        if (Result::OK == ret) {
+            mode = v;
+        }
+    });
+
+    return true;
+}
+
+bool SystemControlClient::getConnectorModeList(std::vector<std::string>& supportDispModes, int display) {
+    mSysCtrl->getConnectorModeList(display, [&supportDispModes](const Result &ret, const hidl_vec<hidl_string> list) {
+        if (Result::OK == ret) {
+            for (size_t i = 0; i < list.size(); i++) {
+                supportDispModes.push_back(list[i]);
+            }
+        } else {
+            supportDispModes.clear();
+        }
+    });
+
+    if (supportDispModes.empty()) {
+        LOG(ERROR) << "syscontrol::readEdidList FAIL.";
+        return false;
+    }
+
+    return true;
+}
+
+bool SystemControlClient::getDisplayIds(std::vector<std::string>& displayIdsList) {
+    mSysCtrl->getDisplayIds([&displayIdsList](const Result &ret, const hidl_vec<hidl_string> list) {
+        if (Result::OK == ret) {
+            for (size_t i = 0; i < list.size(); i++) {
+                displayIdsList.push_back(list[i]);
+            }
+        } else {
+            displayIdsList.clear();
+        }
+    });
+
+    if (displayIdsList.empty()) {
+        LOG(ERROR) << "syscontrol::get displayIds list FAIL.";
+        return false;
+    }
+
+    return true;
+}
+
+int32_t SystemControlClient::getConnectorType(int32_t displayid) {
+    int32_t result;
+    mSysCtrl->getConnectorType(displayid, [&result](const Result &ret, const int32_t& v) {
+        if (Result::OK == ret) {
+            result = v;
+        }
+    });
+    return result;
+}
+
 void SystemControlClient::setDigitalMode(const std::string& mode) {
     mSysCtrl->setDigitalMode(mode);
 }

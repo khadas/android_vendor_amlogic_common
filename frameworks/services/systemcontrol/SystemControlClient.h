@@ -100,6 +100,11 @@ public:
 
     void setMboxOutputMode(const std::string& mode);
     void setSinkOutputMode(const std::string& mode);
+    bool setConnectorMode(const std::string& mode, int display);
+    bool getConnectorMode(std::string& mode, int display);
+    bool getConnectorModeList(std::vector<std::string>& supportDispModes, int display);
+    int32_t getConnectorType(int32_t displayid);
+    bool getDisplayIds(std::vector<std::string>& displayIdsList);
 
     void setDigitalMode(const std::string& mode);
     void setListener(const sp<ISystemControlCallback> callback);

@@ -105,6 +105,11 @@ public:
     void loopMountUnmount(int isMount, const std::string& path);
     void setSourceOutputMode(const std::string& mode);
     void setSinkOutputMode(const std::string& mode);
+    bool setConnectorMode(std::string& mode, int display);
+    bool getConnectorMode(std::string& mode, int display);
+    bool getConnectorModeList(std::vector<std::string>& supportDispModes, int display);
+    bool getDisplayIds(std::vector<int32_t>& displayidlist);
+    bool getConnectorType(int32_t displayId, int& DisplayType);
     void setDigitalMode(const std::string& mode);
     void setOsdMouseMode(const std::string& mode);
     void setOsdMousePara(int x, int y, int w, int h);

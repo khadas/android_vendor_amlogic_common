@@ -695,6 +695,84 @@ Return<void> SystemControlHal::setSinkOutputMode(const hidl_string& mode) {
     return Void();
 }
 
+Return<Result> SystemControlHal::setConnectorMode(const hidl_string& mode, int32_t display) {
+    std::string value = mode;
+
+    SYS_LOGD("mode :%s display:%d\n", value.c_str(), display);
+    bool ret = mSysControl->setConnectorMode(value, display);
+    if (ret)
+        return Result::OK;
+    else
+        return Result::FAIL;
+}
+
+Return<void> SystemControlHal::getConnectorMode(int32_t display, getConnectorMode_cb _hidl_cb) {
+    std::string mode;
+    bool ret = mSysControl->getConnectorMode(mode, display);
+
+    SYS_LOGD("getConnectorMode display :%d, mode:%s", display, mode.c_str());
+
+    if (ret)
+        _hidl_cb(Result::OK, mode);
+    else
+        _hidl_cb(Result::FAIL, mode);
+
+    return Void();
+}
+
+Return<void> SystemControlHal::getConnectorModeList(int32_t display, getConnectorModeList_cb _hidl_cb) {
+    std::vector<std::string> supportModes;
+    bool ret = mSysControl->getConnectorModeList(supportModes, display);
+
+    hidl_vec<hidl_string> hidlList;
+    hidlList.resize(supportModes.size());
+    for (size_t i = 0; i < supportModes.size(); ++i) {
+        hidlList[i] = supportModes[i];
+        SYS_LOGD("getSupportDispModeList index:%ld mode :%s", (unsigned long)i, supportModes[i].c_str());
+    }
+
+    if (ret)
+        _hidl_cb(Result::OK, hidlList);
+    else
+        _hidl_cb(Result::FAIL, hidlList);
+
+    return Void();
+}
+
+Return<void> SystemControlHal::getDisplayIds(getDisplayIds_cb _hidl_cb) {
+    std::vector<int32_t> displayIds;
+    bool ret = mSysControl->getDisplayIds(displayIds);
+
+    hidl_vec<hidl_string> hidlList;
+    hidlList.resize(displayIds.size());
+    for (size_t i = 0; i < displayIds.size(); ++i) {
+        hidlList[i] = std::to_string(displayIds[i]);
+        SYS_LOGD("getDisplayIds index:%ld displayIds:%d", (unsigned long)i, displayIds[i]);
+    }
+
+
+    if (ret)
+        _hidl_cb(Result::OK, hidlList);
+    else
+        _hidl_cb(Result::FAIL, hidlList);
+
+    return Void();
+}
+
+Return<void> SystemControlHal::getConnectorType(int32_t displayid, getConnectorType_cb _hidl_cb) {
+    int32_t value = -1;
+    bool ret = mSysControl->getConnectorType(displayid, value);
+
+    SYS_LOGD("getConnectorType displayid :%d, value:%d", displayid, value);
+
+    if (ret)
+        _hidl_cb(Result::OK, value);
+    else
+        _hidl_cb(Result::FAIL, value);
+
+    return Void();
+}
+
 Return<void> SystemControlHal::setDigitalMode(const hidl_string& mode) {
     if (ENABLE_LOG_PRINT) ALOGI("setDigitalMode mode:%s", mode.c_str());
     mSysControl->setDigitalMode(mode);

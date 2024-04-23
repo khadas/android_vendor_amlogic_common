@@ -48,6 +48,10 @@ using namespace android;
 #ifdef FRAMERATE_MODE
 #include "PQ/include/CPQControl.h"
 #endif
+#include "DisplayModeMgr.h"
+
+
+
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 //frame rate auto adapter feature
@@ -531,6 +535,11 @@ public:
     void setTvModelName();
     void setLogLevel(int level);
     int dump(char *result);
+    bool setConnectorMode(std::string& mode, ConnectorType display);
+    bool getConnectorMode(std::string& mode, ConnectorType display);
+    bool getConnectorModeList(std::vector<std::string>& modelist, ConnectorType display);
+    bool getDisplayIds(std::vector<int>& displayIdsList);
+    bool getConnectorType(int32_t displayId, int& DisplayType);
     void setTvRecoveryDisplay();
     void setSourceOutputMode(const char* outputmode);
     void setSinkOutputMode(const char* outputmode);

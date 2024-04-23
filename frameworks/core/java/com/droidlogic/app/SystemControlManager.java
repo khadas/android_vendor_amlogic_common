@@ -888,6 +888,173 @@ public class SystemControlManager {
         }
     }
 
+    public enum ConnectorType {
+         CONN_TYPE_UNKNOWN(-1),
+         CONN_TYPE_DUMMY(0),
+         CONN_TYPE_HDMI(1),
+         CONN_TYPE_PANEL(2),
+         CONN_TYPE_CVBS(3),
+         CONN_TYPE_HDMIA(4),
+         CONN_TYPE_TV(5),
+         CONN_TYPE_LVDS(6),
+         CONN_TYPE_LVDS_A(7),
+         CONN_TYPE_LVDS_B(8),
+         CONN_TYPE_LVDS_C(9),
+         CONN_TYPE_VBYONE_A(10),
+         CONN_TYPE_VYBONE_B(11),
+         CONN_TYPE_MIPI_A(12),
+         CONN_TYPE_MIPI_B(13),
+         CONN_TYPE_EDP_A(14),
+         CONN_TYPE_EDP_B(15);
+
+         private int val;
+
+         ConnectorType(int val) {
+             this.val = val;
+         }
+
+         public static ConnectorType valueOf(int value) {
+             for (ConnectorType it : ConnectorType.values()) {
+                 if (it.toInt() == value) {
+                     return it;
+                 }
+             }
+             return ConnectorType.CONN_TYPE_UNKNOWN;
+         }
+
+         public int toInt() {
+             return this.val;
+         }
+     }
+
+      /**
+      * @Function: setConnectorMode
+      * @Description: Set connector output mode
+      * @Param: mode is resolution, display refer to enum ConnectorType
+      * @Return: 0 success, -1 fail
+      */
+      public void setConnectorMode(String mode, ConnectorType display) {
+        synchronized (mLock) {
+            try {
+                mProxy.setConnectorMode(mode, display.toInt());
+            } catch (RemoteException e) {
+                Log.e(TAG, "setConnectorMode:" + e);
+            }
+        }
+    }
+
+    /**
+    * @Function: getConnectorMode
+    * @Description: get connector output mode
+    * @Param: display:displayID, mode is display current output resolution
+    * @Return: 0 success, -1 fail
+    */
+    public String getConnectorMode(ConnectorType display) {
+        synchronized (mLock) {
+            Mutable<String> resultVal = new Mutable<>();
+            try {
+                mProxy.getConnectorMode(display.toInt(), (int ret, String v) -> {
+                                if (Result.OK == ret) {
+                                    resultVal.value = v;
+                                }
+                            });
+                return resultVal.value;
+            } catch (RemoteException e) {
+                Log.e(TAG, "getConnectorMode:" + e);
+            }
+        }
+
+        return "";
+    }
+
+    /**
+     * get connector support mode list
+     * @param ModeList connector support mode list
+     *
+     * @return result OK, success
+     *                FAIL, fail
+     *
+     */
+    public void getConnectorModeList(ArrayList<String> ModeList, ConnectorType display) {
+        synchronized (mLock) {
+            try {
+                mProxy.getConnectorModeList(display.toInt(), (int ret, ArrayList<String> hidlModeList) -> {
+                                if (Result.OK == ret) {
+                                    int size = hidlModeList.size();
+                                    if (size <= 0) {
+                                       Log.e(TAG, "hidlDispModeList size is 0");
+                                    } else {
+                                      //Log.d(TAG, "hidlModeList:"+ hidlModeList);
+                                      for (int i =  0; i < size; i++) {
+                                          ModeList.add(hidlModeList.get(i));
+                                      }
+                                    }
+                                }
+                            });
+            } catch (RemoteException e) {
+                Log.e(TAG, "getConnectorModeList:" + e);
+            }
+        }
+    }
+
+    /**
+     * get display Id list
+     * @param displayIdsList connector display id list
+     *
+     * @return result OK if get data
+     *                FAIL if do not get data
+     *
+     */
+    public void getDisplayIds(ArrayList<String> displayIdsList) {
+        synchronized (mLock) {
+            try {
+                mProxy.getDisplayIds((int ret, ArrayList<String> hidllist) -> {
+                                if (Result.OK == ret) {
+                                    int size = hidllist.size();
+                                    if (size <= 0) {
+                                       Log.e(TAG, "hidllist size is 0");
+                                    } else {
+                                      //Log.d(TAG, "hidllist:"+ hidllist);
+                                      for (int i =  0; i < size; i++) {
+                                          displayIdsList.add(hidllist.get(i));
+                                      }
+                                    }
+                                }
+                            });
+            } catch (RemoteException e) {
+                Log.e(TAG, "getDisplayIds:" + e);
+            }
+        }
+    }
+
+    /**
+     * get display Id map display type
+     * @param displayid connector display id
+     *
+     * @return result OK if get data
+     *                FAIL if do not get data
+     *
+     */
+    public ConnectorType getConnectorType(int displayid) {
+        synchronized (mLock) {
+            Mutable<Integer> resultVal = new Mutable<>();
+            try {
+                mProxy.getConnectorType(displayid, (int ret, int v) -> {
+                                if (Result.OK == ret) {
+                                    resultVal.value = v;
+                                } else {
+                                    resultVal.value = ConnectorType.CONN_TYPE_UNKNOWN.toInt();
+                                }
+                            });
+                return ConnectorType.valueOf(resultVal.value);
+            } catch (RemoteException e) {
+                Log.e(TAG, "getConnectorType:" + e);
+            }
+        }
+
+        return ConnectorType.CONN_TYPE_UNKNOWN;
+    }
+
     public void setColorSpace(String colorspace) {
         synchronized (mLock) {
             try {

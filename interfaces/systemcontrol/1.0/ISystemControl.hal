@@ -97,6 +97,63 @@ interface ISystemControl {
       generates (Result result, string prefDispMode);
 
  /**
+  * set connector mode
+  * @param mode: output resolution
+  *        display: connector type
+  *
+  * @return result OK, set success
+  *                FAIL, set fail
+  *
+  */
+  setConnectorMode(string mode, int32_t display)
+      generates (Result result);
+
+ /**
+  * get connector mode
+  * @param display: connector type
+  *
+  * @return  mode: output resolution
+  *          result OK, success
+  *                 FAIL, fail
+  *
+  */
+  getConnectorMode(int32_t display)
+      generates (Result result, string mode);
+
+ /**
+  * get connector support mode list
+  * @param ModeList connector support mode list
+  *
+  * @return result OK, success
+  *                FAIL, fail
+  *
+  */
+  getConnectorModeList(int32_t display)
+      generates (Result result, vec<string> ModeList);
+
+ /**
+  * get display Id list
+  * @param displayIdsList connector display id list
+  *
+  * @return result OK if get data
+  *                FAIL if do not get data
+  *
+  */
+  getDisplayIds()
+      generates (Result result, vec<string> displayIdsList);
+
+ /**
+  * get display Id map display type
+  * @param displayid connector display id
+  *
+  * @return result OK if get data
+  *                FAIL if do not get data
+  *
+  */
+  getConnectorType(int32_t displayid)
+      generates (Result result, int32_t displaytype);
+
+ /**
   * set hdmi color space
   * @param color space
   *

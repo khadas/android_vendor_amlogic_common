@@ -585,6 +585,42 @@ void SystemControlService::setSinkOutputMode(const std::string& mode) {
     pDisplayMode->setSinkOutputMode(mode.c_str());
 }
 
+bool SystemControlService::setConnectorMode(std::string& mode, int display) {
+    if (mLogLevel > LOG_LEVEL_1) {
+        ALOGI("set display mode :%s display:%d\n", mode.c_str(), display);
+    }
+
+    return pDisplayMode->setConnectorMode(mode, (ConnectorType)display);
+}
+
+bool SystemControlService::getConnectorMode(std::string& mode, int display) {
+    if (mLogLevel > LOG_LEVEL_1) {
+        ALOGI("get display:%d mode\n", display);
+    }
+
+    return pDisplayMode->getConnectorMode(mode, (ConnectorType)display);
+}
+
+bool SystemControlService::getConnectorModeList(std::vector<std::string>& supportDispModes, int display) {
+    if (mLogLevel > LOG_LEVEL_1) {
+        ALOGI("get display:%d mode list\n", display);
+    }
+
+    return pDisplayMode->getConnectorModeList(supportDispModes, (ConnectorType)display);
+}
+
+bool SystemControlService::getDisplayIds(std::vector<int32_t>& displayidlist) {
+    return pDisplayMode->getDisplayIds(displayidlist);
+}
+
+bool SystemControlService::getConnectorType(int32_t displayId, int& DisplayType) {
+    int type = -1;
+    bool ret = pDisplayMode->getConnectorType(displayId, type);
+    DisplayType = type;
+
+    return ret;
+}
+
 void SystemControlService::setDigitalMode(const std::string& mode) {
     if (mLogLevel > LOG_LEVEL_1) {
         ALOGI("set Digital mode :%s", mode.c_str());
