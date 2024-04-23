@@ -344,22 +344,32 @@ void FrameRateAutoAdaption::delayControl(int frameRateValue){
     }
         //always change when panel output
 
-        std::vector<std::string> modes = configMap[frameRateValue];
-        if (modes.size() <= 0) {
-            frameRateValue = findNearlyFrame(frameRateValue);
+    std::vector<std::string> modes = configMap[frameRateValue];
+    if (modes.size() <= 0) {
+        frameRateValue = findNearlyFrame(frameRateValue);
+        if (frameRateValue == FRAME_RATE_DURATION_125) frameRateValue = FRAME_RATE_DURATION_50;
         SYS_LOGD("decoder find new framerate is %d",frameRateValue);
-            if (frameRateValue <= 0) return;
+        if ((frameRateValue >= FRAME_RATE_DURATION_144 && !mLastFromVdin) || (frameRateValue <= 0)) {
+            return;
         }
-        outputDispatch(NULL, outType, OUTPUT_MODE_STATE_SWITCH, frameRateValue, mLastFromVdin);
     }
+    outputDispatch(NULL, outType, OUTPUT_MODE_STATE_SWITCH, frameRateValue, mLastFromVdin);
+}
 
 /*
 * the input fps is reliable since freesync or decoder calculate.
 * make the input fps to known in framerate.cfg
 */
 int  FrameRateAutoAdaption::findNearlyFrame(int frameRate) {
-
+    float fps = VIDEORATE*1.0f/frameRate;
     int smalldip = 7681;//less than 12.5hz
+    if ( fps < 24) {
+        frameRate = VIDEORATE*1.0f/(fps*2);
+        SYS_LOGD("double non-standard fps %d",frameRate);
+    }
+    if (frameRate > smalldip) {//less than 12.5hz
+        return -1;
+    }
     std::vector<int>::iterator itr = mFramerateList.begin();
 
     for (; itr != mFramerateList.end(); ++itr) {
@@ -502,7 +512,8 @@ void FrameRateAutoAdaption::restoreEnv() {
         case OUTPUT_TYPE_HDMI_TX:
         break;
         case OUTPUT_TYPE_LCD_PANEL:
-        outputDispatch(NULL,OUTPUT_TYPE_LCD_PANEL,0,0,true);
+        mLastFromVdin = false;
+        outputDispatch(NULL,OUTPUT_TYPE_LCD_PANEL,0,0,false);
         break;
         default:
         break;
@@ -728,6 +739,7 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
                             DisplayModeMgr::getInstance().setFrameRate(VIDEORATE*1.0f/5994,
                                         "outputDispatch 222");
                             break;
+                        case FRAME_RATE_DURATION_125:
                         case FRAME_RATE_DURATION_25:
                         case FRAME_RATE_DURATION_50:
                             DisplayModeMgr::getInstance().setFrameRate(VIDEORATE*1.0f/5000,
