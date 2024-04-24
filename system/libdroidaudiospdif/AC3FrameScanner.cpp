@@ -90,7 +90,7 @@ const uint16_t
 #define AC3_STREAM_TYPE_1       1
 #define AC3_STREAM_TYPE_2       2
 
-#define AC3_HEADER_LENGTH       6
+#define AC3_HEADER_LENGTH       8
 // -----------------------------------------------------------------------------
 
 // Scanner for AC3 byte streams.
@@ -233,6 +233,28 @@ bool AC3FrameScanner::parseHeader()
         mRateMultiplier = EAC3_RATE_MULTIPLIER; // per IEC 61973-3 Paragraph 5.3.3
         // Don't send data burst until we have 6 blocks per substream.
         mAudioBlocksPerSyncFrame = kEAC3BlocksPerFrameTable[numblkscod];
+
+        /* if it is first frame and mAudioBlocksPerSyncFrame < 6, we need check the convsync bit.
+         * the first frame in IEC61937 must be convsync = 1
+         */
+        if (numblkscod != 3) {
+            uint32_t acmod = (mHeaderBuffer[4] >> 1) & 0x07;
+            uint32_t compre = (mHeaderBuffer[6] >> 5) & 0x01;
+            if (acmod != 0) {
+                if (compre && mStreamType != AC3_STREAM_TYPE_1) {
+                    uint32_t mixmdate = (mHeaderBuffer[7] >> 4) & 0x01;
+                    uint32_t infomdate = (mHeaderBuffer[7] >> 3) & 0x01;
+                    if (!mixmdate && !infomdate) {
+                        uint32_t convsync = (mHeaderBuffer[7] >> 2) & 0x01;
+                        if (convsync && mSubstreamBlockCounts[mSubstreamID] != 0 && mSubstreamBlockCounts[mSubstreamID] != 6) {
+                            ALOGI("%s convsync 1 is not first block", __func__);
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
         // Keep track of how many audio blocks we have for each substream.
         // This should be safe because mSubstreamID is ANDed with 0x07 above.
         // And the array is allocated as [8].
