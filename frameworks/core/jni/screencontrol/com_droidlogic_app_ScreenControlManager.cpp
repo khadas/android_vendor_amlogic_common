@@ -138,8 +138,8 @@ extern "C"  {
             env->SetByteArrayRegion(arr, 0, bufferSize, (jbyte *)buffer);
             delete [] buffer;
         }
-        env->CallObjectMethod(obj,method_set_result, ret);
-        env->CallObjectMethod(obj,method_set_data, arr);
+        env->CallVoidMethod(obj,method_set_result, ret);
+        env->CallVoidMethod(obj,method_set_data, arr);
         return obj;
 
     }
