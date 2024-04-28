@@ -736,17 +736,17 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
                         case FRAME_RATE_DURATION_5994:
                         case FRAME_RATE_DURATION_2398:
                         case FRAME_RATE_DURATION_2997:
-                            DisplayModeMgr::getInstance().setFrameRate(VIDEORATE*1.0f/5994,
+                            DisplayModeMgr::getInstance().setFrameRate(59.94f,
                                         "outputDispatch 222");
                             break;
                         case FRAME_RATE_DURATION_125:
                         case FRAME_RATE_DURATION_25:
                         case FRAME_RATE_DURATION_50:
-                            DisplayModeMgr::getInstance().setFrameRate(VIDEORATE*1.0f/5000,
+                            DisplayModeMgr::getInstance().setFrameRate(50,
                                         "outputDispatch 222");
                             break;
                         default:
-                            DisplayModeMgr::getInstance().setFrameRate(VIDEORATE*1.0f/6000,
+                            DisplayModeMgr::getInstance().setFrameRate(60,
                                         "outputDispatch 222");
                             break;
                     }
