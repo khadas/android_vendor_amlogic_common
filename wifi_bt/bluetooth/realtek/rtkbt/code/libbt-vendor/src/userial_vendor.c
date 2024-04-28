@@ -3978,7 +3978,6 @@ int userial_socket_open()
     }
 
     vnd_userial.epoll_fd = epoll_create(64);
-    ALOGE("userial_socket_open: creat epoll_create here vnd_userial.epoll_fd = %d", vnd_userial.epoll_fd);
     if (vnd_userial.epoll_fd == -1)
     {
         ALOGE("%s unable to create epoll instance: %s", __func__, strerror(errno));
