@@ -105,9 +105,6 @@ void FrameRateAutoAdaption::enter4k1korBack() {
     } else if (!isDLGOn() && strstr(curDisplayMode,customStr2.c_str()) == NULL) {
         afrInDLG(customStr2,framerate,false);
     }
-    if (!mLastFromVdin) {
-        mLastFrameRate = -1;
-    }
 }
 
 int FrameRateAutoAdaption::parseConfigFile() {
@@ -421,11 +418,6 @@ void FrameRateAutoAdaption::inputValidateAndParse(void* data, int inType) {
                 } else {
                     sscanf(ueventData->switchName, "%d", &frameRateValue);
                 }
-                if (frameRateValue == 0 && mLastFrameRate != -1) {
-                    SYS_LOGD("not afr just skip");
-                    mLastFrameRate = -1;
-                    return;
-                }
                 SYS_LOGD("INPUT_TYPE_UEVENT mLastFrameRate:%d cur %d",mLastFrameRate,frameRateValue);
                 if (mLastFrameRate == frameRateValue) {
                     //double message between play videoLayer
@@ -719,12 +711,10 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
                 if ((dlgOn == 1) && isVdin && ((pCPQControl != NULL)
                     && (pCPQControl->GetPQMode() == 6 || pCPQControl->GetPQMode() == 7)) && !backFrom4k1k(frameRate)){
                     freesyncFrame(frameRate);
-                    //mLastFrameRate = -1;
                     return;
                 }
 #endif
                 if ((dlgOn == 0) && backFrom4k1k(frameRate)) {
-                    //mLastFrameRate = -1;
                     SYS_LOGD("leave 4k1k");
                     return;
                 }
@@ -750,9 +740,6 @@ void FrameRateAutoAdaption::outputDispatch(char* outputMode, int outType, int st
                                         "outputDispatch 222");
                             break;
                     }
-                }
-                if (!mLastFromVdin) {
-                    mLastFrameRate = -1;
                 }
             }
             break;
