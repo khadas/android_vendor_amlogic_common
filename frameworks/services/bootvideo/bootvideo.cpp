@@ -81,13 +81,15 @@ static int amsysfs_set_str(const char *path, const char *val) {
 
 static int set_dmx_source(bool isNewDemux, int demux_id)
 {
+    char cmd[30];
     if (isNewDemux) {
-        char cmd[30];
-        sprintf(cmd,"%d local dma_%d", demux_id, demux_id);
+        sprintf(cmd, "%d local dma_%d", demux_id, demux_id);
         amsysfs_set_str("/sys/class/dmx/dmx_source", cmd);
     } else {
-        amsysfs_set_str("/sys/class/stb/source", "dmx0");
-        amsysfs_set_str("/sys/class/stb/demux0_source", "hiu");
+        sprintf(cmd, "dma%d", demux_id);
+        amsysfs_set_str("/sys/class/stb/source", cmd);
+        sprintf(cmd, "/sys/class/stb/demux%d_source", demux_id);
+        amsysfs_set_str(cmd, "hiu");
     }
     return 0;
 }
@@ -408,7 +410,7 @@ int BootVideo::play() {
     ALOGD("file name = %s, is_open %d, size %lld, tsType %d\n",
                 mTsplayParam.filePath, file.is_open(),(long long) fsize, mTsplayParam.tsType);
 
-    int demux_id = 0;
+    int demux_id = 1;
     int32_t bootplay_mode = 1;
     am_tsplayer_init_params parm = {mTsplayParam.tsType, TS_INPUT_BUFFER_TYPE_NORMAL, demux_id, 0};
     AmTsPlayer_setParams(mSession, AM_TSPLAYER_KEY_BOOTPLAY_MODE , (void*)&bootplay_mode);
@@ -420,7 +422,7 @@ int BootVideo::play() {
        isTsyncNonTunelflag = true;
     } else {
         struct utsname kernel_msg;
-        set_dmx_source(false, 0);
+        set_dmx_source(false, demux_id);
         uname(&kernel_msg);
         if (strstr(kernel_msg.release, "5.15") != NULL) {
             ALOGD("single dmx nontunelmode need set VideoTunnelId\n");
