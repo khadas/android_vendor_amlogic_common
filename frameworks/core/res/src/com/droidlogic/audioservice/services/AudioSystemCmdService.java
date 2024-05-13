@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.*;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -48,6 +49,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.SystemProperties;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.Slog;
 import android.widget.Toast;
@@ -102,7 +104,7 @@ public class AudioSystemCmdService extends Service {
     private TvInputManager mTvInputManager;
     private boolean sinkUpdated = false;
     private static final String PATH_AUDIOFORMAT_UEVENT = "/devices/platform/auge_sound";
-    private static final String PATH_NEW_AUDIOFORMAT_UEVENT = "/devices/platform/auge_sound/sound/card0/controlC0";
+    private static final String PATH_NEW_AUDIOFORMAT_UEVENT_REGEX = "/devices/platform/auge_sound/sound/card\\d+/controlC\\d+";
     private static final String PATH_TXLX_AUDIOFORMAT_UEVENT = "/devices/platform/aml_snd_tv";
     private static final String ACTION_AUDIO_FORMAT_CHANGE = "droidlogic.audioservice.action.AUDIO_FORMAT";
     private static final String AUDIO_FORMAT_KEY = "audio_format";
@@ -155,9 +157,7 @@ public class AudioSystemCmdService extends Service {
                 Log.d(TAG, "DEVPATH: " + event.get("DEVPATH"));
             }
 
-            if ((PATH_AUDIOFORMAT_UEVENT.equals(event.get("DEVPATH", null)))
-                || PATH_TXLX_AUDIOFORMAT_UEVENT.equals(event.get("DEVPATH", null))
-                || PATH_NEW_AUDIOFORMAT_UEVENT.equals(event.get("DEVPATH", null))) {
+            if (isDevicePathMatch(event.get("DEVPATH", null))) {
                 String audioFormatStr = event.get("AUDIO_FORMAT", null);
                 if (audioFormatStr == null) {
                     Log.e(TAG, "Error! got audio uevent from kernel, but no AUDIO_FORMAT value set!");
@@ -180,8 +180,8 @@ public class AudioSystemCmdService extends Service {
         }
     };
 
-   //Same sa the content of DroidLogicTvUtils.java
-   public static String sourceTypeToString(int arg) {
+    //Same sa the content of DroidLogicTvUtils.java
+    public static String sourceTypeToString(int arg) {
         String temp = "["+arg+"]";
         switch (arg) {
             case SOURCE_TYPE_ATV:
@@ -211,6 +211,19 @@ public class AudioSystemCmdService extends Service {
             default:
                 return temp + "invalid value";
         }
+    }
+
+    private boolean isDevicePathMatch(String devicePath) {
+        if (TextUtils.isEmpty(devicePath)) {
+            return false;
+        }
+        boolean result = PATH_AUDIOFORMAT_UEVENT.equals(devicePath) || PATH_TXLX_AUDIOFORMAT_UEVENT.equals(devicePath);
+        if (!result) {
+            Pattern pattern = Pattern.compile(PATH_NEW_AUDIOFORMAT_UEVENT_REGEX);
+            Matcher matcher = pattern.matcher(devicePath);
+            result = matcher.matches();
+        }
+        return result;
     }
 
     private String covertAudioFormatIndextToString(int audioFormat) {
