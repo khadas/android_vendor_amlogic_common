@@ -397,6 +397,15 @@ TEST_F(ScreenControlUnitTest, testYuvRcordScreenCapture) {
     printf("testYuvRcordScreenCapture success\n");
 }
 
+TEST_F(ScreenControlUnitTest, testLongTimeTsRecord) {
+    ALOGD("testLongTimeTsRecord begin");
+    printf("testLongTimeTsRecord begin\n");
+    int ret = client->startScreenRecord(0, 0, 1920, 1080, 1920, 1080,30,4000000,43200,1,"testLoopTsRecord");
+    ASSERT_EQ(ret, 0);
+    ALOGD("testLongTimeTsRecord success");
+    printf("testLongTimeTsRecord success\n");
+}
+
 
 
 
