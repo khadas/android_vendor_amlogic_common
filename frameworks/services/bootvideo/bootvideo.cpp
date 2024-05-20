@@ -35,6 +35,7 @@
 #include <string.h>
 #include <ui/DisplayMode.h>
 
+#include "dmx.h"
 #include "bootvideo.h"
 
 #define PROPERTY_BOOTANIM_EXIT "service.bootanim.exit"
@@ -79,17 +80,65 @@ static int amsysfs_set_str(const char *path, const char *val) {
     return -1;
 }
 
-static int set_dmx_source(bool isNewDemux, int demux_id)
+int BootVideo::openDmx() {
+    char node[32] = {0};
+    snprintf(node, sizeof(node), "/dev/dvb0.demux%d", mDemuxId);
+    mDemuxFd = open(node, O_WRONLY);
+    if (mDemuxFd < 0) {
+        ALOGD("%s: open %s fail %d.", __func__, node, errno);
+        return -1;
+    }
+    return 0;
+}
+
+int BootVideo::closeDmx() {
+    if (mDemuxFd >= 0)
+        close(mDemuxFd);
+    return 0;
+}
+
+int BootVideo::setDmxSource(bool isNewDemux)
 {
-    char cmd[30];
+    int ret = 0;
     if (isNewDemux) {
-        sprintf(cmd, "%d local dma_%d", demux_id, demux_id);
-        amsysfs_set_str("/sys/class/dmx/dmx_source", cmd);
+        if (mDemuxFd  < 0) {
+            openDmx();
+            if (mDemuxFd  < 0) {
+                return -1;
+            }
+        }
+        if (ioctl(mDemuxFd , DMX_SET_INPUT, INPUT_LOCAL) < 0) {
+            ret = -1;
+            ALOGD("DMX_SET_INPUT demux input:%d error:%d", INPUT_LOCAL, errno);
+        }
+        if (ioctl(mDemuxFd , DMX_SET_HW_SOURCE, DMA_1) < 0) {
+            ret = -1;
+            ALOGD("DMX_SET_HW_SOURCE source:%d error:%d", DMA_0, errno);
+        }
     } else {
-        sprintf(cmd, "dma%d", demux_id);
+        char cmd[30];
+        sprintf(cmd, "dma%d", mDemuxId);
         amsysfs_set_str("/sys/class/stb/source", cmd);
-        sprintf(cmd, "/sys/class/stb/demux%d_source", demux_id);
+        sprintf(cmd, "/sys/class/stb/demux%d_source", mDemuxId);
         amsysfs_set_str(cmd, "hiu");
+    }
+    return ret;
+}
+
+int BootVideo::clearDmxCache() {
+    // release dmx cache after bootvideo finish
+    //amsysfs_set_str("/sys/class/dmx/cache_status", "clear");
+    struct dmx_set_command_info	props;
+    if (mDemuxFd  < 0) {
+        openDmx();
+        if (mDemuxFd  < 0) {
+            return -1;
+        }
+    }
+    props.command = DMX_CLEAR_CACHE;
+    if (ioctl(mDemuxFd, DMX_SET_COMMAND, &props) < 0) {
+        ALOGD("DMX_SET_COMMAND error:%d", errno);
+        return -1;
     }
     return 0;
 }
@@ -118,6 +167,8 @@ BootVideo::BootVideo() {
     property_set(PROPERTY_BOOTVIDEO_EXIT, "1");
     mPlayEndTimeOutMs = property_get_int32(PROPERTY_TSPLAYER_PLAYTIMEOUT, TSPLAYER_PLAY_TIMEOUT);
     mRotation = (ui::Rotation)property_get_int32(PROPERTY_ANDROID_ROTATION, (int32_t)ui::ROTATION_0);
+    mDemuxId = 1;
+    mDemuxFd = -1;
 }
 
 bool BootVideo::mirrorDisplay() {
@@ -165,7 +216,7 @@ bool BootVideo::mirrorDisplay() {
     return true;
 }
 
-bool BootVideo::CreateVideoTunnelId(int* id) {
+bool BootVideo::createVideoTunnelId(int* id) {
     sp<IProducerListener> producerListener = NULL;
     sp<IGraphicBufferProducer> producer = NULL;
     sp<NativeHandle> sourceHandle = NULL;
@@ -246,7 +297,7 @@ bool BootVideo::CreateVideoTunnelId(int* id) {
     return true;
 }
 
-void BootVideo::video_callback(void *user_data, am_tsplayer_event *event) {
+void BootVideo::videoCallback(void *user_data, am_tsplayer_event *event) {
     UNUSED(user_data);
     ALOGD("video_callback type %d\n", event? event->type : 0);
     switch (event->type) {
@@ -410,28 +461,28 @@ int BootVideo::play() {
     ALOGD("file name = %s, is_open %d, size %lld, tsType %d\n",
                 mTsplayParam.filePath, file.is_open(),(long long) fsize, mTsplayParam.tsType);
 
-    int demux_id = 1;
     int32_t bootplay_mode = 1;
-    am_tsplayer_init_params parm = {mTsplayParam.tsType, TS_INPUT_BUFFER_TYPE_NORMAL, demux_id, 0};
+    am_tsplayer_init_params parm = {mTsplayParam.tsType, TS_INPUT_BUFFER_TYPE_NORMAL, mDemuxId, 0};
     AmTsPlayer_setParams(mSession, AM_TSPLAYER_KEY_BOOTPLAY_MODE , (void*)&bootplay_mode);
     AmTsPlayer_create(parm, &mSession);
 
-    bool isTsyncNonTunelflag = false;
+    int demuxVer = 0;
     if (access("/sys/class/stb/demux0_source",F_OK) != 0) {
-       set_dmx_source(true, demux_id);
-       isTsyncNonTunelflag = true;
+       openDmx();
+       setDmxSource(true);
+       demuxVer = 2;
     } else {
         struct utsname kernel_msg;
-        set_dmx_source(false, demux_id);
+        setDmxSource(false);
         uname(&kernel_msg);
         if (strstr(kernel_msg.release, "5.15") != NULL) {
             ALOGD("single dmx nontunelmode need set VideoTunnelId\n");
-            isTsyncNonTunelflag = true;
+            demuxVer = 1;
         }
     }
-    if (isTsyncNonTunelflag) {
+    if (demuxVer > 0) {
         int VideoTunnelId = 0;
-        if (CreateVideoTunnelId(&VideoTunnelId) == true) {
+        if (createVideoTunnelId(&VideoTunnelId) == true) {
             ALOGD("Set VideoTunnelId %d\n", VideoTunnelId);
             AmTsPlayer_setSurface(mSession,(void*)&VideoTunnelId);
         } else {
@@ -445,7 +496,7 @@ int BootVideo::play() {
     uint32_t instanceno;
     AmTsPlayer_getInstansNo(mSession, &instanceno);
     AmTsPlayer_setWorkMode(mSession, TS_PLAYER_MODE_NORMAL);
-    AmTsPlayer_registerCb(mSession, video_callback, NULL);
+    AmTsPlayer_registerCb(mSession, videoCallback, NULL);
     AmTsPlayer_setSyncMode(mSession, mTsplayParam.avsyncMode);
     AmTsPlayer_setVideoBlackOut(mSession, false);
 
@@ -516,6 +567,10 @@ int BootVideo::play() {
     AmTsPlayer_stopVideoDecoding(mSession);
     AmTsPlayer_stopAudioDecoding(mSession);
     AmTsPlayer_release(mSession);
+    if (demuxVer == 2) {
+        clearDmxCache();
+        closeDmx();
+    }
 
     while (property_get_int32(PROPERTY_BOOTANIM_EXIT, 0) == 0) {
         usleep(100000);

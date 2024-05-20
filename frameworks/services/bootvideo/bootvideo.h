@@ -49,9 +49,13 @@ private:
     };
 
     bool mirrorDisplay();
-    bool CreateVideoTunnelId(int* id);
+    bool createVideoTunnelId(int* id);
     bool checkExit();
-    static void video_callback(void *user_data, am_tsplayer_event *event);
+    static void videoCallback(void *user_data, am_tsplayer_event *event);
+    int openDmx();
+    int closeDmx();
+    int setDmxSource(bool isNewDemux);
+    int clearDmxCache();
 
     //int mPlayStatus = -1;
     am_tsplayer_handle mSession;
@@ -64,6 +68,8 @@ private:
     uint64_t mLastPlayTs;
     uint64_t mLastGetTs;
     int mPlayEndTimeOutMs;
+    int mDemuxFd;
+    int mDemuxId;
 };
 #endif //ANDROID_BOOTVIDEO_H
 
