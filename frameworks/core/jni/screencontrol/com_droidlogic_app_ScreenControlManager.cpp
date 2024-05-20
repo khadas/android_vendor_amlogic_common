@@ -16,6 +16,21 @@
 
 #define LOG_TAG "screencontrol-jni"
 #include "com_droidlogic_app_ScreenControlManager.h"
+#ifdef BUILD_SYSTEM
+#include <android/native_window.h>
+#include <android/native_window_jni.h>
+#include <nativebase/nativebase.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <system/window.h>
+#include <gui/Surface.h>
+#include <ui/GraphicBuffer.h>
+#include <gui/IGraphicBufferProducer.h>
+#include <android_runtime/android_view_Surface.h>
+#endif
+
 
 static sp<ScreenControlClient> spScreenCtrl = NULL;
 static jclass g_jclazz;
@@ -29,6 +44,12 @@ class YuvRecordMsg;
 
 static sp<AvcRecordMsg> gAvcRecordMsg;
 static sp<YuvRecordMsg> gYuvRecordMsg;
+
+#ifdef BUILD_SYSTEM
+
+#define SCREENCONTROL_GRALLOC_USAGE  ( GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_SW_READ_RARELY | GRALLOC_USAGE_SW_WRITE_NEVER )
+
+#endif
 
 JNIEnv *attach_java_thread(const char * threadName){
     static __thread JNIEnv* g_t_env = NULL;
@@ -255,6 +276,64 @@ static void ScreenControlSetRecordParameter(JNIEnv *env, jobject,jobjectArray ke
         scc->setExtraInt32Config(int32Map);
 
 }
+static int ScreenControlstartScreenCapDisplay(JNIEnv *env, jobject thiz, jint sourceType, jobject jsurface)
+{
+#ifdef BUILD_SYSTEM
+    ANativeWindowBuffer* buf = nullptr;
+    if (!jsurface) {
+        ALOGE("can' get the jsurface");
+        return -1;
+    }
+
+    sp<Surface> surface(android_view_Surface_getSurface(env, jsurface));
+    if (!surface) {
+        ALOGE("can' get the surface");
+        return -1;
+    }
+
+    sp<IGraphicBufferProducer> gbp = surface->getIGraphicBufferProducer();
+    if (!gbp) {
+        ALOGE("can' get the IGraphicBufferProducer");
+        return -1;
+    }
+    sp<ANativeWindow> window = new Surface(gbp);
+    if (!window) {
+        ALOGE("can' get the ANativeWindow");
+        return -1;
+    }
+    status_t err = native_window_api_connect(window.get(),NATIVE_WINDOW_API_MEDIA);
+
+    if (err != NO_ERROR) {
+        ALOGE("can' connect the window !!");
+        return -1;
+    }
+    native_window_set_usage(window.get(), SCREENCONTROL_GRALLOC_USAGE);
+    native_window_set_buffers_format(window.get(), WINDOW_FORMAT_RGBA_8888);
+
+    int ret = window->dequeueBuffer_DEPRECATED(window.get(), &buf);
+    if (ret != 0) {
+        ALOGE("dequeue buffer failed :%s (%d)",strerror(-ret), -ret);
+        return -1;
+    }
+    window->lockBuffer_DEPRECATED(window.get(), buf);
+
+    sp<ScreenControlClient>& scc = getScreenControlClient();
+    ret = scc->startScreenCapBuffer(buf->width,buf->height,sourceType,buf->handle);
+    if (ret != 0) {
+        ALOGE("startScreenCap failed :%s (%d)",ret);
+        return -1;
+    }
+    window->queueBuffer_DEPRECATED(window.get(), buf);
+
+    err = native_window_api_disconnect(window.get(),NATIVE_WINDOW_API_MEDIA);
+    if (err != NO_ERROR) {
+        ALOGE("can' disconnect the window !!");
+        return -1;
+    }
+
+#endif
+    return 0;
+}
 
 
 
@@ -267,6 +346,7 @@ static JNINativeMethod ScreenControl_Methods[] = {
     {"native_startYuvRecord", "(IIIIIIII)I", (void *) ScreenControlStartYuvRecord},
     {"native_ForceStop", "()V", (void *) ScreenControlForceStop },
     {"native_SetRecordParameter", "([Ljava/lang/String;[Ljava/lang/Object;)V", (void *) ScreenControlSetRecordParameter },
+    {"native_startScreenCapDisplay", "(ILandroid/view/Surface;)I", (void *) ScreenControlstartScreenCapDisplay},
 
 };
 

@@ -85,10 +85,12 @@ public:
     *
     * bufSize: the size of output buffer
     *
-    * return true if success, false otherwise
+    * return 0 if success, false otherwise
     */
     int32_t startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom,
         int32_t width, int32_t height, int32_t sourceType, void **buffer, int32_t *bufSize);
+
+    int32_t startScreenCapBuffer(int32_t width, int32_t height, int32_t sourceType, const native_handle_t* handle);
     /* start record screen to get ts file
     *
     * left,top,right,bottom: the coordinates of rect which you want to capture the screen.
@@ -108,7 +110,7 @@ public:
     *
     * filename : the ts file name which you want to save.
     *
-    * return true if success, false otherwise
+    * return 0 if success, false otherwise
     */
     int32_t startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t frameRate,
         int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const char* filename);
@@ -131,7 +133,7 @@ public:
     *          The unit of this variable is seconds.
     *
     *
-    * return true if success, false otherwise
+    * return 0 if success, false otherwise
     */
 
     int32_t startAvcScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width,
@@ -151,7 +153,7 @@ public:
     *
     * frameRate: the frame rate of the data
     *
-    * return true if success, false otherwise
+    * return 0 if success, false otherwise
     */
     int32_t startYuvScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width,
                                 int32_t height, int32_t frameRate, int32_t sourceType);

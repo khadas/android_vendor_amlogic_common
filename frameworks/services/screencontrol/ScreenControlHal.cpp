@@ -55,7 +55,8 @@ Return<void> ScreenControlHal::setCallback(const sp<IScreenControlCallback>& cal
     return Void();
 }
 
-Return<void> ScreenControlHal::startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, startScreenCapBuffer_cb _cb) {
+Return<void> ScreenControlHal::startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom,
+                            int32_t width, int32_t height, int32_t sourceType, startScreenCapBuffer_cb _cb) {
     sp<IAllocator> allocator = IAllocator::getService("ashmem");
     allocator->allocate((uint64_t)width*(uint64_t)height*4, [&](bool success, const hidl_memory& mem) {
         int bufSize = 0;
@@ -80,6 +81,32 @@ Return<void> ScreenControlHal::startScreenCapBuffer(int32_t left, int32_t top, i
         }
     });
     return Void();
+}
+
+Return<Result> ScreenControlHal::startScreenCapBuffer1(int32_t width, int32_t height, int32_t sourceType, const hidl_handle& handle) {
+    int bufSize = 0;
+    if (handle == nullptr || handle->numFds < 1 || !mScreenControl)
+            return Result::FAIL;
+    uint8_t* data = (uint8_t*)malloc(width*height *4);
+    int ret = mScreenControl->startScreenCapBuffer(0, 0, width, height,
+                        width, height, sourceType, data, &bufSize);
+    if (ret != 0 || !data || bufSize <= 0) {
+        ALOGE("[%s %d] screencap fail !! ret = %d",__FUNCTION__, __LINE__,ret);
+        free(data);
+        return Result::FAIL;
+    }
+    uint8_t* input = (uint8_t*) mmap(NULL, bufSize,
+                PROT_READ | PROT_WRITE, MAP_SHARED, handle->data[0], 0);
+    if (!input) {
+        ALOGE("[%s %d]  mmap failed,Not enough memory,bufferSize = %d", __FUNCTION__, __LINE__,bufSize);
+        return Result::FAIL;
+    }
+    memcpy(input, data, bufSize);
+    munmap(input,bufSize);
+    free(data);
+    mScreenControl->stopScreenCapBuffer();
+    ALOGI("[%s %d]  screecap success bufSize=%d", __FUNCTION__, __LINE__,bufSize);
+    return Result::OK;
 }
 
 Return<Result> ScreenControlHal::startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width,

@@ -33,6 +33,7 @@ namespace implementation {
     using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControlCallback;
     using ::vendor::amlogic::hardware::screencontrol::V1_0::Result;
     using ::android::hardware::hidl_string;
+    using ::android::hardware::hidl_handle;
     using ::android::hardware::hidl_vec;
     using ::android::hardware::Return;
     using ::android::hardware::Void;
@@ -49,6 +50,8 @@ public:
     Return<void> setCallback(const sp<IScreenControlCallback>& callback) override;
 
     Return<void> startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, startScreenCapBuffer_cb _hidl_cb);
+
+    Return<Result> startScreenCapBuffer1(int32_t width, int32_t height, int32_t sourceType, const hidl_handle& handle) override;
 
     Return<Result> startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
                                         int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const hidl_string& filename) override;

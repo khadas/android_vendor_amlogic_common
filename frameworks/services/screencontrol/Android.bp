@@ -64,7 +64,7 @@ cc_library_shared {
 
 cc_library_shared {
   name: "libscreencontrolclient",
-  vendor: true,
+  vendor_available: true,
   cflags: [
     "-std=c++17",
   ],

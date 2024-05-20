@@ -38,6 +38,7 @@ import android.content.Intent;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.media.MediaFormat;
+import android.view.Surface;
 import java.lang.ref.WeakReference;
 
 
@@ -62,7 +63,12 @@ public class ScreenControlManager {
     private final Object mLock = new Object();
 
     static {
-        System.loadLibrary("screencontrol_jni");
+        try {
+            System.loadLibrary("screencontrol_jni.system");
+        } catch (UnsatisfiedLinkError e) {
+            Log.i(TAG,"The screencontrol_jni.system does not exist or cannot be loaded：" + e.getMessage());
+            System.loadLibrary("screencontrol_jni");
+        }
     }
 
     private native void native_ConnectScreenControl();
@@ -79,6 +85,8 @@ public class ScreenControlManager {
     private native void native_ForceStop();
 
     private native void native_SetRecordParameter(String[] keys, Object[] values);
+
+    private native int native_startScreenCapDisplay(int sourceType, Surface surface);
 
     public ScreenControlManager(Context context) {
         mContext = context;
@@ -264,6 +272,13 @@ public class ScreenControlManager {
             }
         }
         return null;
+    }
+
+    public int startScreenCapDisplay(int sourceType, Surface surface) {
+        Log.d(TAG, "startScreenCapDisplay sourceType:" + sourceType + ",surface:"+ surface);
+        synchronized (mLock) {
+            return native_startScreenCapDisplay(sourceType,surface);
+        }
     }
 
     public void setRecordParameter(MediaFormat format) {

@@ -97,6 +97,15 @@ int ScreenControlClient::startScreenCapBuffer(int32_t left, int32_t top, int32_t
     return result;
 }
 
+int32_t ScreenControlClient::startScreenCapBuffer(int32_t width, int32_t height, int32_t sourceType, const native_handle_t* handle) {
+    ALOGI("enter %s,width=%d,height=%d", __func__, width, height);
+    Mutex::Autolock autoLock(mScreenCapLock);
+    int result = -1;
+    if (Result::OK == mScreenCtrl->startScreenCapBuffer1(width, height, sourceType, handle))
+        result = 0;
+    return result;
+}
+
 int ScreenControlClient::startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t frameRate,
     int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const char* filename)
 {

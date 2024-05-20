@@ -12,13 +12,49 @@ package {
 }
 
 cc_library_shared {
-  name: "libscreencontrol_jni",
-  vendor: true,
-
+  name: "libscreencontrol_jni.system",
   srcs: [
     "com_droidlogic_app_ScreenControlManager.cpp",
   ],
+  cflags: [
+    "-DBUILD_SYSTEM",
+  ],
 
+  shared_libs: [
+    "vendor.amlogic.hardware.screencontrol@1.0",
+    "libscreencontrolclient",
+    "libcutils",
+    "libutils",
+    "liblog",
+    "libandroid",
+    "libui",
+    "libgui",
+    "libhidlbase",
+    "libandroid_runtime",
+  ],
+
+  header_libs: [
+    "jni_headers",
+    "android.hardware.graphics.composer3-command-buffer",
+  ],
+
+  include_dirs: [
+    "frameworks/base/core/jni/include",
+    "frameworks/native/include",
+    "frameworks/native/libs/nativewindow/include",
+    "frameworks/native/libs/arect/include",
+    "frameworks/native/libs/nativebase/include",
+    "frameworks/native/libs/ui/include",
+    "vendor/amlogic/common/frameworks/services/screencontrol",
+  ],
+}
+
+cc_library_shared {
+  name: "libscreencontrol_jni",
+  vendor:true,
+  srcs: [
+    "com_droidlogic_app_ScreenControlManager.cpp",
+  ],
   shared_libs: [
     "vendor.amlogic.hardware.screencontrol@1.0",
     "libscreencontrolclient",
@@ -35,5 +71,5 @@ cc_library_shared {
     "frameworks/base/core/jni/include",
     "vendor/amlogic/common/frameworks/services/screencontrol",
   ],
-
 }
+
