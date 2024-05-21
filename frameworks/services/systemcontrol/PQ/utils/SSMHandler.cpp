@@ -303,6 +303,7 @@ struct SSMHeader_section2_t gSSMHeader_section2[] = {
     {.id =CUSTOMER_DATA_POS_HDMI2_EDID_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =CUSTOMER_DATA_POS_HDMI3_EDID_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =CUSTOMER_DATA_POS_HDMI4_EDID_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
+    {.id =CUSTOMER_DATA_POS_HDMI_QMS_ENABLE_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =CUSTOMER_DATA_POS_HDMI_HDCP_SWITCHER_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =CUSTOMER_DATA_POS_HDMI_COLOR_RANGE_START, .addr = 0, .size = 1, .valid = 0, .rsv = {0}},
     {.id =CUSTOMER_DATA_POS_DYNAMIC_BACKLIGHT, .addr = 0, .size = SSM_SOURCE_MAX, .valid = 0, .rsv = {0}},
