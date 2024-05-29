@@ -50,6 +50,7 @@ private:
 
     bool mirrorDisplay();
     bool createVideoTunnelId(int* id);
+    bool showSurface();
     bool checkExit();
     static void videoCallback(void *user_data, am_tsplayer_event *event);
     int openDmx();

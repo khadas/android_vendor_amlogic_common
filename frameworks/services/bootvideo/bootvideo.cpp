@@ -216,6 +216,13 @@ bool BootVideo::mirrorDisplay() {
     return true;
 }
 
+bool BootVideo::showSurface() {
+    SurfaceComposerClient::Transaction{}
+        .show(mControl)
+        .apply();
+    return true;
+}
+
 bool BootVideo::createVideoTunnelId(int* id) {
     sp<IProducerListener> producerListener = NULL;
     sp<IGraphicBufferProducer> producer = NULL;
@@ -266,7 +273,7 @@ bool BootVideo::createVideoTunnelId(int* id) {
         t.setLayer(mControl, LAYER_VIDEO);
         t.setLayerStack(mControl, ui::DEFAULT_LAYER_STACK);
         t.setFlags(mControl, android::layer_state_t::eLayerOpaque, android::layer_state_t::eLayerOpaque)
-            .show(mControl)
+            .hide(mControl)
             .setPosition(mControl, x, y)
             .apply();
 
@@ -425,6 +432,8 @@ bool BootVideo::checkExit() {
 
     AmTsPlayer_getCurrentTime(mSession, &playtime);
     if (playtime > 0) {
+        if (mLastPlayTs == -1)
+            showSurface();
         if (mLastPlayTs == playtime) {
             int64_t diff = (nowus - mLastGetTs)/1000000;
             if (diff > 100)
