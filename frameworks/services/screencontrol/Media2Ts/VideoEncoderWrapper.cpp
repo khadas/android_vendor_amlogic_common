@@ -15,45 +15,40 @@
  */
 #define LOG_NDEBUG 0
 #define LOG_TAG "VideoEncoderWrapper"
-#include <utils/Log.h>
-
-#include <OMX_Video.h>
-#include <media/stagefright/MediaCodecConstants.h>
-#include <media/NdkMediaFormat.h>
-#include "ScreenControlH264.h"
-#include "ulit.h"
-#include "VideoEncoderWrapper.h"
-#include "ScreenControlDebug.h"
-
 #include <ALooper.h>
-#include <binder/ProcessState.h>
+#include <OMX_Video.h>
 #include <binder/IPCThreadState.h>
-
+#include <binder/ProcessState.h>
+#include <media/NdkMediaFormat.h>
+#include <media/stagefright/MediaCodecConstants.h>
+#include <utils/Log.h>
+#include "ScreenControlDebug.h"
+#include "ScreenControlH264.h"
+#include "VideoEncoderWrapper.h"
+#include "ulit.h"
 
 namespace android {
 
-VideoEncoderWrapper::VideoEncoderWrapper(VideoEncoderWrapperCallback * client):
-        mIsSoftwareEncoder(false),
-        mEncoder(nullptr),
-        mStart(false),
-        mWorkingFrameNum(0),
-        mCSDbufferSize(0),
-        mVideoEncoderWrapperCallback(client) {
-        int fd;
-        (fd = open("/dev/amvenc_avc", O_RDWR)) >= 0?close(fd):
-        (fd = open("/dev/amvenc_multi", O_RDWR))>= 0?close(fd):
-        (fd = open("/dev/vc8000", O_RDWR)) >= 0?close(fd):
-        mIsSoftwareEncoder = true;
-        ALOGI("VideoEncoderWrapper : %p",this);
+VideoEncoderWrapper::VideoEncoderWrapper(VideoEncoderWrapperCallback* client)
+        : mIsSoftwareEncoder(false),
+          mEncoder(nullptr),
+          mStart(false),
+          mWorkingFrameNum(0),
+          mCSDbufferSize(0),
+          mVideoEncoderWrapperCallback(client) {
+    int fd;
+    (fd = open("/dev/amvenc_avc", O_RDWR)) >= 0     ? close(fd)
+    : (fd = open("/dev/amvenc_multi", O_RDWR)) >= 0 ? close(fd)
+    : (fd = open("/dev/vc8000", O_RDWR)) >= 0       ? close(fd)
+                                                    : mIsSoftwareEncoder = true;
+    ALOGI("VideoEncoderWrapper : %p", this);
 }
 
-
-
 VideoEncoderWrapper::~VideoEncoderWrapper() {
-    ALOGI("~VideoEncoderWrapper : %p",this);
+    ALOGI("~VideoEncoderWrapper : %p", this);
     while (!mPendingInputQueue.empty()) {
         auto input = mPendingInputQueue.begin();
-        if (!mIsSoftwareEncoder && (*input)->data_ )
+        if (!mIsSoftwareEncoder && (*input)->data_)
             free((*input)->data_);
         mPendingInputQueue.erase(input);
     }
@@ -68,7 +63,7 @@ bool VideoEncoderWrapper::init(AMediaFormat* format) {
         ALOGE("[%s %d] the format is null,init fail !!", __FUNCTION__, __LINE__);
         goto out;
     }
-    ALOGI("[%s %d] the format : %s", __FUNCTION__, __LINE__,AMediaFormat_toString(format));
+    ALOGI("[%s %d] the format : %s", __FUNCTION__, __LINE__, AMediaFormat_toString(format));
 
     mEncoder = AMediaCodec_createEncoderByType("video/avc");
     if (mEncoder == NULL) {
@@ -83,17 +78,13 @@ bool VideoEncoderWrapper::init(AMediaFormat* format) {
         AMediaFormat_setInt32(format, "prepend-sps-pps-to-idr-frames", 0);
     } else {
         if (!AMediaFormat_getInt32(format, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, &i_frame_interval))
-            AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 15);  // Iframes every 15 secs
+            AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 15); // Iframes every 15 secs
         AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_COLOR_FORMAT, OMX_COLOR_FormatAndroidOpaque);
         AMediaFormat_setInt32(format, "store-metadata-in-buffers", true);
         AMediaFormat_setInt32(format, "prepend-sps-pps-to-idr-frames", 1);
         AMediaFormat_setInt32(format, "vendor.venc.canvasmode.value", 1);
     }
-    err = AMediaCodec_configure(mEncoder,
-              format,
-              nullptr,
-              nullptr,
-              AMEDIACODEC_CONFIGURE_FLAG_ENCODE);
+    err = AMediaCodec_configure(mEncoder, format, nullptr, nullptr, AMEDIACODEC_CONFIGURE_FLAG_ENCODE);
     if (err != AMEDIA_OK) {
         ALOGE("[%s %d] encoder config fail , err:%d", __FUNCTION__, __LINE__, err);
         goto out;
@@ -105,32 +96,32 @@ bool VideoEncoderWrapper::init(AMediaFormat* format) {
         goto out;
     }
     mStart = true;
-    ts.push_back(std::thread(&VideoEncoderWrapper::threadVideoFunc,this));
+    ts.push_back(std::thread(&VideoEncoderWrapper::threadVideoFunc, this));
     ALOGD("[%s %d] finish", __FUNCTION__, __LINE__);
     ret = true;
 out:
     return ret;
 }
 
-bool VideoEncoderWrapper::encodec(void* data,const int32_t size,const int64_t pts) {
+bool VideoEncoderWrapper::encodec(void* data, const int32_t size, const int64_t pts) {
     if (!data || size <= 0 || pts < 0) {
         ALOGE("[%s %d] the input data is abnormal", __FUNCTION__, __LINE__);
         return false;
     }
-    ALOGI("[%s %d] pts=%lld", __FUNCTION__, __LINE__,pts);
+    ALOGI("[%s %d] pts=%lld", __FUNCTION__, __LINE__, pts);
     void* encodec_data = data;
     if (!mIsSoftwareEncoder) {
         encodec_data = malloc(size);
         if (!encodec_data)
             return false;
-        memset(encodec_data,0,size);
-        memcpy(encodec_data,data,size);
+        memset(encodec_data, 0, size);
+        memcpy(encodec_data, data, size);
     }
-    auto input = std::make_unique<InputData>(encodec_data,size,pts);
+    auto input = std::make_unique<InputData>(encodec_data, size, pts);
     std::unique_lock<std::mutex> pl(mPendingInputLock);
     mPendingInputQueue.push_back(std::move(input));
     pl.unlock();
-    ALOGI("[%s %d] push_back pts=%lld ,size =%d", __FUNCTION__, __LINE__,pts,mPendingInputQueue.size());
+    ALOGI("[%s %d] push_back pts=%lld ,size =%d", __FUNCTION__, __LINE__, pts, mPendingInputQueue.size());
     return true;
 }
 
@@ -144,22 +135,21 @@ bool VideoEncoderWrapper::EnqueueInput(std::unique_ptr<InputData>& input) {
     mInputBufferIds.pop_front();
     uint8_t* buffer = AMediaCodec_getInputBuffer(mEncoder, index, &bufSize);
     if (bufSize < input->size_) {
-        ALOGE("[%s %d] the input buffer from mediacodec is abnormal index:%d", __FUNCTION__, __LINE__,index);
+        ALOGE("[%s %d] the input buffer from mediacodec is abnormal index:%d", __FUNCTION__, __LINE__, index);
         return false;
     }
     if (buffer) {
-        memcpy(buffer,input->data_,input->size_);
+        memcpy(buffer, input->data_, input->size_);
         if (mIsSoftwareEncoder && mVideoEncoderWrapperCallback) {
             mVideoEncoderWrapperCallback->onInputBufferAvailable(input->pts_);
         }
     }
-    media_status_t err = AMediaCodec_queueInputBuffer(mEncoder, index, 0,
-                (buffer) ?input->size_ : 0 , input->pts_, 0);
+    media_status_t err = AMediaCodec_queueInputBuffer(mEncoder, index, 0, (buffer) ? input->size_ : 0, input->pts_, 0);
     if (err != AMEDIA_OK) {
         ALOGE("[%s %d] queueInputBuffer fail", __FUNCTION__, __LINE__);
         return false;
     }
-    VDLog("[%s %d] queue input buffer to encoder index =%d,pts = %lld", __FUNCTION__, __LINE__,index,input->pts_);
+    VDLog("[%s %d] queue input buffer to encoder index =%d,pts = %lld", __FUNCTION__, __LINE__, index, input->pts_);
     if (!mIsSoftwareEncoder) {
         if (input->data_)
             free(input->data_);
@@ -167,7 +157,7 @@ bool VideoEncoderWrapper::EnqueueInput(std::unique_ptr<InputData>& input) {
         input->encoder_index_ = index;
         mWorkingInputQueue.push_back(std::move(input));
     }
-    mWorkingFrameNum ++;
+    mWorkingFrameNum++;
     return true;
 }
 bool VideoEncoderWrapper::stop() {
@@ -183,13 +173,12 @@ bool VideoEncoderWrapper::stop() {
     VDLog("[%s %d] join in ", __FUNCTION__, __LINE__);
     for (int i = 0; i < ts.size(); i++) {
         ts[i].join();
-
     }
     VDLog("[%s %d] thread join out ", __FUNCTION__, __LINE__);
     ts.clear();
     while (!mPendingInputQueue.empty()) {
         auto input = mPendingInputQueue.begin();
-        if (!mIsSoftwareEncoder && (*input)->data_ )
+        if (!mIsSoftwareEncoder && (*input)->data_)
             free((*input)->data_);
         mPendingInputQueue.erase(input);
     }
@@ -228,37 +217,32 @@ void VideoEncoderWrapper::threadVideoFunc() {
                 onDequeueOutputWork();
             }
         }
-        usleep(5*1000);//5ms
+        usleep(5 * 1000); // 5ms
     }
     ALOGI("[%s %d]  video thread out", __FUNCTION__, __LINE__);
-
 }
 void VideoEncoderWrapper::onDequeueInputWork() {
     int index = AMediaCodec_dequeueInputBuffer(mEncoder, 0ll);
     if (index <= AMEDIACODEC_INFO_TRY_AGAIN_LATER) {
-        VDLog("[%s %d] don't get the usable input buffer index = %d", __FUNCTION__, __LINE__,index);
+        VDLog("[%s %d] don't get the usable input buffer index = %d", __FUNCTION__, __LINE__, index);
         return;
     }
-    VDLog("[%s %d] dequeue input buffer from encoder index =%d", __FUNCTION__, __LINE__,index);
+    VDLog("[%s %d] dequeue input buffer from encoder index =%d", __FUNCTION__, __LINE__, index);
     if (!mIsSoftwareEncoder && !mWorkingInputQueue.empty()) {
         auto input_info = std::find_if(mWorkingInputQueue.begin(), mWorkingInputQueue.end(),
-                [=](std::unique_ptr<InputData>& info) {
-                    return info->encoder_index_ == index;
-                });
+                                       [=](std::unique_ptr<InputData>& info) { return info->encoder_index_ == index; });
         if (input_info == mWorkingInputQueue.end()) {
             ALOGE("don't find the buffer in working input queue: index %d", index);
-        }else {
+        } else {
             if (mVideoEncoderWrapperCallback) {
                 mVideoEncoderWrapperCallback->onInputBufferAvailable((*input_info)->pts_);
             }
             mWorkingInputQueue.erase(input_info);
         }
-
     }
     mInputBufferIds.push_back(index);
     return;
 }
-
 
 void VideoEncoderWrapper::onDequeueOutputWork() {
     AMediaCodecBufferInfo outInfo;
@@ -266,80 +250,78 @@ void VideoEncoderWrapper::onDequeueOutputWork() {
     outInfo.flags = AMEDIACODEC_INFO_TRY_AGAIN_LATER;
     outInfo.size = 0;
     outInfo.presentationTimeUs = 0;
-    size_t index = AMediaCodec_dequeueOutputBuffer(mEncoder, &outInfo,0ll);
-    VDLog("[%s %d] AMediaCodec_dequeueOutputBuffer index = %d ,outInfo.flags = %d,outInfo.size =%d,outInfo.presentationTimeUs=%d",
-                                    __FUNCTION__, __LINE__,index,outInfo.flags,outInfo.size,outInfo.presentationTimeUs);
-    if (index == AMEDIACODEC_INFO_TRY_AGAIN_LATER ||
-        index == AMEDIACODEC_INFO_OUTPUT_BUFFERS_CHANGED) {
-        VDLog("[%s %d] don't get the usable out buffer index = %d", __FUNCTION__, __LINE__,index);
+    size_t index = AMediaCodec_dequeueOutputBuffer(mEncoder, &outInfo, 0ll);
+    VDLog(
+        "[%s %d] AMediaCodec_dequeueOutputBuffer index = %d ,outInfo.flags = %d,outInfo.size =%d,outInfo.presentationTimeUs=%d",
+        __FUNCTION__, __LINE__, index, outInfo.flags, outInfo.size, outInfo.presentationTimeUs);
+    if (index == AMEDIACODEC_INFO_TRY_AGAIN_LATER || index == AMEDIACODEC_INFO_OUTPUT_BUFFERS_CHANGED) {
+        VDLog("[%s %d] don't get the usable out buffer index = %d", __FUNCTION__, __LINE__, index);
         return;
-    } else if (index == AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED){
-            AMediaFormat* format_temp = AMediaCodec_getOutputFormat(mEncoder);
-            const char* string_temp = AMediaFormat_toString(format_temp);
-            ALOGD("get output format string_temp = %s",string_temp);
-            void * sps = nullptr;
-            void * pps = nullptr;
-            size_t data_size = 0;
-            if (AMediaFormat_getBuffer(format_temp,"csd-0",&sps,&data_size) && sps && data_size > 0) {
-                ALOGD("test get SPS data data_size = %d",data_size);
-                if (mVideoEncoderWrapperCallback)
-                    mVideoEncoderWrapperCallback->onOutputBufferAvailable(sps, data_size,
-                                        AVC_TYPE_FRAME_TYPE_SPS, outInfo.presentationTimeUs);
-            }
-            data_size = 0;
-            if (AMediaFormat_getBuffer(format_temp,"csd-1",&pps,&data_size) && pps && data_size > 0) {
-                ALOGD("get PPS data data_size = %d",data_size);
-                if (mVideoEncoderWrapperCallback)
-                    mVideoEncoderWrapperCallback->onOutputBufferAvailable(pps, data_size,
-                                        AVC_TYPE_FRAME_TYPE_PPS, outInfo.presentationTimeUs);
-            }
-            return;
+    } else if (index == AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED) {
+        AMediaFormat* format_temp = AMediaCodec_getOutputFormat(mEncoder);
+        const char* string_temp = AMediaFormat_toString(format_temp);
+        ALOGD("get output format string_temp = %s", string_temp);
+        void* sps = nullptr;
+        void* pps = nullptr;
+        size_t data_size = 0;
+        if (AMediaFormat_getBuffer(format_temp, "csd-0", &sps, &data_size) && sps && data_size > 0) {
+            ALOGD("test get SPS data data_size = %d", data_size);
+            if (mVideoEncoderWrapperCallback)
+                mVideoEncoderWrapperCallback->onOutputBufferAvailable(sps, data_size, AVC_TYPE_FRAME_TYPE_SPS,
+                                                                      outInfo.presentationTimeUs);
+        }
+        data_size = 0;
+        if (AMediaFormat_getBuffer(format_temp, "csd-1", &pps, &data_size) && pps && data_size > 0) {
+            ALOGD("get PPS data data_size = %d", data_size);
+            if (mVideoEncoderWrapperCallback)
+                mVideoEncoderWrapperCallback->onOutputBufferAvailable(pps, data_size, AVC_TYPE_FRAME_TYPE_PPS,
+                                                                      outInfo.presentationTimeUs);
+        }
+        return;
     }
     uint8_t* output = AMediaCodec_getOutputBuffer(mEncoder, index, &bufSize);
     if (output && outInfo.size > 0) {
-        ALOGI("[%s %d] get output buffer from encoder index = %d,size =%d,pts = %lld,flag = %d",
-                __FUNCTION__, __LINE__,index,outInfo.size,outInfo.presentationTimeUs,outInfo.flags);
+        ALOGI("[%s %d] get output buffer from encoder index = %d,size =%d,pts = %lld,flag = %d", __FUNCTION__, __LINE__,
+              index, outInfo.size, outInfo.presentationTimeUs, outInfo.flags);
         if (outInfo.flags & AMEDIACODEC_BUFFER_FLAG_CODEC_CONFIG) {
             mCSDbufferSize = outInfo.size;
-        }else {
-            mWorkingFrameNum --;
+        } else {
+            mWorkingFrameNum--;
             // the first output buffer from encoder is CSD data,so the CSD data in IDR buffer is not useful.
             if ((outInfo.flags & AMEDIACODEC_BUFFER_FLAG_KEY_FRAME) &&
-                    get_frame_type(output, outInfo.size) == AVC_TYPE_FRAME_TYPE_SPS &&
-                    mCSDbufferSize > 0) {
+                get_frame_type(output, outInfo.size) == AVC_TYPE_FRAME_TYPE_SPS && mCSDbufferSize > 0) {
                 ALOGD("[%s %d] the IDR frame have CSD data , so need to remove it!", __FUNCTION__, __LINE__);
                 output = output + mCSDbufferSize;
                 outInfo.size = outInfo.size - mCSDbufferSize;
             }
             if (mVideoEncoderWrapperCallback)
-                mVideoEncoderWrapperCallback->onOutputBufferAvailable(output, outInfo.size,
-                                get_frame_type(output, outInfo.size), outInfo.presentationTimeUs);
+                mVideoEncoderWrapperCallback->onOutputBufferAvailable(
+                    output, outInfo.size, get_frame_type(output, outInfo.size), outInfo.presentationTimeUs);
         }
     }
     AMediaCodec_releaseOutputBuffer(mEncoder, index, false);
     return;
-
 }
 int32_t VideoEncoderWrapper::get_frame_type(void* buffer, int32_t size) {
-    uint8_t *h264 =new uint8_t[size];
+    uint8_t* h264 = new uint8_t[size];
     int32_t frameType = AVC_TYPE_FRAME_TYPE_UNKNOWN;
     memcpy(h264, buffer, size);
-    uint8_t naltype = (*(h264+4)) & 0x1F;
+    uint8_t naltype = (*(h264 + 4)) & 0x1F;
     switch (naltype) {
         case NAL_SLICE: {
             NALU_t nal[1];
-            if (h264[0]== 0x00 && h264[1]== 0x00 && h264[2]== 0x00 && h264[3]== 0x01 ) {
+            if (h264[0] == 0x00 && h264[1] == 0x00 && h264[2] == 0x00 && h264[3] == 0x01) {
                 nal->startcodeprefix_len = 4;
                 nal->buf = h264 + 4;
                 nal->len = size - 4;
-            }else if (h264[0]== 0x00 && h264[1]== 0x00 && h264[2]== 0x01) {
+            } else if (h264[0] == 0x00 && h264[1] == 0x00 && h264[2] == 0x01) {
                 nal->startcodeprefix_len = 3;
                 nal->buf = h264 + 3;
                 nal->len = size - 3;
-            }else
+            } else
                 break;
             nal->nal_unit_type = naltype;
-            int ret =GetFrameType(nal);
+            int ret = GetFrameType(nal);
             if (ret < 1) {
                 frameType = AVC_TYPE_FRAME_TYPE_UNKNOWN;
                 ALOGE(" find frame type error !!");
@@ -361,7 +343,7 @@ int32_t VideoEncoderWrapper::get_frame_type(void* buffer, int32_t size) {
             }
             break;
         }
-        case NAL_SLICE_DPA :
+        case NAL_SLICE_DPA:
             frameType = AVC_TYPE_FRAME_TYPE_SLICE_A;
             break;
         case NAL_SLICE_DPB:
@@ -395,10 +377,8 @@ int32_t VideoEncoderWrapper::get_frame_type(void* buffer, int32_t size) {
             frameType = AVC_TYPE_FRAME_TYPE_UNKNOWN;
             break;
     }
-    delete [] h264;
+    delete[] h264;
     return frameType;
 }
 
-
-
-}; //namespace android
+}; // namespace android

@@ -20,7 +20,6 @@
 #include "../ScreenManager.h"
 #include "VideoEncoderWrapper.h"
 
-
 namespace android {
 
 struct BufferPtsInfo {
@@ -30,7 +29,9 @@ struct BufferPtsInfo {
 };
 
 struct ESConvertorParmeter : public InputParmeter {
-    ESConvertorParmeter(): bit_rate_(0),i_frame_interval(0){};
+    ESConvertorParmeter()
+            : bit_rate_(0),
+              i_frame_interval(0) {};
     ESConvertorParmeter(ESConvertorParmeter&&) = default;
     ~ESConvertorParmeter() = default;
     int32_t bit_rate_;
@@ -49,10 +50,11 @@ public:
     };
     ESConvertor();
     virtual ~ESConvertor();
-    bool start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertorCallback *client, AMediaFormat *format = nullptr);
+    bool start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertorCallback* client,
+               AMediaFormat* format = nullptr);
     bool stop();
-    void setCallback(ESConvertorCallback *client);
-    void PictureReady(const OutputRecord &output);
+    void setCallback(ESConvertorCallback* client);
+    void PictureReady(const OutputRecord& output);
     void EventNotify(int32_t event);
     void onInputBufferAvailable(int64_t pts);
     void onOutputBufferAvailable(void* const buffer, int32_t size, int32_t frame_type, int64_t pts);
@@ -69,7 +71,6 @@ private:
     std::unique_ptr<DataDumper> mDumper;
     std::list<std::unique_ptr<BufferPtsInfo>> mWorkingInfoQueue;
 };
-
 
 }; // namespace android
 

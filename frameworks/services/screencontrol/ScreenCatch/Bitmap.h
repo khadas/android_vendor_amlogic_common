@@ -20,42 +20,42 @@
 namespace android {
 
 #pragma pack(push, 1)
-    typedef struct BmpFileHeader {       /**** BMP file header structure ****/
-        unsigned short bfType;           /* File type: bm(0x4d42) */
-        unsigned int   bfSize;           /* Size of file */
-        unsigned short bfReserved1;      /* Reserved */
-        unsigned short bfReserved2;      /* ... */
-        unsigned int   bfOffBits;        /* Offset to bitmap data */
-    } BmpFileHeader;
+typedef struct BmpFileHeader {  /**** BMP file header structure ****/
+    unsigned short bfType;      /* File type: bm(0x4d42) */
+    unsigned int bfSize;        /* Size of file */
+    unsigned short bfReserved1; /* Reserved */
+    unsigned short bfReserved2; /* ... */
+    unsigned int bfOffBits;     /* Offset to bitmap data */
+} BmpFileHeader;
 
-    typedef struct BmpInfoHeader {       /**** BMP file info structure ****/
-        unsigned int   biSize;           /* Size of info header */
-        int            biWidth;          /* Width of image */
-        int            biHeight;         /* Height of image */
-        unsigned short biPlanes;         /* Number of color planes */
-        unsigned short biBitCount;       /* Number of bits per pixel */
-        unsigned int   biCompression;    /* Type of compression to use */
-        unsigned int   biSizeImage;      /* Size of image data */
-        int            biXPelsPerMeter;  /* X pixels per meter */
-        int            biYPelsPerMeter;  /* Y pixels per meter */
-        unsigned int   biClrUsed;        /* Number of colors used */
-        unsigned int   biClrImportant;   /* Number of important colors */
-    } BmpInfoHeader;
+typedef struct BmpInfoHeader {   /**** BMP file info structure ****/
+    unsigned int biSize;         /* Size of info header */
+    int biWidth;                 /* Width of image */
+    int biHeight;                /* Height of image */
+    unsigned short biPlanes;     /* Number of color planes */
+    unsigned short biBitCount;   /* Number of bits per pixel */
+    unsigned int biCompression;  /* Type of compression to use */
+    unsigned int biSizeImage;    /* Size of image data */
+    int biXPelsPerMeter;         /* X pixels per meter */
+    int biYPelsPerMeter;         /* Y pixels per meter */
+    unsigned int biClrUsed;      /* Number of colors used */
+    unsigned int biClrImportant; /* Number of important colors */
+} BmpInfoHeader;
 #pragma pack(pop)
 
 class Bitmap {
 public:
     // create from buffer
-    Bitmap(void *rgb, int width, int height, int bytePerPixel);
+    Bitmap(void* rgb, int width, int height, int bytePerPixel);
     ~Bitmap();
 
-    bool getHeader(BmpFileHeader &bfh, BmpInfoHeader &bih);
-    bool getData(void *dst, int dstLength);
+    bool getHeader(BmpFileHeader& bfh, BmpInfoHeader& bih);
+    bool getData(void* dst, int dstLength);
 
     // save to file
     bool save(int outFd);
-    bool save(FILE *outFile);
-    bool save(const char *outFilePath);
+    bool save(FILE* outFile);
+    bool save(const char* outFilePath);
 
 private:
     void initPriv();
@@ -64,11 +64,10 @@ private:
 
     BmpFileHeader mBfh;
     BmpInfoHeader mBih;
-    void *mData;
+    void* mData;
     bool isDataAlloc;
 };
 
 }; // namespace android
 
 #endif // ANDROID_DROIDLOGIC_BITMAP_H
-

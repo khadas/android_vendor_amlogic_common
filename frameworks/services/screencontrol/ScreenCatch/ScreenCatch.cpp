@@ -14,15 +14,15 @@
 ** See the License for the specific language governing permissions and
 ** limitations under the License.
 */
-//#define LOG_NDEBUG 0
+// #define LOG_NDEBUG 0
 #define LOG_TAG "ScreenCatch"
-#include <utils/Log.h>
 #include <cutils/properties.h>
 #include <ui/GraphicBuffer.h>
-#include "am_gralloc_ext.h"
-#include "DisplayAdapter.h"
+#include <utils/Log.h>
 #include "../ScreenControlDebug.h"
+#include "DisplayAdapter.h"
 #include "ScreenCatch.h"
+#include "am_gralloc_ext.h"
 
 namespace android {
 
@@ -31,8 +31,8 @@ namespace android {
 
 //////////////////////////////  screen capture when use keystone  //////////////////////////////
 
-static int32_t gralloc_unref_dma_buf(native_handle_t * hnd) {
-    static GraphicBufferMapper & maper = GraphicBufferMapper::get();
+static int32_t gralloc_unref_dma_buf(native_handle_t* hnd) {
+    static GraphicBufferMapper& maper = GraphicBufferMapper::get();
 
     bool bfreed = false;
     if (am_gralloc_is_valid_graphic_buffer(hnd)) {
@@ -50,9 +50,8 @@ static int32_t gralloc_unref_dma_buf(native_handle_t * hnd) {
     return 0;
 }
 
-static int32_t gralloc_lock_dma_buf(
-    native_handle_t * handle, void** vaddr) {
-    static GraphicBufferMapper & maper = GraphicBufferMapper::get();
+static int32_t gralloc_lock_dma_buf(native_handle_t* handle, void** vaddr) {
+    static GraphicBufferMapper& maper = GraphicBufferMapper::get();
     uint32_t usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
     int w = am_gralloc_get_width(handle);
     int h = am_gralloc_get_height(handle);
@@ -65,38 +64,34 @@ static int32_t gralloc_lock_dma_buf(
     return -EINVAL;
 }
 
-static int32_t gralloc_unlock_dma_buf(native_handle_t * handle) {
-    static GraphicBufferMapper & maper = GraphicBufferMapper::get();
+static int32_t gralloc_unlock_dma_buf(native_handle_t* handle) {
+    static GraphicBufferMapper& maper = GraphicBufferMapper::get();
     if (NO_ERROR == maper.unlock(handle))
         return 0;
     return -EINVAL;
 }
 
-static inline void rgb24_to_rgb32(unsigned char *src, unsigned char *dist, int srcWidth, int srcHeight)
-{
+static inline void rgb24_to_rgb32(unsigned char* src, unsigned char* dist, int srcWidth, int srcHeight) {
     int srcIdx = 0, dstIdx = 0;
     int size = srcWidth * srcHeight * 3;
-    for (;srcIdx < size; srcIdx+=3, dstIdx+=4) {
+    for (; srcIdx < size; srcIdx += 3, dstIdx += 4) {
         memmove(&dist[dstIdx], &src[srcIdx], 3);
-        dist[dstIdx+4] = 0xff;
+        dist[dstIdx + 4] = 0xff;
     }
 }
 
-ScreenCatch::ScreenCatch():
-            mScreenManager(nullptr),
-            mStart(false),
-            mRawBufferSize(0),
-            mClientId(-1),
-            mErrorEvent(0) {
+ScreenCatch::ScreenCatch()
+        : mScreenManager(nullptr),
+          mStart(false),
+          mRawBufferSize(0),
+          mClientId(-1),
+          mErrorEvent(0) {
     ALOGI("[%s %d] Construct", __FUNCTION__, __LINE__);
     ScreenControlDebug::initDebug();
     mOutputQueue.clear();
-
 }
 
-ScreenCatch::~ScreenCatch() {
-    ALOGI("~ScreenCatch");
-}
+ScreenCatch::~ScreenCatch() { ALOGI("~ScreenCatch"); }
 bool ScreenCatch::start(std::unique_ptr<InputParmeter>& input) {
     std::lock_guard<std::mutex> lock(mLock);
     int32_t size = 0;
@@ -106,15 +101,15 @@ bool ScreenCatch::start(std::unique_ptr<InputParmeter>& input) {
         return false;
     }
     if (input->source_type < AML_CAPTURE_VIDEO || input->source_type > SCAML_CAPTURE_UNKNOWN) {
-        ALOGE("[%s %d] dont't support the type=%d", __FUNCTION__, __LINE__,input->source_type);
+        ALOGE("[%s %d] dont't support the type=%d", __FUNCTION__, __LINE__, input->source_type);
         return false;
     }
-    ALOGI("[%s %d] source_type = %d (%d/%d)", __FUNCTION__, __LINE__,
-                input->source_type,input->size->width(),input->size->height());
-    if (property_get(PROP_POSTPROCESSOR, postprocessor, "") > 0 &&
-        strlen(postprocessor) > 0 && !strcasecmp(postprocessor, "true")) {
+    ALOGI("[%s %d] source_type = %d (%d/%d)", __FUNCTION__, __LINE__, input->source_type, input->size->width(),
+          input->size->height());
+    if (property_get(PROP_POSTPROCESSOR, postprocessor, "") > 0 && strlen(postprocessor) > 0 &&
+        !strcasecmp(postprocessor, "true")) {
         ALOGI("[%s %d] postprocessor:%s", __FUNCTION__, __LINE__, postprocessor);
-        return captureforKeystone()?true:false;
+        return captureforKeystone() ? true : false;
     }
 
     mScreenManager = ScreenManager::getInstance();
@@ -132,7 +127,7 @@ bool ScreenCatch::start(std::unique_ptr<InputParmeter>& input) {
     }
     ALOGI("[%s %d]  ScreenManager start finish mClientId=%d", __FUNCTION__, __LINE__, mClientId);
     mRawBufferSize = size;
-    mStart =true;
+    mStart = true;
     return true;
 }
 bool ScreenCatch::stop() {
@@ -141,7 +136,7 @@ bool ScreenCatch::stop() {
         ALOGE("[%s %d] the ScreenCatch has been started !", __FUNCTION__, __LINE__);
         return false;
     }
-    mScreenManager->setCallback(mClientId,nullptr);
+    mScreenManager->setCallback(mClientId, nullptr);
     mScreenManager->stop(mClientId);
     std::unique_lock<std::mutex> ol(mOutputQueueLock);
     while (!mOutputQueue.empty()) {
@@ -152,7 +147,7 @@ bool ScreenCatch::stop() {
             continue;
         }
         if (mClientId > 0 && (*output)->raw) {
-            delete [](*output)->raw;
+            delete[] (*output)->raw;
         }
         mOutputQueue.erase(output);
     }
@@ -168,7 +163,8 @@ bool ScreenCatch::readBuffer(uint8_t* buffer, int32_t* size) {
     std::lock_guard<std::mutex> lock(mLock);
     std::lock_guard<std::mutex> ol(mOutputQueueLock);
     if (!mStart || mOutputQueue.empty()) {
-        ALOGV("[%s %d] the ScreenCatch has been started or mOutputQueue don't have any buffer ", __FUNCTION__, __LINE__);
+        ALOGV("[%s %d] the ScreenCatch has been started or mOutputQueue don't have any buffer ", __FUNCTION__,
+              __LINE__);
         return false;
     }
     auto output = mOutputQueue.begin();
@@ -178,60 +174,57 @@ bool ScreenCatch::readBuffer(uint8_t* buffer, int32_t* size) {
         return false;
     }
     int64_t first_times = android::getNowTimesUs();
-    memcpy(buffer,(*output)->raw,mRawBufferSize);
+    memcpy(buffer, (*output)->raw, mRawBufferSize);
     int64_t end_times = android::getNowTimesUs();
-    ALOGI("[%s %d] copy duration %lld ms", __FUNCTION__, __LINE__,(end_times - first_times) / 1000);
+    ALOGI("[%s %d] copy duration %lld ms", __FUNCTION__, __LINE__, (end_times - first_times) / 1000);
     *size = mRawBufferSize;
     if (mClientId > 0) {
         if ((*output)->raw)
-            delete [](*output)->raw;
+            delete[] (*output)->raw;
     } else {
-       mScreenManager->realseBuffer(mClientId,(*output)->index);
+        mScreenManager->releaseBuffer(mClientId, (*output)->index);
     }
 
     mOutputQueue.erase(output);
-    ALOGD("[%s %d] get the buffer size = %d", __FUNCTION__, __LINE__,mRawBufferSize);
+    ALOGD("[%s %d] get the buffer size = %d", __FUNCTION__, __LINE__, mRawBufferSize);
     return true;
 }
 
-int32_t ScreenCatch::getErrorEvent() {
-    return mErrorEvent;
-}
+int32_t ScreenCatch::getErrorEvent() { return mErrorEvent; }
 
 void ScreenCatch::pause() {
     std::lock_guard<std::mutex> lock(mLock);
     ALOGD("[%s %d]", __FUNCTION__, __LINE__);
-    mScreenManager->setCallback(mClientId,nullptr);
+    mScreenManager->setCallback(mClientId, nullptr);
     mScreenManager->pause(mClientId);
 }
 
 void ScreenCatch::resume() {
     std::lock_guard<std::mutex> lock(mLock);
     ALOGD("[%s %d]", __FUNCTION__, __LINE__);
-    mScreenManager->setCallback(mClientId,this);
+    mScreenManager->setCallback(mClientId, this);
     mScreenManager->resume(mClientId);
 }
 
 bool ScreenCatch::captureforKeystone() {
-    const native_handle_t *outBufferHandle = nullptr;
-    native_handle_t *bufferHandle = nullptr;
-    int width=0, height=0, format=0, stride=0;
+    const native_handle_t* outBufferHandle = nullptr;
+    native_handle_t* bufferHandle = nullptr;
+    int width = 0, height = 0, format = 0, stride = 0;
     std::unique_ptr<meson::DisplayAdapter> displayAdapter = meson::DisplayAdapterCreateRemote();
     if (!displayAdapter) {
         ALOGE("DisplayAdapter init failed");
         return false;
     }
-    if ((displayAdapter->captureDisplayScreen(&outBufferHandle))
-                && (nullptr != outBufferHandle)) {
+    if ((displayAdapter->captureDisplayScreen(&outBufferHandle)) && (nullptr != outBufferHandle)) {
         void* mapBase = nullptr;
-        bufferHandle = const_cast<native_handle_t*> (outBufferHandle);
+        bufferHandle = const_cast<native_handle_t*>(outBufferHandle);
         width = am_gralloc_get_width(bufferHandle);
         height = am_gralloc_get_height(bufferHandle);
         format = am_gralloc_get_format(bufferHandle);
         stride = am_gralloc_get_stride_in_pixel(bufferHandle);
         mRawBufferSize = stride * height * 4;
-        ALOGD("[%s %d]mDisplayAdapter get width=%d, height=%d, format=%d, stride=%d, bufSize=%d",
-            __func__, __LINE__, width, height, format, stride, mRawBufferSize);
+        ALOGD("[%s %d]mDisplayAdapter get width=%d, height=%d, format=%d, stride=%d, bufSize=%d", __func__, __LINE__,
+              width, height, format, stride, mRawBufferSize);
         if (!gralloc_lock_dma_buf(bufferHandle, &mapBase)) {
             unsigned char* buffer = (unsigned char*)malloc(mRawBufferSize);
             if (!buffer)
@@ -250,25 +243,22 @@ bool ScreenCatch::captureforKeystone() {
         return false;
     }
     return true;
-
-
 }
 
-void ScreenCatch::PictureReady(const OutputRecord &output) {
-    ALOGI("PictureReady index =%d ",output.index);
+void ScreenCatch::PictureReady(const OutputRecord& output) {
+    ALOGI("PictureReady index =%d ", output.index);
     if (!mStart || output.format != SCREENCONTROL_PIX_FMT_RGBA888 || !output.raw_buffer ||
-            output.raw_buffer_size <= 0 || output.raw_buffer_size > mRawBufferSize) {
-        ALOGE("[%s %d] the format is not RGBA888 or the buffer is wrong ,size = %d", __FUNCTION__, __LINE__,output.raw_buffer_size);
+        output.raw_buffer_size <= 0 || output.raw_buffer_size > mRawBufferSize) {
+        ALOGE("[%s %d] the format is not RGBA888 or the buffer is wrong ,size = %d", __FUNCTION__, __LINE__,
+              output.raw_buffer_size);
         return;
     }
-    auto info = std::make_unique<OutputInfo>(output.raw_buffer,output.index);
+    auto info = std::make_unique<OutputInfo>(output.raw_buffer, output.index);
     std::unique_lock<std::mutex> ol(mOutputQueueLock);
     mOutputQueue.push_back(std::move(info));
     ol.unlock();
 }
 
-void ScreenCatch::EventNotify(int32_t event) {
-    mErrorEvent = event;
-}
+void ScreenCatch::EventNotify(int32_t event) { mErrorEvent = event; }
 
-};
+}; // namespace android

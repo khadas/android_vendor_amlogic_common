@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include "Bitmap.h"
 
-//#define NDEBUG  //disable assert
+// #define NDEBUG  //disable assert
 
-#define BITMAT_FILE_TYPE_MAGIC 0x4d42 //bm
+#define BITMAT_FILE_TYPE_MAGIC 0x4d42 // bm
 
 namespace android {
 
-
-
 bool Bitmap::readHeader(int fd) {
-    int BfhLen =0;
-    int BihLen =0;
+    int BfhLen = 0;
+    int BihLen = 0;
     if ((BfhLen = read(fd, &mBfh, sizeof(mBfh))) <= 0) {
         return false;
     }
@@ -50,7 +47,7 @@ bool Bitmap::readHeader(int fd) {
 
 bool Bitmap::readData(int fd) {
     int dataLen = abs(mBih.biWidth * mBih.biHeight) * mBih.biBitCount / 8;
-    int ret ;
+    int ret;
     int readedLen = 0;
     if (mData == NULL) {
         mData = calloc(1, dataLen);
@@ -60,7 +57,7 @@ bool Bitmap::readData(int fd) {
         isDataAlloc = true;
     }
     do {
-        ret = read(fd, mData, dataLen-readedLen);
+        ret = read(fd, mData, dataLen - readedLen);
         if (ret > 0) {
             readedLen += ret;
         }
@@ -75,14 +72,13 @@ void Bitmap::initPriv() {
     isDataAlloc = false;
 }
 
-Bitmap::Bitmap(void *rgb, int width, int height, int bytePerPixel) {
+Bitmap::Bitmap(void* rgb, int width, int height, int bytePerPixel) {
     initPriv();
     // fill BmpFileHeader
     mBfh.bfType = BITMAT_FILE_TYPE_MAGIC;
     mBfh.bfReserved1 = 0;
     mBfh.bfReserved2 = 0;
-    mBfh.bfSize = sizeof(BmpFileHeader) + sizeof(BmpInfoHeader) +
-                 width * height * bytePerPixel;
+    mBfh.bfSize = sizeof(BmpFileHeader) + sizeof(BmpInfoHeader) + width * height * bytePerPixel;
     mBfh.bfOffBits = sizeof(BmpFileHeader) + sizeof(BmpInfoHeader);
 
     // fill BmpInfoHeader
@@ -104,22 +100,22 @@ Bitmap::Bitmap(void *rgb, int width, int height, int bytePerPixel) {
 
 Bitmap::~Bitmap() {
     if (isDataAlloc && (mData != NULL)) {
-        free (mData);
+        free(mData);
     }
 }
 
-bool Bitmap::getHeader(BmpFileHeader &bfh, BmpInfoHeader &bih) {
+bool Bitmap::getHeader(BmpFileHeader& bfh, BmpInfoHeader& bih) {
     memcpy(&bfh, &mBfh, sizeof(mBfh));
     memcpy(&bih, &mBih, sizeof(mBih));
     return true;
 }
 
-bool Bitmap::getData(void *dst, int dstLength) {
+bool Bitmap::getData(void* dst, int dstLength) {
     if (dst == NULL || dstLength <= 0) {
         return false;
     }
     int dataLen = abs(mBih.biWidth * mBih.biHeight) * mBih.biBitCount / 8;
-    memcpy(dst, mData, (dstLength<dataLen?dstLength:dataLen));
+    memcpy(dst, mData, (dstLength < dataLen ? dstLength : dataLen));
     return true;
 }
 
@@ -133,14 +129,14 @@ bool Bitmap::save(int fd) {
     return false;
 }
 
-bool Bitmap::save(FILE *file) {
+bool Bitmap::save(FILE* file) {
     int fd = fileno(file);
     return save(fd);
 }
 
-bool Bitmap::save(const char *filepath) {
+bool Bitmap::save(const char* filepath) {
     bool success = false;
-    int fd = open(filepath, O_CREAT|O_RDWR, 0666);
+    int fd = open(filepath, O_CREAT | O_RDWR, 0666);
     if (fd < 0) {
         return false;
     }
@@ -150,4 +146,3 @@ bool Bitmap::save(const char *filepath) {
 }
 
 } // end of namespace android
-

@@ -19,24 +19,21 @@
 #define ANDROID_SCREENCONTR_FORMAT_COVERT_H
 
 #include <IONmem.h>
+#include <ScreenManager.h>
 #include <aml_ge2d.h>
 #include <ge2d_port.h>
-#include <ScreenManager.h>
 
 namespace android {
-
 
 class FormatCovert {
 
 public:
-
     FormatCovert() {};
 
     virtual ~FormatCovert() {};
 
-    virtual bool covert(const char* src_buff,unsigned int src_fmt, size_t src_w, size_t src_h,
-                            char* dst_buff,unsigned int dst_fmt, size_t dst_w, size_t dst_h) = 0;
-
+    virtual bool covert(const char* src_buff, unsigned int src_fmt, size_t src_w, size_t src_h, char* dst_buff,
+                        unsigned int dst_fmt, size_t dst_w, size_t dst_h) = 0;
 };
 
 class SoftWareFormatCovert : public FormatCovert {
@@ -44,8 +41,8 @@ class SoftWareFormatCovert : public FormatCovert {
 public:
     SoftWareFormatCovert();
     virtual ~SoftWareFormatCovert();
-    bool covert(const char* src_buff,unsigned int src_fmt, size_t src_w, size_t src_h,
-                            char* dst_buff,unsigned int dst_fmt, size_t dst_w, size_t dst_h);
+    bool covert(const char* src_buff, unsigned int src_fmt, size_t src_w, size_t src_h, char* dst_buff,
+                unsigned int dst_fmt, size_t dst_w, size_t dst_h);
 };
 
 class HardWareFormatCovert : public FormatCovert {
@@ -53,17 +50,15 @@ class HardWareFormatCovert : public FormatCovert {
 public:
     HardWareFormatCovert();
     virtual ~HardWareFormatCovert();
-    bool covert(const char* src_buff,unsigned int src_fmt, size_t src_w, size_t src_h,
-                            char* dst_buff,unsigned int dst_fmt, size_t dst_w, size_t dst_h);
+    bool covert(const char* src_buff, unsigned int src_fmt, size_t src_w, size_t src_h, char* dst_buff,
+                unsigned int dst_fmt, size_t dst_w, size_t dst_h);
+
 private:
     aml_ge2d_t m_amlge2d;
-    int32_t ge2DFmtConvert(int32_t dst_fd, int32_t dst_fmt, size_t dst_w, size_t dst_h,
-                                 int32_t src_fd, int32_t src_fmt, size_t src_w, size_t src_h);
+    int32_t ge2DFmtConvert(int32_t dst_fd, int32_t dst_fmt, size_t dst_w, size_t dst_h, int32_t src_fd, int32_t src_fmt,
+                           size_t src_w, size_t src_h);
 };
 
-
-
-};//namespace android
-
+}; // namespace android
 
 #endif

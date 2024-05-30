@@ -16,130 +16,127 @@
 */
 
 #define LOG_TAG "ScreenManager"
-//#define LOG_NDEBUG 0
-#include <utils/Log.h>
+// #define LOG_NDEBUG 0
+#include <ScreenManager.h>
 #include <cutils/properties.h>
 #include <linux/videodev2.h>
-#include <ScreenManager.h>
+#include <utils/Log.h>
 #include "FormatCovert.h"
-
-
 
 namespace android {
 
 #define PORTTYPE_VALUE_VPP0_VIDEO_ONLY 0x11000000
-#define PORTTYPE_VALUE_VPP0_VIDEO_OSD  0x11000001
+#define PORTTYPE_VALUE_VPP0_VIDEO_OSD 0x11000001
 #define PORTTYPE_VALUE_VPP1_VIDEO_ONLY 0x11000002
-#define PORTTYPE_VALUE_VPP1_VIDEO_OSD  0x11000003
-#define PORTTYPE_VALUE_VPP0_OSD_ONLY   0x11000004
+#define PORTTYPE_VALUE_VPP1_VIDEO_OSD 0x11000003
+#define PORTTYPE_VALUE_VPP0_OSD_ONLY 0x11000004
 
 #define kMetadataBufferTypeCanvasSource 3
 
 #define SCREENMANAGER_DUMP_BASEDIR "/data/temp/sm-drvin"
 #define PERSIST_SYS_ROTATION_PROP "persist.vendor.sys.builtinrotation"
 
-static void VdinDataCallBack(void *user, aml_screen_buffer_info_t *buffer){
-    ScreenManager *source = static_cast<ScreenManager *>(user);
+static void VdinDataCallBack(void* user, aml_screen_buffer_info_t* buffer) {
+    ScreenManager* source = static_cast<ScreenManager*>(user);
     source->dataCallBack(buffer);
     return;
 }
 
-static void VdinEventCallBack(void *user,int event_type) {
+static void VdinEventCallBack(void* user, int event_type) {
     if (!user)
         return;
-    ScreenManager *source = static_cast<ScreenManager *>(user);
+    ScreenManager* source = static_cast<ScreenManager*>(user);
     source->onEvent(event_type);
     return;
 }
 
-static int32_t getRotationDegree(){
+static int32_t getRotationDegree() {
     char prop[PROPERTY_VALUE_MAX];
     if (property_get(PERSIST_SYS_ROTATION_PROP, prop, "0") > 0) {
-       ALOGI("start prop =%s",prop);
-        char *tmp = nullptr;
+        ALOGI("start prop =%s", prop);
+        char* tmp = nullptr;
         long degree = strtol(prop, &tmp, 0);
-        ALOGI("propValue =%ld",degree);
-        if (LONG_MIN != degree && LONG_MAX != degree ) {
+        ALOGI("propValue =%ld", degree);
+        if (LONG_MIN != degree && LONG_MAX != degree) {
             return degree;
         }
     }
     return -1;
 }
 
-ScreenManager::ScreenManager():
-    mScreenMangerCallback(nullptr),
-    mScreenModule(nullptr),
-    mScreenDev(nullptr),
-    mBufferSize(0),
-    mFormat(0),
-    mPortType(0),
-    mClientNum(0),
-    mIsMultiAcquire(true),
-    mStart(false)
-{
-    ALOGI("ScreenManager :%p",this);
+ScreenManager::ScreenManager()
+        : mScreenMangerCallback(nullptr),
+          mScreenModule(nullptr),
+          mScreenDev(nullptr),
+          mBufferSize(0),
+          mFormat(0),
+          mPortType(0),
+          mClientNum(0),
+          mIsMultiAcquire(true),
+          mStart(false) {
+    ALOGI("ScreenManager :%p", this);
     mMultiClientMap.clear();
-    if (hw_get_module(AML_SCREEN_HARDWARE_MODULE_ID, (const hw_module_t **)&mScreenModule) < 0) {
+    if (hw_get_module(AML_SCREEN_HARDWARE_MODULE_ID, (const hw_module_t**)&mScreenModule) < 0) {
         ALOGE("[%s %d] can`t get AML_SCREEN_HARDWARE_MODULE_ID module", __FUNCTION__, __LINE__);
     }
-    if (mScreenModule->common.methods->open((const hw_module_t *)mScreenModule, "1",
-            (struct hw_device_t**)&mScreenDev) < 0 || !mScreenDev) {
+    if (mScreenModule->common.methods->open((const hw_module_t*)mScreenModule, "1", (struct hw_device_t**)&mScreenDev) <
+            0 ||
+        !mScreenDev) {
         mScreenModule = nullptr;
         ALOGE("[%s %d] open AML_SCREEN_SOURCE fail", __FUNCTION__, __LINE__);
     }
-
 }
 
-
 ScreenManager::~ScreenManager() {
-    ALOGI("~ScreenManager :%p",this);
+    ALOGI("~ScreenManager :%p", this);
     if (mStart) {
         int num = mClientNum;
-        for (int i = 0;i < num;i++) {
+        for (int i = 0; i < num; i++) {
             stop(i);
         }
     }
-    mScreenDev->common.close((struct hw_device_t *)mScreenDev);
+    mScreenDev->common.close((struct hw_device_t*)mScreenDev);
 }
 
-
-bool ScreenManager::start(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client, int32_t *id, bool multi_acquire) {
+bool ScreenManager::start(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback* client, int32_t* id,
+                          bool multi_acquire) {
     std::lock_guard<std::mutex> lock(mLock);
     if (!input || (mStart && (!mIsMultiAcquire || (input->source_type != mInputParmeter->source_type)))) {
-        ALOGE("[%s %d] the module has been opened and the user is not multi acquire! %d:%d", __FUNCTION__, __LINE__,mStart,mIsMultiAcquire);
+        ALOGE("[%s %d] the module has been opened and the user is not multi acquire! %d:%d", __FUNCTION__, __LINE__,
+              mStart, mIsMultiAcquire);
         return false;
     }
     if (mStart)
-        return startMoreClient(input,client,id);
+        return startMoreClient(input, client, id);
     std::lock_guard<std::mutex> alock(mCallbackLock);
     if (client)
         mScreenMangerCallback = client;
     mInputParmeter = std::move(input);
-    if (mInputParmeter->source_type == AML_CAPTURE_VIDEO) { //video only
+    if (mInputParmeter->source_type == AML_CAPTURE_VIDEO) { // video only
         mPortType = PORTTYPE_VALUE_VPP0_VIDEO_ONLY;
-    } else if(mInputParmeter->source_type == AML_CAPTURE_OSD_VIDEO) {
+    } else if (mInputParmeter->source_type == AML_CAPTURE_OSD_VIDEO) {
         mPortType = PORTTYPE_VALUE_VPP0_VIDEO_OSD;
-    } else if(mInputParmeter->source_type == AML_CAPTURE_OSD_ONLY) {
+    } else if (mInputParmeter->source_type == AML_CAPTURE_OSD_ONLY) {
         mPortType = PORTTYPE_VALUE_VPP0_OSD_ONLY;
     } else {
-        ALOGE("[%s %d] For now ,we don't capture %d by AML_SCREEN_HARDWARE_MODULE_ID module!",
-                                                __FUNCTION__, __LINE__,mInputParmeter->source_type);
+        ALOGE("[%s %d] For now ,we don't capture %d by AML_SCREEN_HARDWARE_MODULE_ID module!", __FUNCTION__, __LINE__,
+              mInputParmeter->source_type);
         return false;
     }
     if (!isSupportFormat()) {
         return false;
     }
-    mBufferSize = getBufferSize(mInputParmeter->size,mInputParmeter->format);
-    if (mBufferSize == 0 )
+    mBufferSize = getBufferSize(mInputParmeter->size, mInputParmeter->format);
+    if (mBufferSize == 0)
         return false;
 
-
-    ALOGI("[%s %d] mPortType=%#x(%s)", __FUNCTION__, __LINE__,
-        mPortType, (PORTTYPE_VALUE_VPP0_VIDEO_ONLY == mPortType?"video only":
-            (PORTTYPE_VALUE_VPP0_VIDEO_OSD == mPortType?"video+osd":"osd only")));
+    ALOGI("[%s %d] mPortType=%#x(%s)", __FUNCTION__, __LINE__, mPortType,
+          (PORTTYPE_VALUE_VPP0_VIDEO_ONLY == mPortType
+               ? "video only"
+               : (PORTTYPE_VALUE_VPP0_VIDEO_OSD == mPortType ? "video+osd" : "osd only")));
 
     int32_t degree = getRotationDegree();
-    if ( degree > 0) {
+    if (degree > 0) {
         setVideoRotation(degree);
         if (degree == 90 || degree == 270) {
             int32_t right = mInputParmeter->area->right();
@@ -147,21 +144,21 @@ bool ScreenManager::start(std::unique_ptr<InputParmeter>& input, ScreenMangerCal
             mInputParmeter->area->set_bottom(right);
             mInputParmeter->area->set_right(bottom);
         }
-
     }
     if (multi_acquire) {
-        mScreenDev->ops.set_mode(mScreenDev, AML_SCREEN_RECODE_MODE );
-    }else
+        mScreenDev->ops.set_mode(mScreenDev, AML_SCREEN_RECODE_MODE);
+    } else
         mScreenDev->ops.set_mode(mScreenDev, AML_SCREEN_CATCH_MODE);
     mIsMultiAcquire = multi_acquire;
     mScreenDev->ops.set_port_type(mScreenDev, mPortType);
     mScreenDev->ops.set_frame_rate(mScreenDev, mInputParmeter->frame_rate);
-    ALOGD("[%s %d] set_format width=%d,height=%d", __FUNCTION__, __LINE__,mInputParmeter->size->width(),mInputParmeter->size->height());
+    ALOGD("[%s %d] set_format width=%d,height=%d", __FUNCTION__, __LINE__, mInputParmeter->size->width(),
+          mInputParmeter->size->height());
     mScreenDev->ops.set_format(mScreenDev, mInputParmeter->size->width(), mInputParmeter->size->height(), mFormat);
     mScreenDev->ops.setDataCallBack(mScreenDev, VdinDataCallBack, (void*)this);
     mScreenDev->ops.setEventCallBack(mScreenDev, VdinEventCallBack);
-    mScreenDev->ops.set_amlvideo2_crop(mScreenDev,mInputParmeter->area->x(), mInputParmeter->area->y(),
-                                    mInputParmeter->area->right(), mInputParmeter->area->bottom());
+    mScreenDev->ops.set_amlvideo2_crop(mScreenDev, mInputParmeter->area->x(), mInputParmeter->area->y(),
+                                       mInputParmeter->area->right(), mInputParmeter->area->bottom());
     mScreenDev->ops.start(mScreenDev);
     mStart = true;
     *id = 0;
@@ -170,14 +167,14 @@ bool ScreenManager::start(std::unique_ptr<InputParmeter>& input, ScreenMangerCal
     return true;
 }
 
-bool ScreenManager::startMoreClient(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client, int32_t *id) {
+bool ScreenManager::startMoreClient(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback* client, int32_t* id) {
     if (!client || input->format >= SCREENCONTROL_PIX_FMT_UNKNOWN)
         return false;
-    auto info = std::make_unique<MultiClientInfo>(input->format,client);
+    auto info = std::make_unique<MultiClientInfo>(input->format, client);
     info->size = std::move(input->size);
     *id = mClientNum;
     mClientNum++;
-    ALOGI("[%s %d]  id=%d,mClientNum=%d", __FUNCTION__, __LINE__,*id,mClientNum);
+    ALOGI("[%s %d]  id=%d,mClientNum=%d", __FUNCTION__, __LINE__, *id, mClientNum);
     std::unique_lock<std::mutex> ml(mClientMapLock);
     mMultiClientMap.insert(std::pair<int32_t, std::unique_ptr<MultiClientInfo>>(*id, std::move(info)));
     ml.unlock();
@@ -212,7 +209,7 @@ void ScreenManager::resume(int32_t client_id) {
 }
 
 void ScreenManager::stop(int32_t client_id) {
-    ALOGI("[%s %d] client_id = %d", __FUNCTION__, __LINE__,client_id);
+    ALOGI("[%s %d] client_id = %d", __FUNCTION__, __LINE__, client_id);
     std::lock_guard<std::mutex> lock(mLock);
     std::unique_lock<std::mutex> ml(mClientMapLock);
     if (client_id > 0) {
@@ -231,12 +228,11 @@ void ScreenManager::stop(int32_t client_id) {
         if (mClientNum > 1) {
             while (!mOutputRecordQueue.empty()) {
                 auto output = mOutputRecordQueue.begin();
-                mScreenDev->ops.release_buffer(mScreenDev, (long *)(*output)->raw_buffer);
+                mScreenDev->ops.release_buffer(mScreenDev, (long*)(*output)->raw_buffer);
                 mOutputRecordQueue.erase(output);
             }
             return;
         }
-
     }
     cl.unlock();
     mScreenDev->ops.stop(mScreenDev);
@@ -252,59 +248,56 @@ void ScreenManager::stop(int32_t client_id) {
     return;
 }
 
-void ScreenManager::setCallback(int32_t client_id, ScreenMangerCallback *client) {
+void ScreenManager::setCallback(int32_t client_id, ScreenMangerCallback* client) {
     std::unique_lock<std::mutex> cl(mCallbackLock);
     if (client_id == 0) {
         mScreenMangerCallback = client;
-    } else if (client_id > 0){
+    } else if (client_id > 0) {
         std::lock_guard<std::mutex> ml(mClientMapLock);
         auto it = mMultiClientMap.find(client_id);
         if (it != mMultiClientMap.end()) {
             it->second->cb = client;
         }
     }
-
 }
 
-bool ScreenManager::isSupportFormat(){
+bool ScreenManager::isSupportFormat() {
     int32_t format;
     if (mInputParmeter->format == SCREENCONTROL_PIX_FMT_NV21) {
         ALOGI("[%s %d] format = V4L2_PIX_FMT_NV21 ", __FUNCTION__, __LINE__);
         format = V4L2_PIX_FMT_NV21;
-    }else if (mInputParmeter->format == SCREENCONTROL_PIX_FMT_NV12) {
+    } else if (mInputParmeter->format == SCREENCONTROL_PIX_FMT_NV12) {
         ALOGI("[%s %d] format = V4L2_PIX_FMT_NV12 ", __FUNCTION__, __LINE__);
         format = V4L2_PIX_FMT_NV12;
-    }else if (mInputParmeter->format == SCREENCONTROL_PIX_FMT_RGBA888) {
+    } else if (mInputParmeter->format == SCREENCONTROL_PIX_FMT_RGBA888) {
         ALOGI("[%s %d] format = V4L2_PIX_FMT_RGB32 ", __FUNCTION__, __LINE__);
         format = V4L2_PIX_FMT_RGB32;
-    }else if (mInputParmeter->format == SCREENCONTROL_PIX_FMT_RGB565) {
+    } else if (mInputParmeter->format == SCREENCONTROL_PIX_FMT_RGB565) {
         ALOGI("[%s %d] format = V4L2_PIX_FMT_RGB565X ", __FUNCTION__, __LINE__);
         format = V4L2_PIX_FMT_RGB565X;
-    }else {
+    } else {
         ALOGE("[%s %d] dont't support the format!", __FUNCTION__, __LINE__);
         return false;
     }
     mFormat = format;
     return true;
-
 }
 
-int32_t ScreenManager::getBufferSize(std::unique_ptr<Size>& size,aml_screencontrol_format format) {
+int32_t ScreenManager::getBufferSize(std::unique_ptr<Size>& size, aml_screencontrol_format format) {
     int32_t buffer_size = 0;
     int32_t width = size->width();
     int32_t height = size->height();
     if (format == SCREENCONTROL_PIX_FMT_NV21 || format == SCREENCONTROL_PIX_FMT_NV12) {
         buffer_size = width * height * 3 / 2;
-    }else if (format == SCREENCONTROL_PIX_FMT_RGBA888) {
+    } else if (format == SCREENCONTROL_PIX_FMT_RGBA888) {
         buffer_size = width * height * 4;
-    }else if (format == SCREENCONTROL_PIX_FMT_RGB565) {
+    } else if (format == SCREENCONTROL_PIX_FMT_RGB565) {
         buffer_size = width * height * 3;
     }
     return buffer_size;
 }
 
-bool ScreenManager::setVideoRotation(int32_t degree)
-{
+bool ScreenManager::setVideoRotation(int32_t degree) {
     int32_t angle;
 
     ALOGI("[%s %d] setVideoRotation degree:%x", __FUNCTION__, __LINE__, degree);
@@ -329,30 +322,26 @@ bool ScreenManager::setVideoRotation(int32_t degree)
     return true;
 }
 
-
-bool ScreenManager::realseBuffer(int32_t client_id, int32_t index) {
-    ALOGI("[%s %d] begin client_id:%d,index:%d,pts:%lld", __FUNCTION__, __LINE__, client_id,index);
+bool ScreenManager::releaseBuffer(int32_t client_id, int32_t index) {
+    ALOGI("[%s %d] begin client_id:%d,index:%d,pts:%lld", __FUNCTION__, __LINE__, client_id, index);
     std::lock_guard<std::mutex> lock(mLock);
     std::lock_guard<std::mutex> alock(mOutputQueueLock);
 
     if (index < 0 || mOutputRecordQueue.size() == 0 || client_id > 0) {
-        ALOGE("realseBuffer failed, index %d, mOutputRecordQueue size %d client_id =%d\n",
-                    index,(int32_t)mOutputRecordQueue.size(),client_id);
+        ALOGE("releaseBuffer failed, index %d, mOutputRecordQueue size %d client_id =%d\n", index,
+              (int32_t)mOutputRecordQueue.size(), client_id);
         return false;
     }
     auto outinfo = std::find_if(mOutputRecordQueue.begin(), mOutputRecordQueue.end(),
-                        [=](std::unique_ptr<OutputRecord>& info) {
-                            return info->index == index;
-                        });
+                                [=](std::unique_ptr<OutputRecord>& info) { return info->index == index; });
     if (outinfo == mOutputRecordQueue.end()) {
-        ALOGE("realseBuffer failed: index %d", index);
+        ALOGE("releaseBuffer failed: index %d", index);
         return false;
     }
-    ALOGI("[%s %d] client_id:%d,index:%d,pts:%lld", __FUNCTION__, __LINE__, client_id,index,(*outinfo)->tv_usec);
-    mScreenDev->ops.release_buffer(mScreenDev, (long *)(*outinfo)->raw_buffer);
+    ALOGI("[%s %d] client_id:%d,index:%d,pts:%lld", __FUNCTION__, __LINE__, client_id, index, (*outinfo)->tv_usec);
+    mScreenDev->ops.release_buffer(mScreenDev, (long*)(*outinfo)->raw_buffer);
     mOutputRecordQueue.erase(outinfo);
     return true;
-
 }
 
 void ScreenManager::onEvent(int32_t event) {
@@ -361,15 +350,15 @@ void ScreenManager::onEvent(int32_t event) {
     }
 }
 
-int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
+int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t* buffer) {
     std::unique_lock<std::mutex> cl(mCallbackLock);
     int64_t tv_usec = 0;
     long* canvas_buffer = nullptr;
     auto output = std::make_unique<OutputRecord>();
     output->index = buffer->index;
     output->tv_usec = getNowTimesUs();
-    ALOGI("[%s %d] index:%d pts=%lld", __FUNCTION__, __LINE__,buffer->index,output->tv_usec);
-    output->raw_buffer = (uint8_t *)buffer->buffer_mem;
+    ALOGI("[%s %d] index:%d pts=%lld", __FUNCTION__, __LINE__, buffer->index, output->tv_usec);
+    output->raw_buffer = (uint8_t*)buffer->buffer_mem;
     long* buff_info = output->canvas_buffer;
     buff_info[0] = kMetadataBufferTypeCanvasSource;
     buff_info[1] = (long)buffer->buffer_mem;
@@ -378,18 +367,18 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
     if (ScreenControlDebug::isNeedDumpYuv()) {
         static int32_t count = 0;
         char filename[64] = {0};
-        const char *dump_path = SCREENMANAGER_DUMP_BASEDIR;
+        const char* dump_path = SCREENMANAGER_DUMP_BASEDIR;
         snprintf(filename, 64, "%s/screensource-%d.yuv", dump_path, count++);
         auto dumper = std::make_unique<DataDumper>(filename);
-        dumper->dump((uint8_t *)buffer->buffer_mem,mBufferSize);
-        ALOGI("[%s %d] dump raw data dir = %s", __FUNCTION__, __LINE__,filename);
+        dumper->dump((uint8_t*)buffer->buffer_mem, mBufferSize);
+        ALOGI("[%s %d] dump raw data dir = %s", __FUNCTION__, __LINE__, filename);
     }
     std::unique_lock<std::mutex> ml(mClientMapLock);
     if (!mMultiClientMap.empty()) {
         for (auto it = mMultiClientMap.begin(); it != mMultiClientMap.end(); it++) {
             if (!it->second->isrunning || !(it->second->cb))
                 continue;
-            int32_t size = getBufferSize(it->second->size,it->second->format);
+            int32_t size = getBufferSize(it->second->size, it->second->format);
             uint8_t* dst = new uint8_t[size];
             std::shared_ptr<FormatCovert> covert;
             if (ScreenControlDebug::isUseHardwareCover()) {
@@ -397,20 +386,21 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
             } else {
                 covert = std::make_shared<SoftWareFormatCovert>();
             }
-            if (covert->covert((const char*)buffer->buffer_mem,mInputParmeter->format,mInputParmeter->size->width() ,
-                mInputParmeter->size->height(),(char*) dst, it->second->format, it->second->size->width(),
-                it->second->size->height())) {
-                const OutputRecord record(buffer->index, size,tv_usec, dst, canvas_buffer,it->second->format);
+            if (covert->covert((const char*)buffer->buffer_mem, mInputParmeter->format, mInputParmeter->size->width(),
+                               mInputParmeter->size->height(), (char*)dst, it->second->format,
+                               it->second->size->width(), it->second->size->height())) {
+                const OutputRecord record(buffer->index, size, tv_usec, dst, canvas_buffer, it->second->format);
                 it->second->cb->PictureReady(record);
                 /* coverity[leaked_storage] */
             } else
-                delete []dst;
+                delete[] dst;
         }
     }
     ml.unlock();
     if (mScreenMangerCallback) {
         std::unique_lock<std::mutex> ol(mOutputQueueLock);
-        const OutputRecord picture(output->index, mBufferSize,output->tv_usec, output->raw_buffer, output->canvas_buffer,mInputParmeter->format);
+        const OutputRecord picture(output->index, mBufferSize, output->tv_usec, output->raw_buffer,
+                                   output->canvas_buffer, mInputParmeter->format);
         mOutputRecordQueue.push_back(std::move(output));
         ol.unlock();
         mScreenMangerCallback->PictureReady(picture);
@@ -421,4 +411,4 @@ int32_t ScreenManager::dataCallBack(aml_screen_buffer_info_t *buffer) {
     return 0;
 }
 
-};
+}; // namespace android

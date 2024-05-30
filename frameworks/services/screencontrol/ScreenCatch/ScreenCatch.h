@@ -19,11 +19,12 @@
 #define ANDROID_SCREENCONTROL_SCREENCATCH_H
 #include "../ScreenManager.h"
 
-
 namespace android {
 
 struct OutputInfo {
-    OutputInfo(uint8_t* a,int32_t i): raw(a),index(i){};
+    OutputInfo(uint8_t* a, int32_t i)
+            : raw(a),
+              index(i) {};
     OutputInfo(OutputInfo&&) = default;
     ~OutputInfo() = default;
     uint8_t* raw;
@@ -37,13 +38,14 @@ public:
     bool start(std::unique_ptr<InputParmeter>& input);
     bool stop();
     void setVideoRotation(int degree);
-    void PictureReady(const OutputRecord &output);
+    void PictureReady(const OutputRecord& output);
     void EventNotify(int32_t event);
     bool readBuffer(uint8_t* buffer, int32_t* size);
     int32_t getErrorEvent();
 
     void pause();
     void resume();
+
 private:
     bool captureforKeystone();
     std::mutex mLock;
@@ -56,6 +58,6 @@ private:
     int32_t mErrorEvent;
 };
 
-};
+}; // namespace android
 
 #endif // ANDROID_SCREENCONTROL_SCREENCATCH_H

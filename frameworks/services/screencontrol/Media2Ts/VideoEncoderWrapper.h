@@ -17,24 +17,25 @@
 #ifndef AMLOGIC_SCREENCONTROL_VIDEOENCODERWRAPPER_H
 #define AMLOGIC_SCREENCONTROL_VIDEOENCODERWRAPPER_H
 
-#include <vector>
-#include <thread>
 #include <list>
-#include <mutex>
-
 #include <media/NdkMediaCodec.h>
-#include <media/NdkMediaFormat.h>
 #include <media/NdkMediaError.h>
-
+#include <media/NdkMediaFormat.h>
+#include <mutex>
+#include <thread>
+#include <vector>
 
 namespace android {
 
 struct InputData {
-    InputData(void* data, int32_t size, int64_t pts): data_(data),
-                    size_(size),pts_(pts),encoder_index_(-1){};
+    InputData(void* data, int32_t size, int64_t pts)
+            : data_(data),
+              size_(size),
+              pts_(pts),
+              encoder_index_(-1) {};
     InputData(InputData&&) = default;
     ~InputData() = default;
-    void *data_;
+    void* data_;
     int32_t size_;
     int64_t pts_;
     size_t encoder_index_;
@@ -49,12 +50,13 @@ public:
         virtual void onInputBufferAvailable(int64_t pts) = 0;
         virtual void onOutputBufferAvailable(void* const buffer, int32_t size, int32_t frame_type, int64_t pts) = 0;
     };
-    VideoEncoderWrapper(VideoEncoderWrapperCallback * client);
+    VideoEncoderWrapper(VideoEncoderWrapperCallback* client);
     virtual ~VideoEncoderWrapper();
     bool init(AMediaFormat* format);
-    bool encodec(void* data,const int32_t size,const int64_t pts);
+    bool encodec(void* data, const int32_t size, const int64_t pts);
     bool stop();
-    bool isSoftwareEncoder() { return mIsSoftwareEncoder;}
+    bool isSoftwareEncoder() { return mIsSoftwareEncoder; }
+
 private:
     void onDequeueInputWork();
     void onDequeueOutputWork();
@@ -63,7 +65,7 @@ private:
     int32_t get_frame_type(void* buffer, int32_t size);
 
     bool mIsSoftwareEncoder;
-    AMediaCodec *mEncoder;
+    AMediaCodec* mEncoder;
     std::vector<std::thread> ts;
     std::mutex mLock;
     std::mutex mPendingInputLock;
@@ -75,9 +77,8 @@ private:
     int32_t mCSDbufferSize;
     VideoEncoderWrapperCallback* mVideoEncoderWrapperCallback;
     std::condition_variable mCondition;
-
 };
 
-};// namespace android
+}; // namespace android
 
 #endif // AMLOGIC_SCREENCONTROL_VIDEOENCODERWRAPPER_H

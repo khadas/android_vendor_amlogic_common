@@ -18,40 +18,38 @@
 #define LOG_TAG "screencontrol"
 #define LOG_NDEBUG 0
 
+#include <binder/IPCThreadState.h>
+#include <binder/IServiceManager.h>
+#include <binder/ProcessState.h>
+#include <cutils/properties.h>
 #include <fcntl.h>
+#include <hidl/HidlBinderSupport.h>
+#include <hidl/HidlLazyUtils.h>
+#include <hidl/HidlTransportSupport.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
-#include <binder/IPCThreadState.h>
-#include <binder/ProcessState.h>
-#include <binder/IServiceManager.h>
-#include <cutils/properties.h>
 #include <utils/Log.h>
-#include <hidl/HidlTransportSupport.h>
-#include <hidl/HidlLazyUtils.h>
-#include <hidl/HidlBinderSupport.h>
-#include "ScreenControlService.h"
 #include "ScreenControlHal.h"
+#include "ScreenControlService.h"
 
 using namespace android;
-using android::hardware::LazyServiceRegistrar;
 using ::android::hardware::configureRpcThreadpool;
-using ::vendor::amlogic::hardware::screencontrol::V1_0::implementation::ScreenControlHal;
+using android::hardware::LazyServiceRegistrar;
 using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControl;
+using ::vendor::amlogic::hardware::screencontrol::V1_0::implementation::ScreenControlHal;
 
-int main()
-{
+int main() {
     ALOGI("screen_control daemon starting");
     bool vendorTreble = property_get_bool("persist.vendor.screencontrol.treble", false);
     if (vendorTreble) {
         ALOGI("screen_control init with vndbinder");
         android::ProcessState::initWithDriver("/dev/vndbinder");
     }
-    ALOGI("screen_control daemon starting in %s mode", vendorTreble?"treble":"lazy");
+    ALOGI("screen_control daemon starting in %s mode", vendorTreble ? "treble" : "lazy");
     configureRpcThreadpool(4, false);
     sp<ProcessState> proc(ProcessState::self());
-
+    sp<ScreenControlService> service = ScreenControlService::getInstance();
     if (vendorTreble) {
-        ScreenControlService* service = ScreenControlService::getInstance();
         sp<IScreenControl> screen = new ScreenControlHal(service);
         if (screen == nullptr) {
             ALOGE("Cannot create IScreenControl service");
@@ -61,8 +59,8 @@ int main()
             ALOGI("Treble IScreenControl service created.");
         }
     } else {
-        android::status_t ret = LazyServiceRegistrar::getInstance().registerService(
-        new ScreenControlHal(ScreenControlService::getInstance()), "default");
+        android::status_t ret =
+            LazyServiceRegistrar::getInstance().registerService(new ScreenControlHal(service), "default");
         if (ret != android::OK) {
             ALOGE("Couldn't register screen_control service!");
         }

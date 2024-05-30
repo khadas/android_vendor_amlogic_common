@@ -17,47 +17,46 @@
 
 #ifndef ANDROID_SCREENCONTROL_SCREENMANAGER_H
 #define ANDROID_SCREENCONTROL_SCREENMANAGER_H
+#include <hardware/hardware.h>
+#include <list>
+#include <map>
+#include <mutex>
+#include "../../../../../hardware/amlogic/screen_source/aml_screen.h"
+#include "ScreenControlDebug.h"
 #include "area.h"
 #include "size.h"
 #include "ulit.h"
-#include <mutex>
-#include <list>
-#include<map>
-#include "../../../../../hardware/amlogic/screen_source/aml_screen.h"
-#include <hardware/hardware.h>
-#include "ScreenControlDebug.h"
 namespace android {
 
-
-typedef enum{
+typedef enum {
     SCREENCONTROL_PIX_FMT_NV21,
     SCREENCONTROL_PIX_FMT_NV12,
     SCREENCONTROL_PIX_FMT_RGBA888,
     SCREENCONTROL_PIX_FMT_RGB565,
     SCREENCONTROL_PIX_FMT_UNKNOWN,
-}aml_screencontrol_format;
+} aml_screencontrol_format;
 
 typedef enum {
     AML_CAPTURE_VIDEO = 0,
     AML_CAPTURE_OSD_VIDEO,
     AML_CAPTURE_OSD_ONLY,
     SCAML_CAPTURE_UNKNOWN
-}aml_source_type;
-
+} aml_source_type;
 
 struct InputParmeter {
-    InputParmeter(): source_type(SCAML_CAPTURE_UNKNOWN),
-                    frame_rate(0),format(SCREENCONTROL_PIX_FMT_UNKNOWN){};
-    InputParmeter(InputParmeter& t ) {
-        size = std::make_unique<Size>(t.size->width(),t.size->height());
-        area = std::make_unique<Area>(t.area->x(),t.area->y(), t.area->width(), t.area->height());
+    InputParmeter()
+            : source_type(SCAML_CAPTURE_UNKNOWN),
+              frame_rate(0),
+              format(SCREENCONTROL_PIX_FMT_UNKNOWN) {};
+    InputParmeter(InputParmeter& t) {
+        size = std::make_unique<Size>(t.size->width(), t.size->height());
+        area = std::make_unique<Area>(t.area->x(), t.area->y(), t.area->width(), t.area->height());
         source_type = t.source_type;
         frame_rate = t.frame_rate;
         format = t.format;
     }
     bool operator==(const InputParmeter& t) {
-        if ((*size == *(t.size)) && (*area == *(t.area))
-            && (source_type == t.source_type)) {
+        if ((*size == *(t.size)) && (*area == *(t.area)) && (source_type == t.source_type)) {
             return true;
         }
         return false;
@@ -70,17 +69,26 @@ struct InputParmeter {
     aml_screencontrol_format format;
 };
 
-
 // Record for output buffers.
 struct OutputRecord {
-    OutputRecord(): index(0), raw_buffer_size(0), tv_usec(0), raw_buffer(nullptr),format(SCREENCONTROL_PIX_FMT_UNKNOWN){
-        canvas_buffer = (long*)malloc(3 *sizeof(long));
+    OutputRecord()
+            : index(0),
+              raw_buffer_size(0),
+              tv_usec(0),
+              raw_buffer(nullptr),
+              format(SCREENCONTROL_PIX_FMT_UNKNOWN) {
+        canvas_buffer = (long*)malloc(3 * sizeof(long));
     };
-    OutputRecord(int32_t _index, int32_t _raw_buffer_size, uint64_t _tv_usec,uint8_t* _raw_buffer,long* _canvas_buffer,aml_screencontrol_format _format) :
-                index(_index), raw_buffer_size(_raw_buffer_size), tv_usec(_tv_usec), raw_buffer(_raw_buffer),format(_format) {
-        canvas_buffer = (long*)malloc(3 *sizeof(long));
-        if(canvas_buffer)
-            memcpy(canvas_buffer,_canvas_buffer,3 *sizeof(long));
+    OutputRecord(int32_t _index, int32_t _raw_buffer_size, uint64_t _tv_usec, uint8_t* _raw_buffer,
+                 long* _canvas_buffer, aml_screencontrol_format _format)
+            : index(_index),
+              raw_buffer_size(_raw_buffer_size),
+              tv_usec(_tv_usec),
+              raw_buffer(_raw_buffer),
+              format(_format) {
+        canvas_buffer = (long*)malloc(3 * sizeof(long));
+        if (canvas_buffer)
+            memcpy(canvas_buffer, _canvas_buffer, 3 * sizeof(long));
     }
     OutputRecord(OutputRecord&&) = default;
     ~OutputRecord() {
@@ -91,8 +99,8 @@ struct OutputRecord {
     int32_t index;
     int32_t raw_buffer_size;
     int64_t tv_usec;
-    uint8_t*   raw_buffer;
-    long*   canvas_buffer;
+    uint8_t* raw_buffer;
+    long* canvas_buffer;
     aml_screencontrol_format format;
 };
 
@@ -102,28 +110,30 @@ public:
     public:
         ScreenMangerCallback() = default;
         virtual ~ScreenMangerCallback() = default;
-        virtual void PictureReady(const OutputRecord &output) = 0;
+        virtual void PictureReady(const OutputRecord& output) = 0;
         virtual void EventNotify(int32_t event) = 0;
-
     };
     /* if other client want to use the screen manger at the same time,
        the info of client will be save to it.
     */
     struct MultiClientInfo {
-        MultiClientInfo(aml_screencontrol_format f,ScreenMangerCallback *c): format(f),
-                        cb(c),isrunning(true){};
+        MultiClientInfo(aml_screencontrol_format f, ScreenMangerCallback* c)
+                : format(f),
+                  cb(c),
+                  isrunning(true) {};
         MultiClientInfo(MultiClientInfo&&) = default;
         ~MultiClientInfo() = default;
         std::unique_ptr<Size> size;
         aml_screencontrol_format format;
-        ScreenMangerCallback *cb;
+        ScreenMangerCallback* cb;
         bool isrunning;
     };
     static ScreenManager* getInstance() {
         static ScreenManager value;
         return &value;
     }
-    bool start(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client,int32_t *id,bool multi_acquire = true);
+    bool start(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback* client, int32_t* id,
+               bool multi_acquire = true);
 
     void stop(int32_t client_id);
 
@@ -131,24 +141,23 @@ public:
 
     void resume(int32_t client_id);
 
-    void setCallback(int32_t client_id, ScreenMangerCallback *client);
+    void setCallback(int32_t client_id, ScreenMangerCallback* client);
 
-    bool realseBuffer(int32_t client_id,int32_t index);
+    bool releaseBuffer(int32_t client_id, int32_t index);
 
     // the callback from screen source
-    int32_t dataCallBack(aml_screen_buffer_info_t *buffer);
+    int32_t dataCallBack(aml_screen_buffer_info_t* buffer);
 
     void onEvent(int32_t event);
-
 
 private:
     ScreenManager();
     ScreenManager(const ScreenManager& other) = delete;
-    ScreenManager& operator = (const ScreenManager&) = delete;
+    ScreenManager& operator=(const ScreenManager&) = delete;
     virtual ~ScreenManager();
-    bool startMoreClient(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback *client,int32_t *id);
+    bool startMoreClient(std::unique_ptr<InputParmeter>& input, ScreenMangerCallback* client, int32_t* id);
     bool setFormat2Device();
-    int32_t getBufferSize(std::unique_ptr<Size>& size,aml_screencontrol_format format);
+    int32_t getBufferSize(std::unique_ptr<Size>& size, aml_screencontrol_format format);
     bool isSupportFormat();
     bool setVideoRotation(int32_t degree);
     ScreenMangerCallback* mScreenMangerCallback;
@@ -160,19 +169,16 @@ private:
     std::mutex mOutputQueueLock;
     std::mutex mClientMapLock;
     std::list<std::unique_ptr<OutputRecord>> mOutputRecordQueue;
-    std::map<int32_t,std::unique_ptr<MultiClientInfo>> mMultiClientMap;
+    std::map<int32_t, std::unique_ptr<MultiClientInfo>> mMultiClientMap;
     int32_t mBufferSize;
     int32_t mFormat;
     int32_t mPortType;
     int32_t mClientNum;
-    //This is true if the client wants to fetch the data more than once, and false otherwise
+    // This is true if the client wants to fetch the data more than once, and false otherwise
     bool mIsMultiAcquire;
     bool mStart;
 };
 
-
-
-
-};// namespace android
+}; // namespace android
 
 #endif // ANDROID_SCREENCONTROL_SCREENMANAGER_H

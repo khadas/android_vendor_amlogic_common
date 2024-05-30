@@ -17,12 +17,11 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "ScreenControlDebug"
 
-#include <strings.h>
-#include <stdlib.h>
-#include <limits.h>
 #include <cutils/properties.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <strings.h>
 #include <utils/Log.h>
-
 #include "ScreenControlDebug.h"
 
 namespace android {
@@ -31,11 +30,9 @@ namespace android {
 #define SCREENCONTROL_DEBUG_DUMP_YUV_PROP "ro.vendor.screencontrol.dump.yuv"
 #define SCREENCONTROL_DEBUG_DUMP_ES_PROP "ro.vendor.screencontrol.dump.es"
 #define SCREENCONTROL_FORMATCOBERT_PROP "ro.vendor.screencontrol.hardware.covert"
-ScreenControlDebug::ScreenControlDebug() {
-}
+ScreenControlDebug::ScreenControlDebug() {}
 
-ScreenControlDebug::~ScreenControlDebug() {
-}
+ScreenControlDebug::~ScreenControlDebug() {}
 
 bool ScreenControlDebug::mPrintMoreInfo = false;
 bool ScreenControlDebug::mNeedDumpYuv = false;
@@ -53,7 +50,7 @@ bool ScreenControlDebug::initDebug() {
             result = true;
         } else {
             // try convert to number value
-            char *tmp = NULL;
+            char* tmp = NULL;
             long int propValue = strtol(prop, &tmp, 0);
             if (LONG_MIN != propValue && LONG_MAX != propValue && 0 != propValue) {
                 result = true;
@@ -68,7 +65,7 @@ bool ScreenControlDebug::initDebug() {
             result = true;
         } else {
             // try convert to number value
-            char *tmp = NULL;
+            char* tmp = NULL;
             long int propValue = strtol(prop, &tmp, 0);
             if (LONG_MIN != propValue && LONG_MAX != propValue && 0 != propValue) {
                 result = true;
@@ -83,7 +80,7 @@ bool ScreenControlDebug::initDebug() {
             result = true;
         } else {
             // try convert to number value
-            char *tmp = NULL;
+            char* tmp = NULL;
             long int propValue = strtol(prop, &tmp, 0);
             if (LONG_MIN != propValue && LONG_MAX != propValue && 0 != propValue) {
                 result = true;
@@ -98,7 +95,7 @@ bool ScreenControlDebug::initDebug() {
             result = true;
         } else {
             // try convert to number value
-            char *tmp = NULL;
+            char* tmp = NULL;
             long int propValue = strtol(prop, &tmp, 0);
             if (LONG_MIN != propValue && LONG_MAX != propValue && 0 != propValue) {
                 result = true;
@@ -109,20 +106,10 @@ bool ScreenControlDebug::initDebug() {
     return true;
 }
 
-bool ScreenControlDebug::isNeedMoreInfo() {
-    return mPrintMoreInfo;
-}
-bool ScreenControlDebug::isNeedDumpYuv() {
-    return mNeedDumpYuv;
-}
-bool ScreenControlDebug::isNeedDumpEs() {
-    return mNeedDumpEs;
-}
+bool ScreenControlDebug::isNeedMoreInfo() { return mPrintMoreInfo; }
+bool ScreenControlDebug::isNeedDumpYuv() { return mNeedDumpYuv; }
+bool ScreenControlDebug::isNeedDumpEs() { return mNeedDumpEs; }
 
-bool ScreenControlDebug::isUseHardwareCover() {
-    return mUseHardwareCovert;
-}
+bool ScreenControlDebug::isUseHardwareCover() { return mUseHardwareCovert; }
 
-
-}
-
+} // namespace android

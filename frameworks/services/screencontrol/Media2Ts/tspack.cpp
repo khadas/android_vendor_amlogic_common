@@ -19,65 +19,61 @@
 #include "./ScreenControlH264.h"
 #include "tspack.h"
 
-
 namespace android {
 
-
-TSPacker::TSPacker() :
-        mStart(false),
-        mFirstVideoFrame(false),
-        mPATContinuityCounter(0),
-        mPMTContinuityCounter(0),
-        mVideoContinuityCounter(0),
-        mSPSBufferSize(0),
-        mPPSBufferSize(0),
-        mPrevTimeUs(-1),
-        mSPSBuffer(nullptr),
-        mPPSBuffer(nullptr){
+TSPacker::TSPacker()
+        : mStart(false),
+          mFirstVideoFrame(false),
+          mPATContinuityCounter(0),
+          mPMTContinuityCounter(0),
+          mVideoContinuityCounter(0),
+          mSPSBufferSize(0),
+          mPPSBufferSize(0),
+          mPrevTimeUs(-1),
+          mSPSBuffer(nullptr),
+          mPPSBuffer(nullptr) {
     ALOGI("TSPacker construct\n");
     mVideoDescriptor = new uint8_t[6];
-    mVideoDescriptor[0] = 40;  // descriptor_tag
-    mVideoDescriptor[1] = 4;  // descriptor_length
-    mVideoDescriptor[2] = 0x67;    // profile_idc
+    mVideoDescriptor[0] = 40;   // descriptor_tag
+    mVideoDescriptor[1] = 4;    // descriptor_length
+    mVideoDescriptor[2] = 0x67; // profile_idc
     mVideoDescriptor[3] = 0x42; // constraint_set*
-    mVideoDescriptor[4] = 0x00;      // level_idc
+    mVideoDescriptor[4] = 0x00; // level_idc
     // AVC_still_present=0, AVC_24_hour_picture_flag=0, reserved
     mVideoDescriptor[5] = 0x3f;
 
     mHdrDescriptor = new uint8_t[4];
-    mHdrDescriptor[0] = 42;  // descriptor_tag
+    mHdrDescriptor[0] = 42; // descriptor_tag
     mHdrDescriptor[1] = 2;  // descriptor_length
     mHdrDescriptor[2] = 0x7e;
     mHdrDescriptor[3] = 0x1f;
     mOutputQueue.clear();
-
-
 }
 TSPacker::~TSPacker() {
 
     ALOGI("~TSPacker");
     if (mVideoDescriptor)
-        delete []mVideoDescriptor;
+        delete[] mVideoDescriptor;
     if (mHdrDescriptor)
-        delete []mHdrDescriptor;
+        delete[] mHdrDescriptor;
     if (mSPSBuffer)
-        delete []mSPSBuffer;
+        delete[] mSPSBuffer;
     if (mPPSBuffer)
-        delete []mPPSBuffer;
+        delete[] mPPSBuffer;
     while (!mOutputQueue.empty()) {
         auto output = mOutputQueue.begin();
         if ((*output)->mTsbuffer) {
-            delete [](*output)->mTsbuffer;
+            delete[] (*output)->mTsbuffer;
         }
 
         mOutputQueue.erase(output);
     }
 }
 
-bool TSPacker::start(std::unique_ptr<ESConvertorParmeter>& input, AMediaFormat *format) {
+bool TSPacker::start(std::unique_ptr<ESConvertorParmeter>& input, AMediaFormat* format) {
     std::lock_guard<std::mutex> lock(mLock);
     mConvertor = std::make_unique<ESConvertor>();
-    if (!mConvertor->start(input,this,format)) {
+    if (!mConvertor->start(input, this, format)) {
         ALOGE("[%s %d] ESConvertor start fail", __FUNCTION__, __LINE__);
         return false;
     }
@@ -104,7 +100,7 @@ bool TSPacker::stop() {
     while (!mOutputQueue.empty()) {
         auto output = mOutputQueue.begin();
         if ((*output)->mTsbuffer)
-            delete [](*output)->mTsbuffer;
+            delete[] (*output)->mTsbuffer;
         mOutputQueue.erase(output);
     }
     mStart = false;
@@ -123,7 +119,7 @@ bool TSPacker::readBuffer(uint8_t** buffer, int32_t* size, int64_t* pts) {
         return false;
     }
     auto output = mOutputQueue.begin();
-    if (!(*output) || !(*output)->mTsbuffer || (*output)->mSize <=0 || (*output)->mPts <= 0) {
+    if (!(*output) || !(*output)->mTsbuffer || (*output)->mSize <= 0 || (*output)->mPts <= 0) {
         ALOGE("[%s %d] the info of output is not legal ! ", __FUNCTION__, __LINE__);
         return false;
     }
@@ -134,8 +130,8 @@ bool TSPacker::readBuffer(uint8_t** buffer, int32_t* size, int64_t* pts) {
     return true;
 }
 
-bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** packets
-                            ,int32_t * ts_size,int64_t timeUs, uint32_t flags) {
+bool TSPacker::packetize(const uint8_t* es_buffer, int32_t es_size, uint8_t** packets, int32_t* ts_size, int64_t timeUs,
+                         uint32_t flags) {
     int32_t stream_pid = kPID_VIDEO;
     int32_t stream_id = 0xe0;
     int32_t PES_packet_length = es_size + 8;
@@ -161,8 +157,8 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
             // There wasn't enough payload left to form a full aligned payload,
             // the last packet doesn't have to be aligned.
             ++numTSPackets;
-        } else if (numFullTSPackets > 0 && (numBytesOfPayloadRemaining
-            + sizeAvailableForAlignedPayload) > sizeAvailableForPayload) {
+        } else if (numFullTSPackets > 0 &&
+                   (numBytesOfPayloadRemaining + sizeAvailableForAlignedPayload) > sizeAvailableForPayload) {
             // The last packet emitted had a full aligned payload and together
             // with the bytes remaining does exceed the unaligned payload
             // size, so we need another packet.
@@ -177,19 +173,19 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
     }
     uint8_t* buffer = new uint8_t[numTSPackets * 188];
     *ts_size = numTSPackets * 188;
-    uint8_t *packetDataStart = buffer;
+    uint8_t* packetDataStart = buffer;
     if (flags & EMIT_PAT_AND_PMT) {
         if (++mPATContinuityCounter == 16) {
             mPATContinuityCounter = 0;
         }
-        uint8_t *ptr = packetDataStart;
+        uint8_t* ptr = packetDataStart;
         *ptr++ = 0x47;
         *ptr++ = 0x40;
         *ptr++ = 0x00;
         *ptr++ = 0x10 | mPATContinuityCounter;
         *ptr++ = 0x00;
 
-        uint8_t *crcDataStart = ptr;
+        uint8_t* crcDataStart = ptr;
         *ptr++ = 0x00;
         *ptr++ = 0xb0;
         *ptr++ = 0x0d;
@@ -203,7 +199,7 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
         *ptr++ = 0xe0 | (kPID_PMT >> 8);
         *ptr++ = kPID_PMT & 0xff;
 
-        //crc
+        // crc
         *ptr++ = 0x2d;
         *ptr++ = 0xf6;
         *ptr++ = 0x52;
@@ -226,7 +222,7 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
         crcDataStart = ptr;
         *ptr++ = 0x02;
 
-        *ptr++ = 0x00;	// section_length to be filled in below.
+        *ptr++ = 0x00; // section_length to be filled in below.
         *ptr++ = 0x00;
 
         *ptr++ = 0x00;
@@ -243,7 +239,7 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
         int32_t ES_info_length = 0;
         //***************video info******************//
         ES_info_length = 10;
-        *ptr++ = 0x1b;//0x1b avc
+        *ptr++ = 0x1b; // 0x1b avc
         *ptr++ = 0xe0 | (kPID_VIDEO >> 8);
         *ptr++ = kPID_VIDEO & 0xff;
 
@@ -272,19 +268,19 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
         packetDataStart += 188;
     }
     if (flags & EMIT_PCR) {
-        int64_t nowUs = getNowTimesUs();;
+        int64_t nowUs = getNowTimesUs();
+        ;
 
-
-        uint64_t PCR = nowUs * 27;	// PCR based on a 27MHz clock
+        uint64_t PCR = nowUs * 27; // PCR based on a 27MHz clock
         uint64_t PCR_base = PCR / 300;
         uint32_t PCR_ext = PCR % 300;
 
-        uint8_t *ptr = packetDataStart;
+        uint8_t* ptr = packetDataStart;
         *ptr++ = 0x47;
         *ptr++ = 0x40 | (kPID_PCR >> 8);
         *ptr++ = kPID_PCR & 0xff;
         *ptr++ = 0x20;
-        *ptr++ = 0xb7;	// adaptation_field_length
+        *ptr++ = 0xb7; // adaptation_field_length
         *ptr++ = 0x10;
         *ptr++ = (PCR_base >> 25) & 0xff;
         *ptr++ = (PCR_base >> 17) & 0xff;
@@ -296,7 +292,6 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
         memset(ptr, 0xff, sizeLeft);
 
         packetDataStart += 188;
-
     }
     uint64_t PTS = (timeUs * 9ll) / 100ll;
     if (PES_packet_length >= 65536) {
@@ -308,11 +303,10 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
     size_t copy = es_size;
     if (copy > sizeAvailableForPayload) {
         copy = sizeAvailableForPayload;
-
     }
     size_t numPaddingBytes = sizeAvailableForPayload - copy;
 
-    uint8_t *ptr = packetDataStart;
+    uint8_t* ptr = packetDataStart;
     *ptr++ = 0x47;
     *ptr++ = 0x40 | (stream_pid >> 8);
     *ptr++ = stream_pid & 0xff;
@@ -345,7 +339,7 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
     ptr += copy;
     if (ptr != packetDataStart + 188) {
         ALOGE("check the ptr fail!");
-        delete []buffer;
+        delete[] buffer;
         return false;
     }
     packetDataStart += 188;
@@ -364,7 +358,7 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
 
         size_t numPaddingBytes = sizeAvailableForPayload - copy;
 
-        uint8_t *ptr = packetDataStart;
+        uint8_t* ptr = packetDataStart;
         *ptr++ = 0x47;
         *ptr++ = 0x00 | (stream_pid >> 8);
         *ptr++ = stream_pid & 0xff;
@@ -381,7 +375,7 @@ bool TSPacker::packetize(const uint8_t *es_buffer, int32_t es_size, uint8_t** pa
         }
 
         memcpy(ptr, es_buffer + offset, copy);
-        //ptr += copy;
+        // ptr += copy;
         offset += copy;
         packetDataStart += 188;
     }
@@ -399,42 +393,40 @@ int32_t TSPacker::incrementContinuityCounter() {
 
 void TSPacker::onEsBufferAvailable(void* const data, int32_t size, int32_t frame_type, int64_t pts) {
     std::lock_guard<std::mutex> lock(mLock);
-    ALOGI("[%s %d] size=%d,frame_type=%d,pts=%lld", __FUNCTION__, __LINE__,size,frame_type,pts);
+    ALOGI("[%s %d] size=%d,frame_type=%d,pts=%lld", __FUNCTION__, __LINE__, size, frame_type, pts);
     if (!data || size <= 0 || pts < 0 || frame_type < 0 || !mStart)
         return;
-    uint8_t *es_buffer = (uint8_t *)data;
-    uint8_t *ts_buffer = nullptr;
+    uint8_t* es_buffer = (uint8_t*)data;
+    uint8_t* ts_buffer = nullptr;
     int32_t es_size = size;
     int32_t ts_size = 0;
     bool isIDR = false;
     if (frame_type == AVC_TYPE_FRAME_TYPE_SPS) {
         if (mSPSBuffer)
-                delete []mSPSBuffer;
+            delete[] mSPSBuffer;
         mSPSBuffer = new uint8_t[size];
         mSPSBufferSize = size;
         memcpy(mSPSBuffer, data, size);
         return;
-    }else if (frame_type == AVC_TYPE_FRAME_TYPE_PPS) {
+    } else if (frame_type == AVC_TYPE_FRAME_TYPE_PPS) {
         if (mPPSBuffer)
-                delete []mPPSBuffer;
+            delete[] mPPSBuffer;
         mPPSBuffer = new uint8_t[size];
         mPPSBufferSize = size;
         memcpy(mPPSBuffer, data, size);
         return;
     }
-    if (frame_type == AVC_TYPE_FRAME_TYPE_IDR &&
-                mSPSBuffer && mSPSBufferSize > 0 &&
-                    mPPSBuffer && mPPSBufferSize > 0) {
-        VDLog("[%s %d] the psp buffer len = %d and the pps buffer len = %d",
-                    __FUNCTION__, __LINE__,mSPSBufferSize,mPPSBufferSize);
+    if (frame_type == AVC_TYPE_FRAME_TYPE_IDR && mSPSBuffer && mSPSBufferSize > 0 && mPPSBuffer && mPPSBufferSize > 0) {
+        VDLog("[%s %d] the psp buffer len = %d and the pps buffer len = %d", __FUNCTION__, __LINE__, mSPSBufferSize,
+              mPPSBufferSize);
         es_size = size + mSPSBufferSize + mPPSBufferSize;
         es_buffer = new uint8_t[es_size];
-        uint8_t *temp = es_buffer;
-        memcpy(temp,mSPSBuffer,mSPSBufferSize);
+        uint8_t* temp = es_buffer;
+        memcpy(temp, mSPSBuffer, mSPSBufferSize);
         temp = temp + mSPSBufferSize;
-        memcpy(temp,mPPSBuffer,mPPSBufferSize);
+        memcpy(temp, mPPSBuffer, mPPSBufferSize);
         temp = temp + mPPSBufferSize;
-        memcpy(temp,data,size);
+        memcpy(temp, data, size);
         isIDR = true;
     }
 
@@ -446,17 +438,16 @@ void TSPacker::onEsBufferAvailable(void* const data, int32_t size, int32_t frame
         mPrevTimeUs = timeNow64;
         mFirstVideoFrame = false;
     }
-    packetize(es_buffer,es_size,&ts_buffer,&ts_size,pts,flags);
+    packetize(es_buffer, es_size, &ts_buffer, &ts_size, pts, flags);
     if (isIDR)
-        delete []es_buffer;
+        delete[] es_buffer;
     if (!ts_buffer || ts_size <= 0) {
         /* coverity[leaked_storage] */
         return;
     }
 
-    std::unique_ptr<TSBufferInfo> output = std::make_unique<TSBufferInfo>(ts_buffer,ts_size,pts);
+    std::unique_ptr<TSBufferInfo> output = std::make_unique<TSBufferInfo>(ts_buffer, ts_size, pts);
     mOutputQueue.push_back(std::move(output));
 }
 
-
-};//namespace android
+}; // namespace android

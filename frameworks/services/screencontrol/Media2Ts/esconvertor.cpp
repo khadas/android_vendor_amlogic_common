@@ -15,24 +15,23 @@
  */
 #define LOG_NDEBUG 0
 #define LOG_TAG "ESConvertor"
-#include <utils/Log.h>
 #include <OMX_Video.h>
+#include <utils/Log.h>
 #include "../ScreenControlDebug.h"
 #include "../ScreenControlH264.h"
 #include "esconvertor.h"
 
 namespace android {
 
-ESConvertor::ESConvertor() :
-            mESConvertorCallback(nullptr),
-            mScreenManager(nullptr),
-            mStart(false),
-            mClientId(-1) {
-    ALOGI("ESConvertor :%p",this);
+ESConvertor::ESConvertor()
+        : mESConvertorCallback(nullptr),
+          mScreenManager(nullptr),
+          mStart(false),
+          mClientId(-1) {
+    ALOGI("ESConvertor :%p", this);
     ScreenControlDebug::initDebug();
     if (ScreenControlDebug::isNeedDumpEs())
         mDumper = std::make_unique<DataDumper>("/data/temp/dump.es");
-
 }
 
 ESConvertor::~ESConvertor() {
@@ -41,19 +40,20 @@ ESConvertor::~ESConvertor() {
     while (!mWorkingInfoQueue.empty()) {
         auto input = mWorkingInfoQueue.begin();
         if (mClientId > 0 && (*input)->buffer)
-            delete [](*input)->buffer;
-        ALOGI("[%s %d] stop clear mWorkingInfoQueue pts = %lld", __FUNCTION__, __LINE__,(*input)->pts);
+            delete[] (*input)->buffer;
+        ALOGI("[%s %d] stop clear mWorkingInfoQueue pts = %lld", __FUNCTION__, __LINE__, (*input)->pts);
         mWorkingInfoQueue.pop_front();
     }
-    ALOGI("ESConvertor :%p",this);
+    ALOGI("ESConvertor :%p", this);
 }
 
-bool ESConvertor::start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertorCallback *client, AMediaFormat *format /*default as nullptr*/) {
+bool ESConvertor::start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertorCallback* client,
+                        AMediaFormat* format /*default as nullptr*/) {
     std::lock_guard<std::mutex> lock(mLock);
     std::lock_guard<std::mutex> CallBackLock(mCallBackLock);
     AMediaFormat* MediaFormat = nullptr;
     if (input->source_type < AML_CAPTURE_VIDEO || input->source_type > SCAML_CAPTURE_UNKNOWN) {
-        ALOGE("[%s %d] dont't support the type=%d", __FUNCTION__, __LINE__,input->source_type);
+        ALOGE("[%s %d] dont't support the type=%d", __FUNCTION__, __LINE__, input->source_type);
         return false;
     }
     if (mStart) {
@@ -92,17 +92,17 @@ bool ESConvertor::start(std::unique_ptr<ESConvertorParmeter>& input, ESConvertor
     }
     auto screenInput = std::make_unique<InputParmeter>();
     screenInput->source_type = input->source_type;
-    screenInput->format = mEncoder->isSoftwareEncoder()?SCREENCONTROL_PIX_FMT_NV12:SCREENCONTROL_PIX_FMT_NV21;
+    screenInput->format = mEncoder->isSoftwareEncoder() ? SCREENCONTROL_PIX_FMT_NV12 : SCREENCONTROL_PIX_FMT_NV21;
     screenInput->frame_rate = input->frame_rate;
     screenInput->size = std::move(input->size);
     screenInput->area = std::move(input->area);
-    if (!mScreenManager->start(screenInput,this,&mClientId) || mClientId < 0) {
-        ALOGE("[%s %d] ScreenManager init fail! mClientId= %d", __FUNCTION__, __LINE__,mClientId);
+    if (!mScreenManager->start(screenInput, this, &mClientId) || mClientId < 0) {
+        ALOGE("[%s %d] ScreenManager init fail! mClientId= %d", __FUNCTION__, __LINE__, mClientId);
         return false;
     }
 
     mStart = true;
-    ALOGI("[%s %d] start finish  mStart=%s", __FUNCTION__, __LINE__,mStart?"true":"false");
+    ALOGI("[%s %d] start finish  mStart=%s", __FUNCTION__, __LINE__, mStart ? "true" : "false");
     return true;
 }
 
@@ -127,7 +127,7 @@ bool ESConvertor::stop() {
     while (!mWorkingInfoQueue.empty()) {
         auto input = mWorkingInfoQueue.begin();
         if (mClientId > 0 && (*input)->buffer)
-            delete [](*input)->buffer;
+            delete[] (*input)->buffer;
         mWorkingInfoQueue.pop_front();
     }
     mESConvertorCallback = nullptr;
@@ -136,11 +136,9 @@ bool ESConvertor::stop() {
     return true;
 }
 
-void ESConvertor::setCallback(ESConvertorCallback *client) {
-    mESConvertorCallback = client;
-}
-void ESConvertor::PictureReady(const OutputRecord &output) {
-    ALOGI("PictureReady index =%d",output.index);
+void ESConvertor::setCallback(ESConvertorCallback* client) { mESConvertorCallback = client; }
+void ESConvertor::PictureReady(const OutputRecord& output) {
+    ALOGI("PictureReady index =%d", output.index);
     std::lock_guard<std::mutex> CallBackLock(mCallBackLock);
     if (!output.raw_buffer || !output.canvas_buffer || output.raw_buffer_size <= 0) {
         ALOGE("[%s %d] the buffer is wrong", __FUNCTION__, __LINE__);
@@ -148,8 +146,9 @@ void ESConvertor::PictureReady(const OutputRecord &output) {
     }
     if (!mStart) {
         if (mClientId > 0)
-            delete []output.raw_buffer;
-        ALOGE("[%s %d] mClientId =%d,has been stoped mStart=%s", __FUNCTION__, __LINE__,mClientId,mStart?"true":"false");
+            delete[] output.raw_buffer;
+        ALOGE("[%s %d] mClientId =%d,has been stoped mStart=%s", __FUNCTION__, __LINE__, mClientId,
+              mStart ? "true" : "false");
         return;
     }
     auto info = std::make_unique<BufferPtsInfo>();
@@ -158,47 +157,42 @@ void ESConvertor::PictureReady(const OutputRecord &output) {
     info->buffer = nullptr;
 
     if (mEncoder->isSoftwareEncoder()) {
-        if (!mEncoder->encodec(output.raw_buffer, output.raw_buffer_size,output.tv_usec))
+        if (!mEncoder->encodec(output.raw_buffer, output.raw_buffer_size, output.tv_usec))
             return;
         // When mClientId is greater then 0 ,it means that there are multiple users at the same time,
         // and it have to destroy the raw buffer , then you have to record it.
         if (mClientId > 0 && output.raw_buffer)
             info->buffer = output.raw_buffer;
-    }else {
-        if (!mEncoder->encodec(output.canvas_buffer, 3 * sizeof(long),output.tv_usec))
+    } else {
+        if (!mEncoder->encodec(output.canvas_buffer, 3 * sizeof(long), output.tv_usec))
             return;
     }
 
     mWorkingInfoQueue.push_back(std::move(info));
-
 }
 
-void ESConvertor::EventNotify(int32_t event) {
-
-}
+void ESConvertor::EventNotify(int32_t event) {}
 void ESConvertor::onInputBufferAvailable(int64_t pts) {
-    ALOGI("onInputBufferAvailable pts =%lld",pts);
+    ALOGI("onInputBufferAvailable pts =%lld", pts);
     std::lock_guard<std::mutex> CallBackLock(mCallBackLock);
     if (pts <= 0 || !mStart)
         return;
     auto outinfo = std::find_if(mWorkingInfoQueue.begin(), mWorkingInfoQueue.end(),
-                    [=](std::unique_ptr<BufferPtsInfo>& info) {
-                        return info->pts == pts;
-                    });
+                                [=](std::unique_ptr<BufferPtsInfo>& info) { return info->pts == pts; });
     if (outinfo == mWorkingInfoQueue.end()) {
         ALOGE("can't find this buffer pts: %lld", pts);
         return;
     }
-    if (mClientId > 0 ) {
+    if (mClientId > 0) {
         if ((*outinfo)->buffer)
-            delete [](*outinfo)->buffer;
-    } else if (mClientId  == 0 && mScreenManager) {
-        mScreenManager->realseBuffer(mClientId,(*outinfo)->index);
+            delete[] (*outinfo)->buffer;
+    } else if (mClientId == 0 && mScreenManager) {
+        mScreenManager->releaseBuffer(mClientId, (*outinfo)->index);
     }
     mWorkingInfoQueue.erase(outinfo);
 }
 void ESConvertor::onOutputBufferAvailable(void* const buffer, int32_t size, int32_t frame_type, int64_t pts) {
-    ALOGI("onOutputBufferAvailable frame_type=%d,pts =%lld,size=%d",frame_type,pts,size);
+    ALOGI("onOutputBufferAvailable frame_type=%d,pts =%lld,size=%d", frame_type, pts, size);
     std::lock_guard<std::mutex> CallBackLock(mCallBackLock);
     /* The encoder outputs PPS and PSP data too quickly, before actually starting coding */
     if (!mStart && (frame_type != AVC_TYPE_FRAME_TYPE_SPS && frame_type != AVC_TYPE_FRAME_TYPE_PPS)) {
@@ -206,11 +200,9 @@ void ESConvertor::onOutputBufferAvailable(void* const buffer, int32_t size, int3
         return;
     }
     if (mDumper)
-        mDumper->dump((uint8_t*) buffer,size);
+        mDumper->dump((uint8_t*)buffer, size);
     if (mESConvertorCallback)
         mESConvertorCallback->onEsBufferAvailable(buffer, size, frame_type, pts);
 }
 
-
-
-};//namespace android
+}; // namespace android

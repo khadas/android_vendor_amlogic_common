@@ -20,57 +20,56 @@
 
 #include <string>
 
-
 namespace android {
 
 // Helper struct for size to replace gfx::size usage from original code.
 // Only partial functions of gfx::size is implemented here.
 struct Size {
- public:
-  Size() : width_(0), height_(0) {}
-  Size(int width, int height)
-      : width_(width < 0 ? 0 : width), height_(height < 0 ? 0 : height) {}
+public:
+    Size()
+            : width_(0),
+              height_(0) {}
+    Size(int width, int height)
+            : width_(width < 0 ? 0 : width),
+              height_(height < 0 ? 0 : height) {}
 
-  constexpr int width() const { return width_; }
-  constexpr int height() const { return height_; }
+    constexpr int width() const { return width_; }
+    constexpr int height() const { return height_; }
 
-  void set_width(int width) { width_ = width < 0 ? 0 : width; }
-  void set_height(int height) { height_ = height < 0 ? 0 : height; }
+    void set_width(int width) { width_ = width < 0 ? 0 : width; }
+    void set_height(int height) { height_ = height < 0 ? 0 : height; }
 
-  void SetSize(int width, int height) {
-    set_width(width);
-    set_height(height);
-  }
+    void SetSize(int width, int height) {
+        set_width(width);
+        set_height(height);
+    }
 
-  bool SizeChanged(int width, int height) {
-    if (width_ != width || height_ != height)
-        return true;
-    else
-        return false;
-  }
+    bool SizeChanged(int width, int height) {
+        if (width_ != width || height_ != height)
+            return true;
+        else
+            return false;
+    }
 
-  bool IsEmpty() const { return !width() || !height(); }
+    bool IsEmpty() const { return !width() || !height(); }
 
+    Size& operator=(const Size& ps) {
+        set_width(ps.width());
+        set_height(ps.height());
+        return *this;
+    }
 
-  Size& operator=(const Size& ps) {
-    set_width(ps.width());
-    set_height(ps.height());
-    return *this;
-  }
-
- private:
-  int width_;
-  int height_;
+private:
+    int width_;
+    int height_;
 };
 
 inline bool operator==(const Size& lhs, const Size& rhs) {
-  return lhs.width() == rhs.width() && lhs.height() == rhs.height();
+    return lhs.width() == rhs.width() && lhs.height() == rhs.height();
 }
 
-inline bool operator!=(const Size& lhs, const Size& rhs) {
-  return !(lhs == rhs);
-}
+inline bool operator!=(const Size& lhs, const Size& rhs) { return !(lhs == rhs); }
 
-}  // namespace android
+} // namespace android
 
-#endif  // ANDROID_SCREENCONTROL_SIZE_H_
+#endif // ANDROID_SCREENCONTROL_SIZE_H_

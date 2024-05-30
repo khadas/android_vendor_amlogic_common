@@ -29,22 +29,21 @@ public:
     static bool isNeedDumpYuv();
     static bool isNeedDumpEs();
     static bool isUseHardwareCover();
+
 private:
     static bool mPrintMoreInfo;
     static bool mNeedDumpYuv;
     static bool mNeedDumpEs;
     static bool mUseHardwareCovert;
-
 };
 
-#define VDLog(f, s...) \
-do { \
-    if (ScreenControlDebug::isNeedMoreInfo()) {\
-            ALOGD(f, ##s);\
-    }\
-} while(0)
+#define VDLog(f, s...)                              \
+    do {                                            \
+        if (ScreenControlDebug::isNeedMoreInfo()) { \
+            ALOGD(f, ##s);                          \
+        }                                           \
+    } while (0)
 
-}
+} // namespace android
 
 #endif
-

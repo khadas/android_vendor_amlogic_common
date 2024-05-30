@@ -15,22 +15,19 @@
  */
 #define LOG_NDEBUG 0
 #define LOG_TAG "TSPackerTest"
-#include <limits.h>
-#include <fcntl.h>
 #include <cutils/log.h>
-#include "../ScreenManager.h"
+#include <fcntl.h>
+#include <limits.h>
 #include "../ScreenControlClient.h"
+#include "../ScreenManager.h"
 
 using namespace android;
 #define MAX_FILE_PATH_SIZE 128
 
-static const char* CAPTURE_TYPE_STR_ARR[] = {
-    "video only", "video+osd","osd only"
-};
+static const char* CAPTURE_TYPE_STR_ARR[] = {"video only", "video+osd", "osd only"};
 
-static const char *opt_str = "hlnf:b:t:s:c:";
-static void help(char *appName)
-{
+static const char* opt_str = "hlnf:b:t:s:c:";
+static void help(char* appName) {
     printf(
         "Usage:\n"
         "  %s [-h/-n] [-f <framerate>] [-b <bitrate>] [-t <type>] [-s <second>] [<left>  <top>  <right>  <bottom> <width> <height>]\n"
@@ -54,46 +51,63 @@ static void help(char *appName)
         "---NOTICE---\n"
         "Default save [es] files to /data/temp/ \n"
         "Pls run following commands before use:\n"
-        "      mkdir -p /data/temp; chmod 777 /data/temp \n"
-        , appName);
+        "      mkdir -p /data/temp; chmod 777 /data/temp \n",
+        appName);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     int counter = 1;
     int nowCounter = 0;
     int type = 1;
     int ch;
     int tmpArgIdx = 0;
-    int left=0, top=0, right=1280, bottom=720;
+    int left = 0, top = 0, right = 1280, bottom = 720;
     int timeSecond = 30;
-    int framerate = 30,bitrate=4000000;
-    int outWidth=1280, outHeight=720;
+    int framerate = 30, bitrate = 4000000;
+    int outWidth = 1280, outHeight = 720;
     char dump_dir[64] = "/data/temp";
     char dump_path[MAX_FILE_PATH_SIZE];
     bool isSaveFile = true;
     while ((ch = getopt(argc, argv, opt_str)) != -1) {
         switch (ch) {
-        case 'h': help(argv[0]); exit(0);
-        case 'n': isSaveFile = false; break;
-        case 'l': counter = INT_MAX; break;
-        case 'f': framerate = atoi(optarg); break;
-        case 'b': bitrate = atoi(optarg); break;
-        case 'c': counter = atoi(optarg); break;
-        case 's': timeSecond = atoi(optarg); break;
-        case 't': type = atoi(optarg); break;
-        default: break;
+            case 'h':
+                help(argv[0]);
+                exit(0);
+            case 'n':
+                isSaveFile = false;
+                break;
+            case 'l':
+                counter = INT_MAX;
+                break;
+            case 'f':
+                framerate = atoi(optarg);
+                break;
+            case 'b':
+                bitrate = atoi(optarg);
+                break;
+            case 'c':
+                counter = atoi(optarg);
+                break;
+            case 's':
+                timeSecond = atoi(optarg);
+                break;
+            case 't':
+                type = atoi(optarg);
+                break;
+            default:
+                break;
         }
     }
     tmpArgIdx = optind;
-    if ((tmpArgIdx+1) < argc) {
-        if ((argc-tmpArgIdx) == 6) {
+    if ((tmpArgIdx + 1) < argc) {
+        if ((argc - tmpArgIdx) == 6) {
             left = atoi(argv[tmpArgIdx++]);
             top = atoi(argv[tmpArgIdx++]);
             right = atoi(argv[tmpArgIdx++]);
             bottom = atoi(argv[tmpArgIdx++]);
             outWidth = atoi(argv[tmpArgIdx++]);
             outHeight = atoi(argv[tmpArgIdx++]);
-        } else if ((argc-tmpArgIdx) == 2) {
+        } else if ((argc - tmpArgIdx) == 2) {
             left = 0;
             top = 0;
             right = atoi(argv[tmpArgIdx++]);
@@ -102,30 +116,30 @@ int main(int argc, char **argv) {
             outHeight = bottom;
         }
     }
-    printf("size     =[%dX%d]\n"
-           "(left,top,right,bottom)=(%d,%d,%d,%d)\n"
-           "framerate=%dbps\n"
-           "bitrate  =%d\n"
-           "type     =%s\n"
-           "isSaveFile     =%d\n"
-           "counter     =%d\n"
-           "time     =%ds\n",
-           outWidth, outHeight,left, top,right,bottom, framerate, bitrate,
-           CAPTURE_TYPE_STR_ARR[type],
-           isSaveFile, counter, timeSecond);
+    printf(
+        "size     =[%dX%d]\n"
+        "(left,top,right,bottom)=(%d,%d,%d,%d)\n"
+        "framerate=%dbps\n"
+        "bitrate  =%d\n"
+        "type     =%s\n"
+        "isSaveFile     =%d\n"
+        "counter     =%d\n"
+        "time     =%ds\n",
+        outWidth, outHeight, left, top, right, bottom, framerate, bitrate, CAPTURE_TYPE_STR_ARR[type], isSaveFile,
+        counter, timeSecond);
     while (1) {
         ScreenControlClient* client = ScreenControlClient::getInstance();
-        memset (dump_path, 0, MAX_FILE_PATH_SIZE);
+        memset(dump_path, 0, MAX_FILE_PATH_SIZE);
         if (isSaveFile) {
-            snprintf(dump_path, 128, "%s/%dx%d-%d.ts", dump_dir, outWidth, outHeight,nowCounter);
+            snprintf(dump_path, 128, "%s/%dx%d-%d.ts", dump_dir, outWidth, outHeight, nowCounter);
         } else {
             snprintf(dump_path, 128, "%s/%dx%d-1.ts", dump_dir, outWidth, outHeight);
         }
         int64_t firstTimeUs = getNowTimesUs();
-        ALOGD("start ts screen record dump_path=%s",dump_path);
-        printf("start ts screen  record dump_path=%s\n",dump_path);
-        int ret = client->startScreenRecord(left, top, right, bottom, outWidth,
-                outHeight, framerate, bitrate, timeSecond, type, dump_path);
+        ALOGD("start ts screen record dump_path=%s", dump_path);
+        printf("start ts screen  record dump_path=%s\n", dump_path);
+        int ret = client->startScreenRecord(left, top, right, bottom, outWidth, outHeight, framerate, bitrate,
+                                            timeSecond, type, dump_path);
         if (ret != 0) {
             printf("client start ScreenRecord fail !!\n");
             ALOGE("client start ScreenRecord fail !!");
@@ -133,11 +147,13 @@ int main(int argc, char **argv) {
         }
         nowCounter++;
         int64_t endTimeUs = getNowTimesUs();
-        ALOGD("finish ts screen record nowCounter = %d, duration = %lld ms",nowCounter,(endTimeUs-firstTimeUs)/1000);
-        printf("finish ts screen record nowCounter = %d, duration = %lld ms\n",nowCounter,(endTimeUs-firstTimeUs)/1000);
+        ALOGD("finish ts screen record nowCounter = %d, duration = %lld ms", nowCounter,
+              (endTimeUs - firstTimeUs) / 1000);
+        printf("finish ts screen record nowCounter = %d, duration = %lld ms\n", nowCounter,
+               (endTimeUs - firstTimeUs) / 1000);
         if (nowCounter >= counter)
             break;
     }
-    printf("finish ts screen record count =%d\n",nowCounter);
+    printf("finish ts screen record count =%d\n", nowCounter);
     return 0;
 }

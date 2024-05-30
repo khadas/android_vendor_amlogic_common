@@ -17,57 +17,59 @@
 #ifndef ANDROID_DROIDLOGIC_SCREENCONTROL_V1_0_SCREENCONTROLHAL_H
 #define ANDROID_DROIDLOGIC_SCREENCONTROL_V1_0_SCREENCONTROLHAL_H
 
-
+#include <utils/Mutex.h>
 #include <vendor/amlogic/hardware/screencontrol/1.0/IScreenControl.h>
 #include <vendor/amlogic/hardware/screencontrol/1.0/types.h>
-#include "ScreenControlService.h"
-#include <utils/Mutex.h>
 #include "ScreenControlH264.h"
+#include "ScreenControlService.h"
 namespace vendor {
 namespace amlogic {
 namespace hardware {
 namespace screencontrol {
 namespace V1_0 {
 namespace implementation {
-    using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControl;
-    using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControlCallback;
-    using ::vendor::amlogic::hardware::screencontrol::V1_0::Result;
-    using ::android::hardware::hidl_string;
-    using ::android::hardware::hidl_handle;
-    using ::android::hardware::hidl_vec;
-    using ::android::hardware::Return;
-    using ::android::hardware::Void;
-    using ::android::sp;
-    using ::android::ScreenControlService;
-    using ::android::ScreenControlNotify;
+using ::android::ScreenControlNotify;
+using ::android::ScreenControlService;
+using ::android::sp;
+using ::android::hardware::hidl_handle;
+using ::android::hardware::hidl_string;
+using ::android::hardware::hidl_vec;
+using ::android::hardware::Return;
+using ::android::hardware::Void;
+using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControl;
+using ::vendor::amlogic::hardware::screencontrol::V1_0::IScreenControlCallback;
+using ::vendor::amlogic::hardware::screencontrol::V1_0::Result;
 
 class ScreenControlHal : public IScreenControl,
                          public ScreenControlNotify {
 public:
-    ScreenControlHal(ScreenControlService * control);
+    ScreenControlHal(sp<ScreenControlService>& control);
     ~ScreenControlHal();
 
     Return<void> setCallback(const sp<IScreenControlCallback>& callback) override;
 
-    Return<void> startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height, int32_t sourceType, startScreenCapBuffer_cb _hidl_cb);
+    Return<void> startScreenCapBuffer(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width,
+                                      int32_t height, int32_t sourceType, startScreenCapBuffer_cb _hidl_cb);
 
-    Return<Result> startScreenCapBuffer1(int32_t width, int32_t height, int32_t sourceType, const hidl_handle& handle) override;
+    Return<Result> startScreenCapBuffer1(int32_t width, int32_t height, int32_t sourceType,
+                                         const hidl_handle& handle) override;
 
-    Return<Result> startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
-                                        int32_t frameRate, int32_t bitRate, int32_t limitTimeSec, int32_t sourceType, const hidl_string& filename) override;
+    Return<Result> startScreenRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width,
+                                     int32_t height, int32_t frameRate, int32_t bitRate, int32_t limitTimeSec,
+                                     int32_t sourceType, const hidl_string& filename) override;
 
-    Return<Result> startAvcRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
-                                        int32_t frameRate, int32_t bitRate, int32_t sourceType) override;
+    Return<Result> startAvcRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width,
+                                  int32_t height, int32_t frameRate, int32_t bitRate, int32_t sourceType) override;
     Return<void> forceStop();
 
-    Return<void> setExtraInt32Config(const hidl_vec<hidl_string>& keys,const hidl_vec<int32_t>& values);
+    Return<void> setExtraInt32Config(const hidl_vec<hidl_string>& keys, const hidl_vec<int32_t>& values);
 
-    //avc record callback
-    void onEsBufferAvailable(void*data, int32_t size, int32_t frame_type, int64_t pts);
+    // avc record callback
+    void onEsBufferAvailable(void* data, int32_t size, int32_t frame_type, int64_t pts);
 
-    Return<Result> startYuvRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width, int32_t height,
-                                        int32_t frameRate, int32_t sourceType) override;
-    //yuv record callback
+    Return<Result> startYuvRecord(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t width,
+                                  int32_t height, int32_t frameRate, int32_t sourceType) override;
+    // yuv record callback
     void onYuvBufferAvailable(void* data, int32_t size);
 
     Return<Result> startMicroDim(int32_t width, int32_t height);
@@ -75,31 +77,30 @@ public:
     // micro dim data callback
     void onMicroDimAvailable(void* data, int32_t size);
 
-
 private:
     void handleServiceDeath(uint32_t cookie);
-    ScreenControlService* mScreenControl;
+    sp<ScreenControlService> mScreenControl;
     sp<IScreenControlCallback> mCallBack;
-    mutable android::Mutex  mLock;
+    mutable android::Mutex mLock;
 
-    class  DeathRecipient : public android::hardware::hidl_death_recipient  {
-        public:
-            DeathRecipient(sp<ScreenControlHal> sch);
+    class DeathRecipient : public android::hardware::hidl_death_recipient {
+    public:
+        DeathRecipient(sp<ScreenControlHal> sch);
 
-            // hidl_death_recipient interface
-            void serviceDied(uint64_t cookie,
-                const ::android::wp<::android::hidl::base::V1_0::IBase>& who) override;
-        private:
-            sp<ScreenControlHal> mScreenControlHal;
+        // hidl_death_recipient interface
+        void serviceDied(uint64_t cookie, const ::android::wp<::android::hidl::base::V1_0::IBase>& who) override;
+
+    private:
+        sp<ScreenControlHal> mScreenControlHal;
     };
     sp<DeathRecipient> mDeathRecipient;
     AMediaFormat* mEncoderFormat;
-};//ScreenControl
-} //namespace implementation
-}//namespace V1_0
-} //namespace screencontrol
-}//namespace hardware
-} //namespace android
-} //namespace vendor
+}; // ScreenControl
+} // namespace implementation
+} // namespace V1_0
+} // namespace screencontrol
+} // namespace hardware
+} // namespace amlogic
+} // namespace vendor
 
 #endif // ANDROID_DROIDLOGIC_SCREENCONTROL_V1_0_SCREENCONTROLHAL_H
