@@ -1,4 +1,6 @@
-on property:init.svc.vendor.tee_supplicant=running
+#on property only would start vendor.tee_preload_fw too late
+#tee_supplicant run at late-init, early-fs would run after late-init
+on early-fs && property:init.svc.vendor.tee_supplicant=running
     start vendor.tee_preload_fw
 
 service vendor.tee_preload_fw /vendor/bin/tee_preload_fw
