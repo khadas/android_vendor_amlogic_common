@@ -289,6 +289,7 @@ public class OutputModeManager {
         "2160p30hz",
         "2160p50hz",
         "2160p60hz",
+        "1024x600p60hz",
     };
     private static final String[] MODE_FRAMERATE_FIRST = {
         "480i60hz",
@@ -304,6 +305,7 @@ public class OutputModeManager {
         "1080p60hz",
         "2160p50hz",
         "2160p60hz",
+        "1024x600p60hz",
     };
     private static final String[] HDMI_COLOR_LIST = {
         "444,12bit",

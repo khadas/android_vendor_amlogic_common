@@ -2316,7 +2316,9 @@ void DisplayMode::setPosition(const char* curMode, int left, int top, int width,
     char ubootvar[100] = {0};
     if (strstr(curMode, MODE_480CVBS)) {
         strcpy(keyValue, MODE_480CVBS);
-    } else if (strstr(curMode, "480")) {
+    } else if (strstr(curMode, MODE_1024x600P_PREFIX)) {
+        strcpy(keyValue, MODE_1024x600P_PREFIX);
+	}else if (strstr(curMode, "480")) {
         strcpy(keyValue, strstr(curMode, MODE_480P_PREFIX) ? MODE_480P_PREFIX : MODE_480I_PREFIX);
     } else if (strstr(curMode, MODE_576CVBS)) {
         strcpy(keyValue, MODE_576CVBS);
