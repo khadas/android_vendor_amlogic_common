@@ -46,12 +46,7 @@ VideoEncoderWrapper::VideoEncoderWrapper(VideoEncoderWrapperCallback* client)
 
 VideoEncoderWrapper::~VideoEncoderWrapper() {
     ALOGI("~VideoEncoderWrapper : %p", this);
-    while (!mPendingInputQueue.empty()) {
-        auto input = mPendingInputQueue.begin();
-        if (!mIsSoftwareEncoder && (*input)->data_)
-            free((*input)->data_);
-        mPendingInputQueue.erase(input);
-    }
+    clearPendingInputData();
 }
 
 bool VideoEncoderWrapper::init(AMediaFormat* format) {
@@ -140,9 +135,6 @@ bool VideoEncoderWrapper::EnqueueInput(std::unique_ptr<InputData>& input) {
     }
     if (buffer) {
         memcpy(buffer, input->data_, input->size_);
-        if (mIsSoftwareEncoder && mVideoEncoderWrapperCallback) {
-            mVideoEncoderWrapperCallback->onInputBufferAvailable(input->pts_);
-        }
     }
     media_status_t err = AMediaCodec_queueInputBuffer(mEncoder, index, 0, (buffer) ? input->size_ : 0, input->pts_, 0);
     if (err != AMEDIA_OK) {
@@ -176,12 +168,7 @@ bool VideoEncoderWrapper::stop() {
     }
     VDLog("[%s %d] thread join out ", __FUNCTION__, __LINE__);
     ts.clear();
-    while (!mPendingInputQueue.empty()) {
-        auto input = mPendingInputQueue.begin();
-        if (!mIsSoftwareEncoder && (*input)->data_)
-            free((*input)->data_);
-        mPendingInputQueue.erase(input);
-    }
+    clearPendingInputData();
     mWorkingFrameNum = 0;
     mCSDbufferSize = 0;
     mInputBufferIds.clear();
@@ -193,6 +180,17 @@ bool VideoEncoderWrapper::stop() {
     ALOGI("[%s %d] stop done", __FUNCTION__, __LINE__);
     return true;
 }
+
+void VideoEncoderWrapper::clearPendingInputData() {
+    std::lock_guard<std::mutex> pl(mPendingInputLock);
+    while (!mPendingInputQueue.empty()) {
+        auto input = mPendingInputQueue.begin();
+        if (!mIsSoftwareEncoder && (*input)->data_)
+            free((*input)->data_);
+        mPendingInputQueue.erase(input);
+    }
+}
+
 void VideoEncoderWrapper::threadVideoFunc() {
     while (1) {
         {
@@ -203,13 +201,19 @@ void VideoEncoderWrapper::threadVideoFunc() {
             }
             onDequeueInputWork();
             std::unique_lock<std::mutex> pl(mPendingInputLock);
+            int64_t reportPts = 0L;
             if (!mPendingInputQueue.empty() && !mInputBufferIds.empty()) {
                 auto input = mPendingInputQueue.begin();
                 if (EnqueueInput(*input)) {
+                    if (mIsSoftwareEncoder)
+                        reportPts = (*input)->pts_;
                     mPendingInputQueue.erase(input);
                 }
             }
             pl.unlock();
+            if (reportPts > 0 && mVideoEncoderWrapperCallback) {
+                mVideoEncoderWrapperCallback->onInputBufferAvailable(reportPts);
+            }
             // the first output buffer is CSD buffer,
             // and it get the output buffer from encoder when
             // the encoder has input buffer
@@ -258,25 +262,25 @@ void VideoEncoderWrapper::onDequeueOutputWork() {
         VDLog("[%s %d] don't get the usable out buffer index = %d", __FUNCTION__, __LINE__, index);
         return;
     } else if (index == AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED) {
-        AMediaFormat* format_temp = AMediaCodec_getOutputFormat(mEncoder);
-        const char* string_temp = AMediaFormat_toString(format_temp);
-        ALOGD("get output format string_temp = %s", string_temp);
+        AMediaFormat* format = AMediaCodec_getOutputFormat(mEncoder);
+        ALOGD("get output format = %s", AMediaFormat_toString(format));
         void* sps = nullptr;
         void* pps = nullptr;
         size_t data_size = 0;
-        if (AMediaFormat_getBuffer(format_temp, "csd-0", &sps, &data_size) && sps && data_size > 0) {
+        if (AMediaFormat_getBuffer(format, "csd-0", &sps, &data_size) && sps && data_size > 0) {
             ALOGD("test get SPS data data_size = %d", data_size);
             if (mVideoEncoderWrapperCallback)
                 mVideoEncoderWrapperCallback->onOutputBufferAvailable(sps, data_size, AVC_TYPE_FRAME_TYPE_SPS,
                                                                       outInfo.presentationTimeUs);
         }
         data_size = 0;
-        if (AMediaFormat_getBuffer(format_temp, "csd-1", &pps, &data_size) && pps && data_size > 0) {
+        if (AMediaFormat_getBuffer(format, "csd-1", &pps, &data_size) && pps && data_size > 0) {
             ALOGD("get PPS data data_size = %d", data_size);
             if (mVideoEncoderWrapperCallback)
                 mVideoEncoderWrapperCallback->onOutputBufferAvailable(pps, data_size, AVC_TYPE_FRAME_TYPE_PPS,
                                                                       outInfo.presentationTimeUs);
         }
+        AMediaFormat_delete(format);
         return;
     }
     uint8_t* output = AMediaCodec_getOutputBuffer(mEncoder, index, &bufSize);
@@ -289,20 +293,20 @@ void VideoEncoderWrapper::onDequeueOutputWork() {
             mWorkingFrameNum--;
             // the first output buffer from encoder is CSD data,so the CSD data in IDR buffer is not useful.
             if ((outInfo.flags & AMEDIACODEC_BUFFER_FLAG_KEY_FRAME) &&
-                get_frame_type(output, outInfo.size) == AVC_TYPE_FRAME_TYPE_SPS && mCSDbufferSize > 0) {
+                getFrameType(output, outInfo.size) == AVC_TYPE_FRAME_TYPE_SPS && mCSDbufferSize > 0) {
                 ALOGD("[%s %d] the IDR frame have CSD data , so need to remove it!", __FUNCTION__, __LINE__);
                 output = output + mCSDbufferSize;
                 outInfo.size = outInfo.size - mCSDbufferSize;
             }
             if (mVideoEncoderWrapperCallback)
                 mVideoEncoderWrapperCallback->onOutputBufferAvailable(
-                    output, outInfo.size, get_frame_type(output, outInfo.size), outInfo.presentationTimeUs);
+                    output, outInfo.size, getFrameType(output, outInfo.size), outInfo.presentationTimeUs);
         }
     }
     AMediaCodec_releaseOutputBuffer(mEncoder, index, false);
     return;
 }
-int32_t VideoEncoderWrapper::get_frame_type(void* buffer, int32_t size) {
+int32_t VideoEncoderWrapper::getFrameType(void* buffer, int32_t size) {
     uint8_t* h264 = new uint8_t[size];
     int32_t frameType = AVC_TYPE_FRAME_TYPE_UNKNOWN;
     memcpy(h264, buffer, size);

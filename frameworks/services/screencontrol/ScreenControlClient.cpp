@@ -252,7 +252,7 @@ Return<void> ScreenControlClient::ScreenControlHidlCallback::onMicroDimArouse(co
 ScreenControlClient::ScreenControlHidlCallback::ScreenControlHidlCallback(ScreenControlClient* client)
         : mScrCtrlClient(client) {
     ALOGI("ScreenControlHidlCallback :%p", this);
-};
+}
 ScreenControlClient::ScreenControlHidlCallback::~ScreenControlHidlCallback() {
     ALOGI("~ScreenControlHidlCallback :%p", this);
 }

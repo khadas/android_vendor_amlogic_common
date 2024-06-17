@@ -56,13 +56,14 @@ public:
     bool encodec(void* data, const int32_t size, const int64_t pts);
     bool stop();
     bool isSoftwareEncoder() { return mIsSoftwareEncoder; }
+    void clearPendingInputData();
 
 private:
     void onDequeueInputWork();
     void onDequeueOutputWork();
     void threadVideoFunc();
     bool EnqueueInput(std::unique_ptr<InputData>& input);
-    int32_t get_frame_type(void* buffer, int32_t size);
+    int32_t getFrameType(void* buffer, int32_t size);
 
     bool mIsSoftwareEncoder;
     AMediaCodec* mEncoder;

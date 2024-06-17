@@ -116,6 +116,8 @@ bool ESConvertor::stop() {
     }
     mStart = false;
     CallBackLock.unlock();
+    if (mEncoder->isSoftwareEncoder())
+        mEncoder->clearPendingInputData();
     mScreenManager->stop(mClientId);
     mScreenManager = nullptr;
     if (!mEncoder->stop()) {
@@ -136,7 +138,9 @@ bool ESConvertor::stop() {
     return true;
 }
 
-void ESConvertor::setCallback(ESConvertorCallback* client) { mESConvertorCallback = client; }
+void ESConvertor::setCallback(ESConvertorCallback* client) {
+    mESConvertorCallback = client;
+}
 void ESConvertor::PictureReady(const OutputRecord& output) {
     ALOGI("PictureReady index =%d", output.index);
     std::lock_guard<std::mutex> CallBackLock(mCallBackLock);
@@ -171,7 +175,8 @@ void ESConvertor::PictureReady(const OutputRecord& output) {
     mWorkingInfoQueue.push_back(std::move(info));
 }
 
-void ESConvertor::EventNotify(int32_t event) {}
+void ESConvertor::EventNotify(int32_t event) {
+}
 void ESConvertor::onInputBufferAvailable(int64_t pts) {
     ALOGI("onInputBufferAvailable pts =%lld", pts);
     std::lock_guard<std::mutex> CallBackLock(mCallBackLock);
