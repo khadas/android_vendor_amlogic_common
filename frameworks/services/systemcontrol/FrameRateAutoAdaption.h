@@ -79,6 +79,9 @@
 #define FRAME_RATE_DURATION_120                 800
 #define FRAME_RATE_DURATION_100                 960
 #define FRAME_RATE_DURATION_119                 806
+#define FRAME_RATE_DURATION_200                 480
+#define FRAME_RATE_DURATION_240                 400
+#define FRAME_RATE_DURATION_288                 333
 typedef void (*fun_t)(bool, bool, const char*);
 
 struct vdin_event_info {

@@ -346,7 +346,7 @@ void FrameRateAutoAdaption::delayControl(int frameRateValue){
         frameRateValue = findNearlyFrame(frameRateValue);
         if (frameRateValue == FRAME_RATE_DURATION_125) frameRateValue = FRAME_RATE_DURATION_50;
         SYS_LOGD("decoder find new framerate is %d",frameRateValue);
-        if ((frameRateValue >= FRAME_RATE_DURATION_144 && !mLastFromVdin) || (frameRateValue <= 0)) {
+        if ((frameRateValue >= FRAME_RATE_DURATION_288 && !mLastFromVdin) || (frameRateValue <= 0)) {
             return;
         }
     }
