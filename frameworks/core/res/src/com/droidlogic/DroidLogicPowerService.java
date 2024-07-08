@@ -17,12 +17,16 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.net.wifi.WifiManager;
+import android.net.Uri;
 import android.os.IBinder;
+import android.os.SystemProperties;
 import android.util.Log;
 
 import com.droidlogic.app.AudioSettingManager;
 import com.droidlogic.app.DroidLogicUtils;
 import com.droidlogic.app.SystemControlManager;
+
+import java.io.IOException;
 
 public class DroidLogicPowerService extends Service {
     private static final String TAG = "DroidLogicPowerService";
@@ -54,6 +58,40 @@ public class DroidLogicPowerService extends Service {
                 }
             } else if (Intent.ACTION_SHUTDOWN.equals(action)) {
                 setSuspendState(POWER_SUSPEND_SHUTDOWN);
+            } else if (Intent.ACTION_PACKAGE_ADDED.equals(intent.getAction())) {
+                if ("anemone".equals(SystemProperties.get("ro.product.device"))) {
+                    Uri data = intent.getData();
+                    if (data != null) {
+                        String packageName = data.getSchemeSpecificPart();
+                        if (packageName.equals("android.server.wm.jetpack")) {
+                            Log.d(TAG, "ADDED packageName: android.server.wm.jetpack");
+                            try {
+                                Process process = Runtime.getRuntime().exec("wm density 320");
+                                process.waitFor();
+                                process.destroy();
+                            } catch (IOException | InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            } else if (Intent.ACTION_PACKAGE_REMOVED.equals(intent.getAction())) {
+                if ("anemone".equals(SystemProperties.get("ro.product.device"))) {
+                    Uri data = intent.getData();
+                    if (data != null) {
+                        String packageName = data.getSchemeSpecificPart();
+                        if (packageName.equals("android.server.wm.jetpack")) {
+                            Log.d(TAG, "REMOVED packageName: android.server.wm.jetpack");
+                            try {
+                                Process process = Runtime.getRuntime().exec("wm density 240");
+                                process.waitFor();
+                                process.destroy();
+                            } catch (IOException | InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
             }
         }
     };
@@ -63,11 +101,20 @@ public class DroidLogicPowerService extends Service {
         super.onCreate();
         mSystemControlManager = SystemControlManager.getInstance();
         mAudioManager = (AudioManager) this.getSystemService(this.AUDIO_SERVICE);
+
+        //register filter for screen intent
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(Intent.ACTION_SCREEN_ON);
         filter.addAction(Intent.ACTION_SHUTDOWN);
         registerReceiver (mReceiver, filter, this.RECEIVER_EXPORTED);
+
+        //register filter for package intent
+        IntentFilter packageFilter = new IntentFilter();
+        packageFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
+        packageFilter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        packageFilter.addDataScheme("package");
+        registerReceiver(mReceiver, packageFilter, this.RECEIVER_EXPORTED);
     }
 
     @Override
