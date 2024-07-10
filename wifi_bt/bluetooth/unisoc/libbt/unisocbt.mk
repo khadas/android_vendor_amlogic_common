@@ -13,7 +13,7 @@ PRODUCT_COPY_FILES += \
     vendor/amlogic/common/wifi_bt/wifi/unisoc/uwe5621/config/bt/bt_configure_rf_marlin3_3.ini:$(TARGET_COPY_OUT_VENDOR)/etc/bluetooth/uwe562x/bt_configure_rf_marlin3_3.ini \
     vendor/amlogic/common/wifi_bt/wifi/unisoc/uwe5621/config/bt/bt_configure_rf_marlin3e_2.ini:$(TARGET_COPY_OUT_VENDOR)/etc/bluetooth/uwe562x/bt_configure_rf_marlin3e_2.ini \
     vendor/amlogic/common/wifi_bt/wifi/unisoc/uwe5621/config/bt/bt_configure_rf_marlin3e_3.ini:$(TARGET_COPY_OUT_VENDOR)/etc/bluetooth/uwe562x/bt_configure_rf_marlin3e_3.ini \
-    #device/amlogic/common/tools/unisoc_driver.sh:$(TARGET_COPY_OUT_VENDOR)/bin/unisoc_driver.sh
+    #device/khadas/common/tools/unisoc_driver.sh:$(TARGET_COPY_OUT_VENDOR)/bin/unisoc_driver.sh
 
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.bluetooth.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth.xml \

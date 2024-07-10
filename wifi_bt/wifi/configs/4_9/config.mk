@@ -2,7 +2,7 @@ define to-root-path
 $(strip $(patsubst %/,%,$(shell echo\
  $(shell bash -c "\
  cd $(1);\
- while [[ ( ! ( -d device/amlogic/common ) ) && ( \`pwd\` != "/" ) ]]; do\
+ while [[ ( ! ( -d device/khadas/common ) ) && ( \`pwd\` != "/" ) ]]; do\
   cd ..;\
   echo \"../\";\
  done;"\

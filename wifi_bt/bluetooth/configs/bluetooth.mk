@@ -20,11 +20,11 @@
 ifdef PRODUCT_DIRNAME
 -include $(PRODUCT_DIRNAME)/wifibt.build.config.trunk.mk
 else
--include device/amlogic/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
+-include device/khadas/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
 endif
 
 ifeq ($(PRODUCT_DIR),mercury)
--include  device/amlogic_car/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
+-include  device/khadas_car/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk
 endif
 
 BLUETOOTH_MODULE := $(CONFIG_BLUETOOTH_MODULES)

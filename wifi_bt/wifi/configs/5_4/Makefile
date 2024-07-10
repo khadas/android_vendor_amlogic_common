@@ -20,10 +20,10 @@ WIFI_SUPPORT_DRIVERS ?= $(EXTRA_WIFI_SUPPORT_DRIVERS)
 define root-dir
 $(strip \
  $(shell bash -c "\
- while [[ ( ! ( -d device/amlogic/common ) ) && ( \`pwd\` != "/" ) ]]; do\
+ while [[ ( ! ( -d device/khadas/common ) ) && ( \`pwd\` != "/" ) ]]; do\
   cd ..;\
  done;\
- if [[ -d \`pwd\`/device/amlogic/common ]]; then\
+ if [[ -d \`pwd\`/device/khadas/common ]]; then\
   echo \`pwd\`;\
  else\
   echo "";\
@@ -40,7 +40,7 @@ $(strip \
 endef
 
 WIFI_DEFAULT_CONFIG := $(call cur-dir)/config.mk
-WIFI_TRUNK_CONFIG ?= $(if $(PRODUCT_DIRNAME),$(call root-dir)/$(PRODUCT_DIRNAME)/wifibt.build.config.trunk.mk,$(call root-dir)/device/amlogic/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk)
+WIFI_TRUNK_CONFIG ?= $(if $(PRODUCT_DIRNAME),$(call root-dir)/$(PRODUCT_DIRNAME)/wifibt.build.config.trunk.mk,$(call root-dir)/device/khadas/$(PRODUCT_DIR)/wifibt.build.config.trunk.mk)
 WIFI_BUILD_RULES := $(call cur-dir)/../driver.mk
 
 MAKE_ARGS := KERNEL_SRC=$(KERNEL_SRC) O=$(O) CC=$(CC) HOSTCC=$(HOSTCC) LD=$(LD) NM=$(NM) OBJCOPY=$(OBJCOPY)
