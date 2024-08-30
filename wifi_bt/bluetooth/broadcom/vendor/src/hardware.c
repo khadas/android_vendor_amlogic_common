@@ -249,7 +249,6 @@ static const fw_settlement_entry_t fw_settlement_table[] = {
 
 static const fw_support_wole_entry_t fw_support_wole_table[] = {
     {"BCM4359C0"},
-    {"BCM4362A2"},
     {NULL}
 };
 
