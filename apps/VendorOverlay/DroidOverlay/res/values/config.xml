@@ -22,16 +22,25 @@
     <bool name="config_enableAutoPowerModes">true</bool>
                                                        -->
     <!-- <bool name="config_useFixedVolume">false</bool> -->
+    <!-- True if the device should block turning display on at boot until wallpaper is ready -->
+    <bool name="config_checkWallpaperAtBoot">false</bool>
     <string-array translatable="false" name="networkAttributes">
         <item>"wifi,1,1,1,-1,true"</item>
         <item>"ethernet,9,9,9,-1,true"</item>
+        <item>"mobile,0,0,0,-1,true"</item>
+	<item>"mobile_mms,2,0,4,60000,true"</item>
+	<item>"mobile_supl,3,0,2,60000,true"</item>
+	<item>"mobile_dun,4,0,2,60000,true"</item>
+	<!--    <item>"pppoe,18,18,1,-1,true"</item> -->
     </string-array>
     <!-- Array of ConnectivityManager.TYPE_xxxx values allowable for tethering__-->
         <!-- Common options are [1, 4] for TYPE_WIFI and TYPE_MOBILE_DUN or
                  <!== [0,1,5,7] for TYPE_MOBILE, TYPE_WIFI, TYPE_MOBILE_HIPRI and TYPE_BLUETOOTH -->
     <!-- [18,9] for TYPE_PPPOE, TYPE_ETHERNET -->
     <integer-array translatable="false" name="config_tether_upstream_types">
+        <item>0</item>
         <item>1</item>
+        <item>18</item>
         <item>9</item>
     </integer-array>
     <!-- This string array should be overridden by the device to present a list of radio
@@ -42,6 +51,7 @@
     <string-array translatable="false" name="radioAttributes">
         <item>"1,1"</item>
         <item>"9,1"</item>
+        <item>"18,1"</item>
     </string-array>
 
     <!-- CEC config values -->
@@ -126,13 +136,16 @@
     <string-array translatable="false" name="config_tether_wifi_regexs">
         <item>"wlan0"</item>
     </string-array>
+
+    <!-- If supported, are dreams enabled? (by default) -->
+    <bool name="config_dreamsEnabledByDefault">false</bool>
     <bool name="config_dreamsActivatedOnSleepByDefault">true</bool>
     <!--  Maximum number of supported users -->
     <integer name="config_multiuserMaximumUsers">1</integer>
     <!-- Enable overlay for all location components. -->
     <bool name="config_enableNetworkLocationOverlay" translatable="false">true</bool>
     <bool name="config_enableFusedLocationOverlay" translatable="false">true</bool>
-
+    <bool name="config_sms_capable">true</bool>
     <!-- Flag indicating whether the current device is "voice capable".
          If true, this means that the device supports circuit-switched
          (i.e. voice) phone calls over the telephony network, and is
@@ -144,7 +157,7 @@
          PackageManager.FEATURE_TELEPHONY system feature, which is
          available on *any* device with a telephony radio, even if the
          device is data-only. -->
-    <bool name="config_voice_capable">false</bool>
+    <bool name="config_voice_capable">true</bool>
 
     <!-- Flag indicating whether all audio streams should be mapped to
          one single stream. If true, all audio streams are mapped to
@@ -190,4 +203,19 @@
     <!-- Whether Low Power Standby is supported and can be enabled. -->
     <bool name="config_lowPowerStandbySupported">false</bool>
 
+    <!-- Enable overlay for all location components. -->
+    <bool name="config_enableGeocoderOverlay" translatable="false">true</bool>
+    <bool name="config_enableGeofenceOverlay" translatable="false">true</bool>
+
+    <!--
+       Sets the package names whose certificates should be used to
+       verify location providers are allowed to be loaded.
+    -->
+    <string-array name="config_locationProviderPackageNames" translatable="false">
+        <item>com.google.android.gms</item>
+        <item>com.android.location.fused</item>
+    </string-array>
+
+    <!-- Whether the device uses the default focus highlight when focus state isn't specified. -->
+    <bool name="config_useDefaultFocusHighlight">false</bool>
 </resources>
