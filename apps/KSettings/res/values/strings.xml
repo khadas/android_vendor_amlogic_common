@@ -13,6 +13,10 @@
     <string name="CAM_IR_CUT_ON_summary">Turn on os08a10 mipi camera ir-cut</string>
     <string name="CAM_IR_CUT_OFF_summary">Turn off os08a10 mipi camera ir-cut</string>
     <string name="Status_bar_control">Status bar control</string>
+    <string name="camera_settings">Camera setting</string>
+    <string name="camera_faceback">Camera faceback</string>
+    <string name="camera_orientation">Camera orientation</string>
+    <string name="reboot_take_effect">You need to restart the device to activate the settings.</string>
     <string name="Logo_LED_control">Logo LED control</string>
     <string name="Timer">Timer</string>
     <string name="USB_PCIE">Toggle USB-3.0/PCI-E</string>
@@ -101,6 +105,30 @@
         <item>0</item>
         <item>1</item>
         <item>2</item>
+    </string-array>
+
+    <string-array name="camera_faceback_array">
+        <item>Facing back</item>
+        <item>Facing front</item>
+        <item>Facing external</item>
+    </string-array>
+    <string-array name="camera_faceback_value">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string-array name="camera_orientation_array">
+        <item>0</item>
+        <item>90</item>
+        <item>180</item>
+        <item>270</item>
+    </string-array>
+    <string-array name="camera_orientation_value">
+        <item>0</item>
+        <item>90</item>
+        <item>180</item>
+        <item>270</item>
     </string-array>
 
     <string name="LED_white">White LED</string>

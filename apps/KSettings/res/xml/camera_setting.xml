@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:key="CAMERA_FACEBACK_KEY"
+        android:iconSpaceReserved="false"
+        android:title="@string/camera_faceback"
+        android:summary=""
+        android:defaultValue="2"
+        android:dialogTitle="@string/camera_faceback"
+        android:entries="@array/camera_faceback_array"
+        android:entryValues="@array/camera_faceback_value">
+    </ListPreference>
+
+    <ListPreference
+        android:key="CAMERA_ORIENTATION_KEY"
+        android:iconSpaceReserved="false"
+        android:title="@string/camera_orientation"
+        android:summary=""
+        android:defaultValue="0"
+        android:dialogTitle="@string/camera_orientation"
+        android:entries="@array/camera_orientation_array"
+        android:entryValues="@array/camera_orientation_value">
+    </ListPreference> 
+
+</PreferenceScreen>

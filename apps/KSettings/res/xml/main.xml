@@ -69,8 +69,17 @@
         android:key="CAM1_IR_CUT_KEY"
         android:iconSpaceReserved="false"
         android:title="@string/CAM1_IR_CUT"
-		android:summaryOn="@string/CAM_IR_CUT_ON_summary"
-        android:summaryOff="@string/CAM_IR_CUT_OFF_summary"/>
+        android:summaryOn="@string/CAM_IR_CUT_ON_summary"
+        android:summaryOff="@string/CAM_IR_CUT_OFF_summary"/> 
+
+    <PreferenceScreen
+        android:title="@string/camera_settings"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.ksettings.CameraPreference"
+            android:targetPackage="com.khadas.ksettings" />
+    </PreferenceScreen> 
+
     <PreferenceScreen
         android:title="@string/Status_bar_control"
         android:iconSpaceReserved="false">
