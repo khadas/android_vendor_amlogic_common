@@ -29,7 +29,6 @@
 #define UINT8_TO_STREAM(p, u8)   {*(p)++ = (uint8_t)(u8);}
 #define STREAM_TO_UINT8(u8, p)   {u8 = (uint8_t)(*(p)); (p) += 1;}
 
-
 #define STREAM_SKIP_UINT8(p) \
     do {                       \
         (p) += 1;                \
@@ -39,4 +38,12 @@
         (p) += 2;                 \
     } while (0)
 
+#define CHECK_MALLOC_FAILED(condition) \
+    do { \
+        if (!(condition)) { \
+            ALOGE("check fail: source file \"%s\", line %d, in function %s", \
+                  __FILE__, __LINE__, __func__); \
+            abort(); \
+        } \
+    } while (0)
 #endif

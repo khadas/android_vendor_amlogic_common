@@ -17,7 +17,7 @@
  ******************************************************************************/
 
 #define LOG_TAG "bt_hwcfg_usb"
-#define RTKBT_RELEASE_NAME "20240315_BT_ANDROID_14.0"
+#define RTKBT_RELEASE_NAME "20240717_BT_ANDROID_14.0"
 
 #include <utils/Log.h>
 #include <sys/types.h>
@@ -67,6 +67,7 @@ extern uint8_t rtk_get_fw_parsing_rule(uint8_t *p_buf);
 extern void check_fw_update_cmd_complete_cback(void *arg);
 extern bool userial_vendor_send_cmd_to_controller(unsigned char *recv_buffer, int total_length,
                                                   tINT_CMD_CBACK p_cback);
+extern void bt_vendor_release_wake_lock();
 
 #define EXTRA_CONFIG_FILE "/vendor/etc/bluetooth/rtk_btconfig.txt"
 static struct rtk_bt_vendor_config_entry *extra_extry;
@@ -130,7 +131,9 @@ static usb_chip_info usb_chip_info_table[] =
     {HCI_VERSION_5_3,   0x000E,    0x8822,     "8822EU"},
     {HCI_VERSION_5_3,   0x000B,    0x8851,     "8851BU"},
     {HCI_VERSION_5_3,   0x000E,    0x8761,     "8761CU"},
-    {HCI_VERSION_5_3,   0x000D,    0x8852,     "8852DU"}
+    {HCI_VERSION_5_3,   0x000D,    0x8852,     "8852DU"},
+    {HCI_VERSION_5_4,   0x000D,    0x8852,     "8852DU"},
+    {HCI_VERSION_5_3,   0x000A,    0x8922,     "8922AU"}
 };
 
 static usb_patch_info usb_fw_patch_table[] =
@@ -249,7 +252,7 @@ static usb_patch_info usb_fw_patch_table[] =
     { 0x0BDA, 0xB85B, 0x8852, 0, 0, "mp_rtl8852bu_fw", "rtl8852bu_fw", "rtl8852bu_config", NULL, 0, CONFIG_MAC_OFFSET_GEN_4PLUS, MAX_PATCH_SIZE_65_2K}, /*RTL8852B */
     { 0x0BDA, 0x4853, 0x8852, 0, 0, "mp_rtl8852bu_fw", "rtl8852bu_fw", "rtl8852bu_config", NULL, 0, CONFIG_MAC_OFFSET_GEN_4PLUS, MAX_PATCH_SIZE_65_2K}, /*RTL8852B */
     { 0x13D3, 0x3570, 0x8852, 0, 0, "mp_rtl8852bu_fw", "rtl8852bu_fw", "rtl8852bu_config", NULL, 0, CONFIG_MAC_OFFSET_GEN_4PLUS, MAX_PATCH_SIZE_65_2K}, /*RTL8852B */
-    { 0x0BDA, 0xB852, 0x8852, 0, 0, "mp_rtl8852btu_fw", "rtl8852btu_fw", "rtl8852btu_config", NULL, 0, CONFIG_MAC_OFFSET_GEN_4PLUS, MAX_PATCH_SIZE_65_2K}, /*RTL8852B */
+    { 0x0BDA, 0xB852, 0x8852, 0, 0, "mp_rtl8852btu_fw", "rtl8852btu_fw", "rtl8852btu_config", NULL, 0, CONFIG_MAC_OFFSET_GEN_4PLUS, MAX_PATCH_SIZE_159K}, /*RTL8852B */
 //RTL8852C
     { 0x0BDA, 0xC85A, 0x8852, 0, 0, "mp_rtl8852cu_fw", "rtl8852cu_fw", "rtl8852cu_config", NULL, 0, CONFIG_MAC_OFFSET_GEN_4PLUS, MAX_PATCH_SIZE_78K}, /*RTL8852C */
     { 0x0BDA, 0xC85D, 0x8852, 0, 0, "mp_rtl8852cu_fw", "rtl8852cu_fw", "rtl8852cu_config", NULL, 0, CONFIG_MAC_OFFSET_GEN_4PLUS, MAX_PATCH_SIZE_78K}, /*RTL8852C */
@@ -272,6 +275,9 @@ static usb_patch_info usb_fw_patch_table[] =
     { 0x0BDA, 0xA850, 0x8852, 0, 0, "mp_rtl8852bpu_fw", "rtl8852bpu_fw", "rtl8852bpu_config", NULL, 0, CONFIG_MAC_OFFSET_GEN_4PLUS, MAX_PATCH_SIZE_65_2K}, /*RTL8852BPE */
 //RTL8852D
     { 0x0BDA, 0xD85A, 0x8852, 0, 0, "mp_rtl8852du_fw", "rtl8852du_fw", "rtl8852du_config", NULL, 0, CONFIG_MAC_OFFSET_GEN_4PLUS, MAX_PATCH_SIZE_131K}, /*RTL8852D */
+    { 0x0BDA, 0xD85B, 0x8852, 0, 0, "mp_rtl8852du_fw", "rtl8852du_fw", "rtl8852du_config", NULL, 0, CONFIG_MAC_OFFSET_GEN_4PLUS, MAX_PATCH_SIZE_131K}, /*RTL8852D */
+//RTL8922A
+    { 0x0BDA, 0x892A, 0x8922, 0, 0, "mp_rtl8922au_fw", "rtl8922au_fw", "rtl8922au_config", NULL, 0, CONFIG_MAC_OFFSET_GEN_4PLUS, MAX_PATCH_SIZE_143K}, /*RTL8922A */
     /* todo: RTL8703CU */
 
     /* NOTE: must append patch entries above the null entry */
@@ -325,7 +331,7 @@ uint16_t usb_project_id[] =
     ROM_LMP_NONE,
     ROM_LMP_8852d,//42 8852d
     ROM_LMP_NONE,
-    ROM_LMP_NONE,
+    ROM_LMP_8922a,//44 8922a
     ROM_LMP_NONE,
     ROM_LMP_NONE,
     ROM_LMP_8852bt,//47 8852bt
@@ -1290,7 +1296,7 @@ CFG_USB_LMP:
                              hw_cfg_cb.lmp_subversion, hw_cfg_cb.hci_version, hw_cfg_cb.hci_revision, hw_cfg_cb.lmp_sub_current);
 
                     dump_usb_chip_name(hw_cfg_cb);
-                    if (hw_cfg_cb.lmp_subversion == 0x8852 && hw_cfg_cb.hci_revision == 0xd)
+                    if (hw_cfg_cb.lmp_subversion == 0x8852 && hw_cfg_cb.hci_revision == 0xd && hw_cfg_cb.eversion == 0)
                     {
                         p = p_buf;
                         UINT8_TO_STREAM(p, DATA_TYPE_COMMAND);
@@ -1327,6 +1333,7 @@ W_C_P:
                     {
                         BTVNDDBG("%s: Warm BT controller startup with same lmp", __func__);
                         userial_vendor_usb_ioctl(DWFW_CMPLT, &hw_cfg_cb.lmp_sub_current);
+                        bt_vendor_release_wake_lock();
 
                         //8761c lmp subversion can't be read normally, we must check fw update here
                         if (hw_cfg_cb.pid == 0xc761 && hw_cfg_cb.vid == 0x0bda)
@@ -1341,7 +1348,10 @@ W_C_P:
                                                                   HCI_CMD_MIN_SIZE + HCI_CMD_CHECK_FW_UPDATE_SIZE, check_fw_update_cmd_complete_cback);
                         }
 
-                        bt_vendor_cbacks->fwcfg_cb(BT_VND_OP_RESULT_SUCCESS);
+                        if (bt_vendor_cbacks)
+                        {
+                            bt_vendor_cbacks->fwcfg_cb(BT_VND_OP_RESULT_SUCCESS);
+                        }
 
                         hw_cfg_cb.state = 0;
                         is_proceeding = TRUE;
@@ -1449,7 +1459,7 @@ DOWNLOAD_USB_FW:
             BTVNDDBG("bt vendor lib: HW_CFG_DL_FW_PATCH status:%i, opcode:0x%x", status, opcode);
 
             //recv command complete event for patch code download command
-            if (opcode == HCI_VSC_DOWNLOAD_FW_PATCH)
+            if (opcode == HCI_VSC_DOWNLOAD_FW_PATCH && p_evt_buf)
             {
                 iIndexRx = *(p_evt_buf + HCI_EVT_CMD_CMPL_STATUS_OFFSET + 1);
                 BTVNDDBG("bt vendor lib: HW_CFG_DL_FW_PATCH status:%i, iIndexRx:%i", status, iIndexRx);
@@ -1480,6 +1490,7 @@ DOWNLOAD_USB_FW:
 
                     hw_cfg_cb.state = 0;
                     is_proceeding = TRUE;
+                    bt_vendor_release_wake_lock();
                     break;
                 }
             }
@@ -1512,6 +1523,7 @@ DOWNLOAD_USB_FW:
     if (is_proceeding == FALSE)
     {
         ALOGE("vendor lib fwcfg aborted!!!");
+        bt_vendor_release_wake_lock();
         if (bt_vendor_cbacks)
         {
             userial_vendor_usb_ioctl(DWFW_CMPLT, &hw_cfg_cb.lmp_sub_current);
@@ -1557,7 +1569,7 @@ void hw_usb_config_start(char transtype, uint32_t usb_id)
     hw_cfg_cb.pid = usb_id & 0x0000ffff;
     hw_cfg_cb.vid = (usb_id >> 16) & 0x0000ffff;
     BTVNDDBG("RTKBT_RELEASE_NAME: %s", RTKBT_RELEASE_NAME);
-    BTVNDDBG("\nRealtek libbt-vendor_usb Version %s \n", RTK_VERSION);
+    BTVNDDBG("\nRealtek libbt-vendor_usb Version %s \n", RTKBT_RELEASE_NAME);
     uint8_t     p_buf[4];
     uint8_t     *p;
 

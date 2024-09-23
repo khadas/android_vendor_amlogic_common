@@ -70,6 +70,8 @@ unsigned char indices0[] = {0xad, 0x0, 0x0, 0xc5, 0x0, 0x0, 0x0, 0x0, 0x77, 0x6d
 #define BT_CHIP_HW_FLOW_CTRL_ON TRUE
 #endif
 
+#define VENDOR_DISCARD_DIRECT_ADV
+
 /******************************************************************************
 **  Extern functions
 ******************************************************************************/
@@ -78,6 +80,7 @@ extern void Heartbeat_init();
 extern int RTK_btservice_init();
 extern void rtkbt_heartbeat_cmpl_cback(void *p_params);
 extern void RTK_btservice_destroyed();
+extern void rtk_handle_le_setup_iso_data_path_cmd(uint8_t *p);
 
 /******************************************************************************
 **  Extern variable
@@ -205,6 +208,7 @@ static serial_data_type_t recv_packet_current_type = 0;
 static unsigned char received_resvered_data[2048] = {0};
 static unsigned char *received_resvered_header = NULL;
 static int received_resvered_length = 0;
+static int actual_resvered_length = 0;
 static rtkbt_version_t rtkbt_version;
 static rtkbt_lescn_t  rtkbt_adv_con;
 rtkbt_cts_info_t rtkbt_cts_info;
@@ -766,9 +770,13 @@ void userial_quene_close(void)
           recv_data_len, send_data_len);
 #endif
     RtbQueueFree(vnd_userial.data_order);
+    vnd_userial.data_order = NULL;
     RtbQueueFree(vnd_userial.recv_data);
+    vnd_userial.recv_data = NULL;
     RtbQueueFree(vnd_userial.send_data);
+    vnd_userial.send_data = NULL;
     RtbQueueFree(vnd_userial.cmd_data);
+    vnd_userial.cmd_data = NULL;
 }
 
 
@@ -833,12 +841,7 @@ void userial_vendor_close(void)
     }
 #endif
 
-    if (vnd_userial.fd > 0)
-    {
-        close(vnd_userial.fd);
-        vnd_userial.fd = -1;
-    }
-
+    vnd_userial.fd = -1;
     vnd_userial.btdriver_state = false;
     if (rtk_parse_manager)
     {
@@ -1387,6 +1390,10 @@ static void *userial_sent_cmd_thread()
 {
     RTK_BUFFER *skb_cmd;
     uint16_t opcode;
+#ifdef VENDOR_MESH_RTK
+    uint8_t mesh_cmd[255];
+    int mesh_cmd_len = 0;
+#endif
     while (vnd_userial.thread_running)
     {
         sem_wait(&queue_cmd_cb.cmd_queue_sem);
@@ -1396,23 +1403,84 @@ static void *userial_sent_cmd_thread()
             skb_cmd = RtbTopQueue(vnd_userial.cmd_data);
             if (skb_cmd)
             {
+                STREAM_TO_UINT16_S(opcode, (skb_cmd->Data + 1));
+#ifdef VENDOR_MESH_RTK
+                if (opcode == HCI_VENDOR_LE_SCAN_PARAMETER)
+                {
+                    memcpy(mesh_cmd, skb_cmd->Data, skb_cmd->Length);
+                    mesh_cmd_len = skb_cmd->Length;
+                    if ((scan_flag & RTK_MESH_SCAN) != RTK_MESH_SCAN)
+                    {
+                        scan_flag |= (RTK_MESH_SCAN);
+                    }
+                    if (ext_mesh_flag)
+                    {
+                        UINT16_TO_STREAM_S((mesh_cmd + 1), HCI_LE_SET_EXTENDED_SCAN_PARAMETERS);
+                    }
+                }
+                else if (opcode == HCI_VENDOR_LE_SCAN_ENABLE)
+                {
+                    memcpy(mesh_cmd, skb_cmd->Data, skb_cmd->Length);
+                    mesh_cmd_len = skb_cmd->Length;
+                    if ((scan_flag & RTK_MESH_SCAN) != RTK_MESH_SCAN)
+                    {
+                        scan_flag |= (RTK_MESH_SCAN);
+                    }
+                    if (ext_mesh_flag)
+                    {
+                        UINT16_TO_STREAM_S((mesh_cmd + 1), HCI_LE_SET_EXTENDED_SCAN_ENABLE);
+                    }
+                }
+#endif
                 if (rtkbt_transtype & RTKBT_TRANS_H4)
                 {
+#ifdef VENDOR_MESH_RTK
+                    if ((opcode == HCI_VENDOR_LE_SCAN_PARAMETER) || (opcode == HCI_VENDOR_LE_SCAN_ENABLE))
+                    {
+                        h4_int_transmit_data(mesh_cmd, mesh_cmd_len);
+                    }
+                    else
+                    {
+                        h4_int_transmit_data(skb_cmd->Data, skb_cmd->Length);
+                    }
+#else
                     h4_int_transmit_data(skb_cmd->Data, skb_cmd->Length);
+#endif
                 }
                 else
                 {
-                    STREAM_TO_UINT16_S(opcode, (skb_cmd->Data + 1));
                     if (opcode == HCI_VSC_H5_INIT)
                     {
                         h5_int_interface->h5_send_sync_cmd(opcode, NULL, (skb_cmd->Length - 1));
                     }
                     else
                     {
+#ifdef VENDOR_MESH_RTK
+                        if ((opcode == HCI_VENDOR_LE_SCAN_PARAMETER) || (opcode == HCI_VENDOR_LE_SCAN_ENABLE))
+                        {
+                            h5_int_interface->h5_send_cmd(DATA_TYPE_COMMAND, mesh_cmd + 1, mesh_cmd_len - 1);
+                        }
+                        else
+                        {
+                            h5_int_interface->h5_send_cmd(DATA_TYPE_COMMAND, (skb_cmd->Data + 1), (skb_cmd->Length - 1));
+                        }
+#else
                         h5_int_interface->h5_send_cmd(DATA_TYPE_COMMAND, (skb_cmd->Data + 1), (skb_cmd->Length - 1));
+#endif
                     }
                 }
+#ifdef VENDOR_MESH_RTK
+                if ((opcode == HCI_VENDOR_LE_SCAN_PARAMETER) || (opcode == HCI_VENDOR_LE_SCAN_ENABLE))
+                {
+                    userial_enqueue_coex_rawdata(mesh_cmd, mesh_cmd_len, false);
+                }
+                else
+                {
+                    userial_enqueue_coex_rawdata(skb_cmd->Data, skb_cmd->Length, false);
+                }
+#else
                 userial_enqueue_coex_rawdata(skb_cmd->Data, skb_cmd->Length, false);
+#endif
             }
         }
     }
@@ -2132,19 +2200,6 @@ static int userial_handle_cmd(unsigned char *recv_buffer, int *total_length)
         break;
 
 #ifdef VENDOR_MESH_RTK
-    case HCI_VENDOR_LE_SCAN_PARAMETER:/*command from mesh lib*/
-        {
-            if ((scan_flag & RTK_MESH_SCAN) != RTK_MESH_SCAN)
-            {
-                scan_flag |= (RTK_MESH_SCAN);
-            }
-            if (ext_mesh_flag)
-            {
-                UINT16_TO_STREAM_S(recv_buffer, HCI_LE_SET_EXTENDED_SCAN_PARAMETERS);
-            }
-        }
-        break;
-
     case HCI_BLE_WRITE_SCAN_ENABLE: /* this is from stack*/
         {
             unsigned char enable = recv_buffer[3];
@@ -2170,20 +2225,6 @@ static int userial_handle_cmd(unsigned char *recv_buffer, int *total_length)
                 userial_recv_rawdata_hook(p_buf, 7);
                 return 1;
                 // }
-            }
-        }
-        break;
-
-    case HCI_VENDOR_LE_SCAN_ENABLE:/* this is from mesh lib*/
-        {
-            //unsigned char enable = recv_buffer[3];
-            if ((scan_flag & RTK_MESH_SCAN) != RTK_MESH_SCAN)
-            {
-                scan_flag |= (RTK_MESH_SCAN);
-            }
-            if (ext_mesh_flag)
-            {
-                UINT16_TO_STREAM_S(recv_buffer, HCI_LE_SET_EXTENDED_SCAN_ENABLE);
             }
         }
         break;
@@ -2297,6 +2338,12 @@ static int userial_handle_cmd(unsigned char *recv_buffer, int *total_length)
         {
             uint8_t gen_bis_iso_num_pkt_cmd[7] = {0x01, 0xBD, 0xFD, 0x03, 0x0B, 0x09, 0x01};
             userial_vendor_send_cmd_to_controller(gen_bis_iso_num_pkt_cmd, 7, NULL);
+        }
+        break;
+
+    case HCI_LE_SETUP_ISO_DATA_PATH:
+        {
+            rtk_handle_le_setup_iso_data_path_cmd(recv_buffer);
         }
         break;
 
@@ -2917,6 +2964,123 @@ static void userial_satrt_inquiry_page_timer(uint8_t event)
 }
 #endif
 
+
+#ifdef VENDOR_DISCARD_DIRECT_ADV
+int discard_direct_adv_form_ext_adv_pkt_evt(unsigned char *data, int data_len)
+{
+    uint8_t *p_total_len = &data[1];
+    uint8_t *p = &data[3];
+    uint8_t *p_num_reports = &data[3];
+    uint8_t *p_copy;
+    uint8_t  num_reports, pkt_data_len, report_len, remain_reports_len;
+    uint16_t event_type;
+    actual_resvered_length = data_len;
+
+    STREAM_TO_UINT8(num_reports, p);
+    p_copy = p;
+    remain_reports_len = data_len - 4;
+    //ALOGI("%s: @wwww------------- num_reports %d", __func__, num_reports);
+    while (num_reports--)
+    {
+        if (p > data + data_len)
+        {
+            ALOGE("%s: err adv pkt", __func__);
+            return 0;
+        }
+
+        /* Extract inquiry results */
+        STREAM_TO_UINT16(event_type, p);
+        p += 21;
+        STREAM_TO_UINT8(pkt_data_len, p);
+
+        p += pkt_data_len; /* Advance to the the next packet*/
+        if (p > data + data_len)
+        {
+            ALOGE("%s: err adv pkt", __func__);
+            return 0;
+        }
+        //ALOGI("%s: @wwww adv type %d", __func__, event_type);
+        if (event_type == 0x15) //0x15 : direct adv
+        {
+            *p_num_reports = *p_num_reports - 1;
+            ALOGI("%s: discrad direct adv", __func__);
+            if (*p_num_reports == 0) { return 0; }
+            report_len = p - p_copy;
+            *p_total_len = *p_total_len - report_len;
+            remain_reports_len -= report_len;
+            memcpy(p_copy, p, remain_reports_len);
+            actual_resvered_length -= report_len;
+            p = p_copy;
+        }
+        else
+        {
+            remain_reports_len -= (p - p_copy);
+            p_copy = p;
+        }
+    }
+
+    return *p_num_reports;
+}
+
+int discard_direct_adv_form_adv_pkt_evt(unsigned char *data, int data_len)
+{
+    uint8_t *p_total_len = &data[1];
+    uint8_t *p = &data[3];
+    uint8_t *p_num_reports = &data[3];
+    uint8_t *p_copy;
+    uint8_t legacy_evt_type, num_reports, pkt_data_len, report_len, remain_reports_len;
+    actual_resvered_length = data_len;
+
+    /* Extract the number of reports in this event. */
+    STREAM_TO_UINT8(num_reports, p);
+    p_copy = p;
+    remain_reports_len = data_len - 4;
+    //ALOGI("%s: @wwww------------- num_reports %d", __func__, num_reports);
+    while (num_reports--)
+    {
+        if (p > data + data_len)
+        {
+            ALOGE("%s: err adv pkt", __func__);
+            return 0;
+        }
+
+        STREAM_TO_UINT8(legacy_evt_type, p);
+        p = p + 7; // 1 bytes addr_type + 6 bytes addr
+        STREAM_TO_UINT8(pkt_data_len, p);
+
+        p += pkt_data_len; /* Advance to the the rssi byte */
+        if (p > data + data_len - 1)
+        {
+            ALOGE("%s: err adv pkt", __func__);
+            return 0;
+        }
+        //ALOGI("%s: @wwww adv type %d", __func__, legacy_evt_type);
+        if (legacy_evt_type == 0x01) //0x1 : directed adv
+        {
+            *p_num_reports = *p_num_reports - 1;
+            ALOGI("%s: discrad direct adv", __func__);
+            if (*p_num_reports == 0) { return 0; }
+            p++; //Advance to the the next packet
+            report_len = p - p_copy;
+            *p_total_len = *p_total_len - report_len;
+            remain_reports_len -= report_len;
+            memcpy(p_copy, p, remain_reports_len);
+            actual_resvered_length -= report_len;
+            p = p_copy;
+        }
+        else
+        {
+            p++; //Advance to the the next packet
+            remain_reports_len -= (p - p_copy);
+            p_copy = p;
+        }
+
+    }
+
+    return *p_num_reports;
+}
+#endif
+
 static int userial_handle_event(unsigned char *recv_buffer, int total_length)
 {
     RTK_UNUSED(total_length);
@@ -2951,11 +3115,19 @@ static int userial_handle_event(unsigned char *recv_buffer, int total_length)
                 }
             }
 #ifdef VENDOR_MESH_RTK
+            else if (opcode == HCI_BLE_READ_LOCAL_SPT_FEAT)
+            {
+                if (!ext_mesh_flag && (p_data[7] & 0x10)) //project id<18 but support le ext adv
+                {
+                    ext_mesh_flag = true;
+                }
+            }
             else if (opcode == HCI_LE_SET_EXTENDED_SCAN_PARAMETERS)
             {
                 if ((scan_flag & RTK_MESH_SET_SCAN_PARM) == RTK_MESH_SET_SCAN_PARM)
                 {
                     *((uint16_t *)&p_data[3]) = HCI_VENDOR_LE_SCAN_PARAMETER;
+                    opcode = HCI_VENDOR_LE_SCAN_PARAMETER;
                     scan_flag &= (~RTK_MESH_SET_SCAN_PARM);
                 }
             }
@@ -2964,6 +3136,7 @@ static int userial_handle_event(unsigned char *recv_buffer, int total_length)
                 if ((scan_flag & RTK_MESH_SET_SCAN) == RTK_MESH_SET_SCAN)
                 {
                     *((uint16_t *)&p_data[3]) = HCI_VENDOR_LE_SCAN_ENABLE;
+                    opcode = HCI_VENDOR_LE_SCAN_ENABLE;
                     scan_flag &= (~RTK_MESH_SET_SCAN);
                 }
             }
@@ -3109,10 +3282,59 @@ static int userial_handle_event(unsigned char *recv_buffer, int total_length)
                             {
                                 skb_cmd->Pcback(p_data);
                             }
+                            RtbFree(skb_cmd);
                             return 1;
                         }
                         else//bt stack cmd status evt
                         {
+                            RtbFree(skb_cmd);
+                            return 0;
+                        }
+                    }
+                    else
+                    {
+                        ALOGE("%s opcode not match, exception!!!", __func__);
+                        assert(false);
+                    }
+                }
+                else
+                {
+                    ALOGE("%s dequeue cmd is null, exception!!!", __func__);
+                    assert(false);
+                }
+            }
+        }
+        break;
+
+    case HCI_LOOPBACK_COMMAND_EVT:
+        {
+            uint16_t opcode = *((uint16_t *)&recv_buffer[2]);
+            if (RtbQueueIsEmpty(vnd_userial.cmd_data))
+            {
+                ALOGE("%s cmd queue is empty, exception!!!", __func__);
+                assert(false);
+            }
+            else
+            {
+                skb_cmd = RtbDequeueHead(vnd_userial.cmd_data);
+                if (skb_cmd)
+                {
+                    STREAM_TO_UINT16_S(skb_cmd_opcode, (skb_cmd->Data) + 1);
+                    if (skb_cmd_opcode == opcode)
+                    {
+                        sem_post(&queue_cmd_cb.cmd_event_sem);
+                        if (skb_cmd->BtVendorCmdFlag)//libbt-vendor cmd status evt
+                        {
+                            if (skb_cmd->Pcback)
+                            {
+                                skb_cmd->Pcback(p_data);
+                            }
+                            RtbFree(skb_cmd);
+                            return 1;
+                        }
+                        else//bt stack cmd status evt
+                        {
+                            RtbFree(skb_cmd);
                             return 0;
                         }
                     }
@@ -3157,6 +3379,10 @@ static int userial_handle_event(unsigned char *recv_buffer, int total_length)
                         break;
                     }
                 }
+#ifdef VENDOR_DISCARD_DIRECT_ADV
+                ret = discard_direct_adv_form_adv_pkt_evt(recv_buffer, total_length);
+                if (ret == 0) { return 1;}
+#endif
 #ifdef VENDOR_MESH_RTK
                 /*check scan_flag*/
                 if (((scan_flag & RTK_BT_STACK_SCAN) == RTK_BT_STACK_SCAN) || ((scan_flag & RTK_MESH_SCAN) == 0))
@@ -3188,6 +3414,10 @@ static int userial_handle_event(unsigned char *recv_buffer, int total_length)
                         break;
                     }
                 }
+#ifdef VENDOR_DISCARD_DIRECT_ADV
+                ret = discard_direct_adv_form_ext_adv_pkt_evt(recv_buffer, total_length);
+                if (ret == 0) { return 1; }
+#endif
 #ifdef VENDOR_MESH_RTK
                 /*check scan_flag*/
                 if (((scan_flag & RTK_BT_STACK_SCAN) == RTK_BT_STACK_SCAN) || ((scan_flag & RTK_MESH_SCAN) == 0))
@@ -3557,6 +3787,7 @@ static int userial_handle_recv_data(unsigned char *recv_buffer, unsigned int tot
     //fall through
 
     case RTKBT_PACKET_END:
+        actual_resvered_length = received_resvered_length;
         switch (recv_packet_current_type)
         {
         case DATA_TYPE_EVENT :
@@ -3582,7 +3813,7 @@ static int userial_handle_recv_data(unsigned char *recv_buffer, unsigned int tot
 
         break;
     }
-    int send_length = received_resvered_length + 1;
+    int send_length = actual_resvered_length + 1;
     uint16_t transmitted_length = 0;
     uint16_t len;
 
@@ -4112,7 +4343,9 @@ int userial_socket_open()
         }
     }
 
-    RTK_btservice_init();
+    ret = RTK_btservice_init();
+    if (ret < 0) { return -1; }
+
     if ((rtkbt_transtype & RTKBT_TRANS_UART) && ((rtkbt_transtype & RTKBT_TRANS_H5) ||
                                                  (rtkbt_transtype & RTKBT_TRANS_H45)))
     {

@@ -16,7 +16,7 @@
  *
  ******************************************************************************/
 #define LOG_TAG "rtk_heartbeat"
-#define RTKBT_RELEASE_NAME "20240315_BT_ANDROID_14.0"
+#define RTKBT_RELEASE_NAME "20240717_BT_ANDROID_14.0"
 
 #include <utils/Log.h>
 #include <sys/types.h>
@@ -220,11 +220,13 @@ static void heartbeat_timed_out()//(union sigval arg)
 {
     int count;
     uint8_t heartbeat_cmd[4] = {0x01, 0x94, 0xfc, 0x00};
+    pthread_mutex_lock(&heartbeat_mutex);
     if (!heartbeatFlag)
     {
+        pthread_mutex_unlock(&heartbeat_mutex);
         return;
     }
-    pthread_mutex_lock(&heartbeat_mutex);
+
     heartbeatCount++;
     if (heartbeatCount >= 3)
     {
@@ -245,7 +247,7 @@ static void heartbeat_timed_out()//(union sigval arg)
         //kill(getpid(), SIGKILL);
         return;
     }
-    pthread_mutex_unlock(&heartbeat_mutex);
+
     if (heartbeatFlag)
     {
 
@@ -256,6 +258,7 @@ static void heartbeat_timed_out()//(union sigval arg)
 
         poll_timer_flush();
     }
+    pthread_mutex_unlock(&heartbeat_mutex);
 }
 
 

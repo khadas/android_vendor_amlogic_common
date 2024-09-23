@@ -103,6 +103,7 @@ typedef struct hci_h5_t
     uint16_t (*h5_send_sco_data)(serial_data_type_t type, uint8_t *data, uint16_t length);
     bool (*h5_recv_msg)(uint8_t *byte, uint16_t length);
     size_t (*h5_int_read_data)(uint8_t *data_buffer, size_t max_size);
+    void (*h5_resync_conf_for_special_card)(uint8_t flag);
 } hci_h5_t;
 
 const hci_h5_t *hci_get_h5_int_interface(void);

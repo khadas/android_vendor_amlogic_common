@@ -17,7 +17,7 @@
  ******************************************************************************/
 
 #define LOG_TAG "bt_hwcfg_uart"
-#define RTKBT_RELEASE_NAME "20240315_BT_ANDROID_14.0"
+#define RTKBT_RELEASE_NAME "20240717_BT_ANDROID_14.0"
 
 #include <utils/Log.h>
 #include <sys/types.h>
@@ -68,10 +68,12 @@ extern uint8_t rtk_get_fw_parsing_rule(uint8_t *p_buf);
 extern void check_fw_update_cmd_complete_cback(void *arg);
 extern bool userial_vendor_send_cmd_to_controller(unsigned char *recv_buffer, int total_length,
                                                   tINT_CMD_CBACK p_cback);
+extern void bt_vendor_release_wake_lock();
 
 #define EXTRA_CONFIG_FILE "/vendor/etc/bluetooth/rtk_btconfig.txt"
 static struct rtk_bt_vendor_config_entry *extra_extry;
 static struct rtk_bt_vendor_config_entry *extra_entry_inx = NULL;
+static const hci_h5_t *h5_int_interface;
 
 
 /******************************************************************************
@@ -141,13 +143,16 @@ static uart_chip_info uart_chip_info_table[] =
     {HCI_VERSION_4_0,   0x000A,   0x8723,   "8723AS"},
     {HCI_VERSION_4_0,   0x000B,   0x8723,   "8723BS"},
     {HCI_VERSION_4_1,   0x000C,   0x8723,   "8723CS"},
+    {HCI_VERSION_4_1,   0x000B,   0x8703,   "8723CS"},
     {HCI_VERSION_4_2,   0x000D,   0x8723,   "8723DS"},
     {HCI_VERSION_4_0,   0x000A,   0x8821,   "8821AE-VAS(8821AS)"},
     {HCI_VERSION_4_1,   0x000B,   0x8822,   "8822BE or 8822BEH"},
     {HCI_VERSION_5_2,   0x000B,   0x8852,   "8852BS or 8852BPS"},
     {HCI_VERSION_5_3,   0x0087,   0x8852,   "8852BTS"},
     {HCI_VERSION_5_3,   0x000E,   0x8822,   "8822ES"},
-    {HCI_VERSION_5_3,   0x000B,   0x8851,   "8851BS"}
+    {HCI_VERSION_5_3,   0x000B,   0x8851,   "8851BS"},
+    {HCI_VERSION_5_4,   0x000D,   0x8852,   "8852DS"},
+    {HCI_VERSION_5_3,   0x000A,   0x8922,   "8922AS"}
 };
 
 static patch_info patch_table[] =
@@ -170,6 +175,7 @@ static patch_info patch_table[] =
     {0x8703,            HCI_VERSION_MASK_ALL,    HCI_REVISION_MASK_ALL, 1 << 5,                1 << 7,                  "rtl8723cs_xx_fw",      "rtl8723cs_xx_config",  CONFIG_MAC_OFFSET_GEN_3PLUS,  MAX_PATCH_SIZE_24K}, //rtl8723cs_xx
     {0x8703,            HCI_VERSION_MASK_ALL,    HCI_REVISION_MASK_ALL, 1 << 3,                1 << 7,                  "rtl8723cs_cg_fw",      "rtl8723cs_cg_config",  CONFIG_MAC_OFFSET_GEN_3PLUS,  MAX_PATCH_SIZE_24K}, //rtl8723cs_cg
     {0x8703,            HCI_VERSION_MASK_ALL,    HCI_REVISION_MASK_ALL, 1 << 4,                1 << 7,                  "rtl8723cs_vf_fw",      "rtl8723cs_vf_config",  CONFIG_MAC_OFFSET_GEN_3PLUS,  MAX_PATCH_SIZE_24K}, //rtl8723cs_vf
+    {0x8703,            HCI_VERSION_MASK_41, (1 << 0xb),            CHIP_TYPE_MASK_ALL,    1 << 7,                  "rtl8723cs_0_fw",       "rtl8723cs_0_config",    CONFIG_MAC_OFFSET_GEN_3PLUS,  MAX_PATCH_SIZE_24K},     //rtl8723cs_0
 //  {0x8822,            HCI_VERSION_MASK_ALL,    HCI_REVISION_MASK_ALL, CHIP_TYPE_MASK_ALL,  1<<8,                  "rtl8822bs_fw",         "rtl8822bs_config",     CONFIG_MAC_OFFSET_GEN_3PLUS,  MAX_PATCH_SIZE_24K},   //Rtl8822BS
     {0x8822,            HCI_VERSION_MASK_ALL, (1 << 0xb),             CHIP_TYPE_MASK_ALL,  1 << 8,                  "rtl8822bs_fw",         "rtl8822bs_config",     CONFIG_MAC_OFFSET_GEN_3PLUS,  MAX_PATCH_SIZE_25K},    //Rtl8822BS
     {0x8822,            HCI_VERSION_MASK_ALL, (1 << 0xc),              CHIP_TYPE_MASK_ALL,  1 << 13,                 "rtl8822cs_fw",         "rtl8822cs_config",     CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_40K},    //Rtl8822CS
@@ -182,12 +188,14 @@ static patch_info patch_table[] =
     {0x8821,            HCI_VERSION_MASK_ALL, (1 << 0xc),              CHIP_TYPE_MASK_ALL,  1 << 10,                 "rtl8821cs_fw",         "rtl8821cs_config",     CONFIG_MAC_OFFSET_GEN_3PLUS,  MAX_PATCH_SIZE_40K}, //RTL8821CS
     {0x8852,            HCI_VERSION_MASK_ALL, (1 << 0xa),              CHIP_TYPE_MASK_ALL,  1 << 18,                 "rtl8852as_fw",         "rtl8852as_config",     CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_69_2K}, //Rtl8852AS
     {0x8852,            HCI_VERSION_MASK_ALL, (1 << 0xb),              1 << 0,  1 << 20,                 "rtl8852bs_fw",         "rtl8852bs_config",     CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_65_2K},            //Rtl8852BS
+    {0x8852,            HCI_VERSION_MASK_ALL, (1 << 0xb),              1 << 3,  1 << 20,                 "rtl8852bs_fw",         "rtl8852bs_config",     CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_65_2K},            //Rtl8852BS-VL
     {0x8852,            HCI_VERSION_MASK_ALL, (1 << 0xc),              CHIP_TYPE_MASK_ALL,  1 << 25,                 "rtl8852cs_fw",         "rtl8852cs_config",     CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_78K}, //Rtl8852CS
     {0x8852,            HCI_VERSION_MASK_ALL, (1 << 0xb),              1 << 6, 1ULL << 34,                "rtl8852bps_fw",        "rtl8852bps_config",    CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_65_2K},           //Rtl8852BPS
     {0x8852,            HCI_VERSION_MASK_ALL, (1 << 0xb),              1 << 10, 1ULL << 34,               "rtl8852bps_fw",        "rtl8852bps_config",    CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_65_2K},           //Rtl8852BPS
-    {0x8852,            HCI_VERSION_MASK_ALL, (0x87),              CHIP_TYPE_MASK_ALL, 1ULL << 47,               "rtl8852bts_fw",        "rtl8852bts_config",    CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_65_2K},  //Rtl8852BTS
+    {0x8852,            HCI_VERSION_MASK_ALL, (0x87),              CHIP_TYPE_MASK_ALL, 1ULL << 47,               "rtl8852bts_fw",        "rtl8852bts_config",    CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_159K},  //Rtl8852BTS
     {0x8851,            HCI_VERSION_MASK_ALL, (1 << 0xb),              CHIP_TYPE_MASK_ALL, 1ULL << 36,               "rtl8851bs_fw",        "rtl8851bs_config",    CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_65_2K}, //Rtl8851BS
     {0x8852,            HCI_VERSION_MASK_ALL, (1 << 0xd),              CHIP_TYPE_MASK_ALL, 1ULL << 42,               "rtl8852ds_fw",        "rtl8852ds_config",    CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_131K}, //Rtl8852DS
+    {0x8922,            HCI_VERSION_MASK_ALL, (1 << 0xa),              CHIP_TYPE_MASK_ALL, 1ULL << 44,               "rtl8922as_fw",        "rtl8922as_config",    CONFIG_MAC_OFFSET_GEN_4PLUS,  MAX_PATCH_SIZE_143K}, //Rtl8922AS
     /*  todo: RTL8703CS */
 
     {LMP_SUBVERSION_NONE, HCI_VERSION_MASK_ALL,   HCI_REVISION_MASK_ALL, CHIP_TYPE_MASK_ALL, PROJECT_ID_MASK_ALL,    "rtl_none_fw",          "rtl_none_config",      CONFIG_MAC_OFFSET_GEN_1_2,  MAX_PATCH_SIZE_24K}
@@ -1744,6 +1752,7 @@ DOWNLOAD_FW:
                     hw_cfg_cb.state = 0;
                     is_proceeding = TRUE;
                     h5_init_datatrans_flag = 0;
+                    bt_vendor_release_wake_lock();
                     break;
                 }
             }
@@ -1767,7 +1776,17 @@ DOWNLOAD_FW:
             is_proceeding = hci_download_patch_h4(p_buf, iIndexRx,
                                                   hw_cfg_cb.total_buf + (hw_cfg_cb.patch_frag_idx * PATCH_DATA_FIELD_MAX_SIZE),
                                                   hw_cfg_cb.patch_frag_len);
+
+            //here is for 8852ds
+            if (is_proceeding && iIndexRx & 0x80 && hw_cfg_cb.lmp_subversion == 0x8852 &&
+                hw_cfg_cb.hci_revision == 0x0d && hw_cfg_cb.eversion == 0x01)
+            {
+                usleep(50000);
+                BTVNDDBG("HW_CFG_DL_FW_PATCH: sync and config h5 for 8852ds !");
+                h5_int_interface->h5_resync_conf_for_special_card(0x10);
+            }
             break;
+
         case HW_VENDOR_WRITE:
             {
                 if (bt_vendor_cbacks)
@@ -1788,6 +1807,7 @@ DOWNLOAD_FW:
     if (is_proceeding == FALSE)
     {
         ALOGE("vendor lib fwcfg aborted!!!");
+        bt_vendor_release_wake_lock();
         if (bt_vendor_cbacks)
         {
             bt_vendor_cbacks->fwcfg_cb(BT_VND_OP_RESULT_FAIL);
@@ -1834,7 +1854,7 @@ void hw_config_start(char transtype)
     hw_cfg_cb.dl_fw_flag = 1;
     hw_cfg_cb.chip_type = CHIPTYPE_NONE;
     BTVNDDBG("RTKBT_RELEASE_NAME: %s", RTKBT_RELEASE_NAME);
-    BTVNDDBG("\nRealtek libbt-vendor_uart Version %s \n", RTK_VERSION);
+    BTVNDDBG("\nRealtek libbt-vendor_uart Version %s \n", RTKBT_RELEASE_NAME);
     uint8_t     p_buf[4];
     uint8_t     *p;
 
@@ -1854,6 +1874,7 @@ void hw_config_start(char transtype)
     }
     else
     {
+        h5_int_interface = hci_get_h5_int_interface();
         UINT8_TO_STREAM(p, DATA_TYPE_COMMAND);
         UINT16_TO_STREAM(p, HCI_VSC_H5_INIT);
         *p = 0; /* parameter length */

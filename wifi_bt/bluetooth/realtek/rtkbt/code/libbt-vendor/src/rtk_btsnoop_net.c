@@ -172,7 +172,7 @@ static void rtk_btsnoop_write_packet(serial_data_type_t type, const uint8_t *pac
 {
     int length_he = 0;
     int length;
-    int flags;
+    int flags = 0;
     int drops = 0;
     pthread_mutex_lock(&btsnoop_log_lock);
     switch (type)
@@ -242,7 +242,11 @@ void rtk_btsnoop_capture(const HC_BT_HDR *p_buf, bool is_rcvd)
     switch (p_buf->event & MSG_EVT_MASK)
     {
     case MSG_HC_TO_STACK_HCI_EVT:
-        if ((*(p + 3) == 0x94) && (*(p + 4) == 0xfc) && (*(p + 5) == 0x00) && (rtkbt_h5logfilter & 1)) {}
+        if ((p_buf->len > 5) && (*(p + 3) == 0x94) && (*(p + 4) == 0xfc) &&
+            (*(p + 5) == 0x00) && (rtkbt_h5logfilter & 1))
+        {
+            // ignore
+        }
         else
         {
             rtk_btsnoop_write_packet(HCI_EVENT_PKT, p, false);

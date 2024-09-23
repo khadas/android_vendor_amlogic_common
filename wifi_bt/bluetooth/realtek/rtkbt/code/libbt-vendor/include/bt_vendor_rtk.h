@@ -49,6 +49,9 @@
 #include <ctype.h>
 #include <cutils/properties.h>
 #include "rtk_common.h"
+#ifdef RTK_USE_LEGACY_POWER
+#include "hardware_legacy/power.h"
+#endif
 
 #define RTK_VERSION "5.2.1"
 /******************************************************************************

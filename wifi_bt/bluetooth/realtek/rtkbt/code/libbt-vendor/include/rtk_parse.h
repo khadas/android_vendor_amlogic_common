@@ -91,6 +91,7 @@ typedef struct rtk_parse_manager_t
 } rtk_parse_manager_t;
 
 rtk_parse_manager_t *rtk_parse_manager_get_interface();
+void rtk_handle_le_setup_iso_data_path_cmd(uint8_t *p);
 
 #ifdef __LITTLE_ENDIAN
 struct sbc_frame_hdr

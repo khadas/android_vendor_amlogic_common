@@ -26,7 +26,7 @@
 
 #undef NDEBUG
 #define LOG_TAG "libbt_vendor"
-#define RTKBT_RELEASE_NAME "20240315_BT_ANDROID_14.0"
+#define RTKBT_RELEASE_NAME "20240717_BT_ANDROID_14.0"
 #include <utils/Log.h>
 #include "bt_vendor_rtk.h"
 #include "upio.h"
@@ -66,6 +66,10 @@ bool fwlog_acl = false;
 pthread_t thrd_dl;
 int poll_dl_fd;
 int event_dl_fd;
+bool wake_lock_acquired;
+#ifdef RTK_USE_LEGACY_POWER
+const char *wake_lock_name = "rtkbt_vendor_wake";
+#endif
 
 /******************************************************************************
 **  Local type definitions
@@ -75,6 +79,55 @@ int event_dl_fd;
 #define RTKBT_CONF_FILE         "/vendor/etc/bluetooth/rtkbt.conf"
 #define USB_DEVICE_DIR          "/sys/bus/usb/devices"
 #define DEBUG_SCAN_USB          FALSE
+
+#define CHECK_CONDTION(cond,ctx) if (cond) ctx
+
+#define IS_STRING_LINE(n) (!strcmp(rtk_trim(line_ptr), #n))
+
+#define IS_STRING_LINE_N(n) (!strncmp(rtk_trim(line_ptr), #n, strlen(#n)))
+
+#define CTX_SET_VALUE(n) \
+    do {\
+        n = strtol(rtk_trim(split + 1), &endptr, 0);\
+    }while(0)
+
+#define CTX_SET_BOOL(n) \
+    do {\
+        if (!strcmp(rtk_trim(split + 1), "true"))\
+        {\
+            n = true;\
+        }\
+    }while(0)
+
+#define CTX_LD_APCF_CFG(n,b) \
+    do {\
+        snprintf(t,200,#n"%d",i+1); \
+        if(!strncmp(rtk_trim(line_ptr),t,strlen(t))){ \
+            p_apcf_cfg[i].b = malloc(strlen(rtk_trim(split+1)) +1);\
+            CHECK_MALLOC_FAILED(p_apcf_cfg[i].b);\
+            p_apcf_cfg[i].b##_len = strlen(rtk_trim(split+1));\
+            strncpy(p_apcf_cfg[i].b,rtk_trim(split+1),strlen(rtk_trim(split+1)) +1);\
+        }\
+    }while(0)
+
+#define free_apcf_cfg(n,i) \
+    if(p_apcf_cfg[i].n##_len > 0){\
+        free(p_apcf_cfg[i].n);\
+        p_apcf_cfg[i].n = NULL;\
+        p_apcf_cfg[i].n##_len = 0;\
+    }
+
+#define free_sub_apcf_cfg(i)\
+    free_apcf_cfg(local_name,i);free_apcf_cfg(service_uuid,i);free_apcf_cfg(service_data,i);free_apcf_cfg(service_data_mask,i);\
+    free_apcf_cfg(company_id,i);free_apcf_cfg(company_id_mask,i);free_apcf_cfg(manu_data,i);free_apcf_cfg(manu_data_mask,i);free_apcf_cfg(bd,i);\
+    free_apcf_cfg(ad_type,i);free_apcf_cfg(ad_data,i);free_apcf_cfg(ad_data_mask,i);free_apcf_cfg(vd_data,i)
+
+#define rtkbt_wakeup_cfg_clean() \
+    for(int i =0 ;i < pwr_cfg.nm_filter_idx;i++){ \
+        free_sub_apcf_cfg(i);\
+    }\
+    free(p_apcf_cfg);\
+    p_apcf_cfg= NULL
 
 /******************************************************************************
 **  Static Variables
@@ -243,16 +296,6 @@ static char *rtk_trim(char *str)
     return str;
 }
 
-#define ld_2_apcf_cfg(n,b) \
-    else if(!strncmp(rtk_trim(line_ptr),#n,strlen(#n))){ \
-        snprintf(t,200,""#n"%d",i+1); \
-        if(!strncmp(rtk_trim(line_ptr),t,strlen(t))){ \
-            p_apcf_cfg[i].b = malloc(strlen(rtk_trim(split+1)) +1);\
-            p_apcf_cfg[i].b##_len = strlen(rtk_trim(split+1));\
-            strncpy(p_apcf_cfg[i].b,rtk_trim(split+1),strlen(rtk_trim(split+1)) +1);\
-        }\
-    } \
-
 static void load_rtkbt_stack_conf()
 {
     char *split;
@@ -285,76 +328,55 @@ static void load_rtkbt_stack_conf()
 
         *split = '\0';
         char *endptr;
-        if (!strcmp(rtk_trim(line_ptr), "RtkbtLogFilter"))
-        {
-            rtkbt_h5logfilter = strtol(rtk_trim(split + 1), &endptr, 0);
-        }
-        else if (!strcmp(rtk_trim(line_ptr), "H5LogOutput"))
-        {
-            h5_log_enable = strtol(rtk_trim(split + 1), &endptr, 0);
-        }
-        else if (!strcmp(rtk_trim(line_ptr), "RtkBtsnoopNetDump"))
-        {
-            if (!strcmp(rtk_trim(split + 1), "true"))
-            {
-                rtk_btsnoop_net_dump = true;
-            }
-        }
-        else if (!strcmp(rtk_trim(line_ptr), "BtSnoopFileName"))
+
+        CHECK_CONDTION(IS_STRING_LINE(RtkbtLogFilter), CTX_SET_VALUE(rtkbt_h5logfilter));
+        CHECK_CONDTION(IS_STRING_LINE(H5LogOutput), CTX_SET_VALUE(h5_log_enable));
+        CHECK_CONDTION(IS_STRING_LINE(RtkBtsnoopNetDump), CTX_SET_BOOL(rtk_btsnoop_net_dump));
+        CHECK_CONDTION(IS_STRING_LINE(BtCoexLogOutput), CTX_SET_VALUE(coex_log_enable));
+        CHECK_CONDTION(IS_STRING_LINE(RtkBtAutoRestart), CTX_SET_BOOL(rtkbt_auto_restart));
+        CHECK_CONDTION(IS_STRING_LINE(RtkBtCaptureFwLog), CTX_SET_BOOL(rtkbt_capture_fw_log));
+        CHECK_CONDTION(IS_STRING_LINE(RtkBtFwLog_ACL), CTX_SET_BOOL(fwlog_acl));
+        CHECK_CONDTION(IS_STRING_LINE(RtkAPCFWakeUpEn), CTX_SET_BOOL(pwr_cfg.rtkbt_apcf_wp_en));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpLocalName), CTX_LD_APCF_CFG(RtkAPCFWakeUpLocalName,
+                                                                                 local_name));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpServiceUUID), CTX_LD_APCF_CFG(RtkAPCFWakeUpServiceUUID,
+                                                                                   service_uuid));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpServiceData), CTX_LD_APCF_CFG(RtkAPCFWakeUpServiceData,
+                                                                                   service_data));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpServiceDMask),
+                       CTX_LD_APCF_CFG(RtkAPCFWakeUpServiceDMask, service_data_mask));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpCompanyId), CTX_LD_APCF_CFG(RtkAPCFWakeUpCompanyId,
+                                                                                 company_id));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpCIdMask), CTX_LD_APCF_CFG(RtkAPCFWakeUpCIdMask,
+                                                                               company_id_mask));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpManuData), CTX_LD_APCF_CFG(RtkAPCFWakeUpManuData,
+                                                                                manu_data));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpManuDMask), CTX_LD_APCF_CFG(RtkAPCFWakeUpManuDMask,
+                                                                                 manu_data_mask));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpBdAddr), CTX_LD_APCF_CFG(RtkAPCFWakeUpBdAddr, bd));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpADType), CTX_LD_APCF_CFG(RtkAPCFWakeUpADType,
+                                                                              ad_type));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpADData), CTX_LD_APCF_CFG(RtkAPCFWakeUpADData,
+                                                                              ad_data));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpADMask), CTX_LD_APCF_CFG(RtkAPCFWakeUpADMask,
+                                                                              ad_data_mask));
+        CHECK_CONDTION(IS_STRING_LINE_N(RtkAPCFWakeUpVDData), CTX_LD_APCF_CFG(RtkAPCFWakeUpVDData,
+                                                                              vd_data));
+
+        if (IS_STRING_LINE(BtSnoopFileName))
         {
             snprintf(rtk_btsnoop_path, 1024, "%s_rtk", rtk_trim(split + 1));
         }
-        else if (!strcmp(rtk_trim(line_ptr), "BtCoexLogOutput"))
-        {
-            coex_log_enable = strtol(rtk_trim(split + 1), &endptr, 0);
-        }
-        else if (!strcmp(rtk_trim(line_ptr), "RtkBtAutoRestart"))
-        {
-            if (!strcmp(rtk_trim(split + 1), "true"))
-            {
-                rtkbt_auto_restart = true;
-            }
-        }
-        else if (!strcmp(rtk_trim(line_ptr), "RtkBtCaptureFwLog"))
-        {
-            if (!strcmp(rtk_trim(split + 1), "true"))
-            {
-                rtkbt_capture_fw_log = true;
-            }
-        }
-        else if (!strcmp(rtk_trim(line_ptr), "RtkBtFwLog_ACL"))
-        {
-            if (!strcmp(rtk_trim(split + 1), "true"))
-            {
-                fwlog_acl = true;
-            }
-        }
-        else if (!strcmp(rtk_trim(line_ptr), "RtkAPCFWakeUpEn"))
-        {
-            if (!strcmp(rtk_trim(split + 1), "true"))
-            {
-                pwr_cfg.rtkbt_apcf_wp_en = true;
-            }
-        }
-        else if (!strncmp(rtk_trim(line_ptr), "RtkAPCFWakeUpSets", strlen("RtkAPCFWakeUpSets")))
+
+        if (IS_STRING_LINE_N(RtkAPCFWakeUpSets))
         {
             pwr_cfg.nm_filter_idx = strtol(rtk_trim(split + 1), &endptr, 0);
             p_apcf_cfg = (tAPCF_CFG *)malloc(pwr_cfg.nm_filter_idx * sizeof(tAPCF_CFG));
+            CHECK_MALLOC_FAILED(p_apcf_cfg);
+            memset(p_apcf_cfg, 0, pwr_cfg.nm_filter_idx * sizeof(tAPCF_CFG));
         }
-        ld_2_apcf_cfg(RtkAPCFWakeUpLocalName, local_name)
-        ld_2_apcf_cfg(RtkAPCFWakeUpServiceUUID, service_uuid)
-        ld_2_apcf_cfg(RtkAPCFWakeUpServiceData, service_data)
-        ld_2_apcf_cfg(RtkAPCFWakeUpServiceDMask, service_data_mask)
-        ld_2_apcf_cfg(RtkAPCFWakeUpCompanyId, company_id)
-        ld_2_apcf_cfg(RtkAPCFWakeUpCIdMask, company_id_mask)
-        ld_2_apcf_cfg(RtkAPCFWakeUpManuData, manu_data)
-        ld_2_apcf_cfg(RtkAPCFWakeUpManuDMask, manu_data_mask)
-        ld_2_apcf_cfg(RtkAPCFWakeUpBdAddr, bd)
-        ld_2_apcf_cfg(RtkAPCFWakeUpADType, ad_type)
-        ld_2_apcf_cfg(RtkAPCFWakeUpADData, ad_data)
-        ld_2_apcf_cfg(RtkAPCFWakeUpADMask, ad_data_mask)
-        ld_2_apcf_cfg(RtkAPCFWakeUpVDData, vd_data)
-        else if (!strncmp(rtk_trim(line_ptr), "RtkAPCFWakeUpWaveDur", strlen("RtkAPCFWakeUpWaveDur")))
+
+        if (IS_STRING_LINE_N(RtkAPCFWakeUpWaveDur))
         {
             snprintf(t, 200, "RtkAPCFWakeUpWaveDur%d", i + 1);
             if (!strncmp(rtk_trim(line_ptr), t, strlen(t)))
@@ -362,7 +384,8 @@ static void load_rtkbt_stack_conf()
                 pwr_cfg.rtkbt_apcf_wp_wd[i] = strtoul(rtk_trim(split + 1), &endptr, 0);
             }
         }
-        else if (!strncmp(rtk_trim(line_ptr), "RtkAPCFWakeUpWaveFre", strlen("RtkAPCFWakeUpWaveFre")))
+
+        if (IS_STRING_LINE_N(RtkAPCFWakeUpWaveFre))
         {
             snprintf(t, 200, "RtkAPCFWakeUpWaveFre%d", i + 1);
             if (!strncmp(rtk_trim(line_ptr), t, strlen(t)))
@@ -370,7 +393,8 @@ static void load_rtkbt_stack_conf()
                 pwr_cfg.rtkbt_apcf_wp_wf[i] = strtoul(rtk_trim(split + 1), NULL, 16);
             }
         }
-        else if (!strncmp(rtk_trim(line_ptr), "RtkAPCFWakeUpWaveTime", strlen("RtkAPCFWakeUpWaveTime")))
+
+        if (IS_STRING_LINE_N(RtkAPCFWakeUpWaveTime))
         {
             snprintf(t, 200, "RtkAPCFWakeUpWaveTime%d", i + 1);
             if (!strncmp(rtk_trim(line_ptr), t, strlen(t)))
@@ -381,25 +405,6 @@ static void load_rtkbt_stack_conf()
     }
     fclose(fp);
 }
-
-#define free_apcf_cfg(n) \
-    if(p_apcf_cfg[i].n##_len > 0){\
-        free(p_apcf_cfg[i].n);\
-        p_apcf_cfg[i].n = NULL;\
-        p_apcf_cfg[i].n##_len = 0;\
-    }\
-
-#define free_sub_apcf_cfg(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12)\
-    free_apcf_cfg(local_name);free_apcf_cfg(service_uuid);free_apcf_cfg(service_data);free_apcf_cfg(service_data_mask);\
-    free_apcf_cfg(company_id);free_apcf_cfg(company_id_mask);free_apcf_cfg(manu_data);free_apcf_cfg(manu_data_mask);free_apcf_cfg(bd);\
-    free_apcf_cfg(ad_type);free_apcf_cfg(ad_data);free_apcf_cfg(ad_data_mask);\
-
-#define rtkbt_wakeup_cfg_clean() \
-    for(int i =0 ;i < pwr_cfg.nm_filter_idx;i++){ \
-        free_sub_apcf_cfg(local_name,service_uuid,service_data,service_data_mask,company_id,company_id_mask,manu_data,manu_data_mask,bd,ad_type,ad_data,ad_data_mask);\
-    }\
-    free(p_apcf_cfg);\
-    p_apcf_cfg= NULL;\
 
 static void rtkbt_stack_conf_cleanup()
 {
@@ -551,12 +556,6 @@ static void *vendor_dl_fw_thrd()
     }
     while (evt_ret);
 
-    if (event_dl_fd > 0)
-    {
-        close(event_dl_fd);
-        event_dl_fd = -1;
-    }
-
     if (rtkbt_transtype & RTKBT_TRANS_UART)
     {
         hw_config_start(rtkbt_transtype);
@@ -623,6 +622,49 @@ static void rtk_create_dl_fw_thrd()
         }
     }
 }
+
+void bt_vendor_acquire_wake_lock()
+{
+    if (!wake_lock_acquired)
+    {
+#ifdef RTK_USE_LEGACY_POWER
+        if (acquire_wake_lock(PARTIAL_WAKE_LOCK, wake_lock_name) == 0)
+        {
+            wake_lock_acquired = true;
+        }
+        else
+        {
+            ALOGE("%s failed to acquire_wake_lock", __func__);
+        }
+#endif
+    }
+    else
+    {
+        ALOGE("%s wakelock unreleased", __func__);
+    }
+}
+
+void bt_vendor_release_wake_lock()
+{
+    if (wake_lock_acquired)
+    {
+#ifdef RTK_USE_LEGACY_POWER
+        if (release_wake_lock(wake_lock_name) == 0)
+        {
+            wake_lock_acquired = false;
+        }
+        else
+        {
+            ALOGE("%s failed to release_wake_lock", __func__);
+        }
+#endif
+    }
+    else
+    {
+        ALOGE("%s wakelock unacquired", __func__);
+    }
+}
+
 /*****************************************************************************
 **
 **   BLUETOOTH VENDOR INTERFACE LIBRARY FUNCTIONS
@@ -634,6 +676,7 @@ static int init(const bt_vendor_callbacks_t *p_cb, unsigned char *local_bdaddr)
     ALOGI("RTKBT_RELEASE_NAME: %s", RTKBT_RELEASE_NAME);
     ALOGI("init");
 
+    wake_lock_acquired = false;
     char value[100] = {0};
     load_rtkbt_conf();
     load_rtkbt_stack_conf();
@@ -811,7 +854,9 @@ static int op(bt_vendor_opcode_t opcode, void *param)
                     {
                         retval = 1;
                         break;
-                    } else {
+                    }
+                    else
+                    {
                         usleep(20000); /* aml patch: fix usb rtkbt open failed */
                     }
                 }
@@ -829,11 +874,14 @@ static int op(bt_vendor_opcode_t opcode, void *param)
                 }
 
             }
+            //Acquire wake_lock here after the event_dl_fd and vnd_userial.fd created.
+            bt_vendor_acquire_wake_lock();
         }
         break;
 
     case BT_VND_OP_USERIAL_CLOSE:
         {
+            bt_vendor_release_wake_lock();
             userial_vendor_close();
         }
         break;
@@ -922,10 +970,14 @@ static void cleanup(void)
     {
         ALOGE("%s unable to unregister fd %d from epoll set: %s", __func__, event_dl_fd, strerror(errno));
     }
+    if (event_dl_fd > 0)
+    {
+        close(event_dl_fd);
+        event_dl_fd = -1;
+    }
     if (poll_dl_fd > 0)
     {
         close(poll_dl_fd);
-        poll_dl_fd = -1;
     }
     rtkbt_stack_conf_cleanup();
     rtkbt_wakeup_cfg_clean();

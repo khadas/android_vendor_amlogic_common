@@ -162,6 +162,10 @@ static volatile uint8_t h5_transfer_running = 0;
 static volatile uint8_t h5_data_ready_running = 0;
 volatile int h5_init_datatrans_flag;
 
+//here is for 8852ds,
+//0x10 is used for that we send sync_req and conf_req to 8852ds,
+static uint8_t h5_resync_conf_for_sepcial_card = 0;
+
 /* Control block for HCISU_H5 */
 typedef struct HCI_H5_CB
 {
@@ -1228,7 +1232,11 @@ void h5_process_ctl_pkts(void)
                 rtk_h5.use_crc = 1;
             }
 
-            rtk_notify_hw_h5_init_result(0);
+            // the <if> here is for 8852ds
+            if (!(h5_resync_conf_for_sepcial_card & 0x10))
+            {
+                rtk_notify_hw_h5_init_result(0);
+            }
         }
         else
         {
@@ -2560,6 +2568,29 @@ int h5_stop_hw_init_ready_timer()
     return OsStopTimer(rtk_h5.timer_h5_hw_init_ready);
 }
 
+/*
+** h5_resync_conf_for_special_card here is for 8852ds
+*/
+void hci_h5_resync_conf_for_special_card(uint8_t flag)
+{
+    h5_resync_conf_for_sepcial_card = flag;
+    H5LogMsg("h5_resync_conf_for_special_card: flag = 0x%02x, h5_resync_conf_for_sepcial_card = 0x%02x",
+             flag, h5_resync_conf_for_sepcial_card);
+    H5LogMsg("h5_resync_conf_for_special_card: link_estab_state = %d, rtk_h5:rxseq_txack = %d, msgq_txseq = %d, rxack = %d,rx_count = %d",
+             rtk_h5.link_estab_state, rtk_h5.rxseq_txack, rtk_h5.msgq_txseq, rtk_h5.rxack, rtk_h5.rx_count);
+
+    rtk_h5.link_estab_state = H5_UNINITIALIZED;
+    rtk_h5.rxseq_txack = 0;
+    rtk_h5.msgq_txseq = 0;
+    rtk_h5.rxack = 0;
+    rtk_h5.rx_count = 0;
+    h5_start_hw_init_ready_timer();
+    hci_h5_send_sync_req();
+    h5_start_sync_retrans_timer();
+
+    return;
+}
+
 
 /******************************************************************************
 **  HCI H5 Services interface table
@@ -2574,6 +2605,7 @@ const hci_h5_t hci_h5_int_func_table =
     .h5_send_sco_data   = hci_h5_send_sco_data,
     .h5_recv_msg        = hci_h5_receive_msg,
     .h5_int_read_data   = hci_h5_int_read_data,
+    .h5_resync_conf_for_special_card = hci_h5_resync_conf_for_special_card,
 };
 
 const hci_h5_t *hci_get_h5_int_interface()

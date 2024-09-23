@@ -1,4 +1,4 @@
-# RELEASE NAME: 20240315_BT_ANDROID_14.0
+# RELEASE NAME: 20240717_BT_ANDROID_14.0
 # RTKBT_API_VERSION=2.1.1.0
 
 BOARD_HAVE_BLUETOOTH := true
@@ -39,6 +39,33 @@ PRODUCT_PROPERTY_OVERRIDES += \
                     persist.vendor.bluetooth.prefferedrole=master \
                     persist.vendor.rtkbtadvdisable=false
 
+PRODUCT_PROPERTY_OVERRIDES += \
+    bluetooth.profile.a2dp.sink.enabled=false \
+    bluetooth.profile.a2dp.source.enabled=true \
+    bluetooth.profile.avrcp.controller.enabled=false \
+    bluetooth.profile.avrcp.target.enabled=true \
+    bluetooth.profile.bap.broadcast.assist.enabled=false \
+    bluetooth.profile.bap.broadcast.source.enabled=false \
+    bluetooth.profile.bap.unicast.client.enabled=false \
+    bluetooth.profile.bass.client.enabled=false \
+    bluetooth.profile.csip.set_coordinator.enabled=false \
+    bluetooth.profile.gatt.enabled=true \
+    bluetooth.profile.hfp.ag.enabled=true \
+    bluetooth.profile.hfp.hf.enabled=false \
+    bluetooth.profile.hid.device.enabled=true \
+    bluetooth.profile.hid.host.enabled=true \
+    bluetooth.profile.map.client.enabled=false \
+    bluetooth.profile.map.server.enabled=true \
+    bluetooth.profile.opp.enabled=true \
+    bluetooth.profile.pbap.client.enabled=false \
+    bluetooth.profile.pbap.server.enabled=false \
+    bluetooth.profile.sap.server.enabled=false \
+#   bluetooth.profile.asha.central.enabled=false \
+    bluetooth.profile.bas.client.enabled=true \
+    bluetooth.profile.ccp.server.enabled=true \
+    bluetooth.profile.hap.client.enabled=true \
+    bluetooth.profile.mcp.server.enabled=true \
+    bluetooth.profile.vcp.controller.enabled=true
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += persist.bluetooth.btsnooplogmode=disable \
                     persist.bluetooth.btsnooppath=/data/misc/bluetooth/logs/btsnoop_hci.log \
                     persist.bluetooth.btsnoopsize=0xffff \

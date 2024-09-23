@@ -182,7 +182,6 @@ RtbAddHead(
     uint32_t                 Length
 )
 {
-
     if ((uint32_t)(RtkBuffer->Data - RtkBuffer->Head) >= Length)
     {
         RtkBuffer->Data -= Length;
@@ -206,7 +205,6 @@ RtbRemoveHead(
     uint32_t                 Length
 )
 {
-
     if (RtkBuffer->Length >= Length)
     {
         RtkBuffer->Data += Length;
@@ -231,7 +229,6 @@ RtbAddTail(
     uint32_t                 Length
 )
 {
-
     if ((uint32_t)(RtkBuffer->Tail - RtkBuffer->End) >= Length)
     {
         uint8_t *Tmp = RtkBuffer->End;
@@ -249,7 +246,6 @@ RtbRemoveTail(
     IN     uint32_t       Length
 )
 {
-
     if ((uint32_t)(RtkBuffer->End - RtkBuffer->Data) >= Length)
     {
         RtkBuffer->End -= Length;
@@ -323,10 +319,13 @@ RtbQueueTail(
     IN RTK_BUFFER                 *RtkBuffer
 )
 {
-    pthread_mutex_lock(&RtkQueueHead->Lock);
-    ListAddToTail(&RtkBuffer->List, &RtkQueueHead->List);
-    RtkQueueHead->QueueLen++;
-    pthread_mutex_unlock(&RtkQueueHead->Lock);
+    if (RtkQueueHead)
+    {
+        pthread_mutex_lock(&RtkQueueHead->Lock);
+        ListAddToTail(&RtkBuffer->List, &RtkQueueHead->List);
+        RtkQueueHead->QueueLen++;
+        pthread_mutex_unlock(&RtkQueueHead->Lock);
+    }
 }
 
 /**
@@ -340,10 +339,13 @@ RtbQueueHead(
     IN RTK_BUFFER                 *RtkBuffer
 )
 {
-    pthread_mutex_lock(&RtkQueueHead->Lock);
-    ListAddToHead(&RtkBuffer->List, &RtkQueueHead->List);
-    RtkQueueHead->QueueLen++;
-    pthread_mutex_unlock(&RtkQueueHead->Lock);
+    if (RtkQueueHead)
+    {
+        pthread_mutex_lock(&RtkQueueHead->Lock);
+        ListAddToHead(&RtkBuffer->List, &RtkQueueHead->List);
+        RtkQueueHead->QueueLen++;
+        pthread_mutex_unlock(&RtkQueueHead->Lock);
+    }
 }
 
 
@@ -360,10 +362,13 @@ RtbInsertBefore(
     IN RTK_BUFFER  *pNewRtkBuffer
 )
 {
-    pthread_mutex_lock(&RtkQueueHead->Lock);
-    ListAdd(&pNewRtkBuffer->List, pOldRtkBuffer->List.Prev, &pOldRtkBuffer->List);
-    RtkQueueHead->QueueLen++;
-    pthread_mutex_unlock(&RtkQueueHead->Lock);
+    if (RtkQueueHead)
+    {
+        pthread_mutex_lock(&RtkQueueHead->Lock);
+        ListAdd(&pNewRtkBuffer->List, pOldRtkBuffer->List.Prev, &pOldRtkBuffer->List);
+        RtkQueueHead->QueueLen++;
+        pthread_mutex_unlock(&RtkQueueHead->Lock);
+    }
 }
 
 /**
@@ -526,6 +531,7 @@ RtbEmptyQueue(
     IN OUT RTB_QUEUE_HEAD *RtkQueueHead
 )
 {
+
     RTK_BUFFER *Rtb = NULL;
     pthread_mutex_lock(&RtkQueueHead->Lock);
 

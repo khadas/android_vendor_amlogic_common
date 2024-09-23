@@ -27,7 +27,7 @@
  ******************************************************************************/
 
 #define LOG_TAG "bt_hwcfg"
-#define RTKBT_RELEASE_NAME "20240315_BT_ANDROID_14.0"
+#define RTKBT_RELEASE_NAME "20240717_BT_ANDROID_14.0"
 
 #include <utils/Log.h>
 #include <sys/types.h>
@@ -429,7 +429,8 @@ uint32_t rtk_get_v1_final_fw(bt_hw_cfg_cb_t *cfg_cb)
         ALOGI("BTCOEX:20%06d-%04x svn_version:%u lmp_subversion:0x%x hci_version:0x%x hci_revision:0x%x chip_type:%d Cut:%d libbt-vendor version:%s, patch->fw_version = %x\n",
               ((entry->coex_version >> 16) & 0x7ff) + ((entry->coex_version >> 27) * 10000),
               (entry->coex_version & 0xffff), entry->svn_version, cfg_cb->lmp_subversion, cfg_cb->hci_version,
-              cfg_cb->hci_revision, cfg_cb->chip_type, cfg_cb->eversion + 1, RTK_VERSION, patch->fw_version);
+              cfg_cb->hci_revision, cfg_cb->chip_type, cfg_cb->eversion + 1, RTKBT_RELEASE_NAME,
+              patch->fw_version);
     }
 
     if (cfg_cb->lmp_subversion == LMPSUBVERSION_8723a)
@@ -478,7 +479,7 @@ uint8_t rtk_insert_fw_patch_fragment_to_linklist(struct rtk_epatch_fragment *fra
         return 0;
     }
 
-    q = p ->next;
+    q = (*header)->next;
     while (p)
     {
         if (q)
@@ -762,7 +763,7 @@ uint32_t rtk_get_v2_final_fw(bt_hw_cfg_cb_t *cfg_cb)
     ALOGI("BTCOEX:20%06d-%04x svn_version:%u lmp_subversion:0x%x hci_version:0x%x hci_revision:0x%x chip_type:%d Cut:%d libbt-vendor version:%s, patch->fw_version = %x\n",
           ((coex_version >> 16) & 0x7ff) + ((coex_version >> 27) * 10000),
           (coex_version & 0xffff), svn_version, cfg_cb->lmp_subversion, cfg_cb->hci_version,
-          cfg_cb->hci_revision, cfg_cb->chip_type, cfg_cb->eversion + 1, RTK_VERSION, fw_version);
+          cfg_cb->hci_revision, cfg_cb->chip_type, cfg_cb->eversion + 1, RTKBT_RELEASE_NAME, fw_version);
 
     while (fw_patch_link)
     {

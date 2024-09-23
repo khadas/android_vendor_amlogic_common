@@ -34,7 +34,7 @@
 *
 ******************************************************************************/
 #define LOG_TAG "rtk_parse"
-#define RTKBT_RELEASE_NAME "20240315_BT_ANDROID_14.0"
+#define RTKBT_RELEASE_NAME "20240717_BT_ANDROID_14.0"
 
 #include <utils/Log.h>
 #include <stdlib.h>
@@ -66,7 +66,6 @@
 #include <sys/syscall.h>
 #include "hardware.h"
 
-#define RTK_COEX_VERSION "3.0"
 
 //#define RTK_ROLE_SWITCH_RETRY
 extern bool rtkbt_capture_fw_log;
@@ -129,6 +128,8 @@ char attend_ack[] = "ATTEND_ACK";
 char wifi_leave[] = "WIFI_LEAVE";
 char leave_ack[] =  "LEAVE_ACK";
 char bt_leave[] =   "BT_LEAVE";
+
+#define RTKBT_CONF_MAC_HDL      "/data/vendor/bluetooth/rtkbt_mac_hdl.conf"
 
 #define CONNECT_PORT        30001
 #define CONNECT_PORT_WIFI   30000
@@ -244,9 +245,12 @@ enum
     profile_hid_interval = 4,
     profile_hogp = 5,
     profile_voice = 6,
-    profile_sink = 7,
+    profile_sink = 7,  //profile_a2dp_sink, this bit will be deprecated soon.
     profile_le_audio = 8,
-    profile_max = 9
+    profile_opp_rx = 9,
+    profile_le_audio_sink = 10,
+    profile_a2dp_sink = 11,
+    profile_max = 12
 };
 
 typedef struct RTK_COEX_INFO
@@ -273,6 +277,7 @@ typedef struct RTK_PROF_INFO
 typedef struct RTK_CONN_PROF
 {
     RT_LIST_ENTRY list;
+    uint8_t le_audio_group_id;      //added for bis management
     uint16_t handle;
     uint8_t type;                   //0:l2cap, 1:sco/esco, 2:le
     bool is_m_f;
@@ -373,13 +378,114 @@ static void pan_notify_func(union sigval sig);
 
 static int coex_msg_send(char *tx_msg, int msg_size);
 static int coex_msg_recv(uint8_t *recv_msg, uint8_t *msg_size);
+static void rtk_handle_le_setup_iso_data_path(uint8_t *p, bool le_audio_active_flag);
+static void rtk_handle_le_big_terminate_sync(uint8_t *p);
+static void rtkbt_write_mac_hdl_conf(uint8_t *mac, uint8_t *hdl);
+static void rtkbt_delete_mac_hdl_conf(uint8_t *mac);
 
 #ifndef RTK_PARSE_LOG_BUF_SIZE
 #define RTK_PARSE_LOG_BUF_SIZE  1024
 #endif
 #define RTK_PARSE_LOG_MAX_SIZE  (RTK_PARSE_LOG_BUF_SIZE - 12)
 
+#define send_pf_setfilt_param(a,f,s) \
+    memset(bf,0,18); \
+    bf[0] = 0x01;/*APCF Set Filtering parameters*/ \
+    bf[1] = a; /*0x00=add 0x01=delete*/ \
+    bf[2] = f; \
+    bf[3] = ((s) & (0xFF));\
+    bf[4] = ((s)>>7); \
+    bf[5] = 0x00;\
+    bf[6] = 0x00;\
+    bf[7] = 0x00;\
+    bf[8] = 0x80;\
+    bf[9] = 0x00;\
+    bf_len = 18;\
+    rtk_vendor_cmd_to_fw(HCI_BLE_ADV_FILTER_OCF,(uint8_t) bf_len,(uint8_t*) bf, NULL);\
+
+#define buld_send_cmd(d,l) \
+    bf[0] = op;\
+    bf[1] = ac;\
+    bf[2] = filt_idx;\
+    memcpy(bf + 3,d,l);\
+
+#define buld_send_vd_cmd(d,l) \
+    bf[0] = op;\
+    bf[1] = filt_idx;\
+    memcpy(bf + 2,d,l);\
+
+#define buld_sd_fdb4_cmd()\
+    bf[0]=pwr_cfg.start_filter_idx+i;\
+    bf[1]=pwr_cfg.rtkbt_apcf_wp_en;\
+    bf[2]=pwr_cfg.rtkbt_apcf_wp_wd[i];\
+    bf[3]=pwr_cfg.rtkbt_apcf_wp_wf[i];\
+    bf[4]=(pwr_cfg.rtkbt_apcf_wp_wf[i]>>8);\
+    bf[5]=(pwr_cfg.rtkbt_apcf_wp_wf[i]>>16);\
+    bf[6]=(pwr_cfg.rtkbt_apcf_wp_wf[i]>>24);\
+    bf[7]=pwr_cfg.rtkbt_apcf_wp_tm[i];\
+    rtk_vendor_cmd_to_fw(HCI_VENDOR_BLE_WAKE_UP_DEV_ADD, 8,(uint8_t*) bf, NULL);\
+
+#define buld_sd_pf_cmd(n,b,m)\
+    p = strtok_r(p_apcf_cfg[i].b," ,",&ps_p);\
+    while (p != NULL){\
+        rtk_conver_str_2_hex(p,ot,strlen(p));\
+        rtk_build_send_PF_cmd(n,0,pwr_cfg.start_filter_idx+i,ot,m,strlen(p)/2);\
+        p = strtok_r(NULL," ,",&ps_p);\
+    }\
+
+#define buld_sd_pf_mk_cmd(n,b)\
+    pm = strtok_r(p_apcf_cfg[i].b##_mask," ,",&ps_pm);\
+    p = strtok_r(p_apcf_cfg[i].b," ,",&ps_p);\
+    while (pm != NULL && p != NULL){\
+        rtk_conver_str_2_hex(p,ot,strlen(p));\
+        rtk_conver_str_2_hex(pm,otm,strlen(pm));\
+        rtk_build_send_PF_cmd(n,0,pwr_cfg.start_filter_idx+i,ot,otm,strlen(p)/2);\
+        p = strtok_r(NULL," ,",&ps_p);\
+        pm = strtok_r(NULL," ,",&ps_pm);\
+    }\
+
+#define buld_sd_cp_ma_pf(n,b1,b2)\
+    pm = strtok_r(p_apcf_cfg[i].b1##_mask," ,",&ps_pm);\
+    p = strtok_r(p_apcf_cfg[i].b1," ,",&ps_p);\
+    p1= strtok_r(p_apcf_cfg[i].b2," ,",&ps_p1);\
+    pm1 = strtok_r(p_apcf_cfg[i].b2##_mask," ,",&ps_pm1);\
+    while (pm != NULL && p != NULL){\
+        memset(bf,0,1024);\
+        rtk_conver_str_2_hex(p,ot,strlen(p));\
+        rtk_conver_str_2_hex(pm,otm,strlen(pm));\
+        rtk_conver_str_2_hex(p1,ot1,strlen(p1));\
+        rtk_conver_str_2_hex(pm1,otm1,strlen(pm1));\
+        memcpy(bf,ot,strlen(p)/2);\
+        memcpy(bf+strlen(p)/2,ot1,strlen(p1)/2);\
+        memcpy(mask,otm,strlen(pm)/2);\
+        memcpy(mask+strlen(pm)/2,otm1,strlen(pm1)/2);\
+        rtk_build_send_PF_cmd(n,0,pwr_cfg.start_filter_idx+i,bf,mask,strlen(p)/2 + strlen(p1)/2);\
+        p = strtok_r(NULL," ,",&ps_p);\
+        pm = strtok_r(NULL," ,",&ps_pm);\
+        p1=strtok_r(NULL," ,",&ps_p1);\
+        pm1=strtok_r(NULL," ,",&ps_pm1);\
+    }\
+
+#define buld_sd_ad_pf(n,b1,b2)\
+    p = strtok_r(p_apcf_cfg[i].b1," ,",&ps_p);\
+    p1 = strtok_r(p_apcf_cfg[i].b2," ,",&ps_p1);\
+    pm1 =strtok_r(p_apcf_cfg[i].b2##_mask," ,",&ps_pm1);\
+    while(p != NULL && p1 != NULL && pm1 != NULL){\
+        rtk_conver_str_2_hex(p,ot,strlen(p));\
+        rtk_conver_str_2_hex(p1,ot1,strlen(p1));\
+        rtk_conver_str_2_hex(pm1,otm1,strlen(pm1));\
+        memcpy(bf, ot,1);\
+        memset(bf + 1,strlen(p1)/2,1);\
+        memcpy(bf + 2,ot1,strlen(p1)/2);\
+        memcpy(bf + 2 + strlen(p1)/2, otm1,strlen(pm1)/2);\
+        rtk_build_send_PF_cmd(n,0,pwr_cfg.start_filter_idx+i,bf,NULL,2 +strlen(p1)/2 + strlen(pm1)/2);\
+        p = strtok_r(NULL," ,",&ps_p);\
+        p1 = strtok_r(NULL," ,",&ps_p1);\
+        pm1 = strtok_r(NULL," ,",&ps_pm1);\
+    }\
+
 #define LOGI0(t,s) __android_log_write(ANDROID_LOG_INFO, t, s)
+
 static void RtkLogMsg(const char *fmt_str, ...)
 {
     static char buffer[RTK_PARSE_LOG_BUF_SIZE];
@@ -577,22 +683,6 @@ static int OsStopTimer(timer_t timerid)
 
 int alloc_polling_timer()
 {
-    /*
-        struct sigaction sigact;
-
-        sigemptyset(&sigact.sa_mask);
-        sigact.sa_flags = SA_SIGINFO;
-
-        //register the Signal Handler
-        sigact.sa_sigaction = timeout_handler;
-
-        // Set up sigaction to catch signal first timer
-        if (sigaction(TIMER_POLLING, &sigact, NULL) == -1)
-        {
-            ALOGE("alloc_polling_timer, sigaction failed");
-            return -1;
-        }
-    */
     // Create and set the timer when to expire
     rtk_prof.timer_polling = OsAllocateTimer(TIMER_POLLING);
     RtkLogMsg("alloc polling timer");
@@ -631,7 +721,6 @@ int alloc_hogp_packet_count_timer(tRTK_CONN_PROF *phci_conn)
     return 0;
 }
 
-
 int stop_hogp_packet_count_timer(timer_t timer_id)
 {
     RtkLogMsg("stop hogp packet");
@@ -646,22 +735,6 @@ int start_hogp_packet_count_timer(timer_t timer_id)
 
 int alloc_a2dp_packet_count_timer(tRTK_CONN_PROF *phci_conn)
 {
-    /*
-        struct sigaction sigact;
-
-        sigemptyset(&sigact.sa_mask);
-        sigact.sa_flags = SA_SIGINFO;
-
-        //register the Signal Handler
-        sigact.sa_sigaction = timeout_handler;
-
-        // Set up sigaction to catch signal first timer
-        if (sigaction(TIMER_A2DP_PACKET_COUNT, &sigact, NULL) == -1)
-        {
-            ALOGE("alloc_a2dp_packet_count_timer, sigaction failed");
-            return -1;
-        }
-    */
     // Create and set the timer when to expire
     if (phci_conn->timer_a2dp_packet_count != (timer_t) - 1)
     {
@@ -702,7 +775,6 @@ int alloc_pan_packet_count_timer(tRTK_CONN_PROF *phci_conn)
 
     return 0;
 }
-
 
 int stop_pan_packet_count_timer(timer_t timer_id)
 {
@@ -795,6 +867,9 @@ tRTK_CONN_PROF *allocate_connection_by_handle(uint16_t handle)
         phci_conn->handle = handle;
         phci_conn->is_m_f = FALSE;
         phci_conn->avdtp_signal_done = FALSE;
+        //Only the phci_conn->le_audio_group_id of bis is set to be big_handle,
+        //and in other situation it is set to be default (0xff).
+        phci_conn->le_audio_group_id = 0xff;
     }
     return phci_conn;
 }
@@ -984,60 +1059,6 @@ void flush_coex_hash(tRTK_PROF *h5)
     //ListInitializeHeader(head);
     pthread_mutex_unlock(&rtk_prof.coex_mutex);
 }
-
-//unused callback func for new vendor cmd flow
-// static void rtk_cmd_complete_cback(void *p_mem)
-// {
-//     uint16_t opcode = 0;
-//     HC_BT_HDR *p_evt_buf = NULL;
-//     if (p_mem)
-//     {
-//         p_evt_buf = (HC_BT_HDR *) p_mem;
-//         opcode = p_evt_buf->data[4] << 8 | p_evt_buf->data[3];
-//     }
-//     pthread_mutex_lock(&rtk_prof.coex_mutex);
-//     RT_LIST_ENTRY *iter = ListGetTop(&(rtk_prof.coex_list));
-//     tRTK_COEX_INFO *desc = NULL;
-//     if (iter)
-//     {
-//         desc = LIST_ENTRY(iter, tRTK_COEX_INFO, list);
-//         if (desc)
-//         {
-//             ListDeleteNode(&desc->list);
-//         }
-//     }
-//     else
-//     {
-//         coex_cmd_send = false;
-//     }
-//     pthread_mutex_unlock(&rtk_prof.coex_mutex);
-//     ALOGI("%s, @cmdtofw last Opcode:%04x", __func__, opcode);
-//     if (rtk_prof.current_cback)
-//     {
-//         rtk_prof.current_cback(p_mem);
-//         rtk_prof.current_cback = NULL;
-//     }
-
-//     if (p_mem)
-//     {
-//         bt_vendor_cbacks->dealloc(p_mem);
-//     }
-
-//     if (desc)
-//     {
-//         pthread_mutex_lock(&rtk_prof.coex_mutex);
-//         if (rtk_prof.bt_on)
-//         {
-//             ALOGI("%s, @cmdtofw transmit_command Opcode:%x", __func__, desc->opcode);
-//             rtk_prof.current_cback = desc->p_cback;
-//             bt_vendor_cbacks->xmit_cb(desc->opcode, desc->p_buf, rtk_cmd_complete_cback);
-//         }
-//         pthread_mutex_unlock(&rtk_prof.coex_mutex);
-//     }
-
-//     free(desc);
-//     return;
-// }
 
 static void rtk_vendor_cmd_to_fw(uint16_t opcode, uint8_t parameter_len, uint8_t *parameter,
                                  tINT_CMD_CBACK p_cback)
@@ -1620,7 +1641,7 @@ void update_profile_connection(tRTK_CONN_PROF *phci_conn, int8_t profile_index, 
         {
             need_update = TRUE;
             phci_conn->profile_bitmap |= BIT(profile_index);
-            if ((profile_index == profile_sco) || (profile_index == profile_le_audio))
+            if (profile_index == profile_sco)
             {
                 phci_conn->profile_status |= BIT(profile_index);
             }
@@ -1813,7 +1834,8 @@ uint8_t handle_l2cap_con_rsp(uint16_t handle, uint16_t dcid, uint16_t scid, uint
         }
 
         tRTK_CONN_PROF *phci_conn = find_connection_by_handle(&rtk_prof, handle);
-        if ((prof_info->profile_index == profile_a2dp) && (phci_conn->avdtp_signal_done == FALSE))
+        if ((prof_info->profile_index == profile_a2dp) && (phci_conn &&
+                                                           phci_conn->avdtp_signal_done == FALSE))
         {
             RtkLogMsg("first avdtp connection is for avdtp signal, ignore");
             phci_conn->avdtp_signal_done = TRUE;
@@ -2121,6 +2143,7 @@ int netlink_send(int nlsk, char *buffer)
     memset(&nladdr, 0, sizeof(struct sockaddr_nl));
 
     nlhdr = (struct nlmsghdr *)malloc(NLMSG_SPACE(strlen(buffer) + 1));
+    CHECK_MALLOC_FAILED(nlhdr);
     strcpy(NLMSG_DATA(nlhdr), buffer);
 
     nlhdr->nlmsg_len = NLMSG_LENGTH(strlen(buffer) + 1);
@@ -2707,32 +2730,6 @@ void rtk_handle_event_from_wifi(uint8_t *msg)
     }
 }
 
-#define send_pf_setfilt_param(a,f,s) \
-    memset(bf,0,18); \
-    bf[0] = 0x01;/*APCF Set Filtering parameters*/ \
-    bf[1] = a; /*0x00=add 0x01=delete*/ \
-    bf[2] = f; \
-    bf[3] = ((s) & (0xFF));\
-    bf[4] = ((s)>>7); \
-    bf[5] = 0x00;\
-    bf[6] = 0x00;\
-    bf[7] = 0x00;\
-    bf[8] = 0x80;\
-    bf[9] = 0x00;\
-    bf_len = 18;\
-    rtk_vendor_cmd_to_fw(HCI_BLE_ADV_FILTER_OCF,(uint8_t) bf_len,(uint8_t*) bf, NULL);\
-
-#define buld_send_cmd(d,l) \
-    bf[0] = op;\
-    bf[1] = ac;\
-    bf[2] = filt_idx;\
-    memcpy(bf + 3,d,l);\
-
-#define buld_send_vd_cmd(d,l) \
-    bf[0] = op;\
-    bf[1] = filt_idx;\
-    memcpy(bf + 2,d,l);\
-
 static void rtk_build_send_PF_cmd(uint8_t op, uint8_t ac, uint8_t filt_idx, char *data,
                                   char *data_mask, uint8_t data_len)
 {
@@ -2794,76 +2791,6 @@ static void rtk_build_send_PF_cmd(uint8_t op, uint8_t ac, uint8_t filt_idx, char
     return;
 }
 
-#define buld_sd_fdb4_cmd()\
-    bf[0]=pwr_cfg.start_filter_idx+i;\
-    bf[1]=pwr_cfg.rtkbt_apcf_wp_en;\
-    bf[2]=pwr_cfg.rtkbt_apcf_wp_wd[i];\
-    bf[3]=pwr_cfg.rtkbt_apcf_wp_wf[i];\
-    bf[4]=(pwr_cfg.rtkbt_apcf_wp_wf[i]>>8);\
-    bf[5]=(pwr_cfg.rtkbt_apcf_wp_wf[i]>>16);\
-    bf[6]=(pwr_cfg.rtkbt_apcf_wp_wf[i]>>24);\
-    bf[7]=pwr_cfg.rtkbt_apcf_wp_tm[i];\
-    rtk_vendor_cmd_to_fw(HCI_VENDOR_BLE_WAKE_UP_DEV_ADD, 8,(uint8_t*) bf, NULL);\
-
-#define buld_sd_pf_cmd(n,b,m)\
-    p = strtok(p_apcf_cfg[i].b," ,");\
-    while (p != NULL){\
-        rtk_conver_str_2_hex(p,ot,strlen(p));\
-        rtk_build_send_PF_cmd(n,0,pwr_cfg.start_filter_idx+i,ot,m,strlen(p)/2);\
-        p = strtok(NULL," ,");\
-    }\
-
-#define buld_sd_pf_mk_cmd(n,b)\
-    pm = strtok(p_apcf_cfg[i].b##_mask," ,");\
-    p = strtok(p_apcf_cfg[i].b," ,");\
-    while (pm != NULL && p != NULL){\
-        rtk_conver_str_2_hex(p,ot,strlen(p));\
-        rtk_conver_str_2_hex(pm,otm,strlen(pm));\
-        rtk_build_send_PF_cmd(n,0,pwr_cfg.start_filter_idx+i,ot,otm,strlen(p)/2);\
-        p = strtok(NULL," ,");\
-        pm = strtok(NULL," ,");\
-    }\
-
-#define buld_sd_cp_ma_pf(n,b1,b2)\
-    pm = strtok(p_apcf_cfg[i].b1##_mask," ,");\
-    p = strtok(p_apcf_cfg[i].b1," ,");\
-    p1= strtok(p_apcf_cfg[i].b2," ,");\
-    pm1 = strtok(p_apcf_cfg[i].b2##_mask," ,");\
-    while (pm != NULL && p != NULL){\
-        memset(bf,0,1024);\
-        rtk_conver_str_2_hex(p,ot,strlen(p));\
-        rtk_conver_str_2_hex(pm,otm,strlen(pm));\
-        rtk_conver_str_2_hex(p1,ot1,strlen(p1));\
-        rtk_conver_str_2_hex(pm1,otm1,strlen(pm1));\
-        memcpy(bf,ot,strlen(p)/2);\
-        memcpy(bf+strlen(p)/2,ot1,strlen(p1)/2);\
-        memcpy(mask,otm,strlen(pm)/2);\
-        memcpy(mask+strlen(pm)/2,otm1,strlen(pm1)/2);\
-        rtk_build_send_PF_cmd(n,0,pwr_cfg.start_filter_idx+i,bf,mask,strlen(p)/2 + strlen(p1)/2);\
-        p = strtok(NULL," ,");\
-        pm = strtok(NULL," ,");\
-        p1=strtok(NULL," ,");\
-        pm1=strtok(NULL," ,");\
-    }\
-
-#define buld_sd_ad_pf(n,b1,b2)\
-    p = strtok(p_apcf_cfg[i].b1," ,");\
-    p1 = strtok(p_apcf_cfg[i].b2," ,");\
-    pm1 =strtok(p_apcf_cfg[i].b2##_mask," ,");\
-    while(p != NULL && p1 != NULL && pm1 != NULL){\
-        rtk_conver_str_2_hex(p,ot,strlen(p));\
-        rtk_conver_str_2_hex(p1,ot1,strlen(p1));\
-        rtk_conver_str_2_hex(pm1,otm1,strlen(pm1));\
-        memcpy(bf, ot,1);\
-        memset(bf + 1,strlen(p1)/2,1);\
-        memcpy(bf + 2,ot1,strlen(p1)/2);\
-        memcpy(bf + 2 + strlen(p1)/2, otm1,strlen(pm1)/2);\
-        rtk_build_send_PF_cmd(n,0,pwr_cfg.start_filter_idx+i,bf,NULL,2 +strlen(p1)/2 + strlen(pm1)/2);\
-        p = strtok(NULL," ,");\
-        p1 = strtok(NULL," ,");\
-        pm1 = strtok(NULL," ,");\
-    }\
-
 static void rtk_conver_str_2_hex(char *in, char *out, int len)
 {
     int i = 0;
@@ -2880,8 +2807,8 @@ static void rtk_conver_str_2_hex(char *in, char *out, int len)
 static void rtk_build_send_wakeup_filter_cmd()
 {
     char bf[1024] = {1}, ot[200] = {0}, otm[200] = {0}, ot1[200] = {0}, otm1[200] = {0}, mask[200] = {0},
-                                                                                    *p,
-                                                                                    *p1, *pm, *pm1;
+                                                                                    *p, *p1, *pm, *pm1,
+                                                                                    *ps_p, *ps_p1, *ps_pm, *ps_pm1;
     uint8_t bf_len = 0;
     uint16_t s = 0;
     int i = 0;
@@ -3168,7 +3095,7 @@ int open_btcoex_chrdev()
 void rtk_parse_init(void)
 {
     ALOGI("RTKBT_RELEASE_NAME: %s", RTKBT_RELEASE_NAME);
-    RtkLogMsg("rtk_profile_init, version: %s", RTK_COEX_VERSION);
+    RtkLogMsg("rtk_profile_init, version: %s", RTKBT_RELEASE_NAME);
 
     memset(&rtk_prof, 0, sizeof(rtk_prof));
     pthread_mutex_init(&rtk_prof.profile_mutex, NULL);
@@ -3456,6 +3383,27 @@ static void rtk_handle_cmd_complete_evt(uint8_t *p, uint8_t len)
             _enable_woble2_ = 0;
         }
         break;
+    case HCI_LE_SETUP_ISO_DATA_PATH:
+        status = *p++;
+        if (!status)
+        {
+            rtk_handle_le_setup_iso_data_path(p, TRUE);
+        }
+        break;
+    case HCI_LE_REMOVE_ISO_DATA_PATH:
+        status = *p++;
+        if (!status)
+        {
+            rtk_handle_le_setup_iso_data_path(p, FALSE);
+        }
+        break;
+    case HCI_LE_BIG_TERM_SYNC:
+        status = *p++;
+        if (!status)
+        {
+            rtk_handle_le_big_terminate_sync(p);
+        }
+        break;
     default:
         break;
     }
@@ -3605,6 +3553,10 @@ static void rtk_handle_disconnect_complete_evt(uint8_t *p)
                     {
                         update_profile_connection(hci_conn, profile_le_audio, FALSE);
                     }
+                    else if (hci_conn->profile_bitmap & BIT(profile_le_audio_sink))
+                    {
+                        update_profile_connection(hci_conn, profile_le_audio_sink, FALSE);
+                    }
                     //if the conn is for profile_le_audio, then profile_hid bit of profile_bitmap must be 0, add else
                     else
                     {
@@ -3745,63 +3697,205 @@ static void rtk_handle_le_cis_established_evt(uint8_t *p)
     }
 }
 
-static void rtk_handle_le_big_complete_evt(uint8_t *p)
+static void rtk_handle_le_setup_iso_data_path(uint8_t *p, bool le_audio_active_flag)
 {
     uint16_t handle;
-    uint8_t status;
+    STREAM_TO_UINT16_S(handle, p);
+    RtkLogMsg("rtk_handle_le_setup_iso_data_path: handle(0x%x) le_audio_active_flag %d", handle,
+              le_audio_active_flag);
+    tRTK_CONN_PROF *phci_conn = find_connection_by_handle(&rtk_prof, handle);
+
+    if (phci_conn->profile_bitmap & BIT(profile_le_audio))
+    {
+        if (le_audio_active_flag)
+        {
+            update_conn_profile_state(phci_conn, profile_le_audio, TRUE);
+        }
+        else
+        {
+            update_conn_profile_state(phci_conn, profile_le_audio, FALSE);
+        }
+    }
+    if (phci_conn->profile_bitmap & BIT(profile_le_audio_sink))
+    {
+        if (le_audio_active_flag)
+        {
+            update_conn_profile_state(phci_conn, profile_le_audio_sink, TRUE);
+        }
+        else
+        {
+            update_conn_profile_state(phci_conn, profile_le_audio_sink, FALSE);
+        }
+    }
+}
+
+void rtk_handle_le_setup_iso_data_path_cmd(uint8_t *p)
+{
+    uint16_t handle;
+    STREAM_TO_UINT16_S(handle, p + 3);
+    tRTK_CONN_PROF *phci_conn = find_connection_by_handle(&rtk_prof, handle);
+    if (phci_conn)
+    {
+        uint8_t data_path_direction = *(p + 5);
+        RtkLogMsg("rtk_handle_le_setup_iso_data_path_cmd: handle(0x%x) data_path_direction %d", handle,
+                  data_path_direction);
+        if (phci_conn->profile_bitmap & BIT(profile_le_audio) && data_path_direction & 0x01)
+        {
+            RtkLogMsg("rtk_handle_le_setup_iso_data_path_cmd: handle(0x%x) data_path_direction from 0 to %d",
+                      handle, data_path_direction);
+            update_profile_connection(phci_conn, profile_le_audio, FALSE);
+            update_profile_connection(phci_conn, profile_le_audio_sink, TRUE);
+        }
+    }
+    else
+    {
+        ALOGE("Connection about handle 0x%x do not exist", handle);
+    }
+}
+
+static void rtk_handle_le_create_big_complete_evt(uint8_t *p)
+{
+    uint16_t handle;
+    uint8_t status, big_handle, bis_number;
     tRTK_CONN_PROF *hci_conn = NULL;
 
     status = *p++;
-    handle = iso_min_conn_handle;
     if (status == 0)
     {
-        hci_conn = find_connection_by_handle(&rtk_prof, handle);
-        if (hci_conn == NULL)
+        big_handle = *p;
+        bis_number = *(p + 16);
+        if (big_handle > 0xef)
         {
-            hci_conn = allocate_connection_by_handle(handle);
-            if (hci_conn)
+            ALOGE("big_handle 0x%x is illegal!!!", big_handle);
+            return;
+        }
+        for (int i = 0; i < bis_number; i++)
+        {
+            STREAM_TO_UINT16_S(handle, p + 17 + i * 2);
+            hci_conn = find_connection_by_handle(&rtk_prof, handle);
+            if (hci_conn == NULL)
             {
-                add_connection_to_hash(&rtk_prof, hci_conn);
+                hci_conn = allocate_connection_by_handle(handle);
+                if (hci_conn)
+                {
+                    add_connection_to_hash(&rtk_prof, hci_conn);
+                    hci_conn->le_audio_group_id = big_handle;
+                    hci_conn->profile_bitmap = 0;
+                    hci_conn->profile_status = 0;
+                    memset(hci_conn->profile_refcount, 0, profile_max);
+                    hci_conn->type = 2;
+                    update_profile_connection(hci_conn, profile_le_audio, TRUE);
+                }
+                else
+                {
+                    ALOGE("bis connection about handle 0x%x allocate fail", handle);
+                }
+            }
+            else
+            {
+                RtkLogMsg("bis connection handle(0x%x) has already exist!", handle);
+                hci_conn->le_audio_group_id = big_handle;
                 hci_conn->profile_bitmap = 0;
                 hci_conn->profile_status = 0;
                 memset(hci_conn->profile_refcount, 0, profile_max);
                 hci_conn->type = 2;
                 update_profile_connection(hci_conn, profile_le_audio, TRUE);
             }
-            else
-            {
-                ALOGE("bis connection allocate fail");
-            }
-        }
-        else
-        {
-            RtkLogMsg("bis connection handle(0x%x) has already exist!", handle);
-            hci_conn->profile_bitmap = 0;
-            hci_conn->profile_status = 0;
-            memset(hci_conn->profile_refcount, 0, profile_max);
-            hci_conn->type = 2;
-            update_profile_connection(hci_conn, profile_le_audio, TRUE);
         }
     }
 }
 
-static void rtk_handle_le_terminate_big_complete_evt()
+static void rtk_handle_le_terminate_big_complete_evt(uint8_t *p)
 {
-    uint16_t handle = iso_min_conn_handle;
+    RT_LIST_HEAD *head = NULL;
+    RT_LIST_ENTRY *iter = NULL, *temp = NULL;
+    tRTK_CONN_PROF *hci_conn = NULL;
+    uint8_t big_handle;
 
-    tRTK_CONN_PROF *hci_conn = find_connection_by_handle(&rtk_prof, handle);
-    if (hci_conn)
+    big_handle = *p;
+    head = &rtk_prof.conn_hash;
+    LIST_FOR_EACH_SAFELY(iter, temp, head)
     {
-        if (hci_conn->profile_bitmap & BIT(profile_le_audio))
+        hci_conn = LIST_ENTRY(iter, tRTK_CONN_PROF, list);
+        if (hci_conn && hci_conn->profile_bitmap && big_handle == hci_conn->le_audio_group_id)
         {
-            update_profile_connection(hci_conn, profile_le_audio, FALSE);
+            if (hci_conn->profile_bitmap & BIT(profile_le_audio))
+            {
+                update_profile_connection(hci_conn, profile_le_audio, FALSE);
+            }
+            if (hci_conn->profile_bitmap & BIT(profile_le_audio_sink))
+            {
+                update_profile_connection(hci_conn, profile_le_audio_sink, FALSE);
+            }
+            delete_connection_from_hash(hci_conn);
+            ALOGE("BIG handle:(0x%x) BIS connection handle:(0x%x) has been cleared away!", big_handle,
+                  hci_conn->handle);
         }
-        delete_connection_from_hash(hci_conn);
     }
-    else
+}
+
+static void rtk_handle_le_big_sync_established_evt(uint8_t *p)
+{
+    uint16_t handle;
+    uint8_t status, big_handle, bis_number;
+    tRTK_CONN_PROF *hci_conn = NULL;
+
+    status = *p++;
+    if (status == 0)
     {
-        ALOGE("HCI Connection handle(0x%x) not found", handle);
+        big_handle = *p;
+        bis_number = *(p + 12);
+        if (big_handle > 0xef)
+        {
+            ALOGE("big_handle 0x%x is illegal!!!", big_handle);
+            return;
+        }
+        for (int i = 0; i < bis_number; i++)
+        {
+            STREAM_TO_UINT16_S(handle, p + 13 + i * 2);
+            hci_conn = find_connection_by_handle(&rtk_prof, handle);
+            if (hci_conn == NULL)
+            {
+                hci_conn = allocate_connection_by_handle(handle);
+                if (hci_conn)
+                {
+                    add_connection_to_hash(&rtk_prof, hci_conn);
+                    hci_conn->le_audio_group_id = big_handle;
+                    hci_conn->profile_bitmap = 0;
+                    hci_conn->profile_status = 0;
+                    memset(hci_conn->profile_refcount, 0, profile_max);
+                    hci_conn->type = 2;
+                    update_profile_connection(hci_conn, profile_le_audio_sink, TRUE);
+                }
+                else
+                {
+                    ALOGE("bis connection allocate fail");
+                }
+            }
+            else
+            {
+                RtkLogMsg("bis connection handle(0x%x) has already exist!", handle);
+                hci_conn->le_audio_group_id = big_handle;
+                hci_conn->profile_bitmap = 0;
+                hci_conn->profile_status = 0;
+                memset(hci_conn->profile_refcount, 0, profile_max);
+                hci_conn->type = 2;
+                update_profile_connection(hci_conn, profile_le_audio_sink, TRUE);
+            }
+        }
     }
+}
+
+static void rtk_handle_le_big_terminate_sync(uint8_t *p)
+{
+    //The mechanism of rtk_handle_le_big_terminate_sync is the same as rtk_handle_le_terminate_big_complete_evt.
+    rtk_handle_le_terminate_big_complete_evt(p);
+}
+
+static void rtk_handle_le_big_sync_lost_evt(uint8_t *p)
+{
+    //The mechanism of rtk_handle_le_big_sync_lost_evt is the same as rtk_handle_le_terminate_big_complete_evt.
+    rtk_handle_le_terminate_big_complete_evt(p);
 }
 
 static void rtk_handle_le_meta_evt(uint8_t *p)
@@ -3810,9 +3904,11 @@ static void rtk_handle_le_meta_evt(uint8_t *p)
     switch (sub_event)
     {
     case HCI_BLE_CONN_COMPLETE_EVT:
+        rtkbt_write_mac_hdl_conf(p + 5, p + 1);
         rtk_handle_le_connection_complete_evt(p, false);
         break;
     case HCI_BLE_ENHANCED_CONN_COMPLETE_EVT:
+        rtkbt_write_mac_hdl_conf(p + 5, p + 1);
         rtk_handle_le_connection_complete_evt(p, true);
         break;
     case HCI_BLE_LL_CONN_PARAM_UPD_EVT:
@@ -3822,10 +3918,16 @@ static void rtk_handle_le_meta_evt(uint8_t *p)
         rtk_handle_le_cis_established_evt(p);
         break;
     case HCI_BLE_CREATE_BIG_CPL_EVT:
-        rtk_handle_le_big_complete_evt(p);
+        rtk_handle_le_create_big_complete_evt(p);
         break;
     case HCI_BLE_TERM_BIG_CPL_EVT:
-        rtk_handle_le_terminate_big_complete_evt();
+        rtk_handle_le_terminate_big_complete_evt(p);
+        break;
+    case HCI_BLE_BIG_SYNC_EST_EVT:
+        rtk_handle_le_big_sync_established_evt(p);
+        break;
+    case HCI_BLE_BIG_SYNC_LOST_EVT:
+        rtk_handle_le_big_sync_lost_evt(p);
         break;
     default :
         break;
@@ -3860,6 +3962,123 @@ static int coex_msg_recv(uint8_t *recv_msg, uint8_t *msg_size)
     }
     return ret;
 }
+
+static void rtkbt_write_mac_hdl_conf(uint8_t *mac, uint8_t *hdl)
+{
+    int fd = 0, i = 0;
+    off_t off_s, off_e;
+    uint8_t *tr = NULL;
+    fd = open(RTKBT_CONF_MAC_HDL,  O_RDWR | O_CREAT | O_APPEND,
+              S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+    if (fd == -1)
+    {
+        ALOGE("%s unable to open '%s': %s", __func__, RTKBT_CONF_MAC_HDL, strerror(errno));
+        return;
+    }
+    off_s = lseek(fd, 0, SEEK_SET);
+    off_e = lseek(fd, 0, SEEK_END);
+
+    if (off_s == off_e)
+    {
+        //empty file
+        write(fd, mac, 6);
+        write(fd, hdl, 2);
+        close(fd);
+        return;
+    }
+    else
+    {
+        //search if exist
+        tr = (uint8_t *)malloc(off_e - off_s);
+        CHECK_MALLOC_FAILED(tr);
+        lseek(fd, 0, SEEK_SET);
+        read(fd, tr, off_e - off_s);
+        do
+        {
+            if (memcmp(tr + i * 8, mac, 6) == 0) //found
+            {
+                close(fd);
+                fd = open(RTKBT_CONF_MAC_HDL,  O_RDWR | O_CREAT | O_TRUNC,
+                          S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+                memcpy(tr + i * 8 + 6, hdl, 2); //update hdl
+                write(fd, tr, off_e - off_s);
+                free(tr);
+                close(fd);
+                return;
+            }
+            else
+            {
+                i++;
+            }
+        }
+        while ((i * 8) < (off_e - off_s));
+        //not found
+        free(tr);
+        lseek(fd, 0, SEEK_END);
+        write(fd, mac, 6);
+        write(fd, hdl, 2);
+        close(fd);
+        return;
+    }
+}
+
+static void rtkbt_delete_mac_hdl_conf(uint8_t *mac)
+{
+    int fd = 0, i = 0;
+    off_t off_s, off_e;
+    uint8_t *tr = NULL;
+    fd = open(RTKBT_CONF_MAC_HDL,  O_RDWR | O_CREAT | O_APPEND,
+              S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+    if (fd == -1)
+    {
+        ALOGE("%s unable to open '%s': %s", __func__, RTKBT_CONF_MAC_HDL, strerror(errno));
+        return;
+    }
+
+    off_s = lseek(fd, 0, SEEK_SET);
+    off_e = lseek(fd, 0, SEEK_END);
+    if (off_s == off_e)
+    {
+        //empty file
+        close(fd);
+        return;
+    }
+    else
+    {
+        tr = (uint8_t *)malloc(off_e - off_s);
+        CHECK_MALLOC_FAILED(tr);
+        lseek(fd, 0, SEEK_SET);
+        read(fd, tr, off_e - off_s);
+        do
+        {
+            if (memcmp(tr + i * 8, mac, 6) == 0) //found
+            {
+                close(fd);
+                fd = open(RTKBT_CONF_MAC_HDL,  O_RDWR | O_CREAT | O_TRUNC,
+                          S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+                if ((i * 8 + 8) == (off_e - off_s))
+                {
+                    write(fd, tr, off_e - off_s - 8);
+                }
+                else
+                {
+                    memcpy(tr + i * 8, tr + i * 8 + 8, off_e - off_s - 8 * i - 8);
+                    write(fd, tr, off_e - off_s - 8);
+                }
+                free(tr);
+                close(fd);
+                return;
+            }
+            else
+            {
+                i++;
+            }
+        }
+        while ((i * 8) < (off_e - off_s));
+        free(tr);
+    }
+}
+
 void rtk_parse_internal_event_intercept(uint8_t *p_msg)
 {
     //ALOGE("in rtk_parse_internal_event_intercept, *p= %x", *p);
@@ -3969,6 +4188,7 @@ void rtk_parse_internal_event_intercept(uint8_t *p_msg)
 
     case HCI_CONNECTION_COMP_EVT:
     case HCI_ESCO_CONNECTION_COMP_EVT:
+        rtkbt_write_mac_hdl_conf(p + 3, p + 1);
         rtk_handle_connection_complete_evt(p);
 #ifdef RTK_ROLE_SWITCH_RETRY
         /*update role switch pool ,record this info*/
@@ -4066,6 +4286,7 @@ void rtk_parse_command(uint8_t *pp)
             vts_enable = 1;
             break;
         }
+
     case HCI_BLE_ADD_WHITE_LIST:
         {
             RtkLogMsg("prepare to send pwr wlit cmd(0xfc7b)");
@@ -4075,6 +4296,13 @@ void rtk_parse_command(uint8_t *pp)
             }
             break;
         }
+
+    case HCI_DELETE_STORED_LINK_KEY:
+        {
+            rtkbt_delete_mac_hdl_conf(p + 1);
+            break;
+        }
+
     default:
         break;
     }

@@ -357,6 +357,9 @@
 #define HCI_BLE_SET_PRIVACY_MODE            (0x004E | HCI_GRP_BLE_CMDS)
 #define HCI_LE_SET_CIG_PARAMS               (0x0062 | HCI_GRP_BLE_CMDS)
 #define HCI_LE_CREATE_BIG                   (0x0068 | HCI_GRP_BLE_CMDS)
+#define HCI_LE_BIG_TERM_SYNC                (0x006C | HCI_GRP_BLE_CMDS)
+#define HCI_LE_SETUP_ISO_DATA_PATH          (0x006E | HCI_GRP_BLE_CMDS)
+#define HCI_LE_REMOVE_ISO_DATA_PATH         (0x006F | HCI_GRP_BLE_CMDS)
 
 #define HCI_VENDOR_SET_LOG_ENABLE_OCF     (0x0027 | HCI_GRP_VENDOR_SPECIFIC)
 
@@ -731,6 +734,8 @@
 #define HCI_BLE_CIS_EST_EVT                 0x19
 #define HCI_BLE_CREATE_BIG_CPL_EVT          0x1b
 #define HCI_BLE_TERM_BIG_CPL_EVT            0x1c
+#define HCI_BLE_BIG_SYNC_EST_EVT            0x1d
+#define HCI_BLE_BIG_SYNC_LOST_EVT           0x1e
 
 /* Definitions for LE Channel Map */
 #define HCI_BLE_CHNL_MAP_SIZE               5

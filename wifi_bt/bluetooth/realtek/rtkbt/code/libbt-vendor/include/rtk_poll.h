@@ -24,7 +24,7 @@
 typedef void (*timed_out)(union sigval arg);
 
 
-void poll_init(timed_out ptr_timeout,uint32_t timeout);
+void poll_init(timed_out ptr_timeout, uint32_t timeout);
 
 void poll_cleanup(void);
 

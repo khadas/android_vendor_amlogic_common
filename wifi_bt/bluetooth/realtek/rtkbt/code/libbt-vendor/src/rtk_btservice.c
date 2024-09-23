@@ -25,7 +25,7 @@
  ******************************************************************************/
 
 #define LOG_TAG "bt_service"
-#define RTKBT_RELEASE_NAME "20240315_BT_ANDROID_14.0"
+#define RTKBT_RELEASE_NAME "20240717_BT_ANDROID_14.0"
 
 #include <utils/Log.h>
 #include <sys/types.h>
@@ -304,19 +304,13 @@ static int hcicmd_stop_reply_timer()
 
 static void Rtk_Client_Cmd_Cback(void *p_mem)
 {
-    HC_BT_HDR *p_evt_buf = (HC_BT_HDR *) p_mem;
-    unsigned char *sendbuf = NULL;
+    unsigned char *p_evt_buf = (unsigned char *) p_mem;
     ssize_t ret = -1;
 
     if (p_evt_buf != NULL)
     {
-        sendbuf = (uint8_t *)(p_evt_buf + 1) + p_evt_buf->offset;
         if (rtk_btservice->current_client_sock != -1)
         {
-            if (p_evt_buf->event != HCIT_TYPE_EVENT)
-            {
-                return;
-            }
             uint8_t type = HCIT_TYPE_EVENT;
 #ifdef VENDOR_MESH_RTK
             pthread_mutex_lock(&sock_mutex);
@@ -331,7 +325,8 @@ static void Rtk_Client_Cmd_Cback(void *p_mem)
                 return;
             }
 
-            RTK_NO_INTR(ret = send(rtk_btservice->current_client_sock, sendbuf, p_evt_buf->len, MSG_NOSIGNAL));
+            RTK_NO_INTR(ret = send(rtk_btservice->current_client_sock, p_evt_buf, p_evt_buf[1] + 2,
+                                   MSG_NOSIGNAL));
             if (ret < 0)
             {
                 ALOGE("%s errno: %s", __func__, strerror(errno));
@@ -914,6 +909,7 @@ int RTK_btservice_thread_start()
     if (pthread_create(&rtk_btservice->epollthd, NULL, epoll_thread, NULL) != 0)
     {
         ALOGE("pthread_create epoll_thread: %s", strerror(errno));
+        rtk_btservice->epoll_thread_running = 0;
         return -1;
     }
 
@@ -921,6 +917,16 @@ int RTK_btservice_thread_start()
     if (pthread_create(&rtk_btservice->cmdreadythd, NULL, cmdready_thread, NULL) != 0)
     {
         ALOGE("pthread_create cmdready_thread: %s", strerror(errno));
+        rtk_btservice->cmdqueue_thread_running = 0;
+        rtk_btservice->epoll_thread_running = 0;
+        if (pthread_join(rtk_btservice->epollthd, NULL) != 0)
+        {
+            ALOGE("%s rtk_btservice->epollthd  pthread_join_failed", __func__);
+        }
+        else
+        {
+            ALOGE("%s rtk_btservice->epollthd  pthread_join_success", __func__);
+        }
         return -1;
     }
 
