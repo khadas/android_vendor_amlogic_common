@@ -83,9 +83,9 @@ public class UsbCameraManager {
 
     public void bootReady(){
         if (!hasCamera()) {
-            Log.i(TAG, "bootReady disable all camera activities");
+            Log.i(TAG, "bootReady enable all camera activities");
             for (int i = 0; i < ACTIVITIES.length; i++) {
-                disableComponent(PACKAGES[i], ACTIVITIES[i]);
+                enableComponent(PACKAGES[i], ACTIVITIES[i]);
             }
         }
     }
@@ -221,7 +221,7 @@ public class UsbCameraManager {
                     ((devNum > 0) && (mCamNum == devNum)))) {
                     usbCameraAttach(mIsAttach);
                     for (int i = 0; i < ACTIVITIES.length; i++) {
-                        enableComponent(PACKAGES[i], ACTIVITIES[i]);
+                        //enableComponent(PACKAGES[i], ACTIVITIES[i]);
                     }
                     ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
                     am.forceStopPackage("com.skype.rover");
@@ -231,7 +231,7 @@ public class UsbCameraManager {
                     usbCameraAttach(mIsAttach);
                     if (devNum < 1) {
                         for (int i = 0; i < ACTIVITIES.length; i++) {
-                            disableComponent(PACKAGES[i], ACTIVITIES[i]);
+                            //disableComponent(PACKAGES[i], ACTIVITIES[i]);
                         }
                     }
                     end = true;
