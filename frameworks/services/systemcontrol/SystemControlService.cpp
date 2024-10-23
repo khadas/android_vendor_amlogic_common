@@ -1422,11 +1422,12 @@ int SystemControlService::saveDisplayMode(int source_input, int mode)
 
 int SystemControlService::setBacklight(int value, int isSave)
 {
-    if (pCPQControl != NULL) {
+/*     if (pCPQControl != NULL) {
         return pCPQControl->SetBacklight(value, 1, isSave);
     } else {
         return -1;
-    }
+    } */
+	return 0;
 }
 
 int SystemControlService::setBacklights(int value, int index, int isSave)

@@ -207,9 +207,9 @@ void CPQControl::CPQControlInit()
     }
 
     //set backlight
-    BacklightInit();
+    //BacklightInit();
     //auto backlight
-    DynamicBackLightInit();
+    //DynamicBackLightInit();
 
     //cabc pq
     SetCabc();
