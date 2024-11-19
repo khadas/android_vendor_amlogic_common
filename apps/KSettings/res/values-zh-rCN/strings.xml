@@ -10,6 +10,10 @@
     <string name="Cooling_fan">风扇控制</string>
     <string name="WOL">WOL</string>
     <string name="Status_bar_control">状态栏控制</string>
+    <string name="camera_settings">USB摄像头设置</string>
+    <string name="camera_faceback">摄像头朝向</string>
+    <string name="camera_orientation">摄像头角度</string>
+    <string name="reboot_take_effect">你需要重启设备激活设置.</string>
     <string name="Logo_LED_control">Logo LED灯控制</string>
     <string name="Timer">定时器</string>
     <string name="USB_PCIE">Toggle USB-3.0/PCI-E</string>
