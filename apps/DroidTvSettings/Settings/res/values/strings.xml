@@ -244,6 +244,7 @@
     <string name="device_calibration">Calibration</string>
     <!-- Preference which changes energy saver settings. [CHAR LIMIT=50] -->
     <string name="device_energy_saver">Energy saver</string>
+    <string name="pin_multiple">Pin Multiple</string>
 
     <!-- Display and sound screen -->
     <skip />

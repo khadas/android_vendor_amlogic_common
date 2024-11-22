@@ -35,6 +35,13 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".PinMultiplePreference"
+            android:label="@string/pin_multiple">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".CameraPreference"
             android:label="@string/camera_settings">
             <intent-filter>

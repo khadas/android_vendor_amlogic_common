@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="horizontal">
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_weight="1"/>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <Switch
+            android:id="@+id/sw_pin1_5V"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="5V"
+            android:background="#FFCDCD"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin2_5V"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="5V"
+            android:background="#FFCDCD"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin3_USB_DM"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="HUB_DM1"
+            android:background="#ED0990"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin4_USB_DP"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="HUB_DP1"
+            android:background="#ED0990"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin5_GND"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GND"
+            android:background="#DEDEDE"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin6_VCC_MCU"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="VCC_MCU"
+            android:background="#FFF200"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin7_MCU_SWCLK"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="MCU_NRST"
+            android:background="#FCB016"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin8_MCU_SWDIO"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="MCU_SWIM"
+            android:background="#FCB016"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin9_GND"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GND"
+            android:background="#DEDEDE"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin10_ADC_CH6"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="ADC_CH0"
+            android:background="#25AAE1"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin11_1V8"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="1.8V"
+            android:background="#FFCDCD"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin12_ADC_CH3"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="ADC_CH2"
+            android:background="#25AAE1"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin13_SPDIFOUT"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="SPDIF_OUT"
+            android:background="#FFF200"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin14_GND"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GND"
+            android:background="#DEDEDE"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin15_UART_EN_RX"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="UARTC_RX"
+            android:background="#E6C7DF"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin16_UART_EN_TX"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="UARTC_TX"
+            android:background="#E6C7DF"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin17_GND"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GND"
+            android:background="#DEDEDE"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin18_LINUX_RX"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="LINUX_RX"
+            android:background="#60BB46"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin19_LINUX_TX"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="LINUX_TX"
+            android:background="#60BB46"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin20_3V3"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="3.3V"
+            android:background="#FFCDCD"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <Switch
+            android:id="@+id/sw_pin21_GND"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GND"
+            android:background="#DEDEDE"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin22_I2CM_F_SCL"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="I2C_MB_SCL"
+            android:background="#318F95"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin23_I2CM_F_SDA"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="I2C_MB_SDA"
+            android:background="#318F95"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin24_GND"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GND"
+            android:background="#DEDEDE"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin25_I2CM_A_SCL"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="I2C_ME_SCL"
+            android:background="#318F95"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin26_I2CM_A_SDA"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="I2C_ME_SDA"
+            android:background="#318F95"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin27_3V3"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="3.3V"
+            android:background="#FFCDCD"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin28_GND"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GND"
+            android:background="#DEDEDE"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin29_I2S_SCLK1"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="I2SB_SCLK2"
+            android:background="#D2AE6E"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin30_I2S_MCLK1"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="I2S_MCLK2"
+            android:background="#D2AE6E"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin31_I2S_SDO1"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="I2SB_SDO2"
+            android:background="#D2AE6E"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin32_I2S_LRCLK1"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="I2SB_LRCLK2"
+            android:background="#D2AE6E"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin33_I2S_SDI1"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="I2SB_SDI2"
+            android:background="#D2AE6E"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin34_GND"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GND"
+            android:background="#DEDEDE"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin35_PWM_F"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="PWM_F"
+            android:background="#FFF200"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin36_GPIOT_18"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GPIOZ_8"
+            android:background="#CAEBFC"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin37_GPIOT_19"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GPIOZ_10"
+            android:background="#CAEBFC"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin38_PWR_HOLD_EXT"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="EXP_INT"
+            android:background="#FFF200"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin39_GPIOD_15_IR_IN"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GPIOH_9"
+            android:background="#CAEBFC"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+
+        <Switch
+            android:id="@+id/sw_pin40_GND"
+            android:layout_width="@dimen/sw_width"
+            android:layout_height="@dimen/sw_height"
+            android:layout_margin="@dimen/sw_margin"
+            android:text="GND"
+            android:background="#DEDEDE"
+            android:gravity="right"
+            android:textColor="@color/black"/>
+    </LinearLayout>
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_weight="1"/>
+
+</LinearLayout>

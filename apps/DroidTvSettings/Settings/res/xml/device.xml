@@ -43,6 +43,14 @@
         android:key="sound_effects"
         android:title="@string/device_display_sound"/>
     <Preference
+        android:icon="@drawable/ic_settings_pin"
+        android:key="pinmultiple"
+        android:title="@string/pin_multiple">
+        <intent
+            android:targetClass="com.android.tv.settings.device.pin.PinMultipleActivity"
+            android:targetPackage="com.android.tv.settings"/>
+    </Preference>
+    <Preference
         android:fragment="com.android.tv.settings.device.StorageSummaryFragment"
         android:icon="@drawable/ic_storage"
         android:key="storage"

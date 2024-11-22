@@ -286,6 +286,9 @@
     <dimen name="activity_horizontal_margin">32dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="remote_marginStart">100dp</dimen>
+    <dimen name="sw_width">180dp</dimen>
+    <dimen name="sw_height">10dp</dimen>
+    <dimen name="sw_margin">0dp</dimen>
     <!-- DroidLogic end -->
 
 </resources>

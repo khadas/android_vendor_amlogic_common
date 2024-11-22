@@ -56,6 +56,14 @@
     </PreferenceScreen>
 
     <PreferenceScreen
+        android:title="@string/pin_multiple"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.ksettings.PinMultiplePreference"
+            android:targetPackage="com.khadas.ksettings"/>
+    </PreferenceScreen>
+
+    <PreferenceScreen
         android:title="@string/camera_settings"
         android:iconSpaceReserved="false">
         <intent
