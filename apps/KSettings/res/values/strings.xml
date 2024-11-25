@@ -10,6 +10,7 @@
     <string name="Cooling_fan">Cooling fan</string>
     <string name="WOL">WOL</string>
     <string name="Status_bar_control">Status bar control</string>
+    <string name="device_remote">Remote controller customize</string>
     <string name="pin_multiple">Pin Multiple</string>
     <string name="camera_settings">USB camera setting</string>
     <string name="camera_faceback">Camera faceback</string>

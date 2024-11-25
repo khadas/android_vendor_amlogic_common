@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_prompt"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:text="@string/prompt">
+    </TextView>
+
+    <ListView
+        android:id="@+id/lv_irkey"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="8">
+    </ListView>
+
+    <Button
+        android:id="@+id/btn_next"
+        android:layout_marginHorizontal="100dp"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="@string/next">
+    </Button>
+
+    <Button
+        android:id="@+id/btn_reset"
+        android:layout_marginHorizontal="100dp"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="@string/reset">
+    </Button>
+
+</LinearLayout>

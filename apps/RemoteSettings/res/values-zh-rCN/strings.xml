@@ -1,0 +1,24 @@
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string name="app_name">遥控器设置</string>
+    <string name="prompt">请选择你需要设置遥控器按键</string>
+    <string name="power">电源</string>
+    <string name="up">上</string>
+    <string name="down">下</string>
+    <string name="left">左</string>
+    <string name="right">右</string>
+    <string name="ok">确认</string>
+    <string name="back">返回</string>
+    <string name="menu">菜单</string>
+    <string name="mouse">鼠标</string>
+    <string name="volume_up">音量加</string>
+    <string name="volume_down">音量减</string>
+    <string name="home">主页</string>
+    <string name="reset">重置</string>
+    <string name="next">下一步</string>
+    <string name="custom_infrared_remote_control">定制遥控器</string>
+    <string name="reset_infrared_remote_control">重置为默认遥控器</string>
+
+    <string name="press_key_prompt">请按下遥控器 <xliff:g id="key">%1$s</xliff:g> 按键。</string>
+
+</resources>

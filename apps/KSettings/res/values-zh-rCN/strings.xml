@@ -10,6 +10,7 @@
     <string name="Cooling_fan">风扇控制</string>
     <string name="WOL">WOL</string>
     <string name="Status_bar_control">状态栏控制</string>
+    <string name="device_remote">遥控器定制</string>
     <string name="pin_multiple">IO复用</string>
     <string name="camera_settings">USB摄像头设置</string>
     <string name="camera_faceback">摄像头朝向</string>

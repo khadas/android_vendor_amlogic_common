@@ -1,0 +1,42 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.khadas.remotesettings">
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <application
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.Settings">
+
+        <activity
+            android:name=".RemoteMainActivity"
+            android:exported="true"
+			android:excludeFromRecents="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+				<!--
+                <category android:name="android.intent.category.LAUNCHER" />
+				-->
+            </intent-filter>
+        </activity>
+
+        <activity
+		    android:exported="true"
+			android:excludeFromRecents="true"
+            android:name=".RemoteKeySettingActivity"/>
+
+        <receiver android:name=".RemoteSettingReceiver"
+            android:exported="true">
+            <intent-filter android:priority="2147483647">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.android.action.FINISH_BOOTING" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+</manifest>

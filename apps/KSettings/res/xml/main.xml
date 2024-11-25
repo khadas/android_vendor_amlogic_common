@@ -56,6 +56,15 @@
     </PreferenceScreen>
 
     <PreferenceScreen
+        android:title="@string/device_remote"
+        android:key="remotecontroller"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.remotesettings.RemoteMainActivity"
+            android:targetPackage="com.khadas.remotesettings" />
+    </PreferenceScreen>
+
+    <PreferenceScreen
         android:title="@string/pin_multiple"
         android:iconSpaceReserved="false">
         <intent

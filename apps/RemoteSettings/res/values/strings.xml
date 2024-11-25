@@ -1,0 +1,24 @@
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string name="app_name">Remote settings</string>
+    <string name="prompt">Please select the remote control button you need to set.</string>
+    <string name="power">POWER</string>
+    <string name="up">UP</string>
+    <string name="down">DOWN</string>
+    <string name="left">LEFT</string>
+    <string name="right">RIGHT</string>
+    <string name="ok">OK</string>
+    <string name="back">BACK</string>
+    <string name="menu">MENU</string>
+    <string name="mouse">MOUSE</string>
+    <string name="volume_up">VOLUME UP</string>
+    <string name="volume_down">VOLUME DOWN</string>
+    <string name="home">HOME</string>
+    <string name="reset">Reset</string>
+    <string name="next">Next</string>
+    <string name="custom_infrared_remote_control">Custom remote control</string>
+    <string name="reset_infrared_remote_control">Reset default remote control</string>
+
+    <string name="press_key_prompt">Please press <xliff:g id="key">%1$s</xliff:g> button on the remote control.</string>
+
+</resources>
