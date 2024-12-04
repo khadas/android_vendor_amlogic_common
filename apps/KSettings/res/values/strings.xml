@@ -12,6 +12,8 @@
     <string name="Status_bar_control">Status bar control</string>
     <string name="device_remote">Remote controller customize</string>
     <string name="pin_multiple">Pin Multiple</string>
+    <string name="keep_alive_app_setting">Keep alive app setting</string>
+    <string name="bootup_app_setting">Bootup app setting</string>
     <string name="camera_settings">USB camera setting</string>
     <string name="camera_faceback">Camera faceback</string>
     <string name="camera_orientation">Camera orientation</string>

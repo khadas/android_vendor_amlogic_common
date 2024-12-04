@@ -474,6 +474,22 @@
             android:exported="true" >
         </activity>
 
+        <activity
+            android:name=".device.apps.BootupAppSettingActivity"
+            android:theme="@style/Theme.Settings.Transparent"
+            android:configChanges="keyboard|keyboardHidden|navigation"
+            android:excludeFromRecents="true"
+            android:exported="true" >
+        </activity>
+
+        <activity
+            android:name=".device.apps.KeepAliveAppsSettingActivity"
+            android:theme="@style/Theme.Settings.Transparent"
+            android:configChanges="keyboard|keyboardHidden|navigation"
+            android:excludeFromRecents="true"
+            android:exported="true" >
+        </activity>
+
         <!-- AmbientSliceActivity is just here to facilitate the activity-alias below to eliminate
              the risk of repackaging. -->
         <activity

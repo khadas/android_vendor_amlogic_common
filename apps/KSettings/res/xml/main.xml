@@ -73,6 +73,22 @@
     </PreferenceScreen>
 
     <PreferenceScreen
+        android:title="@string/bootup_app_setting"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.ksettings.BootupAppPreference"
+            android:targetPackage="com.khadas.ksettings"/>
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/keep_alive_app_setting"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.ksettings.KeepAliveAppsPreference"
+            android:targetPackage="com.khadas.ksettings"/>
+    </PreferenceScreen>
+
+    <PreferenceScreen
         android:title="@string/camera_settings"
         android:iconSpaceReserved="false">
         <intent

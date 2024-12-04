@@ -42,6 +42,20 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".BootupAppPreference"
+            android:label="@string/bootup_app_setting">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".KeepAliveAppsPreference"
+            android:label="@string/keep_alive_app_setting">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".CameraPreference"
             android:label="@string/camera_settings">
             <intent-filter>

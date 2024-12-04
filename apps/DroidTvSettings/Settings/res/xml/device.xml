@@ -51,6 +51,20 @@
             android:targetPackage="com.android.tv.settings"/>
     </Preference>
     <Preference
+        android:key="bootupapp"
+        android:title="@string/bootup_app_setting">
+        <intent
+            android:targetClass="com.android.tv.settings.device.apps.BootupAppSettingActivity"
+            android:targetPackage="com.android.tv.settings"/>
+    </Preference>
+    <Preference
+        android:key="keepaliveapps"
+        android:title="@string/keep_alive_app_setting">
+        <intent
+            android:targetClass="com.android.tv.settings.device.apps.KeepAliveAppsSettingActivity"
+            android:targetPackage="com.android.tv.settings"/>
+    </Preference>
+    <Preference
         android:fragment="com.android.tv.settings.device.StorageSummaryFragment"
         android:icon="@drawable/ic_storage"
         android:key="storage"
