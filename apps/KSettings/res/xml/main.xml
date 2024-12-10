@@ -122,6 +122,22 @@
 -->
 
     <PreferenceScreen
+        android:title="@string/bootup_app_setting"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.ksettings.BootupAppsSettingActivity"
+            android:targetPackage="com.khadas.ksettings" />
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/keep_alive_app_setting"
+        android:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.khadas.ksettings.KeepAliveAppsSettingActivity"
+            android:targetPackage="com.khadas.ksettings" />
+    </PreferenceScreen>
+
+    <PreferenceScreen
         android:key="UPDATER_KEY"
         android:title="@string/Updater"
         android:iconSpaceReserved="false">

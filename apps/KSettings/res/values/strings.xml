@@ -19,6 +19,8 @@
     <string name="reboot_take_effect">You need to restart the device to activate the settings.</string>
     <string name="Logo_LED_control">Logo LED control</string>
     <string name="Timer">Timer</string>
+    <string name="keep_alive_app_setting">Keep alive app setting</string>
+    <string name="bootup_app_setting">Bootup app setting</string>
     <string name="USB_PCIE">Toggle USB-3.0/PCI-E</string>
     <string name="USB_PCIE_Dialog_title">Effective after restart</string>
     <string name="USB_PCIE_default">USB-3.0 Mode</string>
