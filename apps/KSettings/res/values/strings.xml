@@ -30,6 +30,7 @@
     <string name="Gsensor">G-Sensor data</string>
     <string name="Updater" translatable="false">Updater</string>
 
+    <string name="pin_multiple">Pin multiple</string>
 
     <string name="WOL_summary">Wake on LAN</string>
 

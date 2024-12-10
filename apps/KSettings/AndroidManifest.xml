@@ -75,6 +75,14 @@
         </intent-filter>
     </receiver>
 
+    <activity
+        android:name=".PinMultipleActivity"
+        android:label="@string/pin_multiple"
+        android:exported="true" >
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+	      </intent-filter>
+   </activity>
 
     <activity
         android:name=".BootupAppsSettingActivity"

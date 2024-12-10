@@ -65,6 +65,14 @@
         android:title="@string/WOL"
         android:summary="@string/WOL_summary"/>
 
+    <Preference
+        android:key="pinmultiple"
+        android:title="@string/pin_multiple">
+        <intent
+            android:targetClass="com.khadas.ksettings.PinMultipleActivity"
+            android:targetPackage="com.khadas.ksettings"/>
+    </Preference>
+
     <SwitchPreference
         android:key="CAM1_IR_CUT_KEY"
         android:iconSpaceReserved="false"
