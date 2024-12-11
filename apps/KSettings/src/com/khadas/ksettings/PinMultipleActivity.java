@@ -71,7 +71,7 @@ public class PinMultipleActivity extends Activity implements CompoundButton.OnCh
 
     private Switch swPin40GND;
 
-    private static final String OVERLAYS_FILE = "/mnt/vendor/odm_ext/overlays/kvim4.dtb.overlay.env";
+    private static final String OVERLAYS_FILE = "/mnt/vendor/odm_ext/custom/overlays/kvim4.dtb.overlay.env";
     private static final String FDT_HEADER = "fdt_overlays=";
 
     private boolean spdifoutMode = false;
