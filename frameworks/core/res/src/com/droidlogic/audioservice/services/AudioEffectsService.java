@@ -219,7 +219,9 @@ public class AudioEffectsService extends Service {
         boolean isDapValid = OutputModeManager.getInstance(mContext).isAudioSupportMs12System();
         Log.i(TAG, "handleActionStartUp needAudioEffectFeture:" + DroidLogicUtils.isTv() + ", isDapValid:" + isDapValid);
         // This will apply the saved audio settings on boot
-        mSoundEffectManager.createAudioEffectsByIndex();
+        if (mSoundEffectManager != null) {
+            mSoundEffectManager.createAudioEffectsByIndex();
+        }
         registerCommandReceiver(this);
     }
 

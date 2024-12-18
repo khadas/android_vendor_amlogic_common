@@ -3212,7 +3212,9 @@ public class SoundEffectManager {
 
         switch (id) {
             case AudioEffectManager.DEBUG_HPEQ_BAND_NUM_UI:
-                mSoundMode.setParameter(PARAM_EQ_BAND_NUM, value);
+                if (mSoundMode != null) {
+                    mSoundMode.setParameter(PARAM_EQ_BAND_NUM, value);
+                }
                 Settings.Global.putInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_HPEQ_BAND_NUM_DEBUG, value);
                 break;
             default:
