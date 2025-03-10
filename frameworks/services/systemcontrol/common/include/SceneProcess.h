@@ -199,7 +199,6 @@ enum {
 
 static const char* DISPLAY_MODE_LIST[] = {
     MODE_800x480p,
-    MODE_1024x600p,
     MODE_640x480P,
     MODE_480I,
     MODE_480P,
@@ -207,6 +206,7 @@ static const char* DISPLAY_MODE_LIST[] = {
     MODE_576I,
     MODE_576P,
     MODE_576CVBS,
+    MODE_1024x600p,
     MODE_720P,
     MODE_720P50HZ,
     MODE_720P100HZ,

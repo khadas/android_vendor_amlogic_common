@@ -126,6 +126,9 @@ public class DisplayPositionManager {
             || mode.contains(OutputModeManager.PAL_N)) {
             mMaxRight  = 719;
             mMaxBottom = 575;
+        } else if (mode.contains(OutputModeManager.HDMI_600)) {
+            mMaxRight  = 1023;
+            mMaxBottom = 599;
         } else if (mode.contains(OutputModeManager.HDMI_720)) {
             mMaxRight  = 1279;
             mMaxBottom = 719;

@@ -241,6 +241,7 @@ public class OutputModeManager {
     public static final String NTSC_M                       = "ntsc_m";
     public static final String HDMI_480                     = "480";
     public static final String HDMI_576                     = "576";
+    public static final String HDMI_600                     = "600p";
     public static final String HDMI_720                     = "720p";
     public static final String HDMI_1080                    = "1080";
     public static final String HDMI_4K2K                    = "2160p";
@@ -316,7 +317,8 @@ public class OutputModeManager {
         "480p60hz",
         "640x480p60hz",
         "576i50hz",
-        "480i60hz"
+        "480i60hz",
+        "1024x600p60hz"
     };
 
     public static final String[] HDMI_TITLE = {
@@ -353,7 +355,8 @@ public class OutputModeManager {
         "720x480p 60hz",
         "640x480p 60hz",
         "720x576i 50hz",
-        "720x480i 60hz"
+        "720x480i 60hz",
+        "1024x600p 60hz"
     };
 
     //cvbs mode list
